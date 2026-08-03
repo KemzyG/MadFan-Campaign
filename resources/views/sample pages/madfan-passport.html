@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mad Fan — Fan Passport</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --pitch: #0a0f0a;
+    --line: #1a2e1a;
+    --flame: #e8ff00;
+    --ember: #ff4d00;
+    --white: #f5f5f0;
+    --muted: #6b7a6b;
+    --card: #111a11;
+    --border: #1f2e1f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--pitch);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(0deg, transparent 49.5%, rgba(255,255,255,0.018) 49.5%, rgba(255,255,255,0.018) 50.5%, transparent 50.5%),
+      linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,0.018) 49.5%, rgba(255,255,255,0.018) 50.5%, transparent 50.5%);
+    background-size: 80px 80px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: rgba(10,15,10,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 860px; margin: 0 auto; padding: 0 20px;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--flame); }
+  .logo span { color: var(--white); }
+  .pts-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border); padding: 8px 16px;
+  }
+  .pts-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .pts-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--flame); line-height: 1; }
+
+  /* PAGE HEADER */
+  .page-header { padding: 48px 0 36px; }
+  .page-eye { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ember); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 9vw, 80px); letter-spacing: 2px; line-height: 0.95; }
+  .page-sub { font-size: 14px; color: var(--muted); margin-top: 14px; max-width: 480px; line-height: 1.6; }
+
+  /* ═══════════════════════════════════
+     THE PASSPORT CARD
+  ═══════════════════════════════════ */
+  .passport-stage {
+    display: flex; justify-content: center;
+    margin-bottom: 32px;
+    perspective: 1200px;
+  }
+
+  .passport-card {
+    width: 100%;
+    max-width: 520px;
+    aspect-ratio: 1.586 / 1; /* credit card ratio */
+    position: relative;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(.4,0,.2,1);
+  }
+  .passport-card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+  }
+
+  /* FRONT */
+  .card-front {
+    background: #0c140c;
+    border: 1px solid rgba(232,255,0,0.25);
+  }
+
+  /* Pitch texture lines on card */
+  .card-front::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(0deg, transparent 49%, rgba(255,255,255,0.03) 49%, rgba(255,255,255,0.03) 51%, transparent 51%),
+      linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.03) 49%, rgba(255,255,255,0.03) 51%, transparent 51%);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  /* Diagonal accent slash — the signature element */
+  .card-front::after {
+    content: '';
+    position: absolute;
+    top: -40%; right: -10%;
+    width: 55%;
+    height: 200%;
+    background: linear-gradient(135deg, transparent 45%, rgba(232,255,0,0.04) 45%, rgba(232,255,0,0.07) 55%, transparent 55%);
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+
+  .card-top-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ember), var(--flame));
+  }
+
+  .card-logo-area {
+    position: absolute; top: 18px; left: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: var(--flame); }
+  .card-logo-text span { color: rgba(245,245,240,0.6); }
+  .card-season-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: rgba(232,255,0,0.5);
+    border: 1px solid rgba(232,255,0,0.2);
+    padding: 2px 6px; letter-spacing: 1px;
+  }
+
+  .card-tier-badge {
+    position: absolute; top: 16px; right: 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--pitch);
+    background: var(--flame);
+    padding: 3px 10px;
+  }
+
+  .card-avatar-zone {
+    position: absolute; left: 20px; bottom: 20px;
+    display: flex; align-items: flex-end; gap: 14px;
+  }
+  .card-avatar {
+    width: 52px; height: 52px;
+    background: var(--line);
+    border: 1.5px solid rgba(232,255,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .card-fan-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 4vw, 26px);
+    letter-spacing: 1px; color: var(--white); line-height: 1;
+  }
+  .card-fan-handle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--muted); margin-top: 3px;
+  }
+  .card-fan-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: rgba(232,255,0,0.5); margin-top: 2px; letter-spacing: 1px;
+  }
+
+  .card-stats-row {
+    position: absolute; right: 18px; bottom: 20px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  }
+  .card-stat { text-align: right; }
+  .card-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--flame); line-height: 1; }
+  .card-stat-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 1px; }
+
+  .card-club-strip {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, var(--ember) 0, var(--ember) 12px, transparent 12px, transparent 20px);
+    opacity: 0.4;
+  }
+
+  /* Holographic shimmer on hover */
+  .card-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg,
+      transparent 0%,
+      rgba(255,255,255,0.03) 30%,
+      rgba(232,255,0,0.05) 50%,
+      rgba(255,255,255,0.03) 70%,
+      transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .passport-card:hover .card-shimmer { opacity: 1; }
+
+  /* BACK */
+  .card-back {
+    background: #0c140c;
+    border: 1px solid rgba(232,255,0,0.25);
+    transform: rotateY(180deg);
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 20px 24px;
+  }
+  .card-back::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 30%; bottom: 0;
+    width: 40%;
+    background: linear-gradient(135deg, rgba(232,255,0,0.03), transparent);
+    pointer-events: none;
+  }
+
+  .back-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--muted); letter-spacing: 2px; margin-bottom: 14px;
+  }
+  .back-stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .back-stat-cell {
+    background: rgba(10,15,10,0.9);
+    padding: 10px 10px 8px;
+    text-align: center;
+  }
+  .bsc-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--flame); line-height: 1; }
+  .bsc-label { font-family: 'JetBrains Mono', monospace; font-size: 7px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+  .back-bar-row { margin-bottom: 10px; }
+  .back-bar-label {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: var(--muted); letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .back-bar-track { background: var(--line); height: 3px; }
+  .back-bar-fill { height: 100%; background: linear-gradient(90deg, var(--ember), var(--flame)); }
+
+  .back-qr-area {
+    position: absolute; bottom: 16px; right: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .back-qr {
+    width: 44px; height: 44px;
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .back-qr-label { font-family: 'JetBrains Mono', monospace; font-size: 7px; color: var(--muted); letter-spacing: 1px; }
+
+  .flip-hint {
+    text-align: center; margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: 2px;
+  }
+  .flip-hint span { color: var(--flame); }
+
+  /* ═══════════════════════════════════
+     SHARE ACTIONS
+  ═══════════════════════════════════ */
+  .share-actions {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-bottom: 40px;
+  }
+  .share-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: 1px;
+    text-decoration: none;
+  }
+  .share-btn:hover { border-color: var(--flame); color: var(--flame); }
+  .share-btn-icon { font-size: 22px; }
+  .share-btn.primary { background: var(--flame); border-color: var(--flame); color: var(--pitch); font-weight: 600; }
+  .share-btn.primary:hover { background: #fff; border-color: #fff; }
+
+  /* ═══════════════════════════════════
+     REFERRAL SECTION
+  ═══════════════════════════════════ */
+  .ref-section { margin-bottom: 40px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; margin-bottom: 4px; }
+  .section-eye { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ember); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+
+  .ref-link-block {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 24px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .ref-link-url {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; color: var(--flame);
+    background: var(--pitch); border: 1px solid var(--border);
+    padding: 12px 16px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .btn-copy {
+    background: var(--flame); color: var(--pitch);
+    border: none; padding: 12px 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-copy:hover { background: #fff; }
+
+  /* REFERRAL PROGRESS */
+  .ref-progress-block {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 28px; margin-bottom: 16px;
+  }
+  .ref-count-display {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px;
+  }
+  .ref-count-big { font-family: 'Bebas Neue', sans-serif; font-size: 72px; color: var(--flame); line-height: 1; }
+  .ref-count-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+
+  .ref-milestones { display: flex; flex-direction: column; gap: 0; }
+  .ref-milestone-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-milestone-row:last-child { border-bottom: none; }
+  .ref-m-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; color: var(--muted); line-height: 1;
+    width: 52px; flex-shrink: 0; text-align: right;
+  }
+  .ref-m-count.done { color: var(--flame); }
+  .ref-m-bar-wrap { flex: 1; }
+  .ref-m-name { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+  .ref-m-desc { font-size: 12px; color: var(--muted); }
+  .ref-m-track { background: var(--line); height: 3px; margin-top: 8px; }
+  .ref-m-fill { height: 100%; background: linear-gradient(90deg, var(--ember), var(--flame)); transition: width 0.6s ease; }
+  .ref-m-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1px;
+    padding: 3px 8px; flex-shrink: 0;
+  }
+  .ref-m-status.done { color: var(--pitch); background: var(--flame); }
+  .ref-m-status.next { color: var(--ember); border: 1px solid var(--ember); }
+  .ref-m-status.locked { color: var(--muted); border: 1px solid var(--border); }
+
+  /* REFERRED FANS LIST */
+  .fans-list { background: var(--card); border: 1px solid var(--border); overflow: hidden; }
+  .fans-list-header {
+    display: grid; grid-template-columns: 1fr 80px 80px;
+    padding: 10px 20px;
+    background: var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+  }
+  .fan-row {
+    display: grid; grid-template-columns: 1fr 80px 80px;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center; transition: background 0.15s;
+  }
+  .fan-row:hover { background: var(--line); }
+  .fan-row:last-child { border-bottom: none; }
+  .fan-row-name { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .fan-avatar-sm {
+    width: 24px; height: 24px;
+    background: var(--line); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .fan-row-pts { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--flame); }
+  .fan-row-status { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; }
+  .fan-row-status.active { color: var(--flame); }
+  .fan-row-status.pending { color: var(--muted); }
+  .empty-fans {
+    padding: 32px; text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted); letter-spacing: 1px; line-height: 1.8;
+  }
+
+  /* PASSPORT EDIT */
+  .edit-section { margin-bottom: 48px; }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .edit-field { display: flex; flex-direction: column; gap: 6px; }
+  .edit-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .edit-input {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--white); padding: 12px 14px;
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .edit-input:focus { border-color: var(--flame); }
+  .edit-input::placeholder { color: var(--muted); }
+  .edit-select {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--white); padding: 12px 14px;
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none; cursor: pointer; width: 100%; appearance: none;
+  }
+  .btn-update {
+    margin-top: 16px;
+    background: var(--flame); color: var(--pitch);
+    border: none; padding: 14px 28px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-update:hover { background: #fff; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--flame); color: var(--pitch);
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px;
+    padding: 12px 28px; z-index: 200;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    .share-actions { grid-template-columns: 1fr 1fr; }
+    .share-actions .share-btn:first-child { grid-column: 1 / -1; }
+    .edit-grid { grid-template-columns: 1fr; }
+    .ref-link-block { flex-direction: column; align-items: stretch; }
+    .back-stats-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">MAD<span>FAN</span></div>
+    <div class="pts-pill">
+      <div>
+        <div class="pts-label">TOTAL PTS</div>
+        <div class="pts-val">1,350</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <div class="page-eye">Season 01 · Identity</div>
+    <div class="page-title">YOUR FAN<br>PASSPORT</div>
+    <p class="page-sub">This is your loyalty identity. Share it, flex it, grow it. Every point you earn makes it stronger. Tap the card to flip it.</p>
+  </div>
+
+  <!-- PASSPORT CARD -->
+  <div class="passport-stage">
+    <div class="passport-card" id="passport-card" onclick="flipCard()">
+
+      <!-- FRONT -->
+      <div class="card-face card-front">
+        <div class="card-top-bar"></div>
+        <div class="card-shimmer"></div>
+
+        <div class="card-logo-area">
+          <div class="card-logo-text">MAD<span>FAN</span></div>
+          <div class="card-season-tag">S01</div>
+        </div>
+
+        <div class="card-tier-badge" id="card-tier-badge">CORE FAN</div>
+
+        <div class="card-avatar-zone">
+          <div class="card-avatar" id="card-avatar">⚽</div>
+          <div>
+            <div class="card-fan-name" id="card-name">ALEX MORGAN</div>
+            <div class="card-fan-handle" id="card-handle">@alexmorgan · Arsenal FC</div>
+            <div class="card-fan-id" id="card-id">MF-48312 · SEASON 01</div>
+          </div>
+        </div>
+
+        <div class="card-stats-row">
+          <div class="card-stat">
+            <div class="card-stat-val" id="card-pts">1,350</div>
+            <div class="card-stat-label">POINTS</div>
+          </div>
+          <div class="card-stat">
+            <div class="card-stat-val" id="card-streak">4</div>
+            <div class="card-stat-label">DAY STREAK</div>
+          </div>
+          <div class="card-stat">
+            <div class="card-stat-val" id="card-refs">2</div>
+            <div class="card-stat-label">REFERRALS</div>
+          </div>
+        </div>
+
+        <div class="card-club-strip"></div>
+      </div>
+
+      <!-- BACK -->
+      <div class="card-face card-back">
+        <div class="card-top-bar"></div>
+
+        <div class="back-title">FAN LOYALTY RECORD · SEASON 01</div>
+
+        <div class="back-stats-grid">
+          <div class="back-stat-cell">
+            <div class="bsc-val">7</div>
+            <div class="bsc-label">TASKS DONE</div>
+          </div>
+          <div class="back-stat-cell">
+            <div class="bsc-val">4</div>
+            <div class="bsc-label">DAY STREAK</div>
+          </div>
+          <div class="back-stat-cell">
+            <div class="bsc-val">W1</div>
+            <div class="bsc-label">SEASON WEEK</div>
+          </div>
+        </div>
+
+        <div class="back-bar-row">
+          <div class="back-bar-label"><span>LOYALTY SCORE</span><span style="color:var(--flame)">1,350 / 5,000</span></div>
+          <div class="back-bar-track"><div class="back-bar-fill" style="width:27%"></div></div>
+        </div>
+        <div class="back-bar-row">
+          <div class="back-bar-label"><span>TIER PROGRESS</span><span style="color:var(--flame)">CORE → ULTRA</span></div>
+          <div class="back-bar-track"><div class="back-bar-fill" style="width:27%"></div></div>
+        </div>
+        <div class="back-bar-row">
+          <div class="back-bar-label"><span>REFERRAL GOAL</span><span style="color:var(--flame)">2 / 10</span></div>
+          <div class="back-bar-track"><div class="back-bar-fill" style="width:20%"></div></div>
+        </div>
+
+        <div class="back-qr-area">
+          <div class="back-qr">⬛</div>
+          <div class="back-qr-label">SCAN / SHARE</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="flip-hint">TAP CARD TO FLIP · <span>HOLD TO TILT</span></div>
+
+  <!-- SHARE ACTIONS -->
+  <div class="share-actions">
+    <button class="share-btn primary" onclick="shareToX()">
+      <div class="share-btn-icon">𝕏</div>
+      POST PASSPORT
+    </button>
+    <button class="share-btn" onclick="copyPassportLink()">
+      <div class="share-btn-icon">🔗</div>
+      COPY LINK
+    </button>
+    <button class="share-btn" onclick="downloadCard()">
+      <div class="share-btn-icon">⬇</div>
+      SAVE IMAGE
+    </button>
+  </div>
+
+  <!-- REFERRAL SECTION -->
+  <div class="ref-section">
+    <div class="section-eye">Referral Programme</div>
+    <div class="section-title">YOUR REFERRAL LINK</div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px">Every fan who joins through your link earns you <strong style="color:var(--white)">500 points</strong>. No cap. No limit.</p>
+
+    <div class="ref-link-block">
+      <div class="ref-link-url" id="ref-link">madfan.io/r/MF-48312</div>
+      <button class="btn-copy" onclick="copyRefLink()">COPY LINK</button>
+    </div>
+
+    <!-- REFERRAL PROGRESS -->
+    <div class="ref-progress-block">
+      <div class="ref-count-display">
+        <div class="ref-count-big" id="ref-count-big">2</div>
+        <div class="ref-count-label">FANS<br>REFERRED</div>
+      </div>
+
+      <div class="ref-milestones">
+        <div class="ref-milestone-row">
+          <div class="ref-m-count done">3</div>
+          <div class="ref-m-bar-wrap">
+            <div class="ref-m-name">Fan Rank Badge</div>
+            <div class="ref-m-desc">Exclusive profile badge + 1,500 bonus points</div>
+            <div class="ref-m-track"><div class="ref-m-fill" style="width:66%"></div></div>
+          </div>
+          <div class="ref-m-status next">1 AWAY</div>
+        </div>
+        <div class="ref-milestone-row">
+          <div class="ref-m-count">10</div>
+          <div class="ref-m-bar-wrap">
+            <div class="ref-m-name">Ultra Supporter</div>
+            <div class="ref-m-desc">Priority early access + 5,000 pts</div>
+            <div class="ref-m-track"><div class="ref-m-fill" style="width:20%"></div></div>
+          </div>
+          <div class="ref-m-status locked">LOCKED</div>
+        </div>
+        <div class="ref-milestone-row">
+          <div class="ref-m-count">25</div>
+          <div class="ref-m-bar-wrap">
+            <div class="ref-m-name">Loyalty Legend</div>
+            <div class="ref-m-desc">Token allocation + founding member NFT</div>
+            <div class="ref-m-track"><div class="ref-m-fill" style="width:8%"></div></div>
+          </div>
+          <div class="ref-m-status locked">LOCKED</div>
+        </div>
+        <div class="ref-milestone-row">
+          <div class="ref-m-count">50</div>
+          <div class="ref-m-bar-wrap">
+            <div class="ref-m-name">Ambassador</div>
+            <div class="ref-m-desc">Revenue share + exclusive IRL access</div>
+            <div class="ref-m-track"><div class="ref-m-fill" style="width:4%"></div></div>
+          </div>
+          <div class="ref-m-status locked">LOCKED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFERRED FANS LIST -->
+    <div class="fans-list">
+      <div class="fans-list-header">
+        <div>FAN</div>
+        <div>POINTS</div>
+        <div>STATUS</div>
+      </div>
+      <div id="fans-rows">
+        <div class="fan-row">
+          <div class="fan-row-name">
+            <div class="fan-avatar-sm">🦁</div>
+            @jamie_fc
+          </div>
+          <div class="fan-row-pts">+500</div>
+          <div class="fan-row-status active">ACTIVE</div>
+        </div>
+        <div class="fan-row">
+          <div class="fan-row-name">
+            <div class="fan-avatar-sm">🔥</div>
+            @terraceking
+          </div>
+          <div class="fan-row-pts">+500</div>
+          <div class="fan-row-status active">ACTIVE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PASSPORT -->
+  <div class="edit-section">
+    <div class="section-eye">Customise</div>
+    <div class="section-title">EDIT YOUR PASSPORT</div>
+    <div class="edit-grid">
+      <div class="edit-field">
+        <label class="edit-label" for="input-name">DISPLAY NAME</label>
+        <input class="edit-input" id="input-name" type="text" placeholder="Your name" value="Alex Morgan" oninput="liveUpdate()">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label" for="input-handle">X HANDLE</label>
+        <input class="edit-input" id="input-handle" type="text" placeholder="@yourhandle" value="@alexmorgan" oninput="liveUpdate()">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label" for="input-club">YOUR CLUB</label>
+        <select class="edit-select" id="input-club" onchange="liveUpdate()">
+          <option value="Arsenal FC">Arsenal FC</option>
+          <option value="Chelsea FC">Chelsea FC</option>
+          <option value="Manchester City">Manchester City</option>
+          <option value="Manchester United">Manchester United</option>
+          <option value="Liverpool FC">Liverpool FC</option>
+          <option value="Tottenham Hotspur">Tottenham Hotspur</option>
+          <option value="Barcelona">Barcelona</option>
+          <option value="Real Madrid">Real Madrid</option>
+          <option value="Bayern Munich">Bayern Munich</option>
+          <option value="PSG">PSG</option>
+          <option value="Other">Other Club</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label" for="input-avatar">AVATAR EMOJI</label>
+        <input class="edit-input" id="input-avatar" type="text" placeholder="⚽" value="⚽" oninput="liveUpdate()" maxlength="2">
+      </div>
+    </div>
+    <button class="btn-update" onclick="savePassport()">SAVE PASSPORT</button>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let isFlipped = false;
+
+  function flipCard() {
+    isFlipped = !isFlipped;
+    document.getElementById('passport-card').classList.toggle('flipped', isFlipped);
+  }
+
+  // 3D tilt on mouse move
+  const card = document.getElementById('passport-card');
+  card.addEventListener('mousemove', e => {
+    if (isFlipped) return;
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    card.style.transform = `rotateY(${dx * 8}deg) rotateX(${-dy * 5}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    if (!isFlipped) card.style.transform = '';
+  });
+
+  // Live update passport card
+  function liveUpdate() {
+    const name = document.getElementById('input-name').value.toUpperCase() || 'YOUR NAME';
+    const handle = document.getElementById('input-handle').value || '@handle';
+    const club = document.getElementById('input-club').value;
+    const avatar = document.getElementById('input-avatar').value || '⚽';
+
+    document.getElementById('card-name').textContent = name;
+    document.getElementById('card-handle').textContent = handle + ' · ' + club;
+    document.getElementById('card-avatar').textContent = avatar;
+  }
+
+  function savePassport() {
+    showToast('PASSPORT SAVED · +300 PTS EARNED');
+  }
+
+  function copyRefLink() {
+    const link = document.getElementById('ref-link').textContent;
+    navigator.clipboard.writeText('https://' + link).then(() => showToast('REFERRAL LINK COPIED'));
+  }
+
+  function copyPassportLink() {
+    navigator.clipboard.writeText('https://madfan.io/passport/MF-48312').then(() => showToast('PASSPORT LINK COPIED'));
+  }
+
+  function shareToX() {
+    const text = encodeURIComponent(
+      `My @MadFan Fan Passport — Season 01 🟡\n\n` +
+      `🔥 4-day streak\n` +
+      `⚡ 1,350 loyalty points\n` +
+      `⚽ Arsenal FC\n\n` +
+      `Loyalty finally counts. Join me → madfan.io/r/MF-48312\n#MadFan #LoyaltyEconomy`
+    );
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  }
+
+  function downloadCard() {
+    showToast('SAVING PASSPORT IMAGE...');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block direct access to sensitive application paths when the
+    # document root is the Laravel project root (common on cPanel).
+    RewriteRule ^(app|bootstrap|config|database|node_modules|resources|routes|storage|tests|vendor)($|/) - [F,L,NC]
+
+    # Deny hidden files (except ACME challenges).
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+
+    # Route all traffic through the public/ front controller.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "(^\.env|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|vite\.config\.js)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

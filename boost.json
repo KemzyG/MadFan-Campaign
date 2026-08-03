@@ -1,0 +1,30 @@
+{
+    "agents": [
+        "junie",
+        "cursor"
+    ],
+    "cloud": false,
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch": false,
+    "sail": false,
+    "skills": [
+        "ai-sdk-development",
+        "laravel-best-practices",
+        "pest-testing",
+        "inertia-react-development",
+        "tailwindcss-development",
+        "financial-analysis",
+        "frontend-design",
+        "laravel-api",
+        "laravel-expert",
+        "laravel-filament",
+        "laravel-inertia-react",
+        "laravel-owasp-security",
+        "laravel-patterns",
+        "laravel-policies-and-authorization",
+        "laravel-validation-patterns",
+        "send-email",
+        "spatie-laravel-php"
+    ]
+}

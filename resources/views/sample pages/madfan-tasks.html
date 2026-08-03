@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mad Fan — Tasks</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --pitch: #0a0f0a;
+      --turf: #0d1a0d;
+      --line: #1a2e1a;
+      --flame: #e8ff00;
+      --ember: #ff4d00;
+      --white: #f5f5f0;
+      --muted: #6b7a6b;
+      --card: #111a11;
+      --border: #1f2e1f;
+      --x: #1d9bf0;
+      --tg: #229ed9;
+      --dc: #5865f2;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--pitch);
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(0deg, transparent 49.5%, rgba(255, 255, 255, 0.018) 49.5%, rgba(255, 255, 255, 0.018) 50.5%, transparent 50.5%),
+        linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.018) 49.5%, rgba(255, 255, 255, 0.018) 50.5%, transparent 50.5%);
+      background-size: 80px 80px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* HEADER */
+    header {
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10, 15, 10, 0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      color: var(--flame);
+    }
+
+    .logo span {
+      color: var(--white);
+    }
+
+    .pts-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+    }
+
+    .pts-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .pts-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: var(--flame);
+      line-height: 1;
+      transition: all 0.3s;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      padding: 48px 0 36px;
+    }
+
+    .page-eye {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--ember);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(42px, 8vw, 72px);
+      letter-spacing: 2px;
+      line-height: 0.95;
+    }
+
+    .page-sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 14px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    /* PROGRESS OVERVIEW */
+    .progress-bar-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .prog-stat {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .prog-stat-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      color: var(--flame);
+      line-height: 1;
+    }
+
+    .prog-stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .prog-divider {
+      width: 1px;
+      height: 48px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .prog-bar-section {
+      flex: 1;
+    }
+
+    .prog-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .prog-bar-track {
+      background: var(--line);
+      height: 6px;
+      position: relative;
+    }
+
+    .prog-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ember), var(--flame));
+      transition: width 0.6s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .prog-bar-marker {
+      position: absolute;
+      top: -4px;
+      width: 2px;
+      height: 14px;
+      background: var(--flame);
+      opacity: 0.4;
+    }
+
+    /* CATEGORY TABS */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 18px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      margin-bottom: -1px;
+    }
+
+    .tab:hover {
+      color: var(--white);
+    }
+
+    .tab.active {
+      color: var(--flame);
+      border-bottom-color: var(--flame);
+    }
+
+    /* TASK CARDS */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 48px;
+    }
+
+    .task-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+
+    .task-card:hover {
+      border-color: #2a3e2a;
+    }
+
+    .task-card.completed {
+      border-color: var(--flame);
+    }
+
+    .task-card.completed::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--flame);
+    }
+
+    .task-card.locked {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .task-main {
+      display: flex;
+      align-items: center;
+      padding: 20px 24px;
+      gap: 18px;
+      cursor: pointer;
+    }
+
+    .task-platform-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+      position: relative;
+    }
+
+    .task-platform-icon .platform-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--card);
+    }
+
+    .dot-x {
+      background: var(--x);
+    }
+
+    .dot-tg {
+      background: var(--tg);
+    }
+
+    .dot-dc {
+      background: var(--dc);
+    }
+
+    .dot-share {
+      background: var(--ember);
+    }
+
+    .task-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .task-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .task-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .task-pts {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      color: var(--flame);
+      line-height: 1;
+      text-align: right;
+    }
+
+    .task-pts-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 1px;
+    }
+
+    .task-status-icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .task-card.completed .task-status-icon {
+      background: var(--flame);
+      border-color: var(--flame);
+      color: var(--pitch);
+    }
+
+    /* TASK EXPANDED */
+    .task-expand {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 24px 24px 24px 84px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .task-expand.open {
+      display: block;
+    }
+
+    .task-steps {
+      margin-bottom: 20px;
+    }
+
+    .task-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .task-step:last-child {
+      border-bottom: none;
+    }
+
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      width: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .step-text a {
+      color: var(--flame);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(232, 255, 0, 0.3);
+    }
+
+    .step-text a:hover {
+      border-bottom-color: var(--flame);
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      border: none;
+    }
+
+    .btn-go {
+      background: var(--line);
+      color: var(--white);
+      border: 1px solid var(--border);
+    }
+
+    .btn-go:hover {
+      background: var(--border);
+    }
+
+    .btn-confirm {
+      background: var(--flame);
+      color: var(--pitch);
+      font-weight: 600;
+    }
+
+    .btn-confirm:hover {
+      background: #fff;
+    }
+
+    .btn-confirm:active {
+      transform: scale(0.97);
+    }
+
+    .btn-confirm:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-done {
+      background: transparent;
+      color: var(--flame);
+      border: 1px solid var(--flame);
+      cursor: default;
+    }
+
+    .confirm-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .confirm-check input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--flame);
+      cursor: pointer;
+    }
+
+    /* BONUS TASK — SHARE */
+    .share-preview {
+      background: var(--pitch);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--white);
+      line-height: 1.6;
+      position: relative;
+    }
+
+    .share-preview .share-tag {
+      color: var(--flame);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      background: var(--line);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--flame);
+      border-color: var(--flame);
+    }
+
+    /* COMPLETION FLASH */
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flash-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      color: var(--flame);
+      text-shadow: 0 0 40px rgba(232, 255, 0, 0.6);
+      opacity: 0;
+      transform: scale(0.7);
+      transition: none;
+    }
+
+    /* COMPLETED SECTION */
+    .completed-section {
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+      padding-top: 16px;
+    }
+
+    .completed-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    /* BONUS MULTIPLIER BANNER */
+    .bonus-banner {
+      background: linear-gradient(135deg, rgba(255, 77, 0, 0.12), rgba(232, 255, 0, 0.08));
+      border: 1px solid rgba(232, 255, 0, 0.2);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .bonus-icon {
+      font-size: 28px;
+    }
+
+    .bonus-text {
+      font-size: 13px;
+      color: var(--white);
+      line-height: 1.5;
+    }
+
+    .bonus-text strong {
+      color: var(--flame);
+    }
+
+    /* WEEK BADGE */
+    .week-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .week-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--flame);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.2;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .progress-bar-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .prog-divider {
+        width: 100%;
+        height: 1px;
+      }
+
+      .task-expand {
+        padding-left: 24px;
+      }
+
+      .task-right {
+        gap: 10px;
+      }
+
+      .task-pts {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">MAD<span>FAN</span></div>
+      <div class="pts-pill">
+        <div>
+          <div class="pts-label">YOUR POINTS</div>
+          <div class="pts-val" id="total-pts">350</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <div class="page-header">
+      <div class="page-eye">Season 01 · Week 1</div>
+      <div class="page-title">COMPLETE<br>YOUR TASKS</div>
+      <p class="page-sub">Each task earns you loyalty points. Finish all four this week to unlock the <strong
+          style="color:var(--flame)">Week 1 Bonus</strong> — an extra 500 pts.</p>
+    </div>
+
+    <!-- PROGRESS OVERVIEW -->
+    <div class="progress-bar-wrap">
+      <div class="prog-stat">
+        <div class="prog-stat-val" id="done-count">0</div>
+        <div class="prog-stat-label">DONE</div>
+      </div>
+      <div class="prog-divider"></div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">4</div>
+        <div class="prog-stat-label">TOTAL</div>
+      </div>
+      <div class="prog-divider"></div>
+      <div class="prog-bar-section">
+        <div class="prog-bar-label">
+          <span id="bar-left">0 / 4 tasks this week</span>
+          <span id="bar-right">+500 bonus at 4/4</span>
+        </div>
+        <div class="prog-bar-track">
+          <div class="prog-bar-fill" id="progress-fill" style="width:0%"></div>
+          <div class="prog-bar-marker" style="left:25%"></div>
+          <div class="prog-bar-marker" style="left:50%"></div>
+          <div class="prog-bar-marker" style="left:75%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BONUS BANNER -->
+    <div class="bonus-banner">
+      <div class="bonus-icon">⚡</div>
+      <div class="bonus-text">
+        <strong>Week 1 Multiplier: 2×</strong> — All points earned this week are doubled. Complete all 4 tasks to claim
+        the <strong>500pt completion bonus</strong> on top.
+      </div>
+    </div>
+
+    <!-- WEEK BADGE -->
+    <div class="week-badge">
+      <div class="week-dot"></div>
+      WEEK 1 · KICKOFF · 6 DAYS REMAINING
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="filterTasks('all', this)">ALL TASKS</button>
+      <button class="tab" onclick="filterTasks('pending', this)">PENDING</button>
+      <button class="tab" onclick="filterTasks('done', this)">COMPLETED</button>
+    </div>
+
+    <!-- TASK LIST -->
+    <div class="task-list" id="task-list">
+
+      <!-- TASK 1: Follow on X -->
+      <div class="task-card" id="task-x" data-pts="200" data-status="pending">
+        <div class="task-main" onclick="toggleTask('task-x')">
+          <div class="task-platform-icon">
+            𝕏
+            <div class="platform-dot dot-x"></div>
+          </div>
+          <div class="task-info">
+            <div class="task-name">Follow Mad Fan on X</div>
+            <div class="task-desc">Stay updated with the latest news, drops, and season announcements.</div>
+          </div>
+          <div class="task-right">
+            <div>
+              <div class="task-pts">200</div>
+              <div class="task-pts-label">POINTS</div>
+            </div>
+            <div class="task-status-icon" id="icon-task-x">○</div>
+          </div>
+        </div>
+        <div class="task-expand" id="expand-task-x">
+          <div class="task-steps">
+            <div class="task-step">
+              <div class="step-num">01</div>
+              <div class="step-text">Click the button below to open <a href="https://x.com/madfan"
+                  target="_blank">@MadFan on X</a>.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">02</div>
+              <div class="step-text">Hit the <strong style="color:var(--white)">Follow</strong> button on the profile
+                page.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">03</div>
+              <div class="step-text">Come back here and confirm below to claim your points.</div>
+            </div>
+          </div>
+          <div class="task-actions">
+            <a class="btn-action btn-go" href="https://x.com/madfan" target="_blank">↗ Open X Profile</a>
+            <div class="confirm-check">
+              <input type="checkbox" id="check-task-x" onchange="toggleConfirm('task-x')">
+              <label for="check-task-x" style="cursor:pointer">I've followed @MadFan on X</label>
+            </div>
+            <button class="btn-action btn-confirm" id="btn-task-x" disabled onclick="completeTask('task-x', 200)">CLAIM
+              200 PTS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TASK 2: Join Telegram -->
+      <div class="task-card" id="task-tg" data-pts="200" data-status="pending">
+        <div class="task-main" onclick="toggleTask('task-tg')">
+          <div class="task-platform-icon">
+            ✈️
+            <div class="platform-dot dot-tg"></div>
+          </div>
+          <div class="task-info">
+            <div class="task-name">Join the Mad Fan Telegram</div>
+            <div class="task-desc">Get real-time updates, early drops, and connect with the community.</div>
+          </div>
+          <div class="task-right">
+            <div>
+              <div class="task-pts">200</div>
+              <div class="task-pts-label">POINTS</div>
+            </div>
+            <div class="task-status-icon" id="icon-task-tg">○</div>
+          </div>
+        </div>
+        <div class="task-expand" id="expand-task-tg">
+          <div class="task-steps">
+            <div class="task-step">
+              <div class="step-num">01</div>
+              <div class="step-text">Click the button below to open the <a href="https://t.me/madfan"
+                  target="_blank">Mad Fan Telegram channel</a>.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">02</div>
+              <div class="step-text">Tap <strong style="color:var(--white)">Join Channel</strong> inside Telegram.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">03</div>
+              <div class="step-text">Return here and confirm below to receive your points.</div>
+            </div>
+          </div>
+          <div class="task-actions">
+            <a class="btn-action btn-go" href="https://t.me/madfan" target="_blank">↗ Open Telegram</a>
+            <div class="confirm-check">
+              <input type="checkbox" id="check-task-tg" onchange="toggleConfirm('task-tg')">
+              <label for="check-task-tg" style="cursor:pointer">I've joined the Telegram</label>
+            </div>
+            <button class="btn-action btn-confirm" id="btn-task-tg" disabled
+              onclick="completeTask('task-tg', 200)">CLAIM 200 PTS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TASK 3: Join Discord -->
+      <div class="task-card" id="task-dc" data-pts="200" data-status="pending">
+        <div class="task-main" onclick="toggleTask('task-dc')">
+          <div class="task-platform-icon">
+            🎮
+            <div class="platform-dot dot-dc"></div>
+          </div>
+          <div class="task-info">
+            <div class="task-name">Join the Mad Fan Discord</div>
+            <div class="task-desc">The home base. Weekly AMAs, fan debates, club channels, and exclusive roles.</div>
+          </div>
+          <div class="task-right">
+            <div>
+              <div class="task-pts">200</div>
+              <div class="task-pts-label">POINTS</div>
+            </div>
+            <div class="task-status-icon" id="icon-task-dc">○</div>
+          </div>
+        </div>
+        <div class="task-expand" id="expand-task-dc">
+          <div class="task-steps">
+            <div class="task-step">
+              <div class="step-num">01</div>
+              <div class="step-text">Click below to open the <a href="https://discord.gg/madfan" target="_blank">Mad Fan
+                  Discord server</a>.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">02</div>
+              <div class="step-text">Click <strong style="color:var(--white)">Accept Invite</strong> and complete the
+                onboarding in #welcome.</div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">03</div>
+              <div class="step-text">Come back and confirm to claim your points.</div>
+            </div>
+          </div>
+          <div class="task-actions">
+            <a class="btn-action btn-go" href="https://discord.gg/madfan" target="_blank">↗ Open Discord</a>
+            <div class="confirm-check">
+              <input type="checkbox" id="check-task-dc" onchange="toggleConfirm('task-dc')">
+              <label for="check-task-dc" style="cursor:pointer">I've joined the Discord</label>
+            </div>
+            <button class="btn-action btn-confirm" id="btn-task-dc" disabled
+              onclick="completeTask('task-dc', 200)">CLAIM 200 PTS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TASK 4: Share on X -->
+      <div class="task-card" id="task-share" data-pts="300" data-status="pending">
+        <div class="task-main" onclick="toggleTask('task-share')">
+          <div class="task-platform-icon">
+            📣
+            <div class="platform-dot dot-share"></div>
+          </div>
+          <div class="task-info">
+            <div class="task-name">Share Your Fan Passport on X</div>
+            <div class="task-desc">Post about Mad Fan. Bring more fans in. Earn bonus points.</div>
+          </div>
+          <div class="task-right">
+            <div>
+              <div class="task-pts">300</div>
+              <div class="task-pts-label">POINTS</div>
+            </div>
+            <div class="task-status-icon" id="icon-task-share">○</div>
+          </div>
+        </div>
+        <div class="task-expand" id="expand-task-share">
+          <div class="task-steps">
+            <div class="task-step">
+              <div class="step-num">01</div>
+              <div class="step-text">Copy the post below (or write your own — just include <strong
+                  style="color:var(--flame)">@MadFan</strong> and <strong style="color:var(--flame)">#MadFan</strong>).
+              </div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">02</div>
+              <div class="step-text">Post it publicly on X. Don't delete it — we may verify posts during the season.
+              </div>
+            </div>
+            <div class="task-step">
+              <div class="step-num">03</div>
+              <div class="step-text">Return here and confirm to earn your 300 points.</div>
+            </div>
+          </div>
+          <div class="share-preview">
+            <button class="copy-btn" onclick="copyPost()">COPY</button>
+            I just joined <span class="share-tag">@MadFan</span> — the platform that finally turns fan loyalty into
+            something real. 🟡⚽<br><br>
+            My loyalty is being tracked. My dedication is being rewarded.<br><br>
+            Join me → madfan.io <span class="share-tag">#MadFan</span> <span class="share-tag">#LoyaltyEconomy</span>
+          </div>
+          <div class="task-actions">
+            <a class="btn-action btn-go" id="tweet-btn" href="#" target="_blank" onclick="openTweet()">↗ Post on X</a>
+            <div class="confirm-check">
+              <input type="checkbox" id="check-task-share" onchange="toggleConfirm('task-share')">
+              <label for="check-task-share" style="cursor:pointer">I've posted on X</label>
+            </div>
+            <button class="btn-action btn-confirm" id="btn-task-share" disabled
+              onclick="completeTask('task-share', 300)">CLAIM 300 PTS</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /task-list -->
+
+  </div><!-- /wrap -->
+
+  <!-- COMPLETION FLASH -->
+  <div class="flash-overlay" id="flash-overlay">
+    <div class="flash-badge" id="flash-badge">+000 PTS</div>
+  </div>
+
+  <script>
+    let totalPoints = 350;
+    let completedCount = 0;
+    const TASK_IDS = ['task-x', 'task-tg', 'task-dc', 'task-share'];
+
+    function toggleTask(id) {
+      const card = document.getElementById(id);
+      if (card.dataset.status === 'done') return;
+      const expand = document.getElementById('expand-' + id);
+      const isOpen = expand.classList.contains('open');
+      // Close all
+      TASK_IDS.forEach(t => {
+        document.getElementById('expand-' + t).classList.remove('open');
+      });
+      if (!isOpen) expand.classList.add('open');
+    }
+
+    function toggleConfirm(id) {
+      const cb = document.getElementById('check-' + id);
+      const btn = document.getElementById('btn-' + id);
+      btn.disabled = !cb.checked;
+    }
+
+    function completeTask(id, pts) {
+      const card = document.getElementById(id);
+      if (card.dataset.status === 'done') return;
+
+      card.dataset.status = 'done';
+      card.classList.add('completed');
+
+      // Update status icon
+      const icon = document.getElementById('icon-' + id);
+      icon.textContent = '✓';
+
+      // Swap button
+      const btn = document.getElementById('btn-' + id);
+      btn.className = 'btn-action btn-done';
+      btn.textContent = '✓ CLAIMED';
+      btn.onclick = null;
+
+      // Close expand
+      document.getElementById('expand-' + id).classList.remove('open');
+
+      // Add points
+      totalPoints += pts;
+      completedCount++;
+      animatePoints(pts);
+      updateProgress();
+
+      // Check bonus
+      if (completedCount === 4) {
+        setTimeout(() => awardBonus(), 1200);
+      }
+    }
+
+    function animatePoints(pts) {
+      // Flash
+      const flash = document.getElementById('flash-overlay');
+      const badge = document.getElementById('flash-badge');
+      badge.textContent = '+' + pts + ' PTS';
+      badge.style.transition = 'none';
+      badge.style.opacity = '0';
+      badge.style.transform = 'scale(0.6)';
+      flash.style.pointerEvents = 'none';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          badge.style.transition = 'opacity 0.3s, transform 0.3s';
+          badge.style.opacity = '1';
+          badge.style.transform = 'scale(1)';
+          setTimeout(() => {
+            badge.style.opacity = '0';
+            badge.style.transform = 'scale(1.2)';
+          }, 900);
+        });
+      });
+
+      // Counter
+      const el = document.getElementById('total-pts');
+      const start = parseInt(el.textContent);
+      const end = totalPoints;
+      let current = start;
+      const step = Math.ceil((end - start) / 20);
+      const timer = setInterval(() => {
+        current = Math.min(current + step, end);
+        el.textContent = current;
+        if (current >= end) clearInterval(timer);
+      }, 30);
+    }
+
+    function awardBonus() {
+      totalPoints += 500;
+      completedCount = 4;
+
+      const bonusBanner = document.createElement('div');
+      bonusBanner.style.cssText = `
+      background: linear-gradient(135deg, rgba(232,255,0,0.12), rgba(232,255,0,0.04));
+      border: 1px solid var(--flame);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    `;
+      bonusBanner.innerHTML = `
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#e8ff00;letter-spacing:2px">🏆 WEEK 1 COMPLETE</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6b7a6b;margin-top:6px">+500 BONUS POINTS AWARDED · ALL TASKS DONE</div>
+    `;
+      const style = document.createElement('style');
+      style.textContent = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`;
+      document.head.appendChild(style);
+      document.getElementById('task-list').prepend(bonusBanner);
+      animatePoints(500);
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const fill = document.getElementById('progress-fill');
+      const doneEl = document.getElementById('done-count');
+      const barLeft = document.getElementById('bar-left');
+      const barRight = document.getElementById('bar-right');
+
+      fill.style.width = (completedCount / 4 * 100) + '%';
+      doneEl.textContent = completedCount;
+      barLeft.textContent = completedCount + ' / 4 tasks this week';
+
+      if (completedCount >= 4) {
+        barRight.textContent = '✓ Bonus unlocked!';
+        barRight.style.color = 'var(--flame)';
+      }
+    }
+
+    function filterTasks(filter, tabEl) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tabEl.classList.add('active');
+
+      TASK_IDS.forEach(id => {
+        const card = document.getElementById(id);
+        const status = card.dataset.status;
+        if (filter === 'all') card.style.display = '';
+        else if (filter === 'pending') card.style.display = status === 'pending' ? '' : 'none';
+        else if (filter === 'done') card.style.display = status === 'done' ? '' : 'none';
+      });
+    }
+
+    function copyPost() {
+      const text = `I just joined @MadFan — the platform that finally turns fan loyalty into something real. 🟡⚽\n\nMy loyalty is being tracked. My dedication is being rewarded.\n\nJoin me → madfan.io #MadFan #LoyaltyEconomy`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = 'COPIED!';
+        btn.style.color = 'var(--flame)';
+        setTimeout(() => { btn.textContent = 'COPY'; btn.style.color = ''; }, 2000);
+      });
+    }
+
+    function openTweet() {
+      const text = encodeURIComponent(`I just joined @MadFan — the platform that finally turns fan loyalty into something real. 🟡⚽\n\nMy loyalty is being tracked. My dedication is being rewarded.\n\nJoin me → madfan.io #MadFan #LoyaltyEconomy`);
+      window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+    }
+  </script>
+</body>
+
+</html>

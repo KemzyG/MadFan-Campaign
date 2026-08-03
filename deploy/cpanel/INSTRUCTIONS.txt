@@ -1,0 +1,230 @@
+MadFan — cPanel deploy
+======================
+
+Recommended layout
+------------------
+  /home/USER/
+    laravel/                 ← this whole repo (or "backend")
+    public_html/             ← web root only
+      index.php              ← from deploy/cpanel/public_html/
+      .htaccess              ← from deploy/cpanel/public_html/
+      build/                 ← copy from laravel/public/build
+      css/ js/ fonts/ …      ← Filament + static assets from laravel/public/
+      storage -> symlink     ← to ../laravel/storage/app/public (avatars)
+
+If you cannot change the document root, upload the repo into public_html
+and keep the root .htaccess (rewrites into public/). Prefer the layout above.
+
+
+A. Before upload (on your PC)
+-----------------------------
+1. npm run build
+2. php artisan filament:assets
+3. Confirm public/build/manifest.json exists
+4. Package for upload (recommended):
+
+   php artisan app:prepare-cpanel-deploy
+
+   Creates storage/app/cpanel-deploy.zip with vendor + built assets.
+
+   Or zip manually — do NOT upload node_modules if build/ is included.
+
+
+B. cPanel setup
+---------------
+1. MySQL Databases
+   - Create database + user, grant ALL
+   - Host is usually localhost
+
+2. Domains → your domain → Document Root = public_html
+   (admin subdomain uses the SAME public_html)
+
+3. PHP version: 8.3 or 8.4 (MultiPHP Manager)
+   Enable extensions: intl, mbstring, openssl, pdo_mysql, tokenizer,
+   xml, ctype, json, bcmath, fileinfo, curl, zip, gd (or imagick), gmp
+
+   gmp is required for /api PASETO auth.
+
+4. SSL: AutoSSL / Let's Encrypt ON
+
+
+C. Upload application
+---------------------
+Option 1 — app outside web root (best):
+  Extract/upload repo to /home/USER/app/  (or laravel/)
+  Copy deploy/cpanel/public_html/index.php → public_html/index.php
+  Copy deploy/cpanel/public_html/.htaccess → public_html/.htaccess
+  IMPORTANT: do NOT use the repo root .htaccess here (that one rewrites to public/
+  and causes HTTP 500 when public_html has no public/ folder).
+  Edit public_html/index.php if folder is not named "app", "laravel", or "backend"
+  Run post-deploy.sh (syncs build + Filament assets to public_html)
+
+Option 2 — repo inside public_html (simpler File Manager):
+  Upload so public_html contains artisan, app/, public/, .htaccess (ROOT one —
+  the file that rewrites ^(.*)$ to public/$1)
+  Document root stays public_html; root .htaccess routes to public/
+
+
+D. Environment
+--------------
+1. Copy .env.cpanel.example → laravel/.env
+2. Set at least:
+
+APP_NAME=MadFan
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://YOUR-DOMAIN.com
+FORCE_HTTPS=true
+APP_KEY=   ← php artisan key:generate --show
+
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_DATABASE=cpanel_db_name
+DB_USERNAME=cpanel_db_user
+DB_PASSWORD=…
+
+SESSION_DRIVER=database
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true
+CACHE_STORE=database
+QUEUE_CONNECTION=sync
+LOG_LEVEL=error
+FILESYSTEM_DISK=local
+
+FILAMENT_ADMIN_EMAIL=…
+FILAMENT_ADMIN_PASSWORD=…   ← strong password
+
+CORS_ALLOWED_ORIGINS=https://YOUR-DOMAIN.com   ← never *
+
+SOCIAL_ALLOW_MOCK_VERIFICATION=false
+TWITTER_*/DISCORD_*/TELEGRAM_* redirect URIs must use https://YOUR-DOMAIN.com
+(If social tokens are unset, verification fails closed — do not enable mock in production.)
+
+ADMIN_DOMAIN=admin.YOUR-DOMAIN.com   ← same docroot; console at https://mod…/
+
+
+Post-deploy security gate (must pass)
+-------------------------------------
+□ APP_ENV=production and APP_DEBUG=false
+□ APP_KEY set and unique to this environment
+□ CORS_ALLOWED_ORIGINS lists exact https origins (no *)
+□ SESSION_SECURE_COOKIE=true and SESSION_ENCRYPT=true
+□ SOCIAL_ALLOW_MOCK_VERIFICATION=false
+□ Social API tokens present if Season tasks require live verification
+□ storage/app/paseto_symmetric.key exists and is not world-readable
+□ php artisan config:cache / route:cache / view:cache succeeded
+□ / returns X-Frame-Options, X-Content-Type-Options, Content-Security-Policy
+
+
+E. Database
+-----------
+Option A — phpMyAdmin import (no SSH):
+  Import database/cpanel/madfan_schema.sql
+  Then run migrations (Terminal or cpanel-migrate.php) for newer columns
+  e.g. proof_image_path on user_task_progress.
+
+Option B — migrations only (SSH/Terminal):
+  php artisan migrate --force
+
+
+F. Terminal (cPanel → Terminal or SSH)
+--------------------------------------
+cd ~/laravel
+
+bash deploy/cpanel/post-deploy.sh
+
+Or manually:
+  composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+  php artisan key:generate --force          # first deploy only
+  php artisan migrate --force
+  php artisan storage:link
+  php artisan filament:assets
+  php artisan optimize
+
+If you did NOT upload public/build from your PC:
+  npm ci --ignore-scripts && npm run build
+  then re-run post-deploy.sh
+
+
+G. Storage / uploads
+--------------------
+php artisan storage:link
+
+Fan avatars:
+  storage/app/public/avatars → public/storage/avatars (symlink required)
+
+Task proof screenshots:
+  storage/app/private/task-proofs (NOT in public/storage — auth-only URLs)
+
+If symlink is blocked on cPanel:
+  - symlink public_html/storage → ../laravel/storage/app/public
+  - or uncomment the storage rewrite in public_html/.htaccess
+
+
+H. No-SSH fallback (one-time)
+-------------------------------
+1. Set DEPLOY_MIGRATE_SECRET in .env
+   Also set FILAMENT_ADMIN_EMAIL / FILAMENT_ADMIN_PASSWORD (admin seed)
+2. Copy public/cpanel-migrate.php to public_html/
+3. Visit https://YOUR-DOMAIN.com/cpanel-migrate.php?secret=YOUR_SECRET
+   (runs migrate + FilamentAdminSeeder + storage:link + optimize)
+4. DELETE cpanel-migrate.php and remove DEPLOY_MIGRATE_SECRET from .env
+
+
+I. Admin subdomain (Filament + Inertia console)
+------------------------------------
+1. cPanel → Domains → Create subdomain mod.your-domain.com
+   Point document root to the SAME public_html as the main site.
+2. In laravel/.env:
+
+ADMIN_DOMAIN=mod.your-domain.com
+FORCE_HTTPS=true
+
+(Do not set ADMIN_APP_PATH — the console mounts at the subdomain root.)
+
+3. php artisan optimize:clear && php artisan optimize
+
+URLs:
+  https://mod.your-domain.com/          ← Inertia admin dashboard
+  https://mod.your-domain.com/login     ← Inertia admin login
+  https://mod.your-domain.com/admin     ← Filament
+
+Fan site stays on https://your-domain.com
+Legacy https://mod.your-domain.com/app/... redirects to the root paths.
+
+
+J. Permissions
+--------------
+storage/ and bootstrap/cache/ writable by the web user:
+
+chmod -R ug+rwx storage bootstrap/cache
+
+
+K. Cron (optional)
+------------------
+* * * * * cd /home/USER/laravel && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
+
+For database queues later:
+
+* * * * * cd /home/USER/laravel && /usr/local/bin/php artisan queue:work --stop-when-empty --max-time=50 >> /dev/null 2>&1
+
+
+L. Smoke test
+-------------
+https://YOUR-DOMAIN.com/up
+https://YOUR-DOMAIN.com/                    (fan campaign)
+https://YOUR-DOMAIN.com/passport            (avatar upload after login)
+https://YOUR-DOMAIN.com/tasks               (proof screenshot submit)
+https://YOUR-DOMAIN.com/admin               (Filament on main host if no ADMIN_DOMAIN)
+https://mod.YOUR-DOMAIN.com/                (Inertia admin when ADMIN_DOMAIN set)
+https://mod.YOUR-DOMAIN.com/login
+https://mod.YOUR-DOMAIN.com/admin           (Filament on admin host)
+
+
+M. After each code update
+-------------------------
+1. Upload changed files (or git pull)
+2. If frontend changed: npm run build locally → run post-deploy.sh
+3. cd ~/laravel && bash deploy/cpanel/post-deploy.sh
+
+Keep storage/app/paseto_symmetric.key across deploys.

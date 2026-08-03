@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mad Fan — Daily Claim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --pitch: #0a0f0a;
+    --turf: #0d1a0d;
+    --line: #1a2e1a;
+    --flame: #e8ff00;
+    --ember: #ff4d00;
+    --white: #f5f5f0;
+    --muted: #6b7a6b;
+    --card: #111a11;
+    --border: #1f2e1f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--pitch);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(0deg, transparent 49.5%, rgba(255,255,255,0.018) 49.5%, rgba(255,255,255,0.018) 50.5%, transparent 50.5%),
+      linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,0.018) 49.5%, rgba(255,255,255,0.018) 50.5%, transparent 50.5%);
+    background-size: 80px 80px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: rgba(10,15,10,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 860px; margin: 0 auto; padding: 0 20px;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--flame); }
+  .logo span { color: var(--white); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .pts-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    padding: 8px 16px;
+  }
+  .pts-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .pts-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--flame); line-height: 1; }
+  .streak-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,77,0,0.08); border: 1px solid rgba(255,77,0,0.3);
+    padding: 8px 14px;
+  }
+  .streak-fire { font-size: 16px; }
+  .streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--ember); line-height: 1; }
+  .streak-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  /* PAGE HEADER */
+  .page-header { padding: 48px 0 36px; }
+  .page-eye { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ember); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 9vw, 80px); letter-spacing: 2px; line-height: 0.95; }
+  .page-sub { font-size: 14px; color: var(--muted); margin-top: 14px; max-width: 500px; line-height: 1.6; }
+
+  /* NEXT CLAIM TIMER */
+  .timer-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+  }
+  .timer-left { flex: 1; }
+  .timer-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 6px; }
+  .timer-digits {
+    display: flex; gap: 4px; align-items: center;
+  }
+  .t-seg {
+    background: var(--line);
+    padding: 8px 14px;
+    text-align: center;
+  }
+  .t-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--white); line-height: 1; }
+  .t-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .t-colon { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--muted); padding-bottom: 8px; }
+  .timer-right { text-align: right; }
+  .today-pts-val { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--flame); line-height: 1; }
+  .today-pts-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+
+  /* BIG CLAIM BUTTON */
+  .claim-zone {
+    text-align: center;
+    padding: 48px 0 36px;
+    position: relative;
+  }
+  .claim-ring {
+    position: relative;
+    width: 200px; height: 200px;
+    margin: 0 auto 28px;
+  }
+  .claim-ring svg {
+    position: absolute; inset: 0;
+    transform: rotate(-90deg);
+  }
+  .claim-ring-track { fill: none; stroke: var(--line); stroke-width: 4; }
+  .claim-ring-fill {
+    fill: none;
+    stroke: url(#ringGrad);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 565;
+    stroke-dashoffset: 565;
+    transition: stroke-dashoffset 1s ease;
+  }
+  .claim-btn {
+    position: absolute; inset: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .claim-btn:hover:not(:disabled) {
+    background: var(--line);
+    border-color: var(--flame);
+  }
+  .claim-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+  .claim-btn-icon { font-size: 32px; margin-bottom: 4px; }
+  .claim-btn-text { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--flame); }
+  .claim-btn-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .claim-btn.claimed { background: rgba(232,255,0,0.06); border-color: var(--flame); }
+  .claim-btn.claimed .claim-btn-text { color: var(--flame); }
+
+  .claim-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  /* WEEK CALENDAR */
+  .week-section { margin-bottom: 40px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; }
+  .section-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .day-cell {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px 6px 12px;
+    text-align: center;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .day-cell.past {
+    opacity: 0.5;
+  }
+  .day-cell.claimed-day {
+    border-color: var(--flame);
+    background: rgba(232,255,0,0.05);
+  }
+  .day-cell.claimed-day::after {
+    content: '✓';
+    position: absolute; top: 5px; right: 7px;
+    font-size: 9px; color: var(--flame);
+  }
+  .day-cell.today-cell {
+    border-color: var(--ember);
+  }
+  .day-cell.today-cell.claimed-day {
+    border-color: var(--flame);
+  }
+  .day-cell.future { opacity: 0.3; }
+  .day-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
+  .day-num-big { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; color: var(--white); }
+  .day-cell.claimed-day .day-num-big { color: var(--flame); }
+  .day-pts-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 4px; }
+  .day-cell.claimed-day .day-pts-tag { color: rgba(232,255,0,0.6); }
+  .today-marker {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--ember);
+  }
+  .day-cell.claimed-day .today-marker { background: var(--flame); }
+
+  /* STREAK MILESTONES */
+  .milestones { margin-bottom: 40px; }
+  .milestone-track {
+    position: relative;
+    padding: 24px 0 12px;
+  }
+  .milestone-line {
+    position: absolute;
+    top: 36px; left: 0; right: 0; height: 2px;
+    background: var(--border);
+  }
+  .milestone-fill {
+    position: absolute;
+    top: 36px; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--ember), var(--flame));
+    transition: width 0.8s ease;
+  }
+  .milestones-row {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+  }
+  .milestone {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; flex: 1;
+  }
+  .milestone-dot {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    background: var(--pitch);
+    border-radius: 0;
+    position: relative; z-index: 1;
+    transition: all 0.3s;
+  }
+  .milestone.reached .milestone-dot {
+    background: var(--flame);
+    border-color: var(--flame);
+  }
+  .milestone.current .milestone-dot {
+    border-color: var(--ember);
+    box-shadow: 0 0 12px rgba(255,77,0,0.4);
+  }
+  .milestone-day { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--muted); margin-top: 8px; }
+  .milestone.reached .milestone-day { color: var(--flame); }
+  .milestone-reward { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-align: center; max-width: 72px; line-height: 1.4; }
+  .milestone.reached .milestone-reward { color: rgba(232,255,0,0.6); }
+
+  /* MULTIPLIER TABLE */
+  .mult-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .mult-cell {
+    background: var(--card);
+    padding: 18px 16px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+  .mult-cell.active { background: rgba(232,255,0,0.06); }
+  .mult-streak { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
+  .mult-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--white); line-height: 1; }
+  .mult-cell.active .mult-val { color: var(--flame); }
+  .mult-pts { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .mult-cell.active .mult-pts { color: rgba(232,255,0,0.5); }
+  .active-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--pitch);
+    background: var(--flame);
+    padding: 2px 6px; letter-spacing: 1px;
+    display: inline-block; margin-top: 6px;
+  }
+
+  /* SEASON STREAK HISTORY */
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-bottom: 40px;
+  }
+  .history-week { }
+  .history-week-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: var(--muted);
+    letter-spacing: 1px; text-align: center; margin-bottom: 4px;
+  }
+  .history-days { display: flex; flex-direction: column; gap: 3px; }
+  .h-day {
+    height: 10px;
+    background: var(--line);
+    transition: background 0.3s;
+  }
+  .h-day.h-claimed { background: var(--flame); opacity: 0.7; }
+  .h-day.h-missed { background: var(--ember); opacity: 0.3; }
+  .h-day.h-future { background: var(--line); opacity: 0.3; }
+
+  /* CLAIM SUCCESS STATE */
+  .success-ring {
+    position: absolute; inset: 0;
+    border: 2px solid var(--flame);
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(1.1);
+    transition: all 0.4s;
+  }
+  .success-ring.show { opacity: 1; transform: scale(1); }
+
+  /* FLASH */
+  .flash-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .flash-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px; color: var(--flame);
+    text-shadow: 0 0 60px rgba(232,255,0,0.5);
+    opacity: 0; transform: scale(0.6);
+  }
+
+  @media (max-width: 600px) {
+    .timer-block { flex-direction: column; align-items: flex-start; }
+    .timer-right { text-align: left; }
+    .mult-grid { grid-template-columns: repeat(2, 1fr); }
+    .history-grid { grid-template-columns: repeat(4, 1fr); }
+    .week-grid { gap: 4px; }
+    .day-cell { padding: 10px 4px 8px; }
+    .day-num-big { font-size: 22px; }
+    .header-right { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">MAD<span>FAN</span></div>
+    <div class="header-right">
+      <div class="streak-pill">
+        <div class="streak-fire">🔥</div>
+        <div>
+          <div class="streak-num" id="streak-num">4</div>
+          <div class="streak-label">DAY STREAK</div>
+        </div>
+      </div>
+      <div class="pts-pill">
+        <div>
+          <div class="pts-label">TOTAL PTS</div>
+          <div class="pts-val" id="total-pts">1,350</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <div class="page-eye">Season 01 · Daily Engagement</div>
+    <div class="page-title">DAILY<br>CLAIM</div>
+    <p class="page-sub">Show up every day. Your streak multiplies your points. Miss a day and it resets — but your total never goes backwards.</p>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-block">
+    <div class="timer-left">
+      <div class="timer-eyebrow">NEXT CLAIM RESETS IN</div>
+      <div class="timer-digits">
+        <div class="t-seg"><div class="t-val" id="t-h">14</div><div class="t-label">HRS</div></div>
+        <div class="t-colon">:</div>
+        <div class="t-seg"><div class="t-val" id="t-m">32</div><div class="t-label">MIN</div></div>
+        <div class="t-colon">:</div>
+        <div class="t-seg"><div class="t-val" id="t-s">07</div><div class="t-label">SEC</div></div>
+      </div>
+    </div>
+    <div class="timer-right">
+      <div class="today-pts-val" id="today-pts-display">+100</div>
+      <div class="today-pts-label">PTS TODAY</div>
+    </div>
+  </div>
+
+  <!-- BIG CLAIM BUTTON -->
+  <div class="claim-zone">
+    <div class="claim-ring" id="claim-ring">
+      <svg viewBox="0 0 200 200" width="200" height="200">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#ff4d00"/>
+            <stop offset="100%" style="stop-color:#e8ff00"/>
+          </linearGradient>
+        </defs>
+        <circle class="claim-ring-track" cx="100" cy="100" r="90"/>
+        <circle class="claim-ring-fill" id="ring-fill" cx="100" cy="100" r="90"/>
+      </svg>
+      <button class="claim-btn" id="claim-btn" onclick="doClaim()">
+        <div class="claim-btn-icon" id="claim-icon">⚡</div>
+        <div class="claim-btn-text" id="claim-text">CLAIM</div>
+        <div class="claim-btn-sub" id="claim-sub">+100 PTS TODAY</div>
+      </button>
+    </div>
+    <div class="claim-hint" id="claim-hint">TAP TO CLAIM YOUR DAILY POINTS</div>
+  </div>
+
+  <!-- THIS WEEK -->
+  <div class="week-section">
+    <div class="section-head">
+      <div class="section-title">THIS WEEK</div>
+      <div class="section-sub">WEEK 1 OF 8</div>
+    </div>
+    <div class="week-grid" id="week-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- STREAK MILESTONES -->
+  <div class="milestones">
+    <div class="section-head">
+      <div class="section-title">STREAK MILESTONES</div>
+      <div class="section-sub">CURRENT: <span id="streak-milestone-label" style="color:var(--flame)">4 DAYS</span></div>
+    </div>
+    <div class="milestone-track">
+      <div class="milestone-line"></div>
+      <div class="milestone-fill" id="milestone-fill"></div>
+      <div class="milestones-row" id="milestones-row">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTIPLIER TABLE -->
+  <div>
+    <div class="section-head" style="margin-bottom:14px">
+      <div class="section-title">POINT MULTIPLIERS</div>
+      <div class="section-sub">BASE: 50 PTS/DAY</div>
+    </div>
+    <div class="mult-grid" id="mult-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- SEASON HEATMAP -->
+  <div style="margin-top:40px;margin-bottom:60px">
+    <div class="section-head" style="margin-bottom:14px">
+      <div class="section-title">SEASON HISTORY</div>
+      <div class="section-sub">8-WEEK VIEW</div>
+    </div>
+    <div class="history-grid" id="history-grid">
+      <!-- Populated by JS -->
+    </div>
+    <div style="display:flex;gap:16px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:12px;height:12px;background:var(--flame);opacity:0.7"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">CLAIMED</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:12px;height:12px;background:var(--ember);opacity:0.3"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">MISSED</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:12px;height:12px;background:var(--line);opacity:0.3"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">UPCOMING</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FLASH -->
+<div class="flash-overlay" id="flash-overlay">
+  <div class="flash-badge" id="flash-badge">+100 PTS</div>
+</div>
+
+<script>
+  // STATE
+  let streak = 4;
+  let totalPoints = 1350;
+  let todayClaimed = false;
+  const BASE_PTS = 50;
+
+  const DAYS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const DAY_PTS = [50, 50, 75, 75, 100, 100, 150];
+
+  // This week: Mon-Thu claimed, Fri = today, Sat-Sun future
+  const weekStatus = ['claimed','claimed','claimed','claimed','today','future','future'];
+
+  const MILESTONES = [
+    { day: 1,  pts: '+50',   label: 'STARTER',    },
+    { day: 3,  pts: '+75',   label: '1.5× MULTI', },
+    { day: 7,  pts: '+500',  label: '7-DAY BONUS' },
+    { day: 14, pts: '2×',    label: '2× MULTI'    },
+    { day: 30, pts: '3×',    label: '3× LEGEND'   },
+  ];
+
+  const MULTIPLIERS = [
+    { label: 'DAY 1–2',  mult: '1×',   pts: '50 PTS',  active: false },
+    { label: 'DAY 3–6',  mult: '1.5×', pts: '75 PTS',  active: true  },
+    { label: 'DAY 7–13', mult: '2×',   pts: '100 PTS', active: false },
+    { label: 'DAY 14+',  mult: '3×',   pts: '150 PTS', active: false },
+  ];
+
+  // Build week grid
+  function buildWeekGrid() {
+    const grid = document.getElementById('week-grid');
+    grid.innerHTML = '';
+    weekStatus.forEach((status, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      if (status === 'claimed') cell.classList.add('claimed-day');
+      if (status === 'today') { cell.classList.add('today-cell'); if (todayClaimed) cell.classList.add('claimed-day'); }
+      if (status === 'future') cell.classList.add('future');
+      if (status === 'past')   cell.classList.add('past');
+
+      const isToday = status === 'today';
+      cell.innerHTML = `
+        <div class="day-name">${DAYS[i]}</div>
+        <div class="day-num-big">${i + 1}</div>
+        <div class="day-pts-tag">+${DAY_PTS[i]}</div>
+        ${isToday ? '<div class="today-marker"></div>' : ''}
+      `;
+      grid.appendChild(cell);
+    });
+  }
+
+  // Build milestone track
+  function buildMilestones() {
+    const row = document.getElementById('milestones-row');
+    row.innerHTML = '';
+    const fill = document.getElementById('milestone-fill');
+
+    // Find progress
+    const maxDay = MILESTONES[MILESTONES.length - 1].day;
+    let progressPct = Math.min((streak / maxDay) * 100, 100);
+    fill.style.width = progressPct + '%';
+
+    MILESTONES.forEach(m => {
+      const reached = streak >= m.day;
+      const current = streak >= m.day && (MILESTONES.indexOf(m) === MILESTONES.length - 1 || streak < MILESTONES[MILESTONES.indexOf(m) + 1].day);
+      const div = document.createElement('div');
+      div.className = 'milestone' + (reached ? ' reached' : '') + (current ? ' current' : '');
+      div.innerHTML = `
+        <div class="milestone-dot"></div>
+        <div class="milestone-day">D${m.day}</div>
+        <div class="milestone-reward">${m.pts}<br>${m.label}</div>
+      `;
+      row.appendChild(div);
+    });
+  }
+
+  // Build multiplier table
+  function buildMultipliers() {
+    const grid = document.getElementById('mult-grid');
+    grid.innerHTML = '';
+    MULTIPLIERS.forEach(m => {
+      const cell = document.createElement('div');
+      cell.className = 'mult-cell' + (m.active ? ' active' : '');
+      cell.innerHTML = `
+        <div class="mult-streak">${m.label}</div>
+        <div class="mult-val">${m.mult}</div>
+        <div class="mult-pts">${m.pts} / day</div>
+        ${m.active ? '<div class="active-tag">ACTIVE</div>' : ''}
+      `;
+      grid.appendChild(cell);
+    });
+  }
+
+  // Build season heatmap
+  function buildHistory() {
+    const grid = document.getElementById('history-grid');
+    grid.innerHTML = '';
+    for (let w = 0; w < 8; w++) {
+      const week = document.createElement('div');
+      week.className = 'history-week';
+      week.innerHTML = `<div class="history-week-label">W${w + 1}</div><div class="history-days" id="hw-${w}"></div>`;
+      grid.appendChild(week);
+    }
+    // Fill week 1: days 1-4 claimed, day 5 = today
+    const hw0 = document.getElementById('hw-0');
+    [1,2,3,4,5,6,7].forEach((d, i) => {
+      const day = document.createElement('div');
+      day.className = 'h-day';
+      if (i < 4) day.classList.add('h-claimed');
+      else if (i === 4) day.classList.add(todayClaimed ? 'h-claimed' : 'h-future');
+      else day.classList.add('h-future');
+      hw0.appendChild(day);
+    });
+    // Weeks 2-8: all future
+    for (let w = 1; w < 8; w++) {
+      const hw = document.getElementById(`hw-${w}`);
+      for (let d = 0; d < 7; d++) {
+        const day = document.createElement('div');
+        day.className = 'h-day h-future';
+        hw.appendChild(day);
+      }
+    }
+  }
+
+  // Countdown timer
+  function startTimer() {
+    // Set to midnight rollover (14h 32m 7s from now as demo)
+    let h = 14, m = 32, s = 7;
+    setInterval(() => {
+      if (todayClaimed) { s--; if (s < 0) { s = 59; m--; if (m < 0) { m = 59; h--; if (h < 0) h = 23; } } }
+      document.getElementById('t-h').textContent = String(h).padStart(2, '0');
+      document.getElementById('t-m').textContent = String(m).padStart(2, '0');
+      document.getElementById('t-s').textContent = String(s).padStart(2, '0');
+    }, 1000);
+  }
+
+  // Animate ring on load
+  function animateRing(pct) {
+    const circumference = 565;
+    const offset = circumference - (pct / 100) * circumference;
+    setTimeout(() => {
+      document.getElementById('ring-fill').style.strokeDashoffset = offset;
+    }, 300);
+  }
+
+  // Claim
+  function doClaim() {
+    if (todayClaimed) return;
+    todayClaimed = true;
+    streak++;
+    const earned = DAY_PTS[4]; // Friday = index 4
+    totalPoints += earned;
+
+    // Update streak
+    document.getElementById('streak-num').textContent = streak;
+
+    // Animate points
+    animatePointsCounter(totalPoints - earned, totalPoints);
+    flashPoints(earned);
+
+    // Update button
+    const btn = document.getElementById('claim-btn');
+    btn.classList.add('claimed');
+    btn.disabled = true;
+    document.getElementById('claim-icon').textContent = '✓';
+    document.getElementById('claim-text').textContent = 'CLAIMED';
+    document.getElementById('claim-sub').textContent = 'COME BACK TOMORROW';
+    document.getElementById('claim-hint').textContent = 'SEE YOU TOMORROW · KEEP YOUR STREAK ALIVE';
+
+    // Ring to full
+    animateRing(100);
+
+    // Rebuild components
+    weekStatus[4] = 'claimed';
+    buildWeekGrid();
+    buildMilestones();
+    buildHistory();
+
+    // Streak bonus check
+    if (streak === 7) {
+      setTimeout(() => showStreakBonus(), 1500);
+    }
+  }
+
+  function animatePointsCounter(from, to) {
+    const el = document.getElementById('total-pts');
+    let cur = from;
+    const step = Math.ceil((to - from) / 20);
+    const t = setInterval(() => {
+      cur = Math.min(cur + step, to);
+      el.textContent = cur.toLocaleString();
+      if (cur >= to) clearInterval(t);
+    }, 30);
+  }
+
+  function flashPoints(pts) {
+    const overlay = document.getElementById('flash-overlay');
+    const badge = document.getElementById('flash-badge');
+    badge.textContent = '+' + pts + ' PTS';
+    badge.style.transition = 'none';
+    badge.style.opacity = '0';
+    badge.style.transform = 'scale(0.6)';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      badge.style.transition = 'opacity 0.3s, transform 0.3s';
+      badge.style.opacity = '1';
+      badge.style.transform = 'scale(1)';
+      setTimeout(() => {
+        badge.style.transition = 'opacity 0.5s, transform 0.5s';
+        badge.style.opacity = '0';
+        badge.style.transform = 'scale(1.3)';
+      }, 900);
+    }));
+  }
+
+  function showStreakBonus() {
+    totalPoints += 500;
+    const banner = document.createElement('div');
+    banner.style.cssText = `
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:var(--flame);color:var(--pitch);
+      font-family:'Bebas Neue',sans-serif;font-size:20px;
+      letter-spacing:2px;padding:16px 32px;z-index:200;
+      animation:slideUp 0.4s ease;white-space:nowrap;
+    `;
+    banner.textContent = '🔥 7-DAY STREAK! +500 BONUS POINTS';
+    const style = document.createElement('style');
+    style.textContent = `@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`;
+    document.head.appendChild(style);
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 4000);
+    animatePointsCounter(totalPoints - 500, totalPoints);
+  }
+
+  // Init ring based on day progress (4/7 days done)
+  function initRing() {
+    animateRing((streak / 7) * 100);
+  }
+
+  // Boot
+  buildWeekGrid();
+  buildMilestones();
+  buildMultipliers();
+  buildHistory();
+  startTimer();
+  initRing();
+</script>
+</body>
+</html>

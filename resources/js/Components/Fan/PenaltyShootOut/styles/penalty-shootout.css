@@ -1,0 +1,97 @@
+/* Module-scoped HUD chrome. Shared tokens still come from madfan.css .pso-* rules. */
+
+.pso-pause,
+.pso-settings {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 10, 8, 0.62);
+    backdrop-filter: blur(4px);
+    z-index: 20;
+    pointer-events: auto;
+}
+
+.pso-pause-panel,
+.pso-settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 220px;
+    padding: 18px;
+    border: 1px solid rgba(245, 245, 240, 0.18);
+    background: rgba(12, 18, 14, 0.88);
+}
+
+.pso-pause-panel h2,
+.pso-settings-panel h2 {
+    margin: 0 0 6px;
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--flame, #e8ff00);
+}
+
+.pso-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted, #9aa39a);
+    text-transform: uppercase;
+}
+
+.pso-result-btn--ghost {
+    background: transparent;
+    color: var(--flame, #e8ff00);
+}
+
+.pso-replay-skip {
+    position: absolute;
+    top: 58px;
+    right: 12px;
+    z-index: 12;
+    pointer-events: auto;
+    border: 1px solid rgba(245, 245, 240, 0.25);
+    background: rgba(5, 10, 8, 0.7);
+    color: var(--white, #f5f5f0);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+/* Keep replay control clear of the fullscreen toggle */
+.pso-root.is-fullscreen .pso-replay-skip {
+    top: calc(52px + env(safe-area-inset-top, 0px));
+}
+
+.pso-countdown {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 96px;
+    color: var(--flame, #e8ff00);
+    pointer-events: none;
+}
+
+.pso-stats {
+    position: absolute;
+    left: 12px;
+    bottom: 110px;
+    display: grid;
+    gap: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted, #9aa39a);
+    pointer-events: none;
+}

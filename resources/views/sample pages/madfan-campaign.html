@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mad Fan — The Loyalty Layer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --pitch: #0a0f0a;
+    --turf: #0d1a0d;
+    --line: #1a2e1a;
+    --flame: #e8ff00;
+    --ember: #ff4d00;
+    --white: #f5f5f0;
+    --muted: #6b7a6b;
+    --card: #111a11;
+    --border: #1f2e1f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--pitch);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* PITCH LINES BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(0deg, transparent 49.5%, rgba(255,255,255,0.02) 49.5%, rgba(255,255,255,0.02) 50.5%, transparent 50.5%),
+      linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,0.02) 49.5%, rgba(255,255,255,0.02) 50.5%, transparent 50.5%);
+    background-size: 80px 80px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 900px; margin: 0 auto; padding: 0 20px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--flame);
+  }
+  .logo span { color: var(--white); }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--flame);
+    border: 1px solid var(--flame);
+    padding: 4px 10px;
+    letter-spacing: 1px;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 80px 0 60px;
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ember);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 12vw, 120px);
+    line-height: 0.9;
+    letter-spacing: 3px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .hero h1 .accent { color: var(--flame); }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 24px auto 0;
+    line-height: 1.6;
+  }
+  .hero-sub strong { color: var(--white); }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 48px 0;
+  }
+  .score-cell {
+    background: var(--card);
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .score-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--flame);
+    line-height: 1;
+  }
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* SIGNUP */
+  .signup-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .signup-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ember), var(--flame));
+  }
+  .signup-block h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .signup-block p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  .input-row {
+    display: flex; gap: 12px; max-width: 480px; margin: 0 auto;
+  }
+  .input-row input {
+    flex: 1;
+    background: var(--pitch);
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 14px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-row input:focus { border-color: var(--flame); }
+  .input-row input::placeholder { color: var(--muted); }
+  .btn-join {
+    background: var(--flame);
+    color: var(--pitch);
+    border: none;
+    padding: 14px 28px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-join:hover { background: #fff; }
+  .btn-join:active { transform: scale(0.98); }
+
+  /* CONFIRMED STATE */
+  .confirmed {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--flame);
+    padding: 40px;
+    text-align: center;
+  }
+  .confirmed h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--flame);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .confirmed p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .fan-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--flame);
+    background: var(--pitch);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    display: inline-block;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .position-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    color: var(--white);
+    line-height: 1;
+  }
+  .position-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .section-eye {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ember);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  section { padding: 64px 0; border-top: 1px solid var(--border); }
+
+  /* HOW IT WORKS — 8 WEEK SEASONS */
+  .seasons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .season-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .season-card:hover { border-color: var(--flame); }
+  .season-card.active { border-color: var(--flame); }
+  .season-card.active::after {
+    content: 'LIVE';
+    position: absolute;
+    top: 12px; right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--pitch);
+    background: var(--flame);
+    padding: 2px 6px;
+    letter-spacing: 1px;
+  }
+  .season-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--flame);
+    line-height: 1;
+  }
+  .season-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    margin: 6px 0 4px;
+  }
+  .season-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* EARN POINTS */
+  .earn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .earn-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .earn-card:hover { border-color: var(--flame); }
+  .earn-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--line);
+  }
+  .earn-pts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--flame);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .earn-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .earn-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* REFERRAL */
+  .ref-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 40px;
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  .ref-tiers { margin-top: 20px; }
+  .ref-tier {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-tier:last-child { border-bottom: none; }
+  .ref-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--flame);
+    width: 52px;
+    flex-shrink: 0;
+  }
+  .ref-reward-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .ref-reward-desc { font-size: 12px; color: var(--muted); }
+  .ref-visual {
+    text-align: center;
+  }
+  .ref-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    line-height: 1;
+    color: var(--flame);
+  }
+  .ref-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  /* LEADERBOARD */
+  .leaderboard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    margin-top: 32px;
+    overflow: hidden;
+  }
+  .lb-header {
+    display: grid;
+    grid-template-columns: 48px 1fr 120px 100px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--line);
+  }
+  .lb-col {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 120px 100px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .lb-row:hover { background: var(--line); }
+  .lb-row.top { background: rgba(232,255,0,0.04); }
+  .lb-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--muted);
+  }
+  .lb-rank.gold { color: var(--flame); }
+  .lb-name { font-size: 14px; font-weight: 500; }
+  .lb-pts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--flame);
+  }
+  .lb-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .lb-tier.legend { background: rgba(232,255,0,0.15); color: var(--flame); border: 1px solid var(--flame); }
+  .lb-tier.ultra { background: rgba(255,77,0,0.1); color: var(--ember); border: 1px solid var(--ember); }
+  .lb-tier.core { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* REWARDS TIERS */
+  .tiers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .tier-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    position: relative;
+  }
+  .tier-card.featured {
+    border-color: var(--flame);
+  }
+  .tier-card.featured::before {
+    content: 'TOP TIER';
+    position: absolute;
+    top: -1px; left: 50%; transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--pitch);
+    background: var(--flame);
+    padding: 3px 10px;
+    letter-spacing: 1px;
+  }
+  .tier-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .tier-pts-req {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ember);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .tier-perks { list-style: none; }
+  .tier-perks li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tier-perks li:last-child { border-bottom: none; }
+  .tier-perks li::before {
+    content: '→';
+    color: var(--flame);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* DAILY CLAIM */
+  .daily-strip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-top: 32px;
+  }
+  .days-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .day-box {
+    flex: 1;
+    min-width: 60px;
+    background: var(--pitch);
+    border: 1px solid var(--border);
+    padding: 14px 8px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .day-box.claimed {
+    border-color: var(--flame);
+    background: rgba(232,255,0,0.06);
+  }
+  .day-box.claimed::after {
+    content: '✓';
+    position: absolute;
+    top: 4px; right: 6px;
+    font-size: 10px;
+    color: var(--flame);
+  }
+  .day-box.today {
+    border-color: var(--ember);
+    animation: pulse-border 2s infinite;
+  }
+  @keyframes pulse-border {
+    0%, 100% { border-color: var(--ember); }
+    50% { border-color: rgba(255,77,0,0.3); }
+  }
+  .day-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--white);
+  }
+  .day-pts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .day-box.claimed .day-num,
+  .day-box.claimed .day-pts { color: var(--flame); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+    text-align: center;
+  }
+  footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--flame);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .earn-grid { grid-template-columns: 1fr; }
+    .ref-block { grid-template-columns: 1fr; }
+    .tiers-grid { grid-template-columns: 1fr; }
+    .input-row { flex-direction: column; }
+    .lb-header, .lb-row { grid-template-columns: 40px 1fr 80px; }
+    .lb-tier { display: none; }
+    .seasons-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: var(--line);
+    height: 4px;
+    margin-top: 16px;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ember), var(--flame));
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">MAD<span>FAN</span></div>
+    <div class="badge">SEASON 01 · LIVE</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-eyebrow">⚽ The Loyalty Layer of the Internet</div>
+    <h1>YOUR <span class="accent">LOYALTY</span><br>FINALLY COUNTS</h1>
+    <p class="hero-sub">Join the waitlist. Earn points. Climb the board. <strong>The most loyal fans get in first</strong> — and earn token rewards before launch.</p>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard">
+    <div class="score-cell">
+      <div class="score-val" id="waitlist-count">4,831</div>
+      <div class="score-label">Fans on waitlist</div>
+    </div>
+    <div class="score-cell">
+      <div class="score-val">8</div>
+      <div class="score-label">Weeks of Season 01</div>
+    </div>
+    <div class="score-cell">
+      <div class="score-val">500K</div>
+      <div class="score-label">Points up for grabs</div>
+    </div>
+  </div>
+
+  <!-- SIGNUP -->
+  <div class="signup-block" id="signup-block">
+    <h2>CLAIM YOUR SPOT</h2>
+    <p>Join now. Every day you wait, someone else moves ahead of you.</p>
+    <div class="input-row">
+      <input type="email" id="email-input" placeholder="your@email.com" />
+      <button class="btn-join" onclick="joinWaitlist()">JOIN NOW</button>
+    </div>
+  </div>
+
+  <!-- CONFIRMED -->
+  <div class="confirmed" id="confirmed-block">
+    <h2>YOU'RE IN THE SQUAD</h2>
+    <p>Your loyalty journey starts now. Complete tasks below to climb the board.</p>
+    <div class="fan-id" id="fan-id-display">FAN-ID: MF-00000</div>
+    <div class="position-badge" id="position-num">#4,832</div>
+    <div class="position-label">YOUR CURRENT POSITION</div>
+    <div class="progress-wrap" style="max-width:320px;margin:20px auto 0">
+      <div class="progress-fill" style="width:12%"></div>
+      <div class="progress-label"><span>0 pts</span><span>STARTER TIER</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">Campaign Structure</div>
+    <div class="section-title">8 WEEKS. 8 CHAPTERS.</div>
+    <p style="color:var(--muted);font-size:14px;max-width:540px">Each week unlocks new tasks, bigger bonuses, and exclusive milestones. Miss a week, lose ground. Show up every day, dominate the board.</p>
+    <div class="seasons-grid">
+      <div class="season-card active">
+        <div class="season-num">W1</div>
+        <div class="season-name">Kickoff</div>
+        <div class="season-desc">Sign up, pick your club, complete your profile. 2× point multiplier all week.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W2</div>
+        <div class="season-name">Squad Up</div>
+        <div class="season-desc">Refer your first 3 fans. Unlock the referral leaderboard.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W3</div>
+        <div class="season-name">Daily Grind</div>
+        <div class="season-desc">7-day streak bonus unlocked. Claim every day for a 500pt bonus.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W4</div>
+        <div class="season-name">Social Proof</div>
+        <div class="season-desc">Share your Fan Passport. Amplification tasks go live.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W5</div>
+        <div class="season-name">Loyalty Test</div>
+        <div class="season-desc">Knowledge challenges and prediction tasks. Prove you're a real fan.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W6</div>
+        <div class="season-name">Top 100 Race</div>
+        <div class="season-desc">Leaderboard snapshot. Top 100 locked in for exclusive tier rewards.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W7</div>
+        <div class="season-name">Final Push</div>
+        <div class="season-desc">Bonus task drops. Referral multiplier increases to 3×.</div>
+      </div>
+      <div class="season-card">
+        <div class="season-num">W8</div>
+        <div class="season-name">Judgment Day</div>
+        <div class="season-desc">Final leaderboard. Early access invites sent. Token rewards distributed.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DAILY CLAIM -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">Daily Engagement</div>
+    <div class="section-title">CLAIM EVERY DAY.</div>
+    <p style="color:var(--muted);font-size:14px;max-width:540px">Log in daily to claim your points. Streaks multiply your earnings. Miss a day and your streak resets — but your total stays.</p>
+    <div class="daily-strip">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px">THIS WEEK'S STREAK</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px">CURRENT MULTIPLIER: <span style="color:var(--flame)">1.5×</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--flame)">4 DAYS</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">STREAK ACTIVE</div>
+        </div>
+      </div>
+      <div class="days-row">
+        <div class="day-box claimed"><div class="day-num">M</div><div class="day-pts">+50</div></div>
+        <div class="day-box claimed"><div class="day-num">T</div><div class="day-pts">+50</div></div>
+        <div class="day-box claimed"><div class="day-num">W</div><div class="day-pts">+75</div></div>
+        <div class="day-box claimed"><div class="day-num">T</div><div class="day-pts">+75</div></div>
+        <div class="day-box today" onclick="claimToday(this)"><div class="day-num">F</div><div class="day-pts">+100</div></div>
+        <div class="day-box"><div class="day-num">S</div><div class="day-pts">+100</div></div>
+        <div class="day-box"><div class="day-num">S</div><div class="day-pts">+150</div></div>
+      </div>
+      <div style="margin-top:16px;font-size:13px;color:var(--muted)">Complete 7 days → unlock <span style="color:var(--flame);font-weight:600">500 bonus points</span> + 2× multiplier next week.</div>
+    </div>
+  </div>
+</section>
+
+<!-- EARN POINTS -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">Point System</div>
+    <div class="section-title">HOW YOU EARN.</div>
+    <div class="earn-grid">
+      <div class="earn-card">
+        <div class="earn-icon">📅</div>
+        <div>
+          <div class="earn-pts">+50–150 PTS / DAY</div>
+          <div class="earn-name">Daily Check-in</div>
+          <div class="earn-desc">Claim your daily points. Value increases with streak length — 50 on day 1, up to 150 by day 7.</div>
+        </div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-icon">👥</div>
+        <div>
+          <div class="earn-pts">+500 PTS / REFERRAL</div>
+          <div class="earn-name">Refer a Fan</div>
+          <div class="earn-desc">Each friend who joins and completes their profile earns you 500 points. No cap on referrals.</div>
+        </div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-icon">✅</div>
+        <div>
+          <div class="earn-pts">+100–1000 PTS</div>
+          <div class="earn-name">Task Completion</div>
+          <div class="earn-desc">Weekly tasks: follow Mad Fan on X, join the Telegram, share your Fan ID, verify your club.</div>
+        </div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-icon">🔥</div>
+        <div>
+          <div class="earn-pts">+500 BONUS</div>
+          <div class="earn-name">7-Day Streak</div>
+          <div class="earn-desc">Complete a full 7-day claim streak. Bonus drops on day 7 and resets the multiplier upward.</div>
+        </div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-icon">⚽</div>
+        <div>
+          <div class="earn-pts">+200 PTS</div>
+          <div class="earn-name">Pick Your Club</div>
+          <div class="earn-desc">Connect your loyalty to a football club. One-time bonus, but your club's community can earn together.</div>
+        </div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-icon">📣</div>
+        <div>
+          <div class="earn-pts">+300 PTS</div>
+          <div class="earn-name">Share Your Fan Passport</div>
+          <div class="earn-desc">Post your Fan Passport card publicly on X or Instagram. Tag @MadFan for verification.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERRAL -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">Referral Programme</div>
+    <div class="section-title">BUILD YOUR SQUAD.</div>
+    <div class="ref-block">
+      <div>
+        <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:20px">Every fan you bring in earns you points and unlocks milestone rewards. The more you refer, the bigger the prize.</p>
+        <div class="ref-tiers">
+          <div class="ref-tier">
+            <div class="ref-count">3</div>
+            <div>
+              <div class="ref-reward-name">Fan Rank Badge</div>
+              <div class="ref-reward-desc">Exclusive profile badge + 1,500 pts</div>
+            </div>
+          </div>
+          <div class="ref-tier">
+            <div class="ref-count">10</div>
+            <div>
+              <div class="ref-reward-name">Ultra Supporter</div>
+              <div class="ref-reward-desc">Priority early access + 5,000 pts</div>
+            </div>
+          </div>
+          <div class="ref-tier">
+            <div class="ref-count">25</div>
+            <div>
+              <div class="ref-reward-name">Loyalty Legend</div>
+              <div class="ref-reward-desc">Token allocation + founding member NFT</div>
+            </div>
+          </div>
+          <div class="ref-tier">
+            <div class="ref-count">50+</div>
+            <div>
+              <div class="ref-reward-name">Ambassador Status</div>
+              <div class="ref-reward-desc">Revenue share + exclusive IRL access</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ref-visual">
+        <div class="ref-big">500</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--flame);letter-spacing:1px">PTS PER REFERRAL</div>
+        <div class="ref-caption" style="margin-top:16px">No cap · No limit · No ceiling</div>
+        <div style="margin-top:28px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">YOUR REFERRAL LINK</div>
+          <div style="background:var(--pitch);border:1px solid var(--border);padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--flame)">madfan.io/r/FAN-00000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">Live Rankings</div>
+    <div class="section-title">THE BOARD.</div>
+    <p style="color:var(--muted);font-size:14px;max-width:540px">Updated every 24 hours. Top 500 at end of Week 8 get early access. Top 100 get token rewards.</p>
+    <div class="leaderboard">
+      <div class="lb-header">
+        <div class="lb-col">#</div>
+        <div class="lb-col">FAN</div>
+        <div class="lb-col">POINTS</div>
+        <div class="lb-col">TIER</div>
+      </div>
+      <div class="lb-row top">
+        <div class="lb-rank gold">1</div>
+        <div class="lb-name">@ultraseven_mcr</div>
+        <div class="lb-pts">18,450</div>
+        <div><span class="lb-tier legend">LEGEND</span></div>
+      </div>
+      <div class="lb-row top">
+        <div class="lb-rank gold">2</div>
+        <div class="lb-name">@redsector_a</div>
+        <div class="lb-pts">16,200</div>
+        <div><span class="lb-tier legend">LEGEND</span></div>
+      </div>
+      <div class="lb-row top">
+        <div class="lb-rank gold">3</div>
+        <div class="lb-name">@pitch_side_kev</div>
+        <div class="lb-pts">14,880</div>
+        <div><span class="lb-tier legend">LEGEND</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">4</div>
+        <div class="lb-name">@fanatic_fc</div>
+        <div class="lb-pts">12,100</div>
+        <div><span class="lb-tier ultra">ULTRA</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">5</div>
+        <div class="lb-name">@loyal_since_89</div>
+        <div class="lb-pts">11,750</div>
+        <div><span class="lb-tier ultra">ULTRA</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">6</div>
+        <div class="lb-name">@terrace_talk</div>
+        <div class="lb-pts">9,400</div>
+        <div><span class="lb-tier ultra">ULTRA</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">7</div>
+        <div class="lb-name">@matchday_max</div>
+        <div class="lb-pts">7,200</div>
+        <div><span class="lb-tier core">CORE</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">8</div>
+        <div class="lb-name">@blue_forever</div>
+        <div class="lb-pts">6,850</div>
+        <div><span class="lb-tier core">CORE</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REWARDS TIERS -->
+<section>
+  <div class="wrap">
+    <div class="section-eye">End of Season Rewards</div>
+    <div class="section-title">WHAT YOU'RE PLAYING FOR.</div>
+    <div class="tiers-grid">
+      <div class="tier-card">
+        <div class="tier-name" style="color:var(--muted)">CORE FAN</div>
+        <div class="tier-pts-req">500–4,999 POINTS</div>
+        <ul class="tier-perks">
+          <li>Waitlist confirmed</li>
+          <li>Early access (Wave 3)</li>
+          <li>Core Fan badge</li>
+          <li>Platform launch bonus</li>
+        </ul>
+      </div>
+      <div class="tier-card featured">
+        <div class="tier-name" style="color:var(--ember)">ULTRA FAN</div>
+        <div class="tier-pts-req">5,000–14,999 POINTS</div>
+        <ul class="tier-perks">
+          <li>Priority early access (Wave 1)</li>
+          <li>Ultra Fan badge (permanent)</li>
+          <li>Token reward allocation</li>
+          <li>Founding member status</li>
+          <li>Loyalty score head start</li>
+        </ul>
+      </div>
+      <div class="tier-card">
+        <div class="tier-name" style="color:var(--flame)">LEGEND</div>
+        <div class="tier-pts-req">15,000+ POINTS</div>
+        <ul class="tier-perks">
+          <li>Day-one access</li>
+          <li>Legend badge (lifetime)</li>
+          <li>Max token allocation</li>
+          <li>Founding member NFT</li>
+          <li>Ambassador consideration</li>
+          <li>IRL event invite</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-logo">MADFAN</div>
+    <p>© 2025 Mad Fan · The Loyalty Layer of the Internet</p>
+    <p style="margin-top:8px">Season 01 Campaign · 8 Weeks · Starting Now</p>
+  </div>
+</footer>
+
+<script>
+  function generateFanId() {
+    const num = Math.floor(Math.random() * 90000) + 10000;
+    return `MF-${num}`;
+  }
+
+  function joinWaitlist() {
+    const email = document.getElementById('email-input').value;
+    if (!email || !email.includes('@')) {
+      document.getElementById('email-input').style.borderColor = 'var(--ember)';
+      return;
+    }
+    const count = parseInt(document.getElementById('waitlist-count').innerText.replace(',', ''));
+    document.getElementById('waitlist-count').innerText = (count + 1).toLocaleString();
+    document.getElementById('signup-block').style.display = 'none';
+    document.getElementById('confirmed-block').style.display = 'block';
+    document.getElementById('fan-id-display').innerText = `FAN-ID: ${generateFanId()}`;
+    document.getElementById('position-num').innerText = `#${(count + 1).toLocaleString()}`;
+  }
+
+  function claimToday(el) {
+    if (el.classList.contains('claimed')) return;
+    el.classList.add('claimed');
+    el.classList.remove('today');
+    // Flash feedback
+    const flash = document.createElement('div');
+    flash.innerText = '+100 PTS';
+    flash.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      font-family:'Bebas Neue',sans-serif;font-size:48px;color:#e8ff00;
+      pointer-events:none;animation:fadeUp 1.2s forwards;z-index:999;`;
+    document.body.appendChild(flash);
+    const style = document.createElement('style');
+    style.innerText = `@keyframes fadeUp{0%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-120%)}}`;
+    document.head.appendChild(style);
+    setTimeout(() => flash.remove(), 1300);
+  }
+
+  // Animate waitlist counter on load
+  window.addEventListener('load', () => {
+    const target = 4831;
+    const el = document.getElementById('waitlist-count');
+    let current = 4700;
+    const step = () => {
+      if (current < target) {
+        current += Math.ceil((target - current) / 8);
+        el.innerText = current.toLocaleString();
+        requestAnimationFrame(step);
+      } else {
+        el.innerText = target.toLocaleString();
+      }
+    };
+    requestAnimationFrame(step);
+  });
+</script>
+</body>
+</html>
