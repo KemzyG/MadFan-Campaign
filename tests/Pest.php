@@ -2,6 +2,7 @@
 
 use App\Models\AdminOrganization;
 use App\Models\Club;
+use App\Models\ClubMembership;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\Fan\FanPageDataService;
@@ -46,6 +47,27 @@ function createUser(array $attributes = []): User
     seedRoles();
 
     return User::factory()->create($attributes);
+}
+
+function socialReadyUser(?Club $club = null): User
+{
+    ApplicationSettings::sync(['social_network_enabled' => 'true']);
+
+    $club ??= Club::factory()->create(['name' => 'Terrace FC']);
+    $user = createUser([
+        'email_verified_at' => now(),
+        'favourite_club_id' => $club->id,
+        'club' => $club->name,
+        'social_onboarded_at' => now(),
+        'handle' => 'fan'.fake()->unique()->numerify('######'),
+    ]);
+
+    ClubMembership::factory()->primary()->create([
+        'user_id' => $user->id,
+        'club_id' => $club->id,
+    ]);
+
+    return $user->fresh();
 }
 
 function createAdminUser(array $attributes = []): User

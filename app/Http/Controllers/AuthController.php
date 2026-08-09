@@ -56,11 +56,14 @@ class AuthController extends Controller
         $user->sendEmailVerificationNotification();
 
         $token = $this->pasetoService->generateToken($user->id);
+        $emailVerified = $user->hasVerifiedEmail();
 
         return response()->json([
-            'message' => 'Registration successful. Verify your email to unlock full access.',
+            'message' => $emailVerified
+                ? 'Registration successful.'
+                : 'Registration successful. Verify your email to unlock full access.',
             'token' => $token,
-            'email_verified' => false,
+            'email_verified' => $emailVerified,
             'user' => new UserResource($user->load(['loyaltyTier.tierRewards', 'passport'])),
         ], 201)->withCookie($this->registrationIdentity->makeLockCookie($user));
     }

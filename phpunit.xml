@@ -34,6 +34,7 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="SOCIAL_ALLOW_MOCK_VERIFICATION" value="true"/>
         <env name="ADMIN_MFA_REQUIRED" value="false"/>
+        <env name="EMAIL_VERIFICATION_ENABLED" value="true"/>
         <env name="PASETO_TTL_MINUTES" value="1440"/>
     </php>
 </phpunit>

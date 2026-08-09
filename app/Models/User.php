@@ -8,6 +8,7 @@ use App\Support\PublicStorageUrl;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -38,6 +39,9 @@ use Spatie\Permission\Traits\HasRoles;
     'country',
     'league',
     'club',
+    'favourite_club_id',
+    'bio',
+    'banner_path',
     'avatar_emoji',
     'avatar_path',
     'loyalty_tier_id',
@@ -45,6 +49,7 @@ use Spatie\Permission\Traits\HasRoles;
     'best_streak_days',
     'referral_count',
     'email_verified_at',
+    'social_onboarded_at',
     'last_login_at',
     'token_version',
     'current_admin_organization_id',
@@ -111,6 +116,31 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     /**
+     * When email verification is disabled (local/dev), treat the address as verified
+     * so middleware, policies, and auth redirects stay open without removing MustVerifyEmail.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        if (! config('auth.email_verification_enabled')) {
+            return true;
+        }
+
+        return ! is_null($this->email_verified_at);
+    }
+
+    /**
+     * Skip verification mail when EMAIL_VERIFICATION_ENABLED=false.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        if (! config('auth.email_verification_enabled')) {
+            return;
+        }
+
+        $this->notify(new VerifyEmail);
+    }
+
+    /**
      * Map password attribute to password_hash to prevent column mismatch.
      */
     protected function password(): Attribute
@@ -164,6 +194,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'social_onboarded_at' => 'datetime',
             'last_login_at' => 'datetime',
             'staff_position_assigned_at' => 'datetime',
             'shootout_cooldown_until' => 'datetime',
@@ -234,6 +265,54 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function loyaltyTier(): BelongsTo
     {
         return $this->belongsTo(LoyaltyTier::class);
+    }
+
+    public function favouriteClub(): BelongsTo
+    {
+        return $this->belongsTo(Club::class, 'favourite_club_id');
+    }
+
+    public function clubMemberships(): HasMany
+    {
+        return $this->hasMany(ClubMembership::class);
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class, 'author_id');
+    }
+
+    public function matchTickets(): HasMany
+    {
+        return $this->hasMany(MatchTicket::class);
+    }
+
+    public function hostedStages(): HasMany
+    {
+        return $this->hasMany(Stage::class, 'host_id');
+    }
+
+    public function stageParticipations(): HasMany
+    {
+        return $this->hasMany(StageParticipant::class);
+    }
+
+    public function following(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'follower_id');
+    }
+
+    public function followers(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'following_id');
+    }
+
+    public function isFollowing(User $other): bool
+    {
+        return Follow::query()
+            ->where('follower_id', $this->id)
+            ->where('following_id', $other->id)
+            ->exists();
     }
 
     public function passport(): HasOne

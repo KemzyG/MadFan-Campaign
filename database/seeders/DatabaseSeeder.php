@@ -27,6 +27,9 @@ class DatabaseSeeder extends Seeder
             TaskSeeder::class,
             StaffPositionSeeder::class,
             EarnSourceSeeder::class,
+            ClubSeeder::class,
+            ClubChatSeeder::class,
+            MatchSeeder::class,
             TestDataSeeder::class,
             SettingSeeder::class,
         ]);

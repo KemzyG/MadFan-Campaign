@@ -117,14 +117,23 @@ class FanRegisterController extends Controller
         $user->sendEmailVerificationNotification();
         $this->registrationNotifications->sendWelcomeEmail($user);
 
-        $redirect = redirect()
-            ->route('verification.notice')
-            ->with('success', 'Passport created! Verify your email to continue.');
-
         if (ApplicationSettings::socialVerificationRequired()) {
             $request->session()->put('onboarding_required', true);
         }
 
-        return $redirect->withCookie($this->registrationIdentity->makeLockCookie($user));
+        if (! config('auth.email_verification_enabled')) {
+            $redirect = ApplicationSettings::socialVerificationRequired()
+                ? redirect()->route('fan.connect-accounts', ['onboarding' => 1])
+                    ->with('success', 'Passport created! Connect your accounts to continue.')
+                : redirect()->intended(route('fan.dashboard'))
+                    ->with('success', 'Passport created! Welcome to Mad Fan.');
+
+            return $redirect->withCookie($this->registrationIdentity->makeLockCookie($user));
+        }
+
+        return redirect()
+            ->route('verification.notice')
+            ->with('success', 'Passport created! Verify your email to continue.')
+            ->withCookie($this->registrationIdentity->makeLockCookie($user));
     }
 }

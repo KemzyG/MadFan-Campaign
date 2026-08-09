@@ -10,6 +10,8 @@ use App\Services\SocialAccountService;
 use App\Services\Staff\StaffAssignmentService;
 use App\Support\AdminRouting;
 use App\Support\AdminWorkspace;
+use App\Support\ApplicationSettings;
+use App\Support\SocialRouting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -19,6 +21,10 @@ class HandleInertiaRequests extends Middleware
     {
         if (AdminRouting::isInertiaAdminRequest($request)) {
             return 'admin';
+        }
+
+        if (SocialRouting::isSocialRequest($request)) {
+            return 'social';
         }
 
         return 'user';
@@ -50,6 +56,9 @@ class HandleInertiaRequests extends Middleware
             'app' => [
                 'name' => config('app.name'),
                 'admin_path' => AdminRouting::appPathPrefix(),
+                'logo_url' => is_file(public_path('favicon.jpg'))
+                    ? asset('favicon.jpg')
+                    : null,
             ],
             'auth' => [
                 'user' => $user ? [
@@ -69,7 +78,12 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
                     'email_verified' => $user->hasVerifiedEmail(),
                     'mfa_enabled' => $user->hasMfaEnabled(),
+                    'favourite_club_id' => $user->favourite_club_id,
+                    'social_onboarded' => $user->social_onboarded_at !== null,
                 ] : null,
+            ],
+            'madFanSocial' => [
+                'enabled' => ApplicationSettings::socialNetworkEnabled(),
             ],
             'workspace' => ($user && $onAdminSurface) ? AdminWorkspace::for($user) : null,
             'adminOrganization' => ($user && $onAdminSurface) ? $this->adminOrganizationProps($user) : null,

@@ -176,6 +176,12 @@ class ApplicationSettings
                 'type' => 'boolean',
                 'section' => 'system',
             ],
+            'social_network_enabled' => [
+                'label' => 'Enable Mad Fan Social',
+                'description' => 'When enabled, fans can access /social (feed + club rooms). Disable to hide the social product surface.',
+                'type' => 'boolean',
+                'section' => 'system',
+            ],
         ];
     }
 
@@ -254,6 +260,7 @@ class ApplicationSettings
             'telegram_channel_username' => '@madfan',
             'twitter_target_username' => 'madfan',
             'system_maintenance' => 'false',
+            'social_network_enabled' => 'true',
         ];
     }
 
@@ -370,6 +377,11 @@ class ApplicationSettings
     public static function maintenanceMode(): bool
     {
         return static::bool('system_maintenance');
+    }
+
+    public static function socialNetworkEnabled(): bool
+    {
+        return static::bool('social_network_enabled');
     }
 
     public static function referralBonusPoints(): int

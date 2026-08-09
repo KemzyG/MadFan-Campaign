@@ -114,4 +114,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | When false, the `verified` middleware is a no-op, registration skips the
+    | verify-email redirect/notification, and hasVerifiedEmail() treats fans as
+    | verified. Re-enable with EMAIL_VERIFICATION_ENABLED=true (production).
+    |
+    */
+
+    'email_verification_enabled' => filter_var(
+        env('EMAIL_VERIFICATION_ENABLED', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
+
 ];

@@ -4,6 +4,13 @@ Laravel 13 fan loyalty platform: Inertia/React fan site, Inertia + Filament admi
 
 **Repository:** https://github.com/KemzyG/MadFan-Campaign
 
+### Mad Fan Social (in progress)
+
+Club-first **fan loyalty** social layer: engage on the terrace, earn into the shared Mad Fan points ledger, wear standing on your **passport** (identity). Feed + chat are contribution surfaces; passport is who you are.
+
+**Status:** Phase 0–1 feed largely done · Social passport identity at `/social/passport`  
+**Docs:** [docs/social/README.md](docs/social/README.md)
+
 ---
 
 ## Requirements
@@ -77,12 +84,21 @@ composer run dev
 
 Starts Laravel (`php artisan serve`), the queue listener, and Vite.
 
+For Social realtime (club chat + Stage), also run Reverb in a separate terminal:
+
+```bash
+php artisan reverb:start
+```
+
+Ensure `.env` has `BROADCAST_CONNECTION=reverb` and the `REVERB_*` / `VITE_REVERB_*` keys from `.env.example`, then rebuild front-end assets (`npm run dev` or `npm run build`) so Vite picks up `VITE_REVERB_*`.
+
 | URL | Purpose |
 |-----|---------|
 | http://127.0.0.1:8000 | Fan site / campaign |
 | http://127.0.0.1:8000/admin | Filament admin |
 | http://127.0.0.1:8000/app | Inertia admin console |
 | http://127.0.0.1:8000/api | Mobile/API (Bearer Paseto token) |
+| http://127.0.0.1:8080 | Laravel Reverb WebSocket (default local) |
 
 ### 6. Optional checks
 

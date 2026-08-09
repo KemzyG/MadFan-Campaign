@@ -7,6 +7,7 @@ use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Club extends Model
 {
@@ -30,6 +31,11 @@ class Club extends Model
     public function league(): BelongsTo
     {
         return $this->belongsTo(League::class);
+    }
+
+    public function clubServer(): HasOne
+    {
+        return $this->hasOne(ClubServer::class);
     }
 
     public function getLogoUrlAttribute(): ?string

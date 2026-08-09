@@ -81,8 +81,110 @@ test('security headers are present on web responses', function () {
 
     $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
     $response->assertHeader('X-Content-Type-Options', 'nosniff');
+    $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
     $response->assertHeader('Content-Security-Policy');
     expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'");
+    expect($response->headers->get('Permissions-Policy'))
+        ->toContain('microphone=(self)')
+        ->and($response->headers->get('Permissions-Policy'))->not->toContain('microphone=*')
+        ->and($response->headers->get('Permissions-Policy'))->not->toContain('microphone=()');
+});
+
+test('non-local CSP does not allow vite development origins', function () {
+    $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+    expect($csp)
+        ->toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'")
+        ->and($csp)->toContain("worker-src 'self' blob:")
+        ->and($csp)->not->toContain(':5173')
+        ->and($csp)->not->toContain(':5174')
+        ->and($csp)->not->toContain('ws://')
+        ->and($csp)->not->toContain('[::1]');
+});
+
+test('local CSP allows the vite hot origin for hmr', function () {
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $hotPath = public_path('hot');
+    $previousHot = is_file($hotPath) ? file_get_contents($hotPath) : null;
+    file_put_contents($hotPath, "http://127.0.0.1:5174\n");
+
+    try {
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+        expect($csp)
+            ->not->toContain('[::1]')
+            ->and($csp)->toContain('http://127.0.0.1:5174')
+            ->and($csp)->toContain('http://localhost:5173')
+            ->and($csp)->toContain('ws://127.0.0.1:5174')
+            ->and($csp)->toMatch('/script-src[^;]*http:\/\/127\.0\.0\.1:5174/')
+            ->and($csp)->toMatch('/style-src[^;]*http:\/\/127\.0\.0\.1:5174/')
+            ->and($csp)->toMatch('/connect-src[^;]*ws:\/\/127\.0\.0\.1:5174/')
+            ->and($csp)->toContain("worker-src 'self' blob:")
+            ->and($csp)->toMatch('/worker-src[^;]*http:\/\/127\.0\.0\.1:5174/');
+    } finally {
+        if ($previousHot === null) {
+            @unlink($hotPath);
+        } else {
+            file_put_contents($hotPath, $previousHot);
+        }
+    }
+});
+
+test('local CSP rewrites ipv6 vite hot origins to 127.0.0.1', function () {
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $hotPath = public_path('hot');
+    $previousHot = is_file($hotPath) ? file_get_contents($hotPath) : null;
+    file_put_contents($hotPath, "http://[::1]:5174\n");
+
+    try {
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+        expect($csp)
+            ->not->toContain('[::1]')
+            ->and($csp)->toContain('http://127.0.0.1:5174')
+            ->and($csp)->toContain('ws://127.0.0.1:5174')
+            ->and($csp)->toMatch('/script-src[^;]*http:\/\/127\.0\.0\.1:5174/')
+            ->and($csp)->toMatch('/connect-src[^;]*ws:\/\/127\.0\.0\.1:5174/')
+            ->and($csp)->toMatch('/worker-src[^;]*http:\/\/127\.0\.0\.1:5174/');
+    } finally {
+        if ($previousHot === null) {
+            @unlink($hotPath);
+        } else {
+            file_put_contents($hotPath, $previousHot);
+        }
+    }
+});
+
+test('fan layout injects vite react refresh preamble before entry when hot', function () {
+    $this->withVite();
+
+    $hotPath = public_path('hot');
+    $previousHot = is_file($hotPath) ? file_get_contents($hotPath) : null;
+    file_put_contents($hotPath, "http://127.0.0.1:5174\n");
+
+    try {
+        $html = $this->get('/')->assertSuccessful()->getContent();
+
+        expect($html)
+            ->toContain('@react-refresh')
+            ->toContain('__vite_plugin_react_preamble_installed__')
+            ->toContain('resources/js/user.jsx');
+
+        $preamblePos = strpos($html, '__vite_plugin_react_preamble_installed__');
+        $entryPos = strpos($html, 'resources/js/user.jsx');
+
+        expect($preamblePos)->not->toBeFalse()
+            ->and($entryPos)->not->toBeFalse()
+            ->and($preamblePos)->toBeLessThan($entryPos);
+    } finally {
+        if ($previousHot === null) {
+            @unlink($hotPath);
+        } else {
+            file_put_contents($hotPath, $previousHot);
+        }
+    }
 });
 
 test('admin cannot assign super-admin without being super-admin', function () {

@@ -43,6 +43,25 @@ use App\Http\Controllers\Inertia\PointTransactionsPageController;
 use App\Http\Controllers\Inertia\ReferralsPageController;
 use App\Http\Controllers\Inertia\SeasonsPageController;
 use App\Http\Controllers\Inertia\SettingsPageController;
+use App\Http\Controllers\Inertia\Social\SocialChatController;
+use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
+use App\Http\Controllers\Inertia\Social\SocialFollowController;
+use App\Http\Controllers\Inertia\Social\SocialHomeController;
+use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
+use App\Http\Controllers\Inertia\Social\SocialPassportController;
+use App\Http\Controllers\Inertia\Social\SocialPostBookmarkController;
+use App\Http\Controllers\Inertia\Social\SocialPostController;
+use App\Http\Controllers\Inertia\Social\SocialPostHideController;
+use App\Http\Controllers\Inertia\Social\SocialPostLikeController;
+use App\Http\Controllers\Inertia\Social\SocialPostReportController;
+use App\Http\Controllers\Inertia\Social\SocialPostShowController;
+use App\Http\Controllers\Inertia\Social\SocialProfileController;
+use App\Http\Controllers\Inertia\Social\SocialStageController;
+use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
+use App\Http\Controllers\Inertia\Social\SocialStageParticipantController;
+use App\Http\Controllers\Inertia\Social\SocialStageSignalController;
+use App\Http\Controllers\Inertia\Social\SocialTicketController;
+use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
 use App\Http\Controllers\Inertia\StaffPageController;
 use App\Http\Controllers\Inertia\SystemLogsPageController;
 use App\Http\Controllers\Inertia\TaskReviewsPageController;
@@ -126,6 +145,121 @@ Route::middleware('app.maintenance')->group(function () {
         Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
             ->middleware('throttle:6,1')
             ->name('verification.send');
+
+        Route::middleware(['verified', 'social.enabled'])->prefix('social')->name('social.')->group(function () {
+            Route::get('/onboarding/club', [SocialOnboardingController::class, 'create'])->name('onboarding.club');
+            Route::post('/onboarding/club', [SocialOnboardingController::class, 'store'])
+                ->middleware('throttle:12,1')
+                ->name('onboarding.club.store');
+
+            Route::middleware('social.onboarded')->group(function () {
+                Route::get('/', SocialHomeController::class)->name('home');
+                Route::redirect('/home', '/social');
+                Route::get('/passport', SocialPassportController::class)->name('passport');
+                Route::get('/chat', SocialChatController::class)->name('chat');
+                Route::post('/chat/channels/{channel}/messages', [SocialChatMessageController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('chat.messages.store');
+
+                Route::get('/stage', [SocialStageController::class, 'index'])->name('stage.index');
+                Route::post('/stage', [SocialStageController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('stage.store');
+                Route::get('/stage/{stage}', [SocialStageController::class, 'show'])->name('stage.show');
+                Route::get('/stage/{stage}/room', [SocialStageController::class, 'room'])
+                    ->middleware('throttle:120,1')
+                    ->name('stage.room');
+                Route::post('/stage/{stage}/join', [SocialStageController::class, 'join'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.join');
+                Route::post('/stage/{stage}/leave', [SocialStageController::class, 'leave'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.leave');
+                Route::post('/stage/{stage}/end', [SocialStageController::class, 'end'])
+                    ->middleware('throttle:20,1')
+                    ->name('stage.end');
+                Route::post('/stage/{stage}/voice', [SocialStageController::class, 'startVoice'])
+                    ->middleware('throttle:20,1')
+                    ->name('stage.voice');
+                Route::post('/stage/{stage}/messages', [SocialStageMessageController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('stage.messages.store');
+                Route::post('/stage/{stage}/speak-request', [SocialStageParticipantController::class, 'requestSpeak'])
+                    ->middleware('throttle:20,1')
+                    ->name('stage.speak-request');
+                Route::post('/stage/{stage}/participants/{user}/promote', [SocialStageParticipantController::class, 'promote'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.participants.promote');
+                Route::post('/stage/{stage}/participants/{user}/demote', [SocialStageParticipantController::class, 'demote'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.participants.demote');
+                Route::post('/stage/{stage}/mute', [SocialStageParticipantController::class, 'mute'])
+                    ->middleware('throttle:60,1')
+                    ->name('stage.mute');
+                Route::get('/stage/{stage}/signals', [SocialStageSignalController::class, 'index'])
+                    ->middleware('throttle:120,1')
+                    ->name('stage.signals.index');
+                Route::post('/stage/{stage}/signals', [SocialStageSignalController::class, 'store'])
+                    ->middleware('throttle:180,1')
+                    ->name('stage.signals.store');
+
+                Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
+                Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');
+                Route::get('/tickets/{ticket}', [SocialTicketController::class, 'show'])->name('tickets.show');
+                Route::post('/tickets/matches/{match}/purchase', SocialTicketPurchaseController::class)
+                    ->middleware('throttle:20,1')
+                    ->name('tickets.purchase');
+
+                Route::get('/u/{handle}', SocialProfileController::class)
+                    ->where('handle', '[A-Za-z0-9._\\-]+')
+                    ->name('profile');
+
+                Route::post('/users/{user}/follow', [SocialFollowController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('users.follow');
+                Route::delete('/users/{user}/follow', [SocialFollowController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('users.unfollow');
+
+                Route::post('/posts', [SocialPostController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.store');
+                Route::get('/posts/{post}', SocialPostShowController::class)->name('posts.show');
+                Route::delete('/posts/{post}', [SocialPostController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.destroy');
+                Route::post('/posts/{post}/replies', [SocialPostController::class, 'reply'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.replies.store');
+                Route::post('/posts/{post}/repost', [SocialPostController::class, 'repost'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.repost');
+                Route::post('/posts/{post}/quote', [SocialPostController::class, 'quote'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.quote');
+                Route::post('/posts/{post}/report', [SocialPostReportController::class, 'store'])
+                    ->middleware('throttle:20,1')
+                    ->name('posts.report');
+                Route::post('/posts/{post}/like', [SocialPostLikeController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.like');
+                Route::delete('/posts/{post}/like', [SocialPostLikeController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.unlike');
+                Route::post('/posts/{post}/bookmark', [SocialPostBookmarkController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.bookmark');
+                Route::delete('/posts/{post}/bookmark', [SocialPostBookmarkController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.unbookmark');
+                Route::post('/posts/{post}/not-interested', [SocialPostHideController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.not-interested');
+                Route::delete('/posts/{post}/not-interested', [SocialPostHideController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('posts.interested');
+            });
+        });
 
         Route::get('/connect-accounts', [ConnectAccountsPageController::class, 'index'])->name('fan.connect-accounts');
         Route::post('/connect-accounts/verify', [SocialConnectController::class, 'verifyManual'])->name('fan.social.verify');

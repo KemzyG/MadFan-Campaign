@@ -1,0 +1,731 @@
+import { Link, router, usePage } from '@inertiajs/react';
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useId,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import { ComposeSheet } from '../pages/Social/components/PostCard';
+import {
+    SocialPageSkeleton,
+    resolveSocialSkeletonKind,
+    shouldShowSocialNavSkeleton,
+    visitPathname,
+} from '../pages/Social/components/Skeletons';
+import StageChrome from '../pages/Social/Stage/StageChrome';
+import { SocialFlashContext } from '../pages/Social/optimistic';
+
+const NAV_SKELETON_DELAY_MS = 120;
+
+const SocialComposeContext = createContext({
+    openCompose: () => {},
+    closeCompose: () => {},
+    composeOpen: false,
+});
+
+export function useSocialCompose() {
+    return useContext(SocialComposeContext);
+}
+
+function IconHome({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            {active ? (
+                <path
+                    fill="currentColor"
+                    stroke="none"
+                    d="M12 3.2 3.5 10.2V21a1 1 0 0 0 1 1h5.2v-6.2h4.6V22H19.5a1 1 0 0 0 1-1V10.2L12 3.2Z"
+                />
+            ) : (
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"
+                />
+            )}
+        </svg>
+    );
+}
+
+function IconPassport({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="4" y="3" width="16" height="18" rx="2" strokeWidth={active ? 2.25 : 1.75} />
+            <circle cx="12" cy="10" r="2.5" />
+            <path strokeLinecap="round" d="M8 16.5c1.2-1.4 2.5-2 4-2s2.8.6 4 2" />
+        </svg>
+    );
+}
+
+function IconProfile({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="8.5" r="3.25" strokeWidth={active ? 2.25 : 1.75} />
+            <path
+                strokeLinecap="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M5.5 19.5c1.4-2.8 3.5-4.2 6.5-4.2s5.1 1.4 6.5 4.2"
+            />
+        </svg>
+    );
+}
+
+function IconChat({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7A2.5 2.5 0 0 1 16.5 16H10l-4 3.2V16H7.5A2.5 2.5 0 0 1 5 13.5v-7Z"
+            />
+        </svg>
+    );
+}
+
+function IconCompose() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.85"
+                d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
+            />
+        </svg>
+    );
+}
+
+function IconMenu() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeWidth="1.85" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+    );
+}
+
+function IconCampaign() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.75"
+                d="M4 19V5.8L12 4l8 1.8V19l-8-1.8L4 19Z"
+            />
+            <path strokeLinecap="round" strokeWidth="1.75" d="M12 4v13.2" />
+        </svg>
+    );
+}
+
+function IconTickets({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M4.5 9.5V7.8A1.8 1.8 0 0 1 6.3 6h11.4A1.8 1.8 0 0 1 19.5 7.8v1.7a1.7 1.7 0 0 0 0 3.4v1.7a1.8 1.8 0 0 1-1.8 1.8H6.3A1.8 1.8 0 0 1 4.5 14.6v-1.7a1.7 1.7 0 0 0 0-3.4Z"
+            />
+            <path strokeLinecap="round" strokeWidth={active ? 2 : 1.6} d="M9 8.2v7.6M15 8.2v7.6" />
+        </svg>
+    );
+}
+
+function IconStage({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="12" r="3.1" strokeWidth={active ? 2.25 : 1.75} />
+            <circle
+                cx="12"
+                cy="12"
+                r="6.6"
+                strokeWidth={active ? 2 : 1.6}
+                strokeDasharray="3.2 2.4"
+                opacity="0.9"
+            />
+            <circle
+                cx="12"
+                cy="12"
+                r="9.4"
+                strokeWidth={active ? 1.85 : 1.5}
+                strokeDasharray="2.2 2.8"
+                opacity="0.55"
+            />
+        </svg>
+    );
+}
+
+function pathMatches(current, href, exact = false) {
+    if (!current || !href) {
+        return false;
+    }
+
+    if (exact) {
+        return current === href || current.startsWith(`${href}?`);
+    }
+
+    return current === href || current.startsWith(`${href}/`) || current.startsWith(`${href}?`);
+}
+
+function BrandMark({ logoUrl }) {
+    if (logoUrl) {
+        return <img src={logoUrl} alt="" className="mf-sidebar__logo-img" />;
+    }
+
+    return <span className="mf-sidebar__logo-mark mf-display">MF</span>;
+}
+
+function NavItem({ href, label, icon: Icon, active, onClick }) {
+    const className = ['mf-sidebar__link', active ? 'is-active' : ''].filter(Boolean).join(' ');
+
+    if (onClick && !href) {
+        return (
+            <button type="button" className={className} onClick={onClick}>
+                <span className="mf-sidebar__icon">
+                    <Icon active={active} />
+                </span>
+                <span className="mf-sidebar__label">{label}</span>
+            </button>
+        );
+    }
+
+    return (
+        <Link href={href} className={className} aria-current={active ? 'page' : undefined} prefetch>
+            <span className="mf-sidebar__icon">
+                <Icon active={active} />
+            </span>
+            <span className="mf-sidebar__label">{label}</span>
+        </Link>
+    );
+}
+
+function useDropdownMenu(open, setOpen, triggerRef) {
+    const rootRef = useRef(null);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        if (!open) {
+            return undefined;
+        }
+
+        const firstItem = menuRef.current?.querySelector('[role="menuitem"]');
+        firstItem?.focus?.();
+
+        function onPointerDown(event) {
+            if (rootRef.current && !rootRef.current.contains(event.target)) {
+                setOpen(false);
+            }
+        }
+
+        function onKeyDown(event) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setOpen(false);
+                triggerRef.current?.focus?.();
+            }
+        }
+
+        document.addEventListener('mousedown', onPointerDown);
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('mousedown', onPointerDown);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [open, setOpen, triggerRef]);
+
+    return { rootRef, menuRef };
+}
+
+function HeaderMenuItem({ href, label, icon: Icon, active, onClick, method, as, danger = false }) {
+    const className = ['mf-header-menu__item', active ? 'is-active' : '', danger ? 'is-danger' : '']
+        .filter(Boolean)
+        .join(' ');
+
+    const content = (
+        <>
+            {Icon ? (
+                <span className="mf-header-menu__item-icon" aria-hidden>
+                    <Icon active={Boolean(active)} />
+                </span>
+            ) : null}
+            <span>{label}</span>
+        </>
+    );
+
+    if (onClick && !href) {
+        return (
+            <li role="none">
+                <button type="button" role="menuitem" className={className} onClick={onClick}>
+                    {content}
+                </button>
+            </li>
+        );
+    }
+
+    return (
+        <li role="none">
+            <Link
+                href={href}
+                method={method}
+                as={as}
+                role="menuitem"
+                className={className}
+                aria-current={active ? 'page' : undefined}
+                prefetch={method ? undefined : true}
+                onClick={onClick}
+            >
+                {content}
+            </Link>
+        </li>
+    );
+}
+
+function SocialHeaderNavMenu({ tabs, onCompose }) {
+    const menuId = useId();
+    const [open, setOpen] = useState(false);
+    const triggerRef = useRef(null);
+    const { rootRef, menuRef } = useDropdownMenu(open, setOpen, triggerRef);
+
+    const close = useCallback(() => setOpen(false), []);
+
+    return (
+        <div className="mf-header-menu mf-header-menu--nav" ref={rootRef}>
+            <button
+                type="button"
+                ref={triggerRef}
+                className={`mf-header-menu__trigger ${open ? 'is-open' : ''}`}
+                aria-label={open ? 'Close menu' : 'Open menu'}
+                aria-haspopup="menu"
+                aria-expanded={open}
+                aria-controls={menuId}
+                onClick={() => setOpen((value) => !value)}
+            >
+                <IconMenu />
+            </button>
+
+            {open ? (
+                <ul
+                    id={menuId}
+                    ref={menuRef}
+                    role="menu"
+                    className="mf-header-menu__panel"
+                    aria-label="Social destinations"
+                >
+                    {tabs.map((tab) => (
+                        <HeaderMenuItem
+                            key={tab.label}
+                            href={tab.href}
+                            label={tab.label}
+                            icon={tab.icon}
+                            active={tab.active}
+                            onClick={close}
+                        />
+                    ))}
+                    <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
+                    <HeaderMenuItem
+                        label="Compose"
+                        icon={IconCompose}
+                        onClick={() => {
+                            close();
+                            onCompose();
+                        }}
+                    />
+                    <HeaderMenuItem href="/" label="Campaign" icon={IconCampaign} onClick={close} />
+                    <HeaderMenuItem
+                        href="/logout"
+                        method="post"
+                        as="button"
+                        label="Sign out"
+                        danger
+                        onClick={close}
+                    />
+                </ul>
+            ) : null}
+        </div>
+    );
+}
+
+function SocialHeaderAccountMenu({ user, handle, profileHref }) {
+    const menuId = useId();
+    const [open, setOpen] = useState(false);
+    const triggerRef = useRef(null);
+    const { rootRef, menuRef } = useDropdownMenu(open, setOpen, triggerRef);
+    const close = useCallback(() => setOpen(false), []);
+    const initial = (user?.name || handle || '?').slice(0, 1).toUpperCase();
+
+    return (
+        <div className="mf-header-menu mf-header-menu--account" ref={rootRef}>
+            <button
+                type="button"
+                ref={triggerRef}
+                className={`mf-header-menu__avatar ${open ? 'is-open' : ''}`}
+                aria-label={open ? 'Close account menu' : 'Open account menu'}
+                aria-haspopup="menu"
+                aria-expanded={open}
+                aria-controls={menuId}
+                onClick={() => setOpen((value) => !value)}
+            >
+                {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="mf-header-menu__avatar-img" />
+                ) : (
+                    <span className="mf-header-menu__avatar-fallback mf-display">{initial}</span>
+                )}
+            </button>
+
+            {open ? (
+                <ul
+                    id={menuId}
+                    ref={menuRef}
+                    role="menu"
+                    className="mf-header-menu__panel mf-header-menu__panel--account"
+                    aria-label="Account"
+                >
+                    <li role="none" className="mf-header-menu__identity">
+                        <span className="mf-header-menu__identity-name">{user?.name || 'Fan'}</span>
+                        <span className="mf-header-menu__identity-handle mf-mono">@{handle || 'fan'}</span>
+                    </li>
+                    <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
+                    <HeaderMenuItem href={profileHref} label="You" icon={IconProfile} onClick={close} />
+                    <HeaderMenuItem href="/social/passport" label="Passport" icon={IconPassport} onClick={close} />
+                    <HeaderMenuItem href="/" label="Campaign" icon={IconCampaign} onClick={close} />
+                    <HeaderMenuItem
+                        href="/logout"
+                        method="post"
+                        as="button"
+                        label="Sign out"
+                        danger
+                        onClick={close}
+                    />
+                </ul>
+            ) : null}
+        </div>
+    );
+}
+
+export default function SocialShell({ children, title, showTabs = true, backHref }) {
+    const page = usePage();
+    const { auth, flash, app } = page.props;
+    const user = auth?.user;
+    const handle = user?.handle || user?.fan_id;
+    const current = page.url?.split('?')[0] || '';
+    const logoUrl = app?.logo_url || null;
+
+    const profileHref = handle ? `/social/u/${handle}` : '/social/passport';
+
+    const [composeOpen, setComposeOpen] = useState(false);
+    const [clientError, setClientError] = useState('');
+    const [navSkeletonKind, setNavSkeletonKind] = useState(null);
+    const navSkeletonTimer = useRef(null);
+
+    const openCompose = useCallback(() => setComposeOpen(true), []);
+    const closeCompose = useCallback(() => setComposeOpen(false), []);
+    const reportError = useCallback((message) => {
+        setClientError(message || 'Action failed — rolled back.');
+    }, []);
+    const clearError = useCallback(() => setClientError(''), []);
+
+    const clearNavSkeleton = useCallback(() => {
+        if (navSkeletonTimer.current) {
+            window.clearTimeout(navSkeletonTimer.current);
+            navSkeletonTimer.current = null;
+        }
+        setNavSkeletonKind(null);
+    }, []);
+
+    const composeApi = useMemo(
+        () => ({ openCompose, closeCompose, composeOpen }),
+        [openCompose, closeCompose, composeOpen],
+    );
+
+    const flashApi = useMemo(
+        () => ({ reportError, clearError }),
+        [reportError, clearError],
+    );
+
+    useEffect(() => {
+        if (!clientError) {
+            return undefined;
+        }
+
+        const timer = window.setTimeout(() => setClientError(''), 4500);
+
+        return () => window.clearTimeout(timer);
+    }, [clientError]);
+
+    useEffect(() => {
+        if (!showTabs) {
+            return undefined;
+        }
+
+        const params = new URLSearchParams(page.url?.includes('?') ? page.url.split('?')[1] : '');
+        if (params.get('compose') === '1') {
+            setComposeOpen(true);
+        }
+
+        return undefined;
+    }, [page.url, showTabs]);
+
+    useEffect(() => {
+        const removeStart = router.on('start', (event) => {
+            const visit = event.detail.visit;
+            if (!shouldShowSocialNavSkeleton(visit)) {
+                return;
+            }
+
+            const kind = resolveSocialSkeletonKind(visitPathname(visit));
+
+            if (navSkeletonTimer.current) {
+                window.clearTimeout(navSkeletonTimer.current);
+            }
+
+            navSkeletonTimer.current = window.setTimeout(() => {
+                setNavSkeletonKind(kind);
+            }, NAV_SKELETON_DELAY_MS);
+        });
+
+        const removeFinish = router.on('finish', () => {
+            clearNavSkeleton();
+        });
+
+        return () => {
+            removeStart();
+            removeFinish();
+            clearNavSkeleton();
+        };
+    }, [clearNavSkeleton]);
+
+    // Primary destinations shown in the mobile bottom tab bar (exactly these three).
+    const primaryTabs = [
+        {
+            href: '/social',
+            label: 'Home',
+            icon: IconHome,
+            active: pathMatches(current, '/social', true) || pathMatches(current, '/social/posts'),
+        },
+        {
+            href: '/social/tickets',
+            label: 'Ticket',
+            icon: IconTickets,
+            active: pathMatches(current, '/social/tickets'),
+        },
+        {
+            href: '/social/chat',
+            label: 'Chat',
+            icon: IconChat,
+            active: pathMatches(current, '/social/chat'),
+        },
+    ];
+
+    // Secondary destinations: sidebar + header menus only (not bottom tabs).
+    const secondaryTabs = [
+        {
+            href: '/social/stage',
+            label: 'Join stage',
+            icon: IconStage,
+            active: pathMatches(current, '/social/stage'),
+        },
+        {
+            href: '/social/passport',
+            label: 'Passport',
+            icon: IconPassport,
+            active: pathMatches(current, '/social/passport'),
+        },
+        {
+            href: profileHref,
+            label: 'You',
+            icon: IconProfile,
+            active: handle ? pathMatches(current, `/social/u/${handle}`) : false,
+        },
+    ];
+
+    const tabs = [...primaryTabs, ...secondaryTabs];
+    const mobileTabs = primaryTabs;
+
+    return (
+        <SocialFlashContext.Provider value={flashApi}>
+            <SocialComposeContext.Provider value={composeApi}>
+                <div className="mf-stage">
+                <div className={`mf-shell ${showTabs ? 'mf-shell--nav' : 'mf-shell--bare'}`}>
+                    {showTabs ? (
+                        <aside className="mf-sidebar" aria-label="Social navigation">
+                            <div className="mf-sidebar__top">
+                                <Link
+                                    href="/social"
+                                    className="mf-sidebar__brand"
+                                    aria-label="Mad Fan Social home"
+                                    prefetch
+                                >
+                                    <BrandMark logoUrl={logoUrl} />
+                                </Link>
+
+                                <nav className="mf-sidebar__nav">
+                                    {tabs.map((tab) => (
+                                        <NavItem
+                                            key={tab.label}
+                                            href={tab.href}
+                                            label={tab.label}
+                                            icon={tab.icon}
+                                            active={tab.active}
+                                        />
+                                    ))}
+                                </nav>
+
+                                <button
+                                    type="button"
+                                    className="mf-sidebar__post"
+                                    onClick={openCompose}
+                                >
+                                    <span className="mf-sidebar__post-icon" aria-hidden>
+                                        <IconCompose />
+                                    </span>
+                                    <span className="mf-sidebar__post-label">Post</span>
+                                </button>
+                            </div>
+
+                            {user ? (
+                                <Link
+                                    href="/social/passport"
+                                    className="mf-sidebar__user"
+                                    prefetch
+                                >
+                                    {user.avatar_url ? (
+                                        <img
+                                            src={user.avatar_url}
+                                            alt=""
+                                            className="mf-sidebar__user-avatar"
+                                        />
+                                    ) : (
+                                        <span className="mf-sidebar__user-avatar mf-sidebar__user-avatar--fallback mf-display">
+                                            {(user.name || handle || '?').slice(0, 1).toUpperCase()}
+                                        </span>
+                                    )}
+                                    <span className="mf-sidebar__user-meta">
+                                        <span className="mf-sidebar__user-name">{user.name || 'Fan'}</span>
+                                        <span className="mf-sidebar__user-handle mf-mono">
+                                            @{handle || 'fan'}
+                                        </span>
+                                    </span>
+                                    <span className="mf-sidebar__user-stats">
+                                        <span className="mf-mono">{user.total_points ?? 0}</span>
+                                        <span className="mf-text-caption">pts</span>
+                                    </span>
+                                </Link>
+                            ) : null}
+                        </aside>
+                    ) : null}
+
+                    <div className="mf-app">
+                        {(title || backHref || showTabs) && (
+                            <header className="mf-header">
+                                {showTabs ? (
+                                    <SocialHeaderNavMenu tabs={tabs} onCompose={openCompose} />
+                                ) : null}
+
+                                {backHref ? (
+                                    <Link
+                                        href={backHref}
+                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--mf-pitch)] transition-colors hover:bg-[var(--mf-elevated)]"
+                                        aria-label="Back"
+                                    >
+                                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" aria-hidden>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 6 9 12l6 6" />
+                                        </svg>
+                                    </Link>
+                                ) : (
+                                    <Link href="/social" className="mf-header__brand shrink-0" aria-label="Mad Fan Social home">
+                                        <span className="mf-display mf-text-title tracking-[0.04em] leading-none text-[var(--mf-text)]">
+                                            MF
+                                        </span>
+                                    </Link>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    {title ? (
+                                        <p className="mf-display mf-text-title truncate tracking-[0.03em] text-[var(--mf-text)]">
+                                            {title}
+                                        </p>
+                                    ) : null}
+                                </div>
+                                {user ? (
+                                    <Link
+                                        href="/social/passport"
+                                        className="mf-header__passport flex max-w-[7.5rem] flex-col items-end rounded-lg px-1.5 py-1 transition-colors hover:bg-[var(--mf-elevated)]"
+                                    >
+                                        <span className="mf-mono mf-text-micro truncate text-[var(--mf-pitch)]">
+                                            {user.total_points ?? 0} pts
+                                        </span>
+                                        <span className="mf-text-caption truncate text-[var(--mf-amber)]">
+                                            {user.current_streak_days || 0}d
+                                        </span>
+                                    </Link>
+                                ) : null}
+                                {showTabs && user ? (
+                                    <SocialHeaderAccountMenu
+                                        user={user}
+                                        handle={handle}
+                                        profileHref={profileHref}
+                                    />
+                                ) : null}
+                            </header>
+                        )}
+
+                        {flash?.success ? <div className="mf-flash mf-flash--ok">{flash.success}</div> : null}
+                        {flash?.error ? <div className="mf-flash mf-flash--err">{flash.error}</div> : null}
+                        {clientError ? (
+                            <div className="mf-flash mf-flash--err" role="alert">
+                                {clientError}
+                            </div>
+                        ) : null}
+
+                        <main className={`mf-main ${showTabs ? '' : 'pb-[max(1rem,var(--mf-safe-bottom))]'}`}>
+                            {navSkeletonKind ? <SocialPageSkeleton kind={navSkeletonKind} /> : children}
+                        </main>
+
+                        {showTabs ? (
+                            <nav className="mf-tabbar" aria-label="Primary">
+                                {mobileTabs.map((tab) => {
+                                    const Icon = tab.icon;
+                                    const className = ['mf-tab', tab.active ? 'is-active' : '']
+                                        .filter(Boolean)
+                                        .join(' ');
+
+                                    return (
+                                        <Link
+                                            key={tab.label}
+                                            href={tab.href}
+                                            className={className}
+                                            aria-current={tab.active ? 'page' : undefined}
+                                            prefetch
+                                        >
+                                            <Icon active={tab.active} />
+                                            {tab.label}
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        ) : null}
+                    </div>
+
+                    {showTabs ? <div className="mf-gutter" aria-hidden="true" /> : null}
+                </div>
+
+                {showTabs ? (
+                    <ComposeSheet
+                        open={composeOpen}
+                        onClose={closeCompose}
+                        maxBodyLength={280}
+                        maxImages={4}
+                    />
+                ) : null}
+
+                <StageChrome />
+            </div>
+            </SocialComposeContext.Provider>
+        </SocialFlashContext.Provider>
+    );
+}

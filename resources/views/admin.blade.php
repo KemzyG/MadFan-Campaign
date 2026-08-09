@@ -9,6 +9,7 @@
     <link rel="icon" href="{{ asset('favicon.jpg') }}" type="image/jpeg">
     <link rel="apple-touch-icon" href="{{ asset('favicon.jpg') }}">
     @inertiaHead
+    @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/admin.jsx'])
 </head>
 <body class="antialiased">

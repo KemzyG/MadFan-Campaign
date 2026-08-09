@@ -5,14 +5,16 @@ use App\Http\Middleware\EnsureAdminMfaPassed;
 use App\Http\Middleware\EnsureAdminOrganizationContext;
 use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\EnsureApplicationNotInMaintenance;
+use App\Http\Middleware\EnsureEmailIsVerifiedWhenEnabled;
 use App\Http\Middleware\EnsureRequiredSocialAccountsConnected;
+use App\Http\Middleware\EnsureSocialEnabled;
+use App\Http\Middleware\EnsureSocialOnboarded;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PasetoAuthenticate;
 use App\Http\Middleware\PreventFanRoutesOnAdminDomain;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\AdminRouting;
-use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -54,7 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.required' => EnsureActiveStaffMember::class,
             'app.maintenance' => EnsureApplicationNotInMaintenance::class,
             'admin.mfa' => EnsureAdminMfaPassed::class,
-            'verified' => EnsureEmailIsVerified::class,
+            'verified' => EnsureEmailIsVerifiedWhenEnabled::class,
+            'social.enabled' => EnsureSocialEnabled::class,
+            'social.onboarded' => EnsureSocialOnboarded::class,
         ]);
 
         $middleware->encryptCookies(except: [

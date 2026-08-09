@@ -69,7 +69,10 @@ _ide_helper_models.php
 /.zed
 /.fleet
 
-/docs
+# Docs: ignore the tree, then re-include Mad Fan Social only (parent `/docs` alone blocks un-ignores).
+/docs/*
+!/docs/social/
+!/docs/social/**
 /project_status
 /PenaltyShootOut
 /madfan
@@ -83,3 +86,6 @@ package-lock.json.bak
 
 *.md
 !/README.md
+!/docs/social/
+!/docs/social/**/*.md
+!/docs/social/**/
