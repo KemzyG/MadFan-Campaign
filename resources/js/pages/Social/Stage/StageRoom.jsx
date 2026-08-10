@@ -156,6 +156,10 @@ export default function StageRoom() {
           ? voiceStatus
           : 'Voice on';
     const voiceChipOff = !voiceEnabled || !isLive;
+    const statusLower = String(voiceStatus || '').toLowerCase();
+    const isHearing = statusLower.includes('hearing');
+    const needsHearUnlock = voiceEnabled && isLive && !isHearing;
+    const hearLabel = isHearing ? 'Hearing ✓' : 'Tap to hear';
 
     function flashVisit(options = {}) {
         return withRollbackFlash(reportError, {
@@ -183,6 +187,7 @@ export default function StageRoom() {
                         )}
                         {isLive ? (
                             <span
+                                id="mf-stage-voice-status"
                                 className={`mf-stage-voice-chip mf-mono ${voiceChipOff ? 'mf-stage-voice-chip--off' : ''}`}
                             >
                                 {voiceChipLabel}
@@ -323,8 +328,32 @@ export default function StageRoom() {
                 ) : null}
 
                 {isLive && voiceEnabled ? (
-                    <button type="button" className="mf-btn" onClick={() => unlockVoicePlayback?.()}>
-                        Tap to hear
+                    <button
+                        type="button"
+                        className={`mf-btn mf-stage-hear-btn ${
+                            needsHearUnlock ? 'mf-btn--pitch' : ''
+                        }`}
+                        data-stage-hear-unlock="1"
+                        aria-pressed={!needsHearUnlock}
+                        aria-describedby="mf-stage-voice-status"
+                        onPointerDown={(event) => {
+                            // Prefer pointerdown so WebKit keeps the user-gesture token for play().
+                            if (event.pointerType === 'mouse' && event.button !== 0) {
+                                return;
+                            }
+                            event.stopPropagation();
+                            unlockVoicePlayback?.();
+                        }}
+                        onClick={(event) => {
+                            // Keyboard activation (Enter/Space): detail === 0; mouse/touch already unlocked on pointerdown.
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (event.detail === 0) {
+                                unlockVoicePlayback?.();
+                            }
+                        }}
+                    >
+                        {hearLabel}
                     </button>
                 ) : null}
 

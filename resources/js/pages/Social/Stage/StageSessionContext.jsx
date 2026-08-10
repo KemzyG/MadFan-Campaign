@@ -62,6 +62,8 @@ export function StageSessionProvider({ children }) {
     const chatOpenRef = useRef(false);
     const seenMessageCountRef = useRef(0);
     const roomPollBackoffRef = useRef(null);
+    const pendingUnlockRef = useRef(false);
+    const unlockVoicePlaybackRef = useRef(() => {});
 
     useEffect(() => {
         roomRef.current = room;
@@ -90,6 +92,7 @@ export function StageSessionProvider({ children }) {
             pollTimerRef.current = null;
         }
         roomPollBackoffRef.current = null;
+        pendingUnlockRef.current = false;
         stopVoice();
         setActiveStageId(null);
         setModalOpen(false);
@@ -159,9 +162,22 @@ export function StageSessionProvider({ children }) {
         });
     }, []);
 
+    const unlockVoicePlayback = useCallback(() => {
+        if (voiceRef.current?.unlockPlayback) {
+            pendingUnlockRef.current = false;
+            // Fire from the click/pointer handler so media.play() stays in the user gesture.
+            void voiceRef.current.unlockPlayback();
+            return;
+        }
+        pendingUnlockRef.current = true;
+        setVoiceStatus('Preparing audio… tap again if needed');
+    }, []);
+
+    unlockVoicePlaybackRef.current = unlockVoicePlayback;
+
     const openModal = useCallback(() => {
         setModalOpen(true);
-        voiceRef.current?.unlockPlayback?.();
+        unlockVoicePlaybackRef.current?.();
     }, []);
     const closeChat = useCallback(() => setChatOpen(false), []);
     const openChat = useCallback(() => {
@@ -177,12 +193,8 @@ export function StageSessionProvider({ children }) {
     const reopen = useCallback(() => {
         if (activeStageIdRef.current) {
             setModalOpen(true);
-            voiceRef.current?.unlockPlayback?.();
+            unlockVoicePlaybackRef.current?.();
         }
-    }, []);
-
-    const unlockVoicePlayback = useCallback(() => {
-        voiceRef.current?.unlockPlayback?.();
     }, []);
 
     const fetchRoom = useCallback(async (stageId) => {
@@ -386,6 +398,10 @@ export function StageSessionProvider({ children }) {
             session.stageId = stage.id;
             voiceRef.current = session;
             session.start();
+            if (pendingUnlockRef.current) {
+                pendingUnlockRef.current = false;
+                void session.unlockPlayback();
+            }
         } else {
             voiceRef.current.update({
                 voiceEnabled,

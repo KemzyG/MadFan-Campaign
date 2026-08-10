@@ -31,6 +31,9 @@ export function createStageVoiceSession({
     let currentPollMs = signalPollMs;
     let signalChain = Promise.resolve();
     let iceServers = normalizeIceServers(iceServersOption);
+    /** Set by a trusted user gesture (Tap to hear) so later remote tracks can autoplay. */
+    let playbackUnlocked = false;
+    let unlockAudioContext = null;
 
     function normalizeIceServers(servers) {
         if (Array.isArray(servers) && servers.length > 0) {
@@ -195,30 +198,100 @@ export function createStageVoiceSession({
         playRemoteAudio(audio);
     }
 
+    function listRemoteAudios() {
+        return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
+    }
+
     function playRemoteAudio(audio) {
         if (!audio) {
-            return;
+            return Promise.resolve(false);
         }
+        audio.muted = false;
+        audio.volume = 1;
         const attempt = audio.play();
         if (attempt && typeof attempt.then === 'function') {
-            attempt
+            return attempt
                 .then(() => {
                     if (!iAmOnStage) {
                         setStatus('Hearing stage…');
                     }
+                    return true;
                 })
                 .catch(() => {
-                    setStatus('Tap Stage controls to hear audio');
+                    if (!playbackUnlocked) {
+                        setStatus('Tap “Tap to hear” to unlock audio');
+                    }
+                    return false;
                 });
+        }
+        return Promise.resolve(!audio.paused);
+    }
+
+    function ensureUnlockAudioContext() {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) {
+            return null;
+        }
+        if (!unlockAudioContext || unlockAudioContext.state === 'closed') {
+            unlockAudioContext = new Ctx();
+        }
+        return unlockAudioContext;
+    }
+
+    /**
+     * Warm WebKit / Chrome autoplay gate inside a trusted user gesture.
+     * Must stay synchronous (no await) so later audio.play() stays in-gesture.
+     */
+    function warmUnlockGestureSync() {
+        try {
+            const ctx = ensureUnlockAudioContext();
+            if (!ctx) {
+                return;
+            }
+            if (ctx.state === 'suspended') {
+                void ctx.resume();
+            }
+            const buffer = ctx.createBuffer(1, 1, 22050);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start(0);
+        } catch (err) {
+            console.warn('stage audio unlock context', err);
         }
     }
 
-    /** Call from a trusted user gesture so browsers unlock WebRTC remote audio. */
+    /**
+     * Call from a trusted user gesture so browsers unlock WebRTC remote audio.
+     * Safe before remote tracks exist — marks unlocked so later attachRemoteAudio can play.
+     * Important: do not await before audio.play(); that would drop the gesture token.
+     */
     function unlockPlayback() {
-        document.querySelectorAll('audio[id^="stage-remote-audio-"]').forEach((audio) => {
-            audio.muted = false;
-            audio.volume = 1;
-            playRemoteAudio(audio);
+        playbackUnlocked = true;
+        setStatus('Unlocking audio…');
+        warmUnlockGestureSync();
+
+        const audios = listRemoteAudios();
+        if (!audios.length) {
+            setStatus('Audio unlocked — waiting for speakers…');
+            return Promise.resolve({ played: 0, failed: 0, pending: true });
+        }
+
+        const playPromises = audios.map((audio) => playRemoteAudio(audio));
+
+        return Promise.all(playPromises).then((results) => {
+            const played = results.filter(Boolean).length;
+            const failed = results.length - played;
+
+            if (played > 0) {
+                setStatus(iAmOnStage ? 'Hearing peers…' : 'Hearing stage…');
+            } else if (failed > 0) {
+                setStatus('Browser blocked audio — tap Tap to hear again');
+            } else {
+                setStatus('Audio unlocked — waiting for speakers…');
+            }
+
+            return { played, failed, pending: false };
         });
     }
 
@@ -298,7 +371,10 @@ export function createStageVoiceSession({
             if (state === 'connected' || state === 'completed') {
                 entry.iceFailed = false;
                 if (!iAmOnStage) {
-                    setStatus('Hearing stage…');
+                    // Do not claim "Hearing" until <audio>.play() succeeds (autoplay may still block).
+                    if (!playbackUnlocked) {
+                        setStatus('Connected — tap Tap to hear');
+                    }
                 } else if (isMuted) {
                     setStatus('Mic muted');
                 } else {
@@ -524,6 +600,7 @@ export function createStageVoiceSession({
 
     function stop() {
         stopped = true;
+        playbackUnlocked = false;
         if (pollTimer) window.clearTimeout(pollTimer);
         if (syncTimer) window.clearInterval(syncTimer);
         if (iceFlushTimer) window.clearTimeout(iceFlushTimer);
@@ -536,6 +613,14 @@ export function createStageVoiceSession({
         if (localStream) {
             localStream.getTracks().forEach((t) => t.stop());
             localStream = null;
+        }
+        if (unlockAudioContext) {
+            try {
+                unlockAudioContext.close();
+            } catch {
+                // ignore
+            }
+            unlockAudioContext = null;
         }
         setStatus('Voice stopped');
     }

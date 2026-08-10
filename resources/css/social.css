@@ -5131,6 +5131,20 @@ body,
 
 .mf-stage-room--modal .mf-stage-controls {
     bottom: 0.65rem;
+    z-index: 40;
+    pointer-events: auto;
+    isolation: isolate;
+}
+
+.mf-stage-room--modal .mf-stage-controls .mf-btn {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+
+.mf-stage-hear-btn {
+    min-width: 7.5rem;
 }
 
 /* Right-side live FAB — clear of compose FAB + mobile tab bar + desktop Post rail */
