@@ -1,0 +1,31 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+/**
+ * Idempotent production bootstrap (no TestData / demo matches).
+ * Run: php artisan db:seed --class=ProductionCoreSeeder --force
+ */
+class ProductionCoreSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            RoleSeeder::class,
+            AdminPermissionsSeeder::class,
+            FilamentAdminSeeder::class,
+            AdminOrganizationSeeder::class,
+            LoyaltyTierSeeder::class,
+            SeasonSeeder::class,
+            StreakMilestoneSeeder::class,
+            ReferralMilestoneSeeder::class,
+            TaskSeeder::class,
+            StaffPositionSeeder::class,
+            EarnSourceSeeder::class,
+            ClubSeeder::class,
+            SettingSeeder::class,
+        ]);
+    }
+}

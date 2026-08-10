@@ -29,5 +29,10 @@ if [[ -n "${DB_URL:-}${DATABASE_URL:-}${DB_HOST:-}" ]]; then
   php artisan migrate --force --no-interaction
 fi
 
+if [[ "${RUN_SEEDERS:-}" == "true" ]]; then
+  echo "Running ProductionCoreSeeder..."
+  php artisan db:seed --class=Database\\Seeders\\ProductionCoreSeeder --force --no-interaction
+fi
+
 echo "Starting Mad Fan on port ${PORT}"
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
