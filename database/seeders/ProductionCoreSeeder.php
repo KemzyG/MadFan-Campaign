@@ -25,6 +25,7 @@ class ProductionCoreSeeder extends Seeder
             EarnSourceSeeder::class,
             ClubSeeder::class,
             SettingSeeder::class,
+            SportsPostSeeder::class,
         ]);
     }
 }
