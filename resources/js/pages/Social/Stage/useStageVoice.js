@@ -9,6 +9,11 @@
  * On 429, signal poll backs off exponentially so the limiter can recover.
  */
 import { createStageLiveKitVoiceSession } from './useStageLiveKitVoice';
+import {
+    describeMicError,
+    mediaDevicesAvailable,
+    requestStageMicrophone,
+} from './stageMicPermission';
 
 export function createStageMeshVoiceSession({
     stageId,
@@ -38,6 +43,8 @@ export function createStageMeshVoiceSession({
     /** Set by a trusted user gesture (Tap to hear) so later remote tracks can autoplay. */
     let playbackUnlocked = false;
     let unlockAudioContext = null;
+    /** After a hard mic deny, pause auto getUserMedia until Enable microphone. */
+    let micBlocked = false;
 
     function normalizeIceServers(servers) {
         if (Array.isArray(servers) && servers.length > 0) {
@@ -133,7 +140,7 @@ export function createStageMeshVoiceSession({
         }
     }
 
-    async function ensureLocalStream() {
+    async function ensureLocalStream({ force = false } = {}) {
         if (!iAmOnStage || !voiceEnabled) {
             return null;
         }
@@ -143,25 +150,30 @@ export function createStageMeshVoiceSession({
             });
             return localStream;
         }
-        if (!navigator.mediaDevices?.getUserMedia) {
-            setStatus('Mic unavailable in this browser.');
+        if (micBlocked && !force) {
+            setStatus(describeMicError({ name: 'NotAllowedError' }).status);
             return null;
         }
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true },
-                video: false,
-            });
-            localStream.getAudioTracks().forEach((t) => {
-                t.enabled = !isMuted;
-            });
-            setStatus(isMuted ? 'Mic ready (muted)' : 'Mic live');
-            return localStream;
-        } catch (err) {
-            setStatus('Mic permission denied');
-            console.warn('Stage getUserMedia', err);
+        if (!mediaDevicesAvailable()) {
+            setStatus(describeMicError({ name: 'NotSupportedError' }).status);
             return null;
         }
+        const result = await requestStageMicrophone({ keepStream: true });
+        if (!result.ok) {
+            console.warn('Stage getUserMedia', result.cause);
+            if (result.error.code === 'blocked') {
+                micBlocked = true;
+            }
+            setStatus(result.error.status);
+            return null;
+        }
+        localStream = result.stream;
+        micBlocked = false;
+        localStream.getAudioTracks().forEach((t) => {
+            t.enabled = !isMuted;
+        });
+        setStatus(isMuted ? 'Mic ready (muted)' : 'Mic live');
+        return localStream;
     }
 
     async function ensureAudioSenders(entry) {
@@ -593,6 +605,28 @@ export function createStageMeshVoiceSession({
         }
     }
 
+    /**
+     * Call from a trusted click so the browser may show the permission prompt.
+     */
+    async function retryMicAccess() {
+        if (stopped || !voiceEnabled || !iAmOnStage) {
+            return { ok: false };
+        }
+        setStatus('Requesting microphone…');
+        micBlocked = false;
+        if (localStream) {
+            localStream.getTracks().forEach((t) => t.stop());
+            localStream = null;
+        }
+        const stream = await ensureLocalStream({ force: true });
+        if (!stream) {
+            return { ok: false };
+        }
+        resetAllPeers();
+        await syncPeers();
+        return { ok: true };
+    }
+
     function start() {
         if (stopped) return;
         if (!voiceEnabled) {
@@ -693,7 +727,16 @@ export function createStageMeshVoiceSession({
         }
     }
 
-    return { start, stop, update, applyMute, ingestSignals, unlockPlayback, driver: 'mesh' };
+    return {
+        start,
+        stop,
+        update,
+        applyMute,
+        ingestSignals,
+        unlockPlayback,
+        retryMicAccess,
+        driver: 'mesh',
+    };
 }
 
 /**

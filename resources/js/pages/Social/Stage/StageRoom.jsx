@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
+import { isMicBlockedStatus } from './stageMicPermission';
 import { useStageSession } from './StageSessionContext';
 
 function Avatar({ user, size = 'md' }) {
@@ -132,7 +133,7 @@ function ListenerRow({ participant, isHostView, stageId }) {
  * Room chat opens in a separate modal via the Chat control.
  */
 export default function StageRoom() {
-    const { room, voiceStatus, patchRoom, clearSession, minimize, openChat, chatUnread, unlockVoicePlayback } =
+    const { room, voiceStatus, patchRoom, clearSession, minimize, openChat, chatUnread, unlockVoicePlayback, retryMicAccess } =
         useStageSession();
     const { reportError, clearError } = useSocialFlash();
 
@@ -160,6 +161,7 @@ export default function StageRoom() {
     const isHearing = statusLower.includes('hearing');
     const needsHearUnlock = voiceEnabled && isLive && !isHearing;
     const hearLabel = isHearing ? 'Hearing ✓' : 'Tap to hear';
+    const micNeedsRecovery = onStage && voiceEnabled && isLive && isMicBlockedStatus(voiceStatus);
 
     function flashVisit(options = {}) {
         return withRollbackFlash(reportError, {
@@ -289,6 +291,7 @@ export default function StageRoom() {
                         className="mf-btn mf-btn--pitch"
                         onClick={() => {
                             unlockVoicePlayback?.();
+                            void retryMicAccess?.();
                             patchRoom((props) => ({
                                 ...props,
                                 stage: props.stage ? { ...props.stage, voice_enabled: true } : props.stage,
@@ -302,6 +305,18 @@ export default function StageRoom() {
                     </button>
                 ) : null}
 
+                {micNeedsRecovery ? (
+                    <button
+                        type="button"
+                        className="mf-btn mf-btn--pitch"
+                        onClick={() => {
+                            void retryMicAccess?.();
+                        }}
+                    >
+                        Enable microphone
+                    </button>
+                ) : null}
+
                 {onStage && isLive && voiceEnabled ? (
                     <button
                         type="button"
@@ -309,6 +324,9 @@ export default function StageRoom() {
                         onClick={() => {
                             unlockVoicePlayback?.();
                             const nextMuted = me.is_muted ? 0 : 1;
+                            if (nextMuted === 0) {
+                                void retryMicAccess?.();
+                            }
                             patchRoom((props) => ({
                                 ...props,
                                 me: props.me ? { ...props.me, is_muted: Boolean(nextMuted) } : props.me,

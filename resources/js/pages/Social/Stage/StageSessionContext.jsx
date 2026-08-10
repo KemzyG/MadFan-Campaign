@@ -9,6 +9,7 @@ import {
     useState,
 } from 'react';
 import { getEcho, leaveEchoChannel, subscribeEchoConnection } from '../../../echo';
+import { requestStageMicrophone } from './stageMicPermission';
 import { createStageVoiceSession } from './useStageVoice';
 
 const StageSessionContext = createContext(null);
@@ -187,6 +188,22 @@ export function StageSessionProvider({ children }) {
         pendingUnlockRef.current = true;
         setVoiceStatus('Preparing audio… tap again if needed');
     }, []);
+
+    const retryMicAccess = useCallback(async () => {
+        unlockVoicePlayback();
+        if (voiceRef.current?.retryMicAccess) {
+            return voiceRef.current.retryMicAccess();
+        }
+        // Start voice / promote can race session mount — warm getUserMedia in this gesture.
+        setVoiceStatus('Requesting microphone…');
+        const result = await requestStageMicrophone({ keepStream: false });
+        if (!result.ok) {
+            setVoiceStatus(result.error.status);
+            return result;
+        }
+        setVoiceStatus('Mic allowed — connecting voice…');
+        return { ok: true };
+    }, [unlockVoicePlayback]);
 
     unlockVoicePlaybackRef.current = unlockVoicePlayback;
 
@@ -525,6 +542,7 @@ export function StageSessionProvider({ children }) {
             clearSession,
             setLoading,
             unlockVoicePlayback,
+            retryMicAccess,
         }),
         [
             activeStageId,
@@ -544,6 +562,7 @@ export function StageSessionProvider({ children }) {
             reopen,
             clearSession,
             unlockVoicePlayback,
+            retryMicAccess,
         ],
     );
 

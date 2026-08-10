@@ -32,7 +32,7 @@ class SecurityHeaders
     {
         $scriptSrc = ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
         $styleSrc = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'];
-        $connectSrc = ["'self'", 'https:'];
+        $connectSrc = ["'self'", 'https:', 'wss:'];
         $fontSrc = ["'self'", 'data:', 'https://fonts.gstatic.com'];
         $imgSrc = ["'self'", 'data:', 'blob:', 'https:'];
         // Vite HMR / React Refresh create blob: workers; without worker-src they

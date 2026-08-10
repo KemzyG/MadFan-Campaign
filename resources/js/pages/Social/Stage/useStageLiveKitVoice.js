@@ -4,6 +4,7 @@
  * App events (promote / messages / room): Reverb — no mesh signaling needed.
  */
 import { Room, RoomEvent, Track } from 'livekit-client';
+import { describeMicError, requestStageMicrophone } from './stageMicPermission';
 
 function csrfHeaders() {
     const headers = {
@@ -35,6 +36,8 @@ export function createStageLiveKitVoiceSession({
     let playbackUnlocked = false;
     let unlockAudioContext = null;
     let lastCanPublish = null;
+    /** After a hard mic deny, pause auto-retries until the user taps Enable microphone. */
+    let micBlocked = false;
 
     function setStatus(msg) {
         if (typeof onStatus === 'function') {
@@ -208,12 +211,21 @@ export function createStageLiveKitVoiceSession({
             await room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
             return;
         }
+        if (micBlocked && !isMuted) {
+            setStatus(describeMicError({ name: 'NotAllowedError' }).status);
+            return;
+        }
         try {
             await room.localParticipant.setMicrophoneEnabled(!isMuted);
+            micBlocked = false;
             setStatus(isMuted ? 'Mic muted' : 'Mic live');
         } catch (err) {
             console.warn('livekit mic', err);
-            setStatus('Mic permission denied');
+            const described = describeMicError(err);
+            if (described.code === 'blocked') {
+                micBlocked = true;
+            }
+            setStatus(described.status);
         }
     }
 
@@ -344,6 +356,28 @@ export function createStageLiveKitVoiceSession({
         void applyPublishState();
     }
 
+    /**
+     * Call from a trusted click so the browser may show the permission prompt
+     * (or report a prior deny with a clear recovery status).
+     */
+    async function retryMicAccess() {
+        if (stopped || !voiceEnabled || !iAmOnStage) {
+            return { ok: false };
+        }
+        setStatus('Requesting microphone…');
+        const result = await requestStageMicrophone({ keepStream: false });
+        if (!result.ok) {
+            if (result.error.code === 'blocked') {
+                micBlocked = true;
+            }
+            setStatus(result.error.status);
+            return result;
+        }
+        micBlocked = false;
+        await applyPublishState();
+        return { ok: true };
+    }
+
     // Mesh API surface compatibility (signals unused for LiveKit).
     async function ingestSignals() {}
 
@@ -354,6 +388,7 @@ export function createStageLiveKitVoiceSession({
         applyMute,
         ingestSignals,
         unlockPlayback,
+        retryMicAccess,
         driver: 'livekit',
     };
 }
