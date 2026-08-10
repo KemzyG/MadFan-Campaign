@@ -76,3 +76,21 @@ test('social realtime meta reports reverb when configured', function () {
         ->and(SocialRealtime::chatMeta()['mode'])->toBe('reverb')
         ->and(SocialRealtime::stageMeta()['signal_mode'])->toBe('reverb_with_poll_fallback');
 });
+
+test('social chat inertia reports reverb mode when broadcasting is configured', function () {
+    config([
+        'broadcasting.default' => 'reverb',
+        'broadcasting.connections.reverb.key' => 'test-key',
+    ]);
+
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->get('/social/chat')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Chat')
+            ->where('realtime.mode', 'reverb')
+            ->has('realtime.note'));
+});

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PORT="${PORT:-10000}"
+REVERB_SERVER_PORT="${REVERB_SERVER_PORT:-8080}"
 ROOT="/var/www/html"
 
 cd "$ROOT"
@@ -11,7 +12,8 @@ if [[ -n "${DATABASE_URL:-}" && -z "${DB_URL:-}" ]]; then
   export DB_URL="${DATABASE_URL}"
 fi
 
-sed -i "s/__PORT__/${PORT}/g" /etc/nginx/sites-available/default
+# Public HTTP port + internal Reverb listen port for nginx → reverb proxy.
+sed -i "s/__PORT__/${PORT}/g; s/__REVERB_PORT__/${REVERB_SERVER_PORT}/g" /etc/nginx/sites-available/default
 
 mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache || true
