@@ -22,7 +22,6 @@ class ProductionCoreSeeder extends Seeder
             StreakMilestoneSeeder::class,
             ReferralMilestoneSeeder::class,
             TaskSeeder::class,
-            StaffPositionSeeder::class,
             EarnSourceSeeder::class,
             ClubSeeder::class,
             SettingSeeder::class,
