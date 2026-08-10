@@ -6,6 +6,11 @@ ROOT="/var/www/html"
 
 cd "$ROOT"
 
+# Render links inject DATABASE_URL; Laravel reads DB_URL.
+if [[ -n "${DATABASE_URL:-}" && -z "${DB_URL:-}" ]]; then
+  export DB_URL="${DATABASE_URL}"
+fi
+
 sed -i "s/__PORT__/${PORT}/g" /etc/nginx/sites-available/default
 
 mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
@@ -19,7 +24,7 @@ if [[ -n "${APP_KEY:-}" ]]; then
   php artisan view:cache || true
 fi
 
-if [[ -n "${DATABASE_URL:-}" || -n "${DB_HOST:-}" ]]; then
+if [[ -n "${DB_URL:-}${DATABASE_URL:-}${DB_HOST:-}" ]]; then
   echo "Running migrations..."
   php artisan migrate --force --no-interaction
 fi
