@@ -12,13 +12,17 @@ RUN npm run build
 
 FROM composer:2 AS vendor
 WORKDIR /app
+# Composer image lacks intl/gmp; the runtime stage installs them.
+ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \
     --no-scripts \
     --no-autoloader \
     --prefer-dist \
-    --no-interaction
+    --no-interaction \
+    --ignore-platform-req=ext-intl \
+    --ignore-platform-req=ext-gmp
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-interaction
 
