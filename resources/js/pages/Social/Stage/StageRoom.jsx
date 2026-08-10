@@ -322,7 +322,7 @@ export default function StageRoom() {
                     </button>
                 ) : null}
 
-                {isLive && voiceEnabled && !onStage ? (
+                {isLive && voiceEnabled ? (
                     <button type="button" className="mf-btn" onClick={() => unlockVoicePlayback?.()}>
                         Tap to hear
                     </button>

@@ -5,6 +5,7 @@
  * Signaling: Laravel Reverb (preferred) + HTTP poll fallback of /social/stage/{id}/signals
  *
  * ICE candidates are batched to avoid bursting past stage-signal-post rate limits.
+ * Early ICE (before remote description) is buffered. Offers/answers/ICE are serialized.
  * On 429, signal poll backs off exponentially so the limiter can recover.
  */
 export function createStageVoiceSession({
@@ -15,18 +16,31 @@ export function createStageVoiceSession({
     iAmOnStage,
     isMuted,
     signalPollMs = 1500,
+    iceServers: iceServersOption = null,
     onStatus,
 }) {
     const peers = new Map();
     const seenSignalIds = new Set();
     const iceQueues = new Map();
+    const pendingRemoteIce = new Map();
     let localStream = null;
     let pollTimer = null;
     let syncTimer = null;
     let iceFlushTimer = null;
     let stopped = false;
     let currentPollMs = signalPollMs;
-    const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+    let signalChain = Promise.resolve();
+    let iceServers = normalizeIceServers(iceServersOption);
+
+    function normalizeIceServers(servers) {
+        if (Array.isArray(servers) && servers.length > 0) {
+            return servers;
+        }
+        return [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+        ];
+    }
 
     function setStatus(msg) {
         if (typeof onStatus === 'function') {
@@ -143,6 +157,20 @@ export function createStageVoiceSession({
         }
     }
 
+    async function ensureAudioSenders(entry) {
+        if (!entry || entry.recvOnly || !iAmOnStage || !voiceEnabled) {
+            return;
+        }
+        const stream = await ensureLocalStream();
+        if (!stream) {
+            return;
+        }
+        const hasAudioSender = entry.pc.getSenders().some((sender) => sender.track?.kind === 'audio');
+        if (!hasAudioSender) {
+            stream.getTracks().forEach((track) => entry.pc.addTrack(track, stream));
+        }
+    }
+
     function attachRemoteAudio(peerUserId, stream) {
         const elId = `stage-remote-audio-${peerUserId}`;
         let audio = document.getElementById(elId);
@@ -209,6 +237,7 @@ export function createStageVoiceSession({
             peers.delete(peerUserId);
         }
         iceQueues.delete(peerUserId);
+        pendingRemoteIce.delete(peerUserId);
         removeRemoteAudio(peerUserId);
     }
 
@@ -218,12 +247,41 @@ export function createStageVoiceSession({
         }
     }
 
+    function bufferRemoteIce(peerUserId, candidates) {
+        const bucket = pendingRemoteIce.get(peerUserId) || [];
+        for (const candidate of candidates) {
+            if (candidate) {
+                bucket.push(candidate);
+            }
+        }
+        pendingRemoteIce.set(peerUserId, bucket);
+    }
+
+    async function flushPendingRemoteIce(peerUserId) {
+        const entry = peers.get(peerUserId);
+        const bucket = pendingRemoteIce.get(peerUserId) || [];
+        pendingRemoteIce.delete(peerUserId);
+        if (!entry?.pc?.remoteDescription || !bucket.length) {
+            if (bucket.length) {
+                pendingRemoteIce.set(peerUserId, bucket);
+            }
+            return;
+        }
+        for (const candidate of bucket) {
+            try {
+                await entry.pc.addIceCandidate(candidate);
+            } catch (err) {
+                console.warn('addIceCandidate', err);
+            }
+        }
+    }
+
     async function createPeer(peerUserId, { initiator, recvOnly }) {
         if (peers.has(peerUserId) || stopped) {
             return peers.get(peerUserId);
         }
         const pc = new RTCPeerConnection({ iceServers });
-        const entry = { pc, initiator, recvOnly };
+        const entry = { pc, initiator, recvOnly, iceFailed: false };
         peers.set(peerUserId, entry);
 
         pc.onicecandidate = (event) => {
@@ -235,6 +293,23 @@ export function createStageVoiceSession({
             const stream = event.streams[0] || new MediaStream([event.track]);
             attachRemoteAudio(peerUserId, stream);
         };
+        pc.oniceconnectionstatechange = () => {
+            const state = pc.iceConnectionState;
+            if (state === 'connected' || state === 'completed') {
+                entry.iceFailed = false;
+                if (!iAmOnStage) {
+                    setStatus('Hearing stage…');
+                } else if (isMuted) {
+                    setStatus('Mic muted');
+                } else {
+                    setStatus('Mic live');
+                }
+            } else if (state === 'failed') {
+                entry.iceFailed = true;
+                setStatus('Voice blocked by network — try same Wi‑Fi or configure TURN');
+                closePeer(peerUserId);
+            }
+        };
         pc.onconnectionstatechange = () => {
             if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
                 closePeer(peerUserId);
@@ -242,17 +317,14 @@ export function createStageVoiceSession({
         };
 
         if (!recvOnly) {
-            const stream = await ensureLocalStream();
-            if (stream) {
-                stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-            }
+            await ensureAudioSenders(entry);
         } else {
             pc.addTransceiver('audio', { direction: 'recvonly' });
         }
 
         if (initiator) {
             try {
-                const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: false });
+                const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 await postSignal(peerUserId, 'offer', {
                     sdp: pc.localDescription.sdp,
@@ -281,7 +353,10 @@ export function createStageVoiceSession({
         if (!entry) {
             entry = await createPeer(fromUserId, { initiator: false, recvOnly });
         }
+
+        await ensureAudioSenders(entry);
         await entry.pc.setRemoteDescription({ type: payload.type || 'offer', sdp: payload.sdp });
+        await flushPendingRemoteIce(fromUserId);
         const answer = await entry.pc.createAnswer();
         await entry.pc.setLocalDescription(answer);
         await postSignal(fromUserId, 'answer', {
@@ -294,17 +369,21 @@ export function createStageVoiceSession({
         const entry = peers.get(fromUserId);
         if (!entry) return;
         await entry.pc.setRemoteDescription({ type: payload.type || 'answer', sdp: payload.sdp });
+        await flushPendingRemoteIce(fromUserId);
     }
 
     async function handleIce(fromUserId, payload) {
-        const entry = peers.get(fromUserId);
-        if (!entry) return;
-
         const list = Array.isArray(payload?.candidates)
             ? payload.candidates
             : payload?.candidate
               ? [payload.candidate]
               : [];
+
+        const entry = peers.get(fromUserId);
+        if (!entry?.pc?.remoteDescription) {
+            bufferRemoteIce(fromUserId, list);
+            return;
+        }
 
         for (const candidate of list) {
             if (!candidate) continue;
@@ -330,9 +409,14 @@ export function createStageVoiceSession({
     }
 
     async function ingestSignals(signals) {
-        for (const signal of signals || []) {
-            await applySignal(signal);
-        }
+        signalChain = signalChain
+            .then(async () => {
+                for (const signal of signals || []) {
+                    await applySignal(signal);
+                }
+            })
+            .catch((err) => console.warn('signal ingest', err));
+        await signalChain;
     }
 
     function schedulePoll(delayMs = currentPollMs) {
@@ -389,6 +473,8 @@ export function createStageVoiceSession({
                         initiator: myUserId < speaker.user_id,
                         recvOnly: false,
                     }).catch((e) => console.warn('peer', e));
+                } else {
+                    await ensureAudioSenders(peers.get(speaker.user_id));
                 }
             }
         } else {
@@ -445,6 +531,7 @@ export function createStageVoiceSession({
         syncTimer = null;
         iceFlushTimer = null;
         iceQueues.clear();
+        pendingRemoteIce.clear();
         for (const id of [...peers.keys()]) closePeer(id);
         if (localStream) {
             localStream.getTracks().forEach((t) => t.stop());
@@ -470,6 +557,10 @@ export function createStageVoiceSession({
             if (currentPollMs < signalPollMs || currentPollMs === signalPollMs) {
                 currentPollMs = signalPollMs;
             }
+        }
+
+        if (Array.isArray(next.iceServers) && next.iceServers.length > 0) {
+            iceServers = normalizeIceServers(next.iceServers);
         }
 
         // Promote/demote must renegotiate send/recv — stale recvonly peers cannot transmit.

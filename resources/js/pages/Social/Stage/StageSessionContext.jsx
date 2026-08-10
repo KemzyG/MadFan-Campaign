@@ -380,6 +380,7 @@ export function StageSessionProvider({ children }) {
                 iAmOnStage: onStage,
                 isMuted: Boolean(me.is_muted),
                 signalPollMs: room?.voice?.signal_poll_ms || 1500,
+                iceServers: room?.voice?.ice_servers || null,
                 onStatus: setVoiceStatus,
             });
             session.stageId = stage.id;
@@ -391,6 +392,7 @@ export function StageSessionProvider({ children }) {
                 iAmOnStage: onStage,
                 isMuted: Boolean(me.is_muted),
                 signalPollMs: room?.voice?.signal_poll_ms || 1500,
+                iceServers: room?.voice?.ice_servers || null,
                 getParticipants: () => roomRef.current?.participants || [],
             });
         }
@@ -404,6 +406,7 @@ export function StageSessionProvider({ children }) {
         room?.me?.on_stage,
         room?.me?.is_muted,
         room?.voice?.signal_poll_ms,
+        room?.voice?.ice_servers,
         stopVoice,
     ]);
 

@@ -14,6 +14,7 @@ use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Models\User;
 use App\Support\SocialRealtime;
+use App\Support\WebRtcIce;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -438,9 +439,14 @@ class StageService
                 'mode' => SocialRealtime::enabled() ? 'webrtc_mesh_reverb' : 'webrtc_mesh_poll',
                 'enabled' => $stage->voice_enabled,
                 'max_speakers' => self::MAX_SPEAKERS,
-                // When Reverb pushes signals, HTTP poll is a sparse fallback only.
-                'signal_poll_ms' => SocialRealtime::enabled() ? max(self::SIGNAL_POLL_MS * 10, 15000) : self::SIGNAL_POLL_MS,
-                'note' => SocialRealtime::stageMeta()['note'].' Cap '.self::MAX_SPEAKERS.' speakers. STUN only; may fail behind strict NAT.',
+                // Keep a tight HTTP drain even with Reverb — private-channel misses / ICE races need recovery.
+                'signal_poll_ms' => SocialRealtime::enabled() ? max(self::SIGNAL_POLL_MS * 2, 3000) : self::SIGNAL_POLL_MS,
+                'ice_servers' => WebRtcIce::servers(),
+                'has_turn' => WebRtcIce::hasTurn(),
+                'note' => SocialRealtime::stageMeta()['note'].' Cap '.self::MAX_SPEAKERS.' speakers. '
+                    .(WebRtcIce::hasTurn()
+                        ? 'TURN relay enabled for strict NAT.'
+                        : 'STUN only — set RTC_TURN_* on the server if peers cannot hear across networks.'),
             ],
             'realtime' => SocialRealtime::stageMeta(),
             'max_message_length' => self::MAX_MESSAGE_LENGTH,

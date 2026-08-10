@@ -334,7 +334,52 @@ test('participants can poll stage room json while browsing', function () {
         ->assertSuccessful()
         ->assertJsonPath('stage.title', 'JSON terrace')
         ->assertJsonPath('me.role', 'listener')
-        ->assertJsonPath('voice.mode', 'webrtc_mesh_poll');
+        ->assertJsonPath('voice.mode', 'webrtc_mesh_poll')
+        ->assertJsonPath('voice.has_turn', true)
+        ->assertJsonStructure([
+            'voice' => [
+                'ice_servers' => [
+                    ['urls'],
+                ],
+            ],
+        ]);
+
+    $iceServers = $this->actingAs($guest)
+        ->getJson("/social/stage/{$stage->id}/room")
+        ->json('voice.ice_servers');
+
+    expect($iceServers)->toBeArray()->not->toBeEmpty();
+    expect(collect($iceServers)->contains(fn ($server) => isset($server['username'])))->toBeTrue();
+});
+
+test('custom RTC_TURN env overrides public openrelay ice servers', function () {
+    config([
+        'webrtc.stun_urls' => ['stun:stun.l.google.com:19302'],
+        'webrtc.turn_urls' => ['turn:turn.example.test:3478'],
+        'webrtc.turn_username' => 'madfan-turn',
+        'webrtc.turn_credential' => 'secret-turn',
+        'webrtc.use_public_turn_fallback' => true,
+    ]);
+
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    $this->actingAs($host)
+        ->getJson("/social/stage/{$stage->id}/room")
+        ->assertSuccessful()
+        ->assertJsonPath('voice.has_turn', true)
+        ->assertJsonPath('voice.ice_servers.1.urls.0', 'turn:turn.example.test:3478')
+        ->assertJsonPath('voice.ice_servers.1.username', 'madfan-turn');
 });
 
 test('stage room and signal polls use separate rate limit buckets', function () {
