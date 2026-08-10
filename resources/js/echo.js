@@ -72,6 +72,34 @@ export function getEcho() {
     return echoInstance;
 }
 
+/**
+ * Subscribe to Echo/Pusher connection health. Callback receives true when connected.
+ * Returns an unsubscribe function.
+ */
+export function subscribeEchoConnection(onChange) {
+    const echo = getEcho();
+    const connection = echo?.connector?.pusher?.connection;
+    if (!connection || typeof onChange !== 'function') {
+        onChange?.(false);
+        return () => {};
+    }
+
+    const emit = () => {
+        onChange(connection.state === 'connected');
+    };
+
+    connection.bind('state_change', emit);
+    emit();
+
+    return () => {
+        try {
+            connection.unbind('state_change', emit);
+        } catch {
+            // ignore
+        }
+    };
+}
+
 export function leaveEchoChannel(name) {
     if (!echoInstance) {
         return;

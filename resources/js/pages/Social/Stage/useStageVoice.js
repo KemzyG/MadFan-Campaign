@@ -1,14 +1,16 @@
 /**
- * Native WebRTC mesh for Mad Fan Stage (no npm WebRTC deps).
+ * Native WebRTC mesh for Mad Fan Stage (fallback when LiveKit is off).
  * Speakers: full mesh (lower user id initiates).
  * Listeners: recvonly offers toward each speaker.
- * Signaling: Laravel Reverb (preferred) + HTTP poll fallback of /social/stage/{id}/signals
+ * Signaling: Laravel Reverb (primary when healthy) + HTTP /signals only if WS is down.
  *
  * ICE candidates are batched to avoid bursting past stage-signal-post rate limits.
  * Early ICE (before remote description) is buffered. Offers/answers/ICE are serialized.
  * On 429, signal poll backs off exponentially so the limiter can recover.
  */
-export function createStageVoiceSession({
+import { createStageLiveKitVoiceSession } from './useStageLiveKitVoice';
+
+export function createStageMeshVoiceSession({
     stageId,
     myUserId,
     getParticipants,
@@ -17,6 +19,8 @@ export function createStageVoiceSession({
     isMuted,
     signalPollMs = 1500,
     iceServers: iceServersOption = null,
+    /** When false, skip HTTP signal poll (Reverb delivers .signal.created). */
+    allowHttpSignals = true,
     onStatus,
 }) {
     const peers = new Map();
@@ -506,6 +510,10 @@ export function createStageVoiceSession({
 
     async function pollSignals() {
         if (stopped || !voiceEnabled) return;
+        if (!allowHttpSignals) {
+            // Reverb is healthy — do not hammer /signals; keep timer dormant until fallback flips on.
+            return;
+        }
         try {
             const res = await fetch(`/social/stage/${stageId}/signals`, {
                 credentials: 'same-origin',
@@ -527,7 +535,7 @@ export function createStageVoiceSession({
         } catch (err) {
             console.warn('signal poll', err);
         }
-        if (!stopped && voiceEnabled) {
+        if (!stopped && voiceEnabled && allowHttpSignals) {
             schedulePoll(currentPollMs);
         }
     }
@@ -594,7 +602,9 @@ export function createStageVoiceSession({
         setStatus(iAmOnStage ? 'Connecting stage…' : 'Connecting as listener…');
         currentPollMs = signalPollMs;
         syncPeers();
-        schedulePoll(0);
+        if (allowHttpSignals) {
+            schedulePoll(0);
+        }
         syncTimer = window.setInterval(syncPeers, Math.max(signalPollMs * 2, 3000));
     }
 
@@ -648,14 +658,26 @@ export function createStageVoiceSession({
             iceServers = normalizeIceServers(next.iceServers);
         }
 
+        if (typeof next.allowHttpSignals === 'boolean') {
+            const wasAllowed = allowHttpSignals;
+            allowHttpSignals = next.allowHttpSignals;
+            if (allowHttpSignals && !wasAllowed && voiceEnabled && !stopped) {
+                schedulePoll(0);
+            }
+            if (!allowHttpSignals && pollTimer) {
+                window.clearTimeout(pollTimer);
+                pollTimer = null;
+            }
+        }
+
         // Promote/demote must renegotiate send/recv — stale recvonly peers cannot transmit.
         if (prevOnStage !== iAmOnStage && voiceEnabled) {
             resetAllPeers();
             syncPeers();
         }
 
-        if (voiceEnabled && !pollTimer && !stopped) start();
-        if (!voiceEnabled && pollTimer) {
+        if (voiceEnabled && !syncTimer && !stopped) start();
+        if (!voiceEnabled && syncTimer) {
             resetAllPeers();
             if (localStream) {
                 localStream.getTracks().forEach((t) => t.stop());
@@ -671,5 +693,17 @@ export function createStageVoiceSession({
         }
     }
 
-    return { start, stop, update, applyMute, ingestSignals, unlockPlayback };
+    return { start, stop, update, applyMute, ingestSignals, unlockPlayback, driver: 'mesh' };
 }
+
+/**
+ * Stage voice entry: LiveKit SFU when driver === 'livekit', else mesh WebRTC.
+ */
+export function createStageVoiceSession(options = {}) {
+    if (options.driver === 'livekit') {
+        return createStageLiveKitVoiceSession(options);
+    }
+
+    return createStageMeshVoiceSession(options);
+}
+

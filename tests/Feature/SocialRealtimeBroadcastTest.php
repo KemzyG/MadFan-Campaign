@@ -75,7 +75,7 @@ test('social realtime meta reports reverb when configured', function () {
 
     expect(SocialRealtime::enabled())->toBeTrue()
         ->and(SocialRealtime::chatMeta()['mode'])->toBe('reverb')
-        ->and(SocialRealtime::stageMeta()['signal_mode'])->toBe('reverb_with_poll_fallback')
+        ->and(SocialRealtime::stageMeta()['signal_mode'])->toBe('reverb_primary')
         ->and(SocialRealtime::echoClientConfig())->toMatchArray([
             'key' => 'test-key',
             'host' => '',

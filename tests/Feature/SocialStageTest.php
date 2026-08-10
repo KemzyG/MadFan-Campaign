@@ -63,7 +63,8 @@ test('onboarded fans can list and create a live stage', function () {
             ->component('Social/Stage/Show')
             ->where('stage.title', 'Derby warm-up chat')
             ->where('me.role', 'host')
-            ->where('voice.mode', 'webrtc_mesh_poll'));
+            ->where('voice.mode', 'webrtc_mesh_poll')
+            ->where('voice.driver', 'mesh'));
 });
 
 test('fans can join leave and chat inside a live stage', function () {

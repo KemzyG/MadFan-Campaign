@@ -57,6 +57,7 @@ use App\Http\Controllers\Inertia\Social\SocialPostReportController;
 use App\Http\Controllers\Inertia\Social\SocialPostShowController;
 use App\Http\Controllers\Inertia\Social\SocialProfileController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
+use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
 use App\Http\Controllers\Inertia\Social\SocialStageParticipantController;
 use App\Http\Controllers\Inertia\Social\SocialStageSignalController;
@@ -202,6 +203,9 @@ Route::middleware('app.maintenance')->group(function () {
                 Route::post('/stage/{stage}/signals', [SocialStageSignalController::class, 'store'])
                     ->middleware('throttle:stage-signal-post')
                     ->name('stage.signals.store');
+                Route::get('/stage/{stage}/livekit-token', SocialStageLiveKitTokenController::class)
+                    ->middleware('throttle:60,1')
+                    ->name('stage.livekit-token');
 
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
                 Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');

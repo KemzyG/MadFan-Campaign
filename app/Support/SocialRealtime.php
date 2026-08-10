@@ -82,15 +82,16 @@ class SocialRealtime
         if (self::enabled()) {
             return [
                 'mode' => 'reverb',
-                'signal_mode' => 'reverb_with_poll_fallback',
-                'note' => 'Stage room + WebRTC signaling prefer Reverb; HTTP poll remains as fallback.',
+                // Room + mesh signaling: WebSocket primary; HTTP only when Echo is down.
+                'signal_mode' => 'reverb_primary',
+                'note' => 'Stage room events via Reverb WebSockets. HTTP room/signal poll only if the socket drops.',
             ];
         }
 
         return [
             'mode' => 'poll',
             'signal_mode' => 'poll',
-            'note' => 'Native WebRTC mesh. Signaling via HTTP poll until Reverb is enabled.',
+            'note' => 'HTTP poll for Stage room (and mesh signaling if voice driver is mesh). Enable Reverb for push delivery.',
         ];
     }
 }

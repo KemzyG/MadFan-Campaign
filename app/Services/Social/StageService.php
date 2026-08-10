@@ -14,6 +14,7 @@ use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Models\User;
 use App\Support\SocialRealtime;
+use App\Support\StageVoice;
 use App\Support\WebRtcIce;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -435,23 +436,51 @@ class StageService
             'participants' => $participants->map(fn (StageParticipant $p): array => $this->presentParticipant($p))->values()->all(),
             'messages' => $messages->map(fn (StageMessage $m): array => $this->presentMessage($m))->all(),
             'me' => $me ? $this->presentParticipant($me) : null,
-            'voice' => [
-                'mode' => SocialRealtime::enabled() ? 'webrtc_mesh_reverb' : 'webrtc_mesh_poll',
-                'enabled' => $stage->voice_enabled,
-                'max_speakers' => self::MAX_SPEAKERS,
-                // Keep a tight HTTP drain even with Reverb — private-channel misses / ICE races need recovery.
-                'signal_poll_ms' => SocialRealtime::enabled() ? max(self::SIGNAL_POLL_MS * 2, 3000) : self::SIGNAL_POLL_MS,
-                'ice_servers' => WebRtcIce::servers(),
-                'has_turn' => WebRtcIce::hasTurn(),
-                'note' => SocialRealtime::stageMeta()['note'].' Cap '.self::MAX_SPEAKERS.' speakers. '
-                    .(WebRtcIce::hasTurn()
-                        ? 'TURN relay enabled for strict NAT.'
-                        : 'STUN only — set RTC_TURN_* on the server if peers cannot hear across networks.'),
-            ],
+            'voice' => $this->presentVoice($stage),
             'realtime' => SocialRealtime::stageMeta(),
             'max_message_length' => self::MAX_MESSAGE_LENGTH,
             'poll_ms' => SocialRealtime::enabled() ? max(self::POLL_INTERVAL_MS * 8, 20000) : self::POLL_INTERVAL_MS,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentVoice(Stage $stage): array
+    {
+        $meta = StageVoice::voiceModeMeta();
+        $livekit = StageVoice::usesLiveKit();
+
+        $payload = [
+            'driver' => $meta['driver'],
+            'mode' => $meta['mode'],
+            'enabled' => $stage->voice_enabled,
+            'max_speakers' => self::MAX_SPEAKERS,
+            'note' => $meta['note'].' Cap '.self::MAX_SPEAKERS.' speakers.',
+            'livekit' => $meta['livekit'],
+        ];
+
+        if ($livekit) {
+            // LiveKit handles ICE; keep poll hint tiny for rare WS-down room sync only.
+            $payload['signal_poll_ms'] = 0;
+            $payload['ice_servers'] = [];
+            $payload['has_turn'] = true;
+            $payload['note'] .= ' Media via LiveKit Cloud (app mints tokens only).';
+
+            return $payload;
+        }
+
+        $payload['signal_poll_ms'] = SocialRealtime::enabled()
+            ? max(self::SIGNAL_POLL_MS * 4, 8000)
+            : self::SIGNAL_POLL_MS;
+        $payload['ice_servers'] = WebRtcIce::servers();
+        $payload['has_turn'] = WebRtcIce::hasTurn();
+        $payload['note'] .= ' '
+            .(WebRtcIce::hasTurn()
+                ? 'TURN relay enabled for strict NAT.'
+                : 'STUN only — set RTC_TURN_* on the server if peers cannot hear across networks.');
+
+        return $payload;
     }
 
     /**

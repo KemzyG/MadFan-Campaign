@@ -7,6 +7,7 @@ use App\Http\Requests\Social\StoreSocialStageRequest;
 use App\Models\Stage;
 use App\Models\User;
 use App\Services\Social\StageService;
+use App\Support\StageVoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,9 @@ class SocialStageController extends Controller
             'stages' => $stages->presentLiveStages(),
             'max_title_length' => StageService::MAX_TITLE_LENGTH,
             'max_speakers' => StageService::MAX_SPEAKERS,
-            'voice_note' => 'Native WebRTC mesh voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb signaling with poll fallback (no SFU)',
+            'voice_note' => StageVoice::usesLiveKit()
+                ? 'LiveKit Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb for room events'
+                : 'Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb signaling with mesh fallback',
         ]);
     }
 

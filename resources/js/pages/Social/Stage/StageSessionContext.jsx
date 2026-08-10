@@ -8,7 +8,7 @@ import {
     useRef,
     useState,
 } from 'react';
-import { getEcho, leaveEchoChannel } from '../../../echo';
+import { getEcho, leaveEchoChannel, subscribeEchoConnection } from '../../../echo';
 import { createStageVoiceSession } from './useStageVoice';
 
 const StageSessionContext = createContext(null);
@@ -64,6 +64,8 @@ export function StageSessionProvider({ children }) {
     const roomPollBackoffRef = useRef(null);
     const pendingUnlockRef = useRef(false);
     const unlockVoicePlaybackRef = useRef(() => {});
+    const echoConnectedRef = useRef(false);
+    const [echoConnected, setEchoConnected] = useState(false);
 
     useEffect(() => {
         roomRef.current = room;
@@ -76,6 +78,19 @@ export function StageSessionProvider({ children }) {
     useEffect(() => {
         chatOpenRef.current = chatOpen;
     }, [chatOpen]);
+
+    useEffect(() => {
+        echoConnectedRef.current = echoConnected;
+    }, [echoConnected]);
+
+    // Track Reverb socket health so HTTP room/signal poll only runs when WS is down.
+    useEffect(() => {
+        if (room?.realtime?.mode !== 'reverb') {
+            setEchoConnected(false);
+            return undefined;
+        }
+        return subscribeEchoConnection(setEchoConnected);
+    }, [room?.realtime?.mode]);
 
     const stopVoice = useCallback(() => {
         if (!voiceRef.current) {
@@ -215,7 +230,7 @@ export function StageSessionProvider({ children }) {
         return { data: await res.json() };
     }, [clearSession]);
 
-    // Poll room while session is active (covers minimized browsing).
+    // Poll room while session is active — skipped when Reverb Echo is connected/healthy.
     useEffect(() => {
         if (!activeStageId) {
             if (pollTimerRef.current) {
@@ -226,7 +241,11 @@ export function StageSessionProvider({ children }) {
             return undefined;
         }
 
-        const basePollMs = room?.poll_ms || 3000;
+        const reverbPrimary = room?.realtime?.mode === 'reverb' && echoConnected;
+        // When WS is up, only a slow safety poll (missed events). When down, normal poll.
+        const basePollMs = reverbPrimary
+            ? Math.max(room?.poll_ms || 3000, 60000)
+            : room?.poll_ms || 3000;
         let cancelled = false;
         let delayMs = roomPollBackoffRef.current || basePollMs;
 
@@ -238,13 +257,15 @@ export function StageSessionProvider({ children }) {
         };
 
         const tick = async () => {
+            // Connection may have recovered mid-loop — back off to safety interval.
+            const wsUp = room?.realtime?.mode === 'reverb' && echoConnectedRef.current;
             const result = await fetchRoom(activeStageId);
             if (cancelled || activeStageIdRef.current !== activeStageId) {
                 return;
             }
 
             if (result?.error === 429) {
-                delayMs = Math.min(Math.max(delayMs, basePollMs) * 2, 30000);
+                delayMs = Math.min(Math.max(delayMs, basePollMs) * 2, 60000);
                 roomPollBackoffRef.current = delayMs;
                 schedule(delayMs);
                 return;
@@ -256,7 +277,7 @@ export function StageSessionProvider({ children }) {
 
             const data = result?.data;
             if (!data) {
-                schedule(Math.min(delayMs * 1.5, 15000));
+                schedule(Math.min(delayMs * 1.5, 30000));
                 return;
             }
 
@@ -265,7 +286,9 @@ export function StageSessionProvider({ children }) {
                 return;
             }
 
-            delayMs = data.poll_ms ?? basePollMs;
+            delayMs = wsUp
+                ? Math.max(data.poll_ms ?? basePollMs, 60000)
+                : data.poll_ms ?? basePollMs;
             roomPollBackoffRef.current = null;
 
             applyRoom({
@@ -282,7 +305,8 @@ export function StageSessionProvider({ children }) {
             schedule(delayMs);
         };
 
-        tick();
+        // If Reverb is primary and connected, delay first HTTP tick (WS delivers room.updated).
+        schedule(reverbPrimary ? basePollMs : 0);
         return () => {
             cancelled = true;
             if (pollTimerRef.current) {
@@ -290,7 +314,7 @@ export function StageSessionProvider({ children }) {
                 pollTimerRef.current = null;
             }
         };
-    }, [activeStageId, room?.poll_ms, applyRoom, clearSession, fetchRoom]);
+    }, [activeStageId, room?.poll_ms, room?.realtime?.mode, echoConnected, applyRoom, clearSession, fetchRoom]);
 
     // Prefer Reverb for stage messages / signals / room changes; poll remains as fallback.
     useEffect(() => {
@@ -364,7 +388,7 @@ export function StageSessionProvider({ children }) {
         };
     }, [activeStageId, room?.realtime?.mode, applyRoom, clearSession, fetchRoom, patchRoom]);
 
-    // Keep WebRTC mounted for the life of the session (modal open or minimized).
+    // Keep Stage voice mounted for the life of the session (modal open or minimized).
     useEffect(() => {
         const stage = room?.stage;
         const me = room?.me;
@@ -377,14 +401,20 @@ export function StageSessionProvider({ children }) {
 
         const voiceEnabled = Boolean(stage.voice_enabled);
         const onStage = Boolean(me.on_stage);
+        const voiceDriver = room?.voice?.driver === 'livekit' ? 'livekit' : 'mesh';
+        const allowHttpSignals =
+            voiceDriver === 'mesh' &&
+            !(room?.realtime?.mode === 'reverb' && echoConnected);
         const boundStageId = voiceRef.current?.stageId;
+        const boundDriver = voiceRef.current?.driver;
 
-        if (voiceRef.current && boundStageId !== stage.id) {
+        if (voiceRef.current && (boundStageId !== stage.id || boundDriver !== voiceDriver)) {
             stopVoice();
         }
 
         if (!voiceRef.current) {
             const session = createStageVoiceSession({
+                driver: voiceDriver,
                 stageId: stage.id,
                 myUserId: me.user_id,
                 getParticipants: () => roomRef.current?.participants || [],
@@ -393,6 +423,7 @@ export function StageSessionProvider({ children }) {
                 isMuted: Boolean(me.is_muted),
                 signalPollMs: room?.voice?.signal_poll_ms || 1500,
                 iceServers: room?.voice?.ice_servers || null,
+                allowHttpSignals,
                 onStatus: setVoiceStatus,
             });
             session.stageId = stage.id;
@@ -409,6 +440,7 @@ export function StageSessionProvider({ children }) {
                 isMuted: Boolean(me.is_muted),
                 signalPollMs: room?.voice?.signal_poll_ms || 1500,
                 iceServers: room?.voice?.ice_servers || null,
+                allowHttpSignals,
                 getParticipants: () => roomRef.current?.participants || [],
             });
         }
@@ -421,8 +453,11 @@ export function StageSessionProvider({ children }) {
         room?.me?.user_id,
         room?.me?.on_stage,
         room?.me?.is_muted,
+        room?.voice?.driver,
         room?.voice?.signal_poll_ms,
         room?.voice?.ice_servers,
+        room?.realtime?.mode,
+        echoConnected,
         stopVoice,
     ]);
 
