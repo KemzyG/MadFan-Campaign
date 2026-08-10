@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Idempotent production bootstrap (no TestData / demo matches).
+ * Idempotent production bootstrap (no TestData / Faker factories).
  * Run: php artisan db:seed --class=ProductionCoreSeeder --force
  */
 class ProductionCoreSeeder extends Seeder
@@ -24,6 +24,7 @@ class ProductionCoreSeeder extends Seeder
             TaskSeeder::class,
             EarnSourceSeeder::class,
             ClubSeeder::class,
+            MatchSeeder::class,
             SettingSeeder::class,
             SportsPostSeeder::class,
         ]);

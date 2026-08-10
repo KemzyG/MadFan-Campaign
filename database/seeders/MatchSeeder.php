@@ -10,7 +10,10 @@ use Illuminate\Database\Seeder;
 class MatchSeeder extends Seeder
 {
     /**
-     * Seed upcoming fixtures for Social ticketing MVP (SQLite-friendly).
+     * Seed upcoming fixtures for Social ticketing (idempotent, no factories).
+     *
+     * Lookup key is home + away + venue so re-runs refresh kickoff/price instead of
+     * inserting duplicates when `now()` drifts between deploys.
      */
     public function run(): void
     {
@@ -62,11 +65,15 @@ class MatchSeeder extends Seeder
             ],
         ];
 
+        $createdOrUpdated = 0;
+
         foreach ($pairs as $pair) {
             $home = Club::query()->where('short', $pair['home'])->first();
             $away = Club::query()->where('short', $pair['away'])->first();
 
             if ($home === null || $away === null) {
+                $this->command?->warn("MatchSeeder skipped {$pair['home']} vs {$pair['away']}: missing club.");
+
                 continue;
             }
 
@@ -74,17 +81,21 @@ class MatchSeeder extends Seeder
                 [
                     'home_club_id' => $home->id,
                     'away_club_id' => $away->id,
-                    'kickoff_at' => now()->addDays($pair['days'])->setTime($pair['hour'], 0),
+                    'venue' => $pair['venue'],
                 ],
                 [
-                    'venue' => $pair['venue'],
+                    'kickoff_at' => now()->addDays($pair['days'])->setTime($pair['hour'], 0),
                     'status' => MatchStatus::Upcoming,
                     'price' => $pair['price'],
                     'competition' => $pair['competition'],
                 ],
             );
+
+            $createdOrUpdated++;
         }
 
-        $this->command?->info('Match fixtures ready: '.MatchFixture::query()->upcoming()->count().' upcoming.');
+        $upcoming = MatchFixture::query()->upcoming()->count();
+
+        $this->command?->info("Match fixtures ready: {$createdOrUpdated} seeded catalogue, {$upcoming} upcoming purchasable.");
     }
 }
