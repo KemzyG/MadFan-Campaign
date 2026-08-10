@@ -79,6 +79,20 @@ class AppServiceProvider extends ServiceProvider
             $request->user()?->id ?: $request->ip(),
         ));
 
+        // Stage room/signal routes used bare throttle:N,1 which share one per-user key —
+        // room poll + signal poll competed and 429'd mid-WebRTC. Keep separate buckets.
+        RateLimiter::for('stage-room', fn ($request) => Limit::perMinute(240)->by(
+            'stage-room|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        RateLimiter::for('stage-signal-poll', fn ($request) => Limit::perMinute(240)->by(
+            'stage-signal-poll|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        RateLimiter::for('stage-signal-post', fn ($request) => Limit::perMinute(600)->by(
+            'stage-signal-post|'.($request->user()?->id ?: $request->ip()),
+        ));
+
         Event::listen(Failed::class, LogFailedAuthentication::class);
     }
 }

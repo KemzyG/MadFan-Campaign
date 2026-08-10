@@ -61,6 +61,7 @@ export function StageSessionProvider({ children }) {
     const activeStageIdRef = useRef(null);
     const chatOpenRef = useRef(false);
     const seenMessageCountRef = useRef(0);
+    const roomPollBackoffRef = useRef(null);
 
     useEffect(() => {
         roomRef.current = room;
@@ -85,9 +86,10 @@ export function StageSessionProvider({ children }) {
 
     const clearSession = useCallback(() => {
         if (pollTimerRef.current) {
-            window.clearInterval(pollTimerRef.current);
+            window.clearTimeout(pollTimerRef.current);
             pollTimerRef.current = null;
         }
+        roomPollBackoffRef.current = null;
         stopVoice();
         setActiveStageId(null);
         setModalOpen(false);
@@ -157,7 +159,10 @@ export function StageSessionProvider({ children }) {
         });
     }, []);
 
-    const openModal = useCallback(() => setModalOpen(true), []);
+    const openModal = useCallback(() => {
+        setModalOpen(true);
+        voiceRef.current?.unlockPlayback?.();
+    }, []);
     const closeChat = useCallback(() => setChatOpen(false), []);
     const openChat = useCallback(() => {
         const count = roomRef.current?.messages?.length ?? 0;
@@ -172,7 +177,12 @@ export function StageSessionProvider({ children }) {
     const reopen = useCallback(() => {
         if (activeStageIdRef.current) {
             setModalOpen(true);
+            voiceRef.current?.unlockPlayback?.();
         }
+    }, []);
+
+    const unlockVoicePlayback = useCallback(() => {
+        voiceRef.current?.unlockPlayback?.();
     }, []);
 
     const fetchRoom = useCallback(async (stageId) => {
@@ -182,29 +192,59 @@ export function StageSessionProvider({ children }) {
         });
         if (res.status === 401 || res.status === 403) {
             clearSession();
-            return null;
+            return { error: res.status };
+        }
+        if (res.status === 429) {
+            return { error: 429 };
         }
         if (!res.ok) {
-            return null;
+            return { error: res.status };
         }
-        return res.json();
+        return { data: await res.json() };
     }, [clearSession]);
 
     // Poll room while session is active (covers minimized browsing).
     useEffect(() => {
         if (!activeStageId) {
             if (pollTimerRef.current) {
-                window.clearInterval(pollTimerRef.current);
+                window.clearTimeout(pollTimerRef.current);
                 pollTimerRef.current = null;
             }
+            roomPollBackoffRef.current = null;
             return undefined;
         }
 
-        const pollMs = room?.poll_ms || 3000;
+        const basePollMs = room?.poll_ms || 3000;
+        let cancelled = false;
+        let delayMs = roomPollBackoffRef.current || basePollMs;
+
+        const schedule = (ms) => {
+            if (cancelled) {
+                return;
+            }
+            pollTimerRef.current = window.setTimeout(tick, ms);
+        };
 
         const tick = async () => {
-            const data = await fetchRoom(activeStageId);
-            if (!data || activeStageIdRef.current !== activeStageId) {
+            const result = await fetchRoom(activeStageId);
+            if (cancelled || activeStageIdRef.current !== activeStageId) {
+                return;
+            }
+
+            if (result?.error === 429) {
+                delayMs = Math.min(Math.max(delayMs, basePollMs) * 2, 30000);
+                roomPollBackoffRef.current = delayMs;
+                schedule(delayMs);
+                return;
+            }
+
+            if (result?.error === 401 || result?.error === 403) {
+                return;
+            }
+
+            const data = result?.data;
+            if (!data) {
+                schedule(Math.min(delayMs * 1.5, 15000));
                 return;
             }
 
@@ -212,6 +252,9 @@ export function StageSessionProvider({ children }) {
                 clearSession();
                 return;
             }
+
+            delayMs = data.poll_ms ?? basePollMs;
+            roomPollBackoffRef.current = null;
 
             applyRoom({
                 stage: data.stage,
@@ -221,15 +264,17 @@ export function StageSessionProvider({ children }) {
                 voice: data.voice ?? null,
                 realtime: data.realtime ?? null,
                 max_message_length: data.max_message_length ?? 280,
-                poll_ms: data.poll_ms ?? pollMs,
+                poll_ms: data.poll_ms ?? basePollMs,
             });
+
+            schedule(delayMs);
         };
 
         tick();
-        pollTimerRef.current = window.setInterval(tick, pollMs);
         return () => {
+            cancelled = true;
             if (pollTimerRef.current) {
-                window.clearInterval(pollTimerRef.current);
+                window.clearTimeout(pollTimerRef.current);
                 pollTimerRef.current = null;
             }
         };
@@ -248,7 +293,8 @@ export function StageSessionProvider({ children }) {
 
         const name = `social.stage.${activeStageId}`;
         const refreshRoom = async () => {
-            const data = await fetchRoom(activeStageId);
+            const result = await fetchRoom(activeStageId);
+            const data = result?.data;
             if (!data || activeStageIdRef.current !== activeStageId) {
                 return;
             }
@@ -344,6 +390,7 @@ export function StageSessionProvider({ children }) {
                 voiceEnabled,
                 iAmOnStage: onStage,
                 isMuted: Boolean(me.is_muted),
+                signalPollMs: room?.voice?.signal_poll_ms || 1500,
                 getParticipants: () => roomRef.current?.participants || [],
             });
         }
@@ -384,7 +431,7 @@ export function StageSessionProvider({ children }) {
     useEffect(() => () => {
         // Provider unmount (leaving Social SPA) tears everything down.
         if (pollTimerRef.current) {
-            window.clearInterval(pollTimerRef.current);
+            window.clearTimeout(pollTimerRef.current);
         }
         voiceRef.current?.stop();
     }, []);
@@ -423,6 +470,7 @@ export function StageSessionProvider({ children }) {
             reopen,
             clearSession,
             setLoading,
+            unlockVoicePlayback,
         }),
         [
             activeStageId,
@@ -441,6 +489,7 @@ export function StageSessionProvider({ children }) {
             minimize,
             reopen,
             clearSession,
+            unlockVoicePlayback,
         ],
     );
 

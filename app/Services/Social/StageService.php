@@ -32,6 +32,9 @@ class StageService
     public const MESSAGES_LIMIT = 80;
 
     /**
+     * Network-wide live Stage lobby — every live room is visible to Social fans.
+     * Intentionally not scoped by the viewer's favourite club (club_id is host metadata).
+     *
      * @return list<array<string, mixed>>
      */
     public function presentLiveStages(): array
@@ -435,7 +438,8 @@ class StageService
                 'mode' => SocialRealtime::enabled() ? 'webrtc_mesh_reverb' : 'webrtc_mesh_poll',
                 'enabled' => $stage->voice_enabled,
                 'max_speakers' => self::MAX_SPEAKERS,
-                'signal_poll_ms' => SocialRealtime::enabled() ? max(self::SIGNAL_POLL_MS * 4, 6000) : self::SIGNAL_POLL_MS,
+                // When Reverb pushes signals, HTTP poll is a sparse fallback only.
+                'signal_poll_ms' => SocialRealtime::enabled() ? max(self::SIGNAL_POLL_MS * 10, 15000) : self::SIGNAL_POLL_MS,
                 'note' => SocialRealtime::stageMeta()['note'].' Cap '.self::MAX_SPEAKERS.' speakers. STUN only; may fail behind strict NAT.',
             ],
             'realtime' => SocialRealtime::stageMeta(),

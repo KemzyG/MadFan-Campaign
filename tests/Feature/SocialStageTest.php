@@ -8,6 +8,8 @@ use App\Models\Stage;
 use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Support\ApplicationSettings;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 test('social stage requires authentication', function () {
     $this->get('/social/stage')->assertRedirect(route('login'));
@@ -117,6 +119,72 @@ test('fans can join leave and chat inside a live stage', function () {
         ->where('user_id', $guest->id)
         ->whereNotNull('left_at')
         ->exists())->toBeTrue();
+});
+
+test('fans from another club can list a live stage hosted under a rival club', function () {
+    $hostClub = Club::factory()->create(['name' => 'Home Side']);
+    $visitorClub = Club::factory()->create(['name' => 'Away Side']);
+    $host = socialReadyUser($hostClub);
+    $visitor = socialReadyUser($visitorClub);
+
+    $stage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $hostClub->id,
+        'title' => 'Cross-terrace open mic',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    $this->actingAs($visitor)
+        ->get('/social/stage')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Stage/Index')
+            ->has('stages', 1)
+            ->where('stages.0.id', $stage->id)
+            ->where('stages.0.title', 'Cross-terrace open mic'));
+});
+
+test('fans from another club can join a live stage as listeners', function () {
+    $hostClub = Club::factory()->create(['name' => 'Home Side']);
+    $visitorClub = Club::factory()->create(['name' => 'Away Side']);
+    $host = socialReadyUser($hostClub);
+    $visitor = socialReadyUser($visitorClub);
+
+    expect($visitor->favourite_club_id)->not->toBe($hostClub->id);
+
+    $stage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $hostClub->id,
+        'title' => 'Everyone welcome',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    $this->actingAs($visitor)
+        ->post("/social/stage/{$stage->id}/join")
+        ->assertRedirect(route('social.stage.show', $stage));
+
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $visitor->id)
+        ->whereNull('left_at')
+        ->where('role', StageParticipantRole::Listener)
+        ->exists())->toBeTrue();
+
+    $this->actingAs($visitor)
+        ->get("/social/stage/{$stage->id}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Stage/Show')
+            ->where('stage.title', 'Everyone welcome')
+            ->where('me.role', 'listener'));
 });
 
 test('only the host can end a stage and start voice', function () {
@@ -267,4 +335,126 @@ test('participants can poll stage room json while browsing', function () {
         ->assertJsonPath('stage.title', 'JSON terrace')
         ->assertJsonPath('me.role', 'listener')
         ->assertJsonPath('voice.mode', 'webrtc_mesh_poll');
+});
+
+test('stage room and signal polls use separate rate limit buckets', function () {
+    RateLimiter::for('stage-room', fn ($request) => Limit::perMinute(3)->by(
+        'stage-room-test|'.($request->user()?->id ?: $request->ip()),
+    ));
+    RateLimiter::for('stage-signal-poll', fn ($request) => Limit::perMinute(3)->by(
+        'stage-signal-poll-test|'.($request->user()?->id ?: $request->ip()),
+    ));
+
+    try {
+        $club = Club::factory()->create();
+        $host = socialReadyUser($club);
+        $guest = socialReadyUser($club);
+
+        $stage = Stage::factory()->live()->withVoice()->create([
+            'host_id' => $host->id,
+            'club_id' => $club->id,
+        ]);
+
+        StageParticipant::factory()->host()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $host->id,
+        ]);
+
+        StageParticipant::factory()->listener()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $guest->id,
+        ]);
+
+        foreach (range(1, 3) as $_) {
+            $this->actingAs($guest)
+                ->getJson("/social/stage/{$stage->id}/room")
+                ->assertSuccessful();
+        }
+
+        $this->actingAs($guest)
+            ->getJson("/social/stage/{$stage->id}/room")
+            ->assertStatus(429);
+
+        // Dedicated signal-poll bucket must remain available after room-poll exhaustion.
+        $this->actingAs($guest)
+            ->getJson("/social/stage/{$stage->id}/signals")
+            ->assertSuccessful();
+    } finally {
+        RateLimiter::for('stage-room', fn ($request) => Limit::perMinute(240)->by(
+            'stage-room|'.($request->user()?->id ?: $request->ip()),
+        ));
+        RateLimiter::for('stage-signal-poll', fn ($request) => Limit::perMinute(240)->by(
+            'stage-signal-poll|'.($request->user()?->id ?: $request->ip()),
+        ));
+    }
+});
+
+test('stage signal posts accept ice bursts and batched candidates', function () {
+    RateLimiter::for('stage-signal-post', fn ($request) => Limit::perMinute(50)->by(
+        'stage-signal-post-test|'.($request->user()?->id ?: $request->ip()),
+    ));
+
+    try {
+        $club = Club::factory()->create();
+        $host = socialReadyUser($club);
+        $guest = socialReadyUser($club);
+
+        $stage = Stage::factory()->live()->withVoice()->create([
+            'host_id' => $host->id,
+            'club_id' => $club->id,
+        ]);
+
+        StageParticipant::factory()->host()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $host->id,
+        ]);
+
+        StageParticipant::factory()->listener()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $guest->id,
+        ]);
+
+        foreach (range(1, 25) as $i) {
+            $this->actingAs($host)
+                ->postJson("/social/stage/{$stage->id}/signals", [
+                    'to_user_id' => $guest->id,
+                    'type' => StageSignalType::Ice->value,
+                    'payload' => [
+                        'candidate' => [
+                            'candidate' => "candidate:{$i} 1 udp 2122260223 10.0.0.1 54000 typ host",
+                            'sdpMid' => '0',
+                            'sdpMLineIndex' => 0,
+                        ],
+                    ],
+                ])
+                ->assertCreated();
+        }
+
+        $this->actingAs($host)
+            ->postJson("/social/stage/{$stage->id}/signals", [
+                'to_user_id' => $guest->id,
+                'type' => StageSignalType::Ice->value,
+                'payload' => [
+                    'candidates' => [
+                        [
+                            'candidate' => 'candidate:batch-a 1 udp 2122260223 10.0.0.2 54001 typ host',
+                            'sdpMid' => '0',
+                            'sdpMLineIndex' => 0,
+                        ],
+                        [
+                            'candidate' => 'candidate:batch-b 1 udp 2122260223 10.0.0.2 54002 typ host',
+                            'sdpMid' => '0',
+                            'sdpMLineIndex' => 0,
+                        ],
+                    ],
+                ],
+            ])
+            ->assertCreated();
+
+        expect(StageSignal::query()->where('stage_id', $stage->id)->count())->toBe(26);
+    } finally {
+        RateLimiter::for('stage-signal-post', fn ($request) => Limit::perMinute(600)->by(
+            'stage-signal-post|'.($request->user()?->id ?: $request->ip()),
+        ));
+    }
 });

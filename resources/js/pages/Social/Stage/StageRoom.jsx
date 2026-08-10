@@ -132,7 +132,8 @@ function ListenerRow({ participant, isHostView, stageId }) {
  * Room chat opens in a separate modal via the Chat control.
  */
 export default function StageRoom() {
-    const { room, voiceStatus, patchRoom, clearSession, minimize, openChat, chatUnread } = useStageSession();
+    const { room, voiceStatus, patchRoom, clearSession, minimize, openChat, chatUnread, unlockVoicePlayback } =
+        useStageSession();
     const { reportError, clearError } = useSocialFlash();
 
     if (!room?.stage) {
@@ -282,6 +283,7 @@ export default function StageRoom() {
                         type="button"
                         className="mf-btn mf-btn--pitch"
                         onClick={() => {
+                            unlockVoicePlayback?.();
                             patchRoom((props) => ({
                                 ...props,
                                 stage: props.stage ? { ...props.stage, voice_enabled: true } : props.stage,
@@ -300,6 +302,7 @@ export default function StageRoom() {
                         type="button"
                         className="mf-btn mf-btn--pitch"
                         onClick={() => {
+                            unlockVoicePlayback?.();
                             const nextMuted = me.is_muted ? 0 : 1;
                             patchRoom((props) => ({
                                 ...props,
@@ -316,6 +319,12 @@ export default function StageRoom() {
                         }}
                     >
                         {me.is_muted ? 'Unmute' : 'Mute'}
+                    </button>
+                ) : null}
+
+                {isLive && voiceEnabled && !onStage ? (
+                    <button type="button" className="mf-btn" onClick={() => unlockVoicePlayback?.()}>
+                        Tap to hear
                     </button>
                 ) : null}
 

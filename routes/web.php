@@ -167,7 +167,7 @@ Route::middleware('app.maintenance')->group(function () {
                     ->name('stage.store');
                 Route::get('/stage/{stage}', [SocialStageController::class, 'show'])->name('stage.show');
                 Route::get('/stage/{stage}/room', [SocialStageController::class, 'room'])
-                    ->middleware('throttle:120,1')
+                    ->middleware('throttle:stage-room')
                     ->name('stage.room');
                 Route::post('/stage/{stage}/join', [SocialStageController::class, 'join'])
                     ->middleware('throttle:30,1')
@@ -197,10 +197,10 @@ Route::middleware('app.maintenance')->group(function () {
                     ->middleware('throttle:60,1')
                     ->name('stage.mute');
                 Route::get('/stage/{stage}/signals', [SocialStageSignalController::class, 'index'])
-                    ->middleware('throttle:120,1')
+                    ->middleware('throttle:stage-signal-poll')
                     ->name('stage.signals.index');
                 Route::post('/stage/{stage}/signals', [SocialStageSignalController::class, 'store'])
-                    ->middleware('throttle:180,1')
+                    ->middleware('throttle:stage-signal-post')
                     ->name('stage.signals.store');
 
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
