@@ -70,17 +70,45 @@ test('social realtime meta reports reverb when configured', function () {
     config([
         'broadcasting.default' => 'reverb',
         'broadcasting.connections.reverb.key' => 'test-key',
+        'app.url' => 'https://madfancampaign.onrender.com',
     ]);
 
     expect(SocialRealtime::enabled())->toBeTrue()
         ->and(SocialRealtime::chatMeta()['mode'])->toBe('reverb')
-        ->and(SocialRealtime::stageMeta()['signal_mode'])->toBe('reverb_with_poll_fallback');
+        ->and(SocialRealtime::stageMeta()['signal_mode'])->toBe('reverb_with_poll_fallback')
+        ->and(SocialRealtime::echoClientConfig())->toMatchArray([
+            'key' => 'test-key',
+            'host' => '',
+            'port' => 443,
+            'scheme' => 'https',
+        ]);
+});
+
+test('echo client config targets local reverb host on http apps', function () {
+    config([
+        'broadcasting.default' => 'reverb',
+        'broadcasting.connections.reverb.key' => 'local-key',
+        'broadcasting.connections.reverb.options' => [
+            'host' => 'localhost',
+            'port' => 8080,
+            'scheme' => 'http',
+        ],
+        'app.url' => 'http://localhost',
+    ]);
+
+    expect(SocialRealtime::echoClientConfig())->toMatchArray([
+        'key' => 'local-key',
+        'host' => 'localhost',
+        'port' => 8080,
+        'scheme' => 'http',
+    ]);
 });
 
 test('social chat inertia reports reverb mode when broadcasting is configured', function () {
     config([
         'broadcasting.default' => 'reverb',
         'broadcasting.connections.reverb.key' => 'test-key',
+        'app.url' => 'https://example.test',
     ]);
 
     $club = Club::factory()->create();
@@ -92,5 +120,7 @@ test('social chat inertia reports reverb mode when broadcasting is configured', 
         ->assertInertia(fn ($page) => $page
             ->component('Social/Chat')
             ->where('realtime.mode', 'reverb')
-            ->has('realtime.note'));
+            ->has('realtime.note'))
+        ->assertSee('window.__MADFAN_REVERB__', false)
+        ->assertSee('"key":"test-key"', false);
 });

@@ -10,6 +10,12 @@
     <title>{{ config('app.name') }} Social</title>
     <link rel="icon" href="{{ asset('favicon.jpg') }}" type="image/jpeg">
     <link rel="apple-touch-icon" href="{{ asset('favicon.jpg') }}">
+    @php($madfanReverb = \App\Support\SocialRealtime::echoClientConfig())
+    @if ($madfanReverb)
+        <script>
+            window.__MADFAN_REVERB__ = @json($madfanReverb);
+        </script>
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{-- Mad Fan Social: Saira Condensed (stadium/broadcast display) + IBM Plex Sans (readable terrace body) + IBM Plex Mono (handles / MRZ / stats) --}}

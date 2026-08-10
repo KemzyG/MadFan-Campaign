@@ -3,19 +3,41 @@ import Pusher from 'pusher-js';
 
 let echoInstance = null;
 
-function reverbConfigured() {
-    return Boolean(import.meta.env.VITE_REVERB_APP_KEY);
+/**
+ * @returns {{ key: string, host?: string, port?: number|string, scheme?: string }|null}
+ */
+function resolveConfig() {
+    const runtime =
+        typeof window !== 'undefined' && window.__MADFAN_REVERB__?.key
+            ? window.__MADFAN_REVERB__
+            : null;
+
+    if (runtime) {
+        return runtime;
+    }
+
+    if (!import.meta.env.VITE_REVERB_APP_KEY) {
+        return null;
+    }
+
+    return {
+        key: import.meta.env.VITE_REVERB_APP_KEY,
+        host: import.meta.env.VITE_REVERB_HOST || '',
+        port: import.meta.env.VITE_REVERB_PORT,
+        scheme: import.meta.env.VITE_REVERB_SCHEME ?? 'https',
+    };
 }
 
 /**
  * Singleton Laravel Echo client for Social (Reverb / Pusher protocol).
- * Returns null when Vite Reverb env is missing (poll-only mode).
+ * Returns null when neither runtime (__MADFAN_REVERB__) nor Vite env is set (poll-only).
  *
- * Production (Render Docker): nginx proxies /app → Reverb on the same public
- * host/port. Leave VITE_REVERB_HOST empty so Echo uses window.location.hostname.
+ * Production: Blade injects window.__MADFAN_REVERB__ from SocialRealtime (same-origin
+ * nginx /app proxy). Vite VITE_REVERB_* remains for local `npm run dev`.
  */
 export function getEcho() {
-    if (!reverbConfigured()) {
+    const config = resolveConfig();
+    if (!config?.key) {
         return null;
     }
 
@@ -25,9 +47,9 @@ export function getEcho() {
 
     window.Pusher = Pusher;
 
-    const scheme = import.meta.env.VITE_REVERB_SCHEME ?? 'https';
+    const scheme = config.scheme ?? 'https';
     const forceTLS = scheme === 'https';
-    const configuredHost = import.meta.env.VITE_REVERB_HOST;
+    const configuredHost = config.host;
     const wsHost =
         configuredHost && String(configuredHost).length > 0
             ? configuredHost
@@ -35,10 +57,10 @@ export function getEcho() {
 
     echoInstance = new Echo({
         broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
+        key: config.key,
         wsHost,
-        wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-        wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+        wsPort: config.port ?? 80,
+        wssPort: config.port ?? 443,
         forceTLS,
         enabledTransports: ['ws', 'wss'],
         authEndpoint: '/broadcasting/auth',
