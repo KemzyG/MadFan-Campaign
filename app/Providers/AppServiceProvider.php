@@ -55,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manageLoyaltyTiers', fn (User $user): bool => $user->can(AdminPermission::LoyaltyTiersManage->value));
         Gate::define('manageLeagues', fn (User $user): bool => $user->can(AdminPermission::LeaguesManage->value));
         Gate::define('manageClubs', fn (User $user): bool => $user->can(AdminPermission::ClubsManage->value));
+        Gate::define('manageJerseys', fn (User $user): bool => $user->can(AdminPermission::JerseysManage->value));
+        Gate::define('viewJerseyOrders', fn (User $user): bool => $user->can(AdminPermission::JerseyOrdersView->value));
+        Gate::define('manageJerseyOrders', fn (User $user): bool => $user->can(AdminPermission::JerseyOrdersManage->value));
         Gate::define('manageAdmins', fn (User $user): bool => $user->can(AdminPermission::AdminsManage->value));
         Gate::define('viewAdmins', fn (User $user): bool => $user->can(AdminPermission::AdminsView->value));
 

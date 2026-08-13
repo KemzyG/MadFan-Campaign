@@ -42,6 +42,9 @@ class AdminPermissionsSeeder extends Seeder
                 AdminPermission::LoyaltyTiersManage->value,
                 AdminPermission::LeaguesManage->value,
                 AdminPermission::ClubsManage->value,
+                AdminPermission::JerseysManage->value,
+                AdminPermission::JerseyOrdersView->value,
+                AdminPermission::JerseyOrdersManage->value,
                 AdminPermission::ReferralsView->value,
                 AdminPermission::PointTransactionsView->value,
             ],
@@ -50,6 +53,7 @@ class AdminPermissionsSeeder extends Seeder
                 AdminPermission::UsersView->value,
                 AdminPermission::TasksManage->value,
                 AdminPermission::ReferralsView->value,
+                AdminPermission::JerseyOrdersView->value,
             ],
         ];
 

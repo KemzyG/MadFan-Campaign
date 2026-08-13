@@ -11,8 +11,8 @@ use App\Support\ApplicationSettings;
 use Illuminate\Database\Seeder;
 
 /**
- * Optional demo Stage - run manually: php artisan db:seed --class=StageSeeder
- * Skips when social is off or no onboarded fan exists (safe for prod seeds).
+ * Idempotent demo live Stage (also called from ProductionCoreSeeder after sports posts).
+ * Skips when social is off, no onboarded fan exists, or a live Stage is already present.
  */
 class StageSeeder extends Seeder
 {

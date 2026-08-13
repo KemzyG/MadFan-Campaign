@@ -40,7 +40,7 @@ class AdminWorkspace
                 'tagline' => 'Campaigns · fans · loyalty ops',
                 'accent' => 'brand',
                 'job' => 'Run seasons, tasks, reviews, and fan operations.',
-                'focus' => ['tasks', 'task-reviews', 'users', 'seasons', 'leagues', 'clubs', 'referrals', 'staff'],
+                'focus' => ['tasks', 'task-reviews', 'users', 'seasons', 'leagues', 'clubs', 'jerseys', 'jersey-orders', 'referrals', 'staff'],
             ],
             'management', 'staff-management' => [
                 'key' => 'management',
@@ -48,15 +48,15 @@ class AdminWorkspace
                 'tagline' => 'Loyalty · seasons · performance',
                 'accent' => 'amber',
                 'job' => 'Shape seasons, tiers, tasks, and referral growth.',
-                'focus' => ['tasks', 'seasons', 'loyalty-tiers', 'leagues', 'clubs', 'referrals', 'point-transactions', 'dashboard'],
+                'focus' => ['tasks', 'seasons', 'loyalty-tiers', 'leagues', 'clubs', 'jerseys', 'jersey-orders', 'referrals', 'point-transactions', 'dashboard'],
             ],
             'support', 'staff-support' => [
                 'key' => 'support',
                 'label' => 'Support Desk',
                 'tagline' => 'Fans · tasks · help queue',
                 'accent' => 'sky',
-                'job' => 'Help fans, manage tasks, and review user profiles.',
-                'focus' => ['dashboard', 'tasks', 'task-reviews', 'users', 'referrals'],
+                'job' => 'Help fans, manage tasks, and review jersey orders.',
+                'focus' => ['dashboard', 'tasks', 'task-reviews', 'users', 'jersey-orders', 'referrals'],
             ],
             'staff-community_manager' => [
                 'key' => 'community',
@@ -80,7 +80,7 @@ class AdminWorkspace
                 'tagline' => 'Tasks · fans · seasons',
                 'accent' => 'brand',
                 'job' => 'Operate campaigns and review fan profiles.',
-                'focus' => ['dashboard', 'tasks', 'users', 'seasons', 'referrals'],
+                'focus' => ['dashboard', 'tasks', 'users', 'seasons', 'jerseys', 'jersey-orders', 'referrals'],
             ],
             default => [
                 'key' => 'operator',

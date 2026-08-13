@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\ActivityLogsController;
 use App\Http\Controllers\Admin\ClubsController;
 use App\Http\Controllers\Admin\DashboardController as AdminApiDashboardController;
+use App\Http\Controllers\Admin\JerseyOrdersController;
+use App\Http\Controllers\Admin\JerseysController;
 use App\Http\Controllers\Admin\LeaguesController;
 use App\Http\Controllers\Admin\LoyaltyTiersController;
 use App\Http\Controllers\Admin\PointTransactionsController;
@@ -37,6 +39,8 @@ use App\Http\Controllers\Inertia\Fan\PassportPageController;
 use App\Http\Controllers\Inertia\Fan\StaticPageController;
 use App\Http\Controllers\Inertia\Fan\TasksPageController as FanTasksPageController;
 use App\Http\Controllers\Inertia\ImpersonationController;
+use App\Http\Controllers\Inertia\JerseyOrdersPageController;
+use App\Http\Controllers\Inertia\JerseysPageController;
 use App\Http\Controllers\Inertia\LeaguesPageController;
 use App\Http\Controllers\Inertia\LoyaltyTiersPageController;
 use App\Http\Controllers\Inertia\PointTransactionsPageController;
@@ -56,6 +60,10 @@ use App\Http\Controllers\Inertia\Social\SocialPostLikeController;
 use App\Http\Controllers\Inertia\Social\SocialPostReportController;
 use App\Http\Controllers\Inertia\Social\SocialPostShowController;
 use App\Http\Controllers\Inertia\Social\SocialProfileController;
+use App\Http\Controllers\Inertia\Social\SocialShopCartController;
+use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
+use App\Http\Controllers\Inertia\Social\SocialShopController;
+use App\Http\Controllers\Inertia\Social\SocialShopOrderController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
 use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
@@ -214,6 +222,25 @@ Route::middleware('app.maintenance')->group(function () {
                     ->middleware('throttle:20,1')
                     ->name('tickets.purchase');
 
+                Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
+                Route::get('/shop/cart', [SocialShopCartController::class, 'show'])->name('shop.cart');
+                Route::post('/shop/cart', [SocialShopCartController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('shop.cart.store');
+                Route::put('/shop/cart/{variant}', [SocialShopCartController::class, 'update'])
+                    ->middleware('throttle:30,1')
+                    ->name('shop.cart.update');
+                Route::delete('/shop/cart/{variant}', [SocialShopCartController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('shop.cart.destroy');
+                Route::get('/shop/checkout', [SocialShopCheckoutController::class, 'create'])->name('shop.checkout');
+                Route::post('/shop/checkout', [SocialShopCheckoutController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('shop.checkout.store');
+                Route::get('/shop/orders', [SocialShopOrderController::class, 'index'])->name('shop.orders.index');
+                Route::get('/shop/orders/{order}', [SocialShopOrderController::class, 'show'])->name('shop.orders.show');
+                Route::get('/shop/{jersey:slug}', [SocialShopController::class, 'show'])->name('shop.show');
+
                 Route::get('/u/{handle}', SocialProfileController::class)
                     ->where('handle', '[A-Za-z0-9._\\-]+')
                     ->name('profile');
@@ -354,6 +381,8 @@ $registerAdminRoutes = function (): void {
             Route::get('/loyalty-tiers', [LoyaltyTiersPageController::class, 'index'])->name('loyalty-tiers');
             Route::get('/leagues', [LeaguesPageController::class, 'index'])->name('leagues');
             Route::get('/clubs', [ClubsPageController::class, 'index'])->name('clubs');
+            Route::get('/jerseys', [JerseysPageController::class, 'index'])->name('jerseys');
+            Route::get('/jersey-orders', [JerseyOrdersPageController::class, 'index'])->name('jersey-orders');
             Route::get('/referrals', [ReferralsPageController::class, 'index'])->name('referrals');
             Route::get('/point-transactions', [PointTransactionsPageController::class, 'index'])->name('point-transactions');
             Route::get('/activity-logs', [ActivityLogsPageController::class, 'index'])->name('activity-logs');
@@ -380,6 +409,10 @@ $registerAdminRoutes = function (): void {
                 Route::apiResource('loyalty-tiers', LoyaltyTiersController::class);
                 Route::apiResource('leagues', LeaguesController::class);
                 Route::apiResource('clubs', ClubsController::class);
+                Route::apiResource('jerseys', JerseysController::class);
+                Route::get('jersey-orders', [JerseyOrdersController::class, 'index'])->name('jersey-orders.index');
+                Route::get('jersey-orders/{jerseyOrder}', [JerseyOrdersController::class, 'show'])->name('jersey-orders.show');
+                Route::put('jersey-orders/{jerseyOrder}', [JerseyOrdersController::class, 'update'])->name('jersey-orders.update');
 
                 Route::get('referrals', [ReferralsController::class, 'index'])->name('referrals.index');
                 Route::patch('referrals/{referral}/status', [ReferralsController::class, 'updateStatus'])->name('referrals.status');

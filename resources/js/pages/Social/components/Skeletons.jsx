@@ -375,6 +375,9 @@ export function resolveSocialSkeletonKind(pathname) {
     if (path === '/social/tickets' || path.startsWith('/social/tickets/')) {
         return 'tickets';
     }
+    if (path === '/social/shop' || path.startsWith('/social/shop/')) {
+        return 'tickets';
+    }
     if (/^\/social\/stage\/[^/]+/.test(path)) {
         return 'stage-room';
     }

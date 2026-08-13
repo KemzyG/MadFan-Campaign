@@ -136,6 +136,20 @@ function IconTickets({ active }) {
     );
 }
 
+function IconShop({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M6.5 9.5 8 5.5h8l1.5 4M5.5 9.5h13v8.2A1.8 1.8 0 0 1 16.7 19.5H7.3A1.8 1.8 0 0 1 5.5 17.7V9.5Z"
+            />
+            <path strokeLinecap="round" strokeWidth={active ? 2 : 1.6} d="M9.5 12.5v4M14.5 12.5v4" />
+        </svg>
+    );
+}
+
 function IconStage({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -524,6 +538,12 @@ export default function SocialShell({ children, title, showTabs = true, backHref
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
     const secondaryTabs = [
+        {
+            href: '/social/shop',
+            label: 'Shop',
+            icon: IconShop,
+            active: pathMatches(current, '/social/shop'),
+        },
         {
             href: '/social/stage',
             label: 'Join stage',
