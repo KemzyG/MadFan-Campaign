@@ -1,9 +1,10 @@
-import { Head, Link, router, useForm, usePage, usePoll } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { Head, Link, router, usePage, usePoll } from '@inertiajs/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getEcho, leaveEchoChannel } from '../../echo';
 import SocialShell from '../../Layouts/SocialShell';
+import { socialApi } from '../../lib/socialApi';
 import { ChatSkeleton } from './components/Skeletons';
-import { useSocialFlash, withRollbackFlash } from './optimistic';
+import { applyOptimisticProps, useSocialFlash } from './optimistic';
 
 function formatTime(iso) {
     if (!iso) {
@@ -20,15 +21,61 @@ function formatTime(iso) {
     }
 }
 
-function AuthorAvatar({ author }) {
-    if (author?.avatar_url) {
-        return <img src={author.avatar_url} alt="" className="mf-avatar h-8 w-8" />;
+function formatDayLabel(iso) {
+    if (!iso) {
+        return '';
     }
 
-    const label = (author?.handle || author?.name || '?').slice(0, 2).toUpperCase();
+    try {
+        const date = new Date(iso);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        const sameDay = (a, b) =>
+            a.getFullYear() === b.getFullYear()
+            && a.getMonth() === b.getMonth()
+            && a.getDate() === b.getDate();
+
+        if (sameDay(date, today)) {
+            return 'Today';
+        }
+        if (sameDay(date, yesterday)) {
+            return 'Yesterday';
+        }
+
+        return new Intl.DateTimeFormat(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+        }).format(date);
+    } catch {
+        return '';
+    }
+}
+
+function dayKey(iso) {
+    if (!iso) {
+        return '';
+    }
+
+    try {
+        const d = new Date(iso);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    } catch {
+        return '';
+    }
+}
+
+function AuthorAvatar({ author }) {
+    if (author?.avatar_url) {
+        return <img src={author.avatar_url} alt="" className="mf-avatar h-9 w-9" />;
+    }
+
+    const label = (author?.name || author?.handle || '?').slice(0, 1).toUpperCase();
 
     return (
-        <span className="mf-avatar mf-text-meta h-8 w-8" aria-hidden>
+        <span className="mf-avatar mf-text-meta h-9 w-9" aria-hidden>
             {author?.avatar_emoji || label}
         </span>
     );
@@ -36,7 +83,6 @@ function AuthorAvatar({ author }) {
 
 function ChatMessageRow({ message, isGrouped }) {
     const author = message.author;
-    const handle = author?.handle ? `@${author.handle}` : author?.fan_id || 'fan';
 
     return (
         <article
@@ -55,7 +101,6 @@ function ChatMessageRow({ message, isGrouped }) {
                 {!isGrouped ? (
                     <div className="mf-chat-msg__meta">
                         <span className="mf-chat-msg__name">{author?.name || 'Fan'}</span>
-                        <span className="mf-mono mf-text-meta text-[var(--mf-muted)]">{handle}</span>
                         <time className="mf-text-meta text-[var(--mf-muted)]" dateTime={message.created_at}>
                             {formatTime(message.created_at)}
                         </time>
@@ -73,21 +118,33 @@ function ChatMessageRow({ message, isGrouped }) {
 function ChatComposer({ channel, maxBodyLength }) {
     const page = usePage();
     const user = page.props?.auth?.user;
-    const { reportError } = useSocialFlash();
-    const { data, setData, processing, errors, reset, optimistic } = useForm({
-        body: '',
-    });
+    const { reportError, reportSuccess } = useSocialFlash();
+    const textareaRef = useRef(null);
+    const [body, setBody] = useState('');
+    const [processing, setProcessing] = useState(false);
 
-    function submit(e) {
-        e.preventDefault();
-        if (!data.body.trim() || channel?.is_read_only || processing || !channel?.id) {
+    useEffect(() => {
+        const el = textareaRef.current;
+        if (!el) {
             return;
         }
 
-        const body = data.body.trim();
-        const tempId = `tmp-chat-${Date.now()}`;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 112)}px`;
+    }, [body]);
 
-        optimistic((props) => {
+    async function submit(e) {
+        e.preventDefault();
+        if (!body.trim() || channel?.is_read_only || processing || !channel?.id) {
+            return;
+        }
+
+        const text = body.trim();
+        const tempId = `tmp-chat-${Date.now()}`;
+        setProcessing(true);
+        setBody('');
+
+        const rollback = applyOptimisticProps((props) => {
             const items = props.messages?.items || [];
             return {
                 messages: {
@@ -96,7 +153,7 @@ function ChatComposer({ channel, maxBodyLength }) {
                         ...items,
                         {
                             id: tempId,
-                            body,
+                            body: text,
                             type: 'text',
                             created_at: new Date().toISOString(),
                             edited_at: null,
@@ -113,14 +170,41 @@ function ChatComposer({ channel, maxBodyLength }) {
                     ],
                 },
             };
-        }).post(
-            `/social/chat/channels/${channel.id}/messages`,
-            withRollbackFlash(reportError, {
-                preserveScroll: true,
-                onSuccess: () => reset('body'),
-                onError: () => setData('body', body),
-            }, 'Message failed — rolled back.'),
-        );
+        });
+
+        try {
+            const data = await socialApi(`/chat/channels/${channel.id}/messages`, {
+                method: 'POST',
+                body: { body: text },
+            });
+
+            applyOptimisticProps((props) => {
+                const items = props.messages?.items || [];
+                const presented = data?.data;
+                return {
+                    messages: {
+                        ...props.messages,
+                        items: items.map((item) =>
+                            item.id === tempId
+                                ? { ...(presented || item), _optimistic: false }
+                                : item,
+                        ),
+                    },
+                };
+            });
+
+            reportSuccess?.(data?.message || 'Message sent.');
+        } catch (error) {
+            rollback();
+            setBody(text);
+            reportError?.(
+                error instanceof Error && error.message
+                    ? error.message
+                    : 'Message failed — rolled back.',
+            );
+        } finally {
+            setProcessing(false);
+        }
     }
 
     return (
@@ -129,31 +213,43 @@ function ChatComposer({ channel, maxBodyLength }) {
                 <p className="mf-text-meta text-[var(--mf-muted)]">This channel is read-only.</p>
             ) : (
                 <>
-                    <textarea
-                        className="mf-chat-composer__input"
-                        rows={1}
-                        maxLength={maxBodyLength}
-                        placeholder={`Message #${channel?.name || 'general'}`}
-                        value={data.body}
-                        onChange={(e) => setData('body', e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                submit(e);
-                            }
-                        }}
-                        disabled={processing}
-                        aria-label="Chat message"
-                    />
-                    <div className="mf-chat-composer__bar">
-                        <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">
-                            {data.body.length}/{maxBodyLength}
-                        </span>
-                        <button type="submit" className="mf-btn mf-btn--pitch" disabled={processing || !data.body.trim()}>
-                            {processing ? 'Sending…' : 'Send'}
+                    <div className="mf-chat-composer__shell">
+                        <textarea
+                            ref={textareaRef}
+                            className="mf-chat-composer__input"
+                            rows={1}
+                            maxLength={maxBodyLength}
+                            placeholder={`Message #${channel?.name || 'general'}`}
+                            value={body}
+                            onChange={(e) => setBody(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    submit(e);
+                                }
+                            }}
+                            disabled={processing}
+                            aria-label="Chat message"
+                        />
+                        <button
+                            type="submit"
+                            className="mf-chat-composer__send"
+                            disabled={processing || !body.trim()}
+                            aria-label={processing ? 'Sending' : 'Send message'}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
                         </button>
                     </div>
-                    {errors.body ? <p className="mf-field-error">{errors.body}</p> : null}
+                    <div className="mf-chat-composer__bar">
+                        <span className="mf-text-meta text-[var(--mf-muted)]">
+                            Enter to send · Shift+Enter for line
+                        </span>
+                        <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">
+                            {body.length}/{maxBodyLength}
+                        </span>
+                    </div>
                 </>
             )}
         </form>
@@ -172,8 +268,19 @@ export default function Chat({
     const items = messages?.items || [];
     const scrollerRef = useRef(null);
     const wasNearBottom = useRef(true);
+    const [channelQuery, setChannelQuery] = useState('');
     const usingReverb = realtime?.mode === 'reverb';
     const fallbackPollMs = usingReverb ? Math.max(poll_ms, 30000) : poll_ms;
+
+    const filteredChannels = useMemo(() => {
+        const q = channelQuery.trim().toLowerCase();
+        if (!q) {
+            return channels;
+        }
+
+        return channels.filter((ch) =>
+            [ch.name, ch.slug, ch.topic].filter(Boolean).join(' ').toLowerCase().includes(q));
+    }, [channels, channelQuery]);
 
     usePoll(fallbackPollMs, {
         only: ['messages', 'channels', 'channel'],
@@ -231,70 +338,119 @@ export default function Chat({
             {messages == null ? (
                 <ChatSkeleton />
             ) : (
-            <div className="mf-chat">
-                <div className="mf-chat-header">
-                    {club ? (
-                        <div className="flex min-w-0 items-center gap-3">
-                            {club.logo_url ? (
-                                <img src={club.logo_url} alt="" className="mf-avatar h-9 w-9" />
+                <div className="mf-chat">
+                    <header className="mf-chat-header">
+                        <div className="mf-chat-header__main">
+                            {club ? (
+                                <div className="mf-chat-header__club">
+                                    {club.logo_url ? (
+                                        <img src={club.logo_url} alt="" className="mf-avatar h-10 w-10" />
+                                    ) : (
+                                        <span className="mf-avatar mf-text-meta h-10 w-10">
+                                            {(club.short || club.name || '?').slice(0, 2)}
+                                        </span>
+                                    )}
+                                    <div className="min-w-0">
+                                        <p className="mf-text-caption text-[var(--mf-pitch)]">Club radio</p>
+                                        <p className="mf-display mf-text-ui truncate tracking-[0.02em] text-[var(--mf-text)]">
+                                            {club.name}
+                                        </p>
+                                        <p className="mf-text-meta truncate text-[var(--mf-muted)]">
+                                            #{channel?.name || 'general'}
+                                            {channel?.topic ? ` · ${channel.topic}` : ''}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : null}
+                        </div>
+                        {realtime?.mode ? (
+                            <span className="mf-chat-live mf-text-micro" title={realtime.note}>
+                                <span className="mf-chat-live__dot" aria-hidden />
+                                {realtime.mode === 'reverb' ? 'Live' : 'Polling'}
+                            </span>
+                        ) : null}
+                    </header>
+
+                    <div className="mf-chat-rail">
+                        <label className="mf-chat-search">
+                            <span className="sr-only">Filter channels</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                                <circle cx="11" cy="11" r="6.5" strokeWidth="1.75" />
+                                <path strokeLinecap="round" strokeWidth="1.75" d="m16 16 3.5 3.5" />
+                            </svg>
+                            <input
+                                type="search"
+                                value={channelQuery}
+                                onChange={(e) => setChannelQuery(e.target.value)}
+                                placeholder="Find a channel"
+                                autoComplete="off"
+                            />
+                        </label>
+
+                        <div className="mf-chat-channels" role="tablist" aria-label="Channels">
+                            {filteredChannels.length === 0 ? (
+                                <p className="mf-chat-channels__empty mf-text-meta text-[var(--mf-muted)]">
+                                    No channels match.
+                                </p>
                             ) : (
-                                <span className="mf-avatar mf-text-meta h-9 w-9">
-                                    {(club.short || club.name || '?').slice(0, 2)}
-                                </span>
+                                filteredChannels.map((ch) => (
+                                    <Link
+                                        key={ch.id}
+                                        href={`/social/chat?channel=${encodeURIComponent(ch.slug)}`}
+                                        className={ch.is_active ? 'is-active' : ''}
+                                        preserveScroll
+                                        prefetch
+                                        role="tab"
+                                        aria-selected={ch.is_active}
+                                    >
+                                        <span className="mf-chat-channels__hash">#</span>
+                                        {ch.name}
+                                    </Link>
+                                ))
                             )}
-                            <div className="min-w-0">
-                                <p className="mf-text-ui truncate font-semibold text-[var(--mf-text)]">{club.name}</p>
-                                <p className="mf-text-meta truncate text-[var(--mf-muted)]">
-                                    #{channel?.name || 'general'}
-                                    {channel?.topic ? ` · ${channel.topic}` : ''}
+                        </div>
+                    </div>
+
+                    <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll}>
+                        {items.length === 0 ? (
+                            <div className="mf-empty mf-empty--compact mf-chat-empty">
+                                <div className="mf-chat-empty__mark" aria-hidden>
+                                    <span />
+                                    <span />
+                                </div>
+                                <p className="mf-empty-title">Quiet radio</p>
+                                <p>
+                                    Kick the first shout in #{channel?.name || 'general'}
+                                    {club?.name ? ` for ${club.name}` : ''}.
                                 </p>
                             </div>
-                        </div>
-                    ) : null}
-                    {realtime?.mode ? (
-                        <span className="mf-chat-live mf-text-micro" title={realtime.note}>
-                            {realtime.mode === 'reverb' ? 'Live · Reverb' : 'Live · poll'}
-                        </span>
-                    ) : null}
+                        ) : (
+                            items.map((message, index) => {
+                                const prev = items[index - 1];
+                                const showDay =
+                                    !prev || dayKey(prev.created_at) !== dayKey(message.created_at);
+                                const isGrouped =
+                                    prev
+                                    && prev.author?.id === message.author?.id
+                                    && dayKey(prev.created_at) === dayKey(message.created_at)
+                                    && Math.abs(new Date(message.created_at) - new Date(prev.created_at)) < 5 * 60 * 1000;
+
+                                return (
+                                    <div key={message.id}>
+                                        {showDay ? (
+                                            <div className="mf-chat-day" role="separator">
+                                                <span>{formatDayLabel(message.created_at)}</span>
+                                            </div>
+                                        ) : null}
+                                        <ChatMessageRow message={message} isGrouped={Boolean(isGrouped)} />
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    <ChatComposer channel={channel} maxBodyLength={max_body_length} />
                 </div>
-
-                <div className="mf-chat-channels" role="tablist" aria-label="Channels">
-                    {channels.map((ch) => (
-                        <Link
-                            key={ch.id}
-                            href={`/social/chat?channel=${encodeURIComponent(ch.slug)}`}
-                            className={ch.is_active ? 'is-active' : ''}
-                            preserveScroll
-                            prefetch
-                            role="tab"
-                            aria-selected={ch.is_active}
-                        >
-                            #{ch.name}
-                        </Link>
-                    ))}
-                </div>
-
-                <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll}>
-                    {items.length === 0 ? (
-                        <div className="mf-empty mf-empty--compact">
-                            <p className="mf-empty-title">Quiet radio</p>
-                            <p>Kick the first shout in #{channel?.name || 'general'}.</p>
-                        </div>
-                    ) : (
-                        items.map((message, index) => {
-                            const prev = items[index - 1];
-                            const isGrouped =
-                                prev &&
-                                prev.author?.id === message.author?.id &&
-                                Math.abs(new Date(message.created_at) - new Date(prev.created_at)) < 5 * 60 * 1000;
-
-                            return <ChatMessageRow key={message.id} message={message} isGrouped={Boolean(isGrouped)} />;
-                        })
-                    )}
-                </div>
-
-                <ChatComposer channel={channel} maxBodyLength={max_body_length} />
-            </div>
             )}
         </SocialShell>
     );

@@ -7,9 +7,9 @@ use App\Http\Resources\PassportResource;
 use App\Models\Club;
 use App\Models\Passport;
 use App\Services\SeasonService;
+use App\Support\CloudinaryImageStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PassportController extends Controller
@@ -72,12 +72,11 @@ class PassportController extends Controller
 
         if ($request->hasFile('avatar')) {
             $previousPath = $user->avatar_path;
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $userFields['avatar_path'] = $path;
-
-            if (filled($previousPath) && $previousPath !== $path) {
-                Storage::disk('public')->delete($previousPath);
-            }
+            $userFields['avatar_path'] = CloudinaryImageStorage::replace(
+                $previousPath,
+                $request->file('avatar'),
+                'avatars',
+            );
         }
 
         if (! empty($userFields)) {

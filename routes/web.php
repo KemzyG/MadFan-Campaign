@@ -18,6 +18,10 @@ use App\Http\Controllers\Admin\TaskReviewsController;
 use App\Http\Controllers\Admin\TasksController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
+use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
+use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
+use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Auth\AdminMfaController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -154,6 +158,36 @@ Route::middleware('app.maintenance')->group(function () {
         Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
             ->middleware('throttle:6,1')
             ->name('verification.send');
+
+        Route::middleware(['verified', 'social.enabled', 'social.onboarded'])
+            ->prefix('api/social')
+            ->name('api.social.')
+            ->group(function () {
+                Route::post('/posts/{post}/like', [ApiSocialPostLikeController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.like');
+                Route::delete('/posts/{post}/like', [ApiSocialPostLikeController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('posts.unlike');
+
+                Route::post('/users/{user}/follow', [ApiSocialFollowController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('users.follow');
+                Route::delete('/users/{user}/follow', [ApiSocialFollowController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('users.unfollow');
+
+                Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('chat.messages.store');
+
+                Route::get('/tickets/{ticket}', [ApiSocialTicketController::class, 'show'])
+                    ->middleware('throttle:60,1')
+                    ->name('tickets.show');
+                Route::post('/tickets/matches/{match}/purchase', [ApiSocialTicketController::class, 'purchase'])
+                    ->middleware('throttle:20,1')
+                    ->name('tickets.purchase');
+            });
 
         Route::middleware(['verified', 'social.enabled'])->prefix('social')->name('social.')->group(function () {
             Route::get('/onboarding/club', [SocialOnboardingController::class, 'create'])->name('onboarding.club');

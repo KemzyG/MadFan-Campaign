@@ -14,7 +14,6 @@ export function PostCardSkeleton({ compact = false }) {
             <div className="mf-skel-post__main">
                 <div className="mf-skel-post__meta">
                     <Bone className="mf-skel-line mf-skel-line--name" />
-                    <Bone className="mf-skel-line mf-skel-line--handle" />
                     <Bone className="mf-skel-line mf-skel-line--time" />
                 </div>
                 <Bone className="mf-skel-line mf-skel-line--body" />
@@ -72,6 +71,9 @@ export function ChatSkeleton({ rows = 6 }) {
                     <Bone className="mf-skel-line mf-skel-line--title" />
                     <Bone className="mf-skel-line mf-skel-line--caption" />
                 </div>
+            </div>
+            <div className="mf-skel-chat__search">
+                <Bone className="mf-skel-line mf-skel-line--body" />
             </div>
             <div className="mf-skel-chat__channels">
                 <Bone className="mf-skel-pill" />
@@ -299,8 +301,8 @@ export function ProfileSkeleton() {
             <div className="mf-skel-profile__hero">
                 <Bone className="mf-skel-profile__avatar" />
                 <div className="mf-skel-profile__meta">
+                    <Bone className="mf-skel-line mf-skel-line--caption" />
                     <Bone className="mf-skel-line mf-skel-line--display" />
-                    <Bone className="mf-skel-line mf-skel-line--handle" />
                     <Bone className="mf-skel-line mf-skel-line--body" />
                     <div className="mf-skel-profile__chips">
                         <Bone className="mf-skel-chip" />
@@ -308,6 +310,11 @@ export function ProfileSkeleton() {
                         <Bone className="mf-skel-chip" />
                     </div>
                 </div>
+            </div>
+            <div className="mf-skel-profile__stats">
+                <Bone className="mf-skel-profile__stat" />
+                <Bone className="mf-skel-profile__stat" />
+                <Bone className="mf-skel-profile__stat" />
             </div>
             <div className="mf-skel-feed__stream">
                 <PostCardSkeleton />

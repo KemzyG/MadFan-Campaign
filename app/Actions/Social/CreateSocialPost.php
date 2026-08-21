@@ -7,6 +7,7 @@ use App\Enums\PostType;
 use App\Models\Post;
 use App\Models\PostMedia;
 use App\Models\User;
+use App\Support\CloudinaryImageStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -57,7 +58,7 @@ class CreateSocialPost
             ]);
 
             foreach ($images as $index => $file) {
-                $path = $file->store('social/posts/'.$post->id, 'public');
+                $path = CloudinaryImageStorage::store($file, 'social/posts/'.$post->id);
                 $size = @getimagesize($file->getRealPath()) ?: [null, null];
 
                 PostMedia::query()->create([

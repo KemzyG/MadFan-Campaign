@@ -169,8 +169,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             if (filled($this->avatar_path)) {
                 $url = PublicStorageUrl::path($this->avatar_path);
                 $version = $this->updated_at?->timestamp ?? time();
+                $separator = str_contains($url, '?') ? '&' : '?';
 
-                return $url.'?v='.$version;
+                return $url.$separator.'v='.$version;
             }
 
             return PublicStorageUrl::asset('default-avatar.png');

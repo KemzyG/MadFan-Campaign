@@ -1,8 +1,11 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { socialApi } from '../../../lib/socialApi';
 import { formatKickoff } from '../components/StadiumTicket';
 import { TicketListSkeleton } from '../components/Skeletons';
-import { useSocialFlash, withRollbackFlash } from '../optimistic';
+import TicketDetailModal from '../components/TicketDetailModal';
+import { applyOptimisticProps, useSocialFlash } from '../optimistic';
 
 function ClubCrest({ club }) {
     if (club?.logo_url) {
@@ -16,9 +19,9 @@ function ClubCrest({ club }) {
     );
 }
 
-function PurchaseButton({ match }) {
-    const { post, processing, optimistic } = useForm({});
-    const { reportError } = useSocialFlash();
+function PurchaseButton({ match, onIssued }) {
+    const { reportError, reportSuccess } = useSocialFlash();
+    const [processing, setProcessing] = useState(false);
 
     if (match.owned) {
         return <span className="mf-ticket-chip mf-ticket-chip--owned mf-mono">Owned</span>;
@@ -28,31 +31,65 @@ function PurchaseButton({ match }) {
         return <span className="mf-ticket-chip mf-mono">Unavailable</span>;
     }
 
+    async function purchase() {
+        if (processing) {
+            return;
+        }
+
+        setProcessing(true);
+        const rollback = applyOptimisticProps((props) => ({
+            matches: (props.matches || []).map((row) =>
+                row.id === match.id
+                    ? { ...row, owned: true, purchasable: false, _purchasing: true }
+                    : row,
+            ),
+            ticket_count: (props.ticket_count || 0) + 1,
+        }));
+
+        try {
+            const data = await socialApi(`/tickets/matches/${match.id}/purchase`, {
+                method: 'POST',
+            });
+
+            applyOptimisticProps((props) => ({
+                matches: (props.matches || []).map((row) =>
+                    row.id === match.id
+                        ? { ...row, owned: true, purchasable: false, _purchasing: false }
+                        : row,
+                ),
+                ticket_count:
+                    typeof data.ticket_count === 'number'
+                        ? data.ticket_count
+                        : props.ticket_count,
+            }));
+
+            reportSuccess?.(data.message || 'Ticket issued.');
+            if (data.ticket) {
+                onIssued?.(data.ticket);
+            }
+        } catch (error) {
+            rollback();
+            reportError?.(
+                error instanceof Error ? error.message : 'Purchase failed — rolled back.',
+            );
+        } finally {
+            setProcessing(false);
+        }
+    }
+
     return (
         <button
             type="button"
             className="mf-btn mf-btn--pitch mf-ticket-buy"
             disabled={processing}
-            onClick={() =>
-                optimistic((props) => ({
-                    matches: (props.matches || []).map((row) =>
-                        row.id === match.id
-                            ? { ...row, owned: true, purchasable: false, _purchasing: true }
-                            : row,
-                    ),
-                    ticket_count: (props.ticket_count || 0) + 1,
-                })).post(
-                    `/social/tickets/matches/${match.id}/purchase`,
-                    withRollbackFlash(reportError, {}, 'Purchase failed — rolled back.'),
-                )
-            }
+            onClick={purchase}
         >
             {processing || match._purchasing ? 'Purchasing…' : `Confirm £${match.price}`}
         </button>
     );
 }
 
-function MatchRow({ match }) {
+function MatchRow({ match, onIssued }) {
     return (
         <article className="mf-ticket-match">
             <div className="mf-ticket-match__perf" aria-hidden />
@@ -87,13 +124,15 @@ function MatchRow({ match }) {
                     </span>
                     <span className="mf-mono">GA £{match.price}</span>
                 </p>
-                <PurchaseButton match={match} />
+                <PurchaseButton match={match} onIssued={onIssued} />
             </div>
         </article>
     );
 }
 
 export default function Index({ matches, ticket_count = 0 }) {
+    const [issuedTicket, setIssuedTicket] = useState(null);
+
     return (
         <SocialShell title="Tickets">
             <Head title="Match tickets — Mad Fan Social" />
@@ -101,36 +140,43 @@ export default function Index({ matches, ticket_count = 0 }) {
             {matches == null ? (
                 <TicketListSkeleton />
             ) : (
-            <div className="mf-tickets">
-                <div className="mf-tickets-hero">
-                    <p className="mf-tickets-kicker mf-text-caption">Box office</p>
-                    <p className="mf-empty-title mf-tickets-title">Upcoming fixtures</p>
-                    <p className="mf-tickets-lead">
-                        Confirm purchase to print a GA stadium ticket to your wallet — monochrome stock face,
-                        perforated stub, turnstile QR. No card rails on this pass.
-                    </p>
-                    <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                        My tickets
-                        {ticket_count > 0 ? (
-                            <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                        ) : null}
-                    </Link>
-                </div>
+                <div className="mf-tickets">
+                    <div className="mf-tickets-hero">
+                        <p className="mf-tickets-kicker mf-text-caption">Box office</p>
+                        <p className="mf-empty-title mf-tickets-title">Upcoming fixtures</p>
+                        <p className="mf-tickets-lead">
+                            Confirm purchase to print a GA stadium ticket to your wallet — monochrome stock
+                            face, perforated stub, turnstile QR. No card rails on this pass.
+                        </p>
+                        <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
+                            My tickets
+                            {ticket_count > 0 ? (
+                                <span className="mf-mono mf-tickets-count">{ticket_count}</span>
+                            ) : null}
+                        </Link>
+                    </div>
 
-                {matches.length === 0 ? (
-                    <div className="mf-empty mf-empty--compact">
-                        <p className="mf-empty-title">Fixture board empty</p>
-                        <p>Upcoming matches will land here when seeded.</p>
-                    </div>
-                ) : (
-                    <div className="mf-ticket-list">
-                        {matches.map((match) => (
-                            <MatchRow key={match.id} match={match} />
-                        ))}
-                    </div>
-                )}
-            </div>
+                    {matches.length === 0 ? (
+                        <div className="mf-empty mf-empty--compact">
+                            <p className="mf-empty-title">Fixture board empty</p>
+                            <p>Upcoming matches will land here when seeded.</p>
+                        </div>
+                    ) : (
+                        <div className="mf-ticket-list">
+                            {matches.map((match) => (
+                                <MatchRow key={match.id} match={match} onIssued={setIssuedTicket} />
+                            ))}
+                        </div>
+                    )}
+                </div>
             )}
+
+            <TicketDetailModal
+                open={issuedTicket != null}
+                ticketId={issuedTicket?.id}
+                initialTicket={issuedTicket}
+                onClose={() => setIssuedTicket(null)}
+            />
         </SocialShell>
     );
 }

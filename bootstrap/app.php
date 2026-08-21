@@ -69,6 +69,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             function (Request $request): bool {
+                if ($request->expectsJson() || $request->wantsJson()) {
+                    return true;
+                }
+
                 $appPath = AdminRouting::appPath();
 
                 return $request->is('api/*', $appPath.'/api', $appPath.'/api/*');

@@ -6,28 +6,23 @@ import PullToRefresh from './components/PullToRefresh';
 import { FeedSkeleton } from './components/Skeletons';
 import { useStageSessionOptional } from './Stage/StageSessionContext';
 
-function ClubStrip({ club }) {
-    if (!club) {
-        return null;
-    }
-
+function GlobalStrip({ club }) {
     return (
-        <div className="mf-club-strip">
+        <div className="mf-club-strip mf-club-strip--global">
             <div className="mf-club-strip__glow" aria-hidden />
-            {club.logo_url ? (
-                <img src={club.logo_url} alt="" className="mf-avatar h-10 w-10" />
-            ) : (
-                <span className="mf-avatar mf-display mf-text-meta h-10 w-10 text-[var(--mf-pitch)]">
-                    {(club.short || club.name || '?').slice(0, 2).toUpperCase()}
-                </span>
-            )}
+            <div className="mf-club-strip__mark" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="8.25" strokeWidth="1.5" />
+                    <path strokeWidth="1.5" d="M3.75 12h16.5M12 3.75c2.4 2.6 3.6 5.4 3.6 8.25S14.4 17.65 12 20.25C9.6 17.65 8.4 14.85 8.4 12S9.6 6.35 12 3.75Z" />
+                </svg>
+            </div>
             <div className="min-w-0 flex-1">
-                <p className="mf-text-caption text-[var(--mf-pitch)]">Club terrace</p>
+                <p className="mf-text-caption text-[var(--mf-pitch)]">Global terrace</p>
                 <p className="mf-display mf-text-ui truncate tracking-[0.02em] text-[var(--mf-text)]">
-                    {club.name}
+                    Every club · every fan
                 </p>
                 <p className="mf-text-meta truncate text-[var(--mf-muted)]">
-                    {club.league || 'Club timeline'}
+                    {club?.name ? `Your end: ${club.name}` : 'Open timeline across the network'}
                 </p>
             </div>
         </div>
@@ -48,7 +43,7 @@ function FeedEmpty({ mode, message, onCompose }) {
             </p>
             <p>{message || (isFollowing
                 ? 'Follow fans to fill this terrace. Your own posts appear here too.'
-                : 'Kick the first ball — you’re already in the right end.')}</p>
+                : 'Kick the first ball — the global terrace is waiting.')}</p>
             <button type="button" className="mf-btn mf-btn--pitch mt-5" onClick={onCompose}>
                 Write a post
             </button>
@@ -62,7 +57,7 @@ function HomeFeed({ club, feed }) {
     const [dismissedIds, setDismissedIds] = useState([]);
 
     const posts = (feed?.posts || []).filter((post) => !dismissedIds.includes(post.id));
-    const mode = feed?.mode || 'club';
+    const mode = feed?.mode || 'global';
     const ptrDisabled = Boolean(composeOpen || stageSession?.modalOpen || stageSession?.chatOpen);
 
     function dismissPost(id) {
@@ -84,14 +79,14 @@ function HomeFeed({ club, feed }) {
                 <div className="mf-feed-toolbar">
                     <div className="mf-segment" role="tablist" aria-label="Feed mode">
                         <Link
-                            href="/social?mode=club"
+                            href="/social?mode=global"
                             role="tab"
-                            aria-selected={mode === 'club'}
-                            className={mode === 'club' ? 'is-active' : ''}
+                            aria-selected={mode === 'global'}
+                            className={mode === 'global' ? 'is-active' : ''}
                             preserveScroll
                             prefetch
                         >
-                            Club
+                            Global
                         </Link>
                         <Link
                             href="/social?mode=following"
@@ -114,7 +109,7 @@ function HomeFeed({ club, feed }) {
                     </button>
                 </div>
 
-                {mode === 'club' ? <ClubStrip club={club} /> : (
+                {mode === 'global' ? <GlobalStrip club={club} /> : (
                     <div className="mf-club-strip mf-club-strip--following">
                         <p className="mf-text-caption text-[var(--mf-amber)]">Following</p>
                         <p className="mf-text-meta text-[var(--mf-muted)]">
@@ -126,7 +121,7 @@ function HomeFeed({ club, feed }) {
                 {posts.length === 0 ? (
                     <FeedEmpty mode={mode} message={feed?.empty_message} onCompose={openCompose} />
                 ) : (
-                    <div className="mf-feed-stream" role="feed" aria-label={mode === 'club' ? 'Club feed' : 'Following feed'}>
+                    <div className="mf-feed-stream" role="feed" aria-label={mode === 'global' ? 'Global feed' : 'Following feed'}>
                         {posts.map((post, index) => (
                             <div
                                 key={post.id}

@@ -1,9 +1,12 @@
 import { Form, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { socialApi } from '../../../lib/socialApi';
 import {
+    applyOptimisticProps,
     prependFeedPost,
     patchPostInProps,
     removePostFromProps,
+    runSocialMutation,
     setAuthorFollowInProps,
     useSocialFlash,
     withRollbackFlash,
@@ -156,8 +159,7 @@ function EmbeddedPost({ embed, label }) {
                 <p className="mf-text-caption mb-1.5 text-[var(--mf-muted)]">{label}</p>
             ) : null}
             <p className="mf-text-meta text-[var(--mf-muted)]">
-                <span className="font-semibold text-[var(--mf-text)]">{embed.author?.name}</span>{' '}
-                <span className="mf-mono">@{embed.author?.handle}</span>
+                <span className="font-semibold text-[var(--mf-text)]">{embed.author?.name}</span>
             </p>
             {embed.body ? (
                 <p className="mf-text-ui mt-1 whitespace-pre-wrap text-[var(--mf-text)]">{embed.body}</p>
@@ -171,7 +173,7 @@ function PostOverflowMenu({ post, onDismiss }) {
     const menuId = useId();
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
-    const { reportError } = useSocialFlash();
+    const { reportError, reportSuccess } = useSocialFlash();
     const isOwn = Boolean(post.is_own || post.can_delete);
     const bookmarked = Boolean(post.bookmarked_by_viewer);
     const hidden = Boolean(post.hidden_by_viewer);
@@ -284,20 +286,26 @@ function PostOverflowMenu({ post, onDismiss }) {
                                             return;
                                         }
                                         const next = !following;
-                                        const visit = router.optimistic((props) =>
-                                            setAuthorFollowInProps(props, authorId, next),
+                                        void runSocialMutation(
+                                            (props) => setAuthorFollowInProps(props, authorId, next),
+                                            () =>
+                                                socialApi(`/users/${authorId}/follow`, {
+                                                    method: following ? 'DELETE' : 'POST',
+                                                }),
+                                            {
+                                                reportError,
+                                                reportSuccess,
+                                                errorFallback: following
+                                                    ? 'Unfollow failed — rolled back.'
+                                                    : 'Follow failed — rolled back.',
+                                            },
                                         );
-                                        const opts = withRollbackFlash(reportError);
-
-                                        if (following) {
-                                            visit.delete(`/social/users/${authorId}/follow`, opts);
-                                            return;
-                                        }
-                                        visit.post(`/social/users/${authorId}/follow`, {}, opts);
                                     })
                                 }
                             >
-                                {following ? `Unfollow @${post.author?.handle}` : `Follow @${post.author?.handle}`}
+                                {following
+                                    ? `Unfollow ${post.author?.name || 'fan'}`
+                                    : `Follow ${post.author?.name || 'fan'}`}
                             </button>
                         </li>
                     ) : null}
@@ -399,7 +407,7 @@ function PostOverflowMenu({ post, onDismiss }) {
 export default function PostCard({ post, compact = false, onDismiss }) {
     const [quoting, setQuoting] = useState(false);
     const [likePop, setLikePop] = useState(false);
-    const { reportError } = useSocialFlash();
+    const { reportError, reportSuccess } = useSocialFlash();
     const page = usePage();
     const viewer = page.props?.auth?.user;
 
@@ -435,21 +443,34 @@ export default function PostCard({ post, compact = false, onDismiss }) {
             setLikePop(true);
         }
 
-        const visit = router.optimistic((props) =>
-            patchPostInProps(props, post.id, (item) => ({
-                ...item,
-                liked_by_viewer: nextLiked,
-                likes_count: Math.max(0, (item.likes_count || 0) + (nextLiked ? 1 : -1)),
-            })),
+        void runSocialMutation(
+            (props) =>
+                patchPostInProps(props, post.id, (item) => ({
+                    ...item,
+                    liked_by_viewer: nextLiked,
+                    likes_count: Math.max(0, (item.likes_count || 0) + (nextLiked ? 1 : -1)),
+                })),
+            () =>
+                socialApi(`/posts/${post.id}/like`, {
+                    method: nextLiked ? 'POST' : 'DELETE',
+                }),
+            {
+                reportError,
+                reportSuccess,
+                errorFallback: nextLiked ? 'Like failed — rolled back.' : 'Unlike failed — rolled back.',
+                onSuccess: (data) => {
+                    if (typeof data?.likes_count === 'number') {
+                        applyOptimisticProps((props) =>
+                            patchPostInProps(props, post.id, (item) => ({
+                                ...item,
+                                liked_by_viewer: Boolean(data.liked),
+                                likes_count: data.likes_count,
+                            })),
+                        );
+                    }
+                },
+            },
         );
-        const opts = withRollbackFlash(reportError);
-
-        if (nextLiked) {
-            visit.post(`/social/posts/${post.id}/like`, {}, opts);
-            return;
-        }
-
-        visit.delete(`/social/posts/${post.id}/like`, opts);
     }
 
     function repost() {
@@ -537,7 +558,6 @@ export default function PostCard({ post, compact = false, onDismiss }) {
                             >
                                 {post.author?.name}
                             </Link>
-                            <span className="mf-mono mf-text-meta text-[var(--mf-muted)]">@{handle}</span>
                             {post.club?.short || post.club?.name ? (
                                 <span className="mf-club-flake">
                                     {post.club.short || post.club.name}

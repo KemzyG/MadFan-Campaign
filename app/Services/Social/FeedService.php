@@ -22,6 +22,20 @@ class FeedService
     public const MAX_IMAGES = 4;
 
     /**
+     * Global feed: top-level posts from every club (not scoped to the viewer's club).
+     *
+     * @return LengthAwarePaginator<int, Post>
+     */
+    public function globalFeed(User $viewer): LengthAwarePaginator
+    {
+        return $this->baseFeedQuery($viewer)
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+    }
+
+    /**
+     * Club-scoped terrace feed (kept for callers that still need a single-club timeline).
+     *
      * @return LengthAwarePaginator<int, Post>
      */
     public function clubFeed(User $viewer, ?int $clubId = null): LengthAwarePaginator

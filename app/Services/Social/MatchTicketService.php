@@ -88,7 +88,9 @@ class MatchTicketService
             'status' => $ticket->status->value,
             'price' => (string) $ticket->price,
             'section' => $ticket->section,
+            'seat' => $ticket->seat,
             'code' => $ticket->code,
+            'qr_payload' => $ticket->qrPayload(),
             'purchased_at' => $ticket->purchased_at?->toIso8601String(),
             'match' => $match ? $this->presentMatch($match, true) : null,
         ];

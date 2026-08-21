@@ -32,7 +32,7 @@ export default function Show({ ticket }) {
 
                 <div className="mf-gate-pass__actions">
                     <Link href="/social/tickets/mine" className="mf-btn mf-btn--ghost" prefetch>
-                        All tickets
+                        Wallet
                     </Link>
                     <Link href="/social/tickets" className="mf-btn mf-btn--muted" prefetch>
                         More fixtures

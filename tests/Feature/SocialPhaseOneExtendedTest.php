@@ -12,11 +12,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-test('fans can follow users and see following feed', function () {
+test('fans can follow users and see following feed without other authors', function () {
     $club = Club::factory()->create();
+    $otherClub = Club::factory()->create();
     $viewer = socialReadyUser($club);
     $followed = socialReadyUser($club);
     $stranger = socialReadyUser($club);
+    $awayAuthor = socialReadyUser($otherClub);
 
     Post::factory()->create([
         'author_id' => $followed->id,
@@ -28,6 +30,12 @@ test('fans can follow users and see following feed', function () {
         'author_id' => $stranger->id,
         'club_id' => $club->id,
         'body' => 'From stranger',
+    ]);
+
+    Post::factory()->create([
+        'author_id' => $awayAuthor->id,
+        'club_id' => $otherClub->id,
+        'body' => 'From away club',
     ]);
 
     $this->actingAs($viewer)
@@ -45,6 +53,14 @@ test('fans can follow users and see following feed', function () {
             ->where('feed.mode', 'following')
             ->has('feed.posts', 1)
             ->where('feed.posts.0.body', 'From followed'));
+
+    $this->actingAs($viewer)
+        ->get('/social?mode=global')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Home')
+            ->where('feed.mode', 'global')
+            ->has('feed.posts', 3));
 });
 
 test('publishing a post awards social points until the daily cap', function () {

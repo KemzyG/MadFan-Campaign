@@ -1,7 +1,9 @@
 import { createContext, useContext } from 'react';
+import { router } from '@inertiajs/react';
 
 export const SocialFlashContext = createContext({
     reportError: () => {},
+    reportSuccess: () => {},
     clearError: () => {},
 });
 
@@ -41,6 +43,89 @@ export function withRollbackFlash(reportError, options = {}, fallback = 'Action 
             options.onSuccess?.(...args);
         },
     };
+}
+
+/**
+ * Apply a partial page-props patch without a network visit (Inertia v3 replaceProp).
+ *
+ * @param {(props: object) => object} mapper
+ * @returns {() => void} rollback
+ */
+export function applyOptimisticProps(mapper) {
+    const page = router.page;
+    if (!page?.props || typeof mapper !== 'function') {
+        return () => {};
+    }
+
+    const previous = page.props;
+    const patch = mapper(previous) || {};
+    const keys = Object.keys(patch);
+
+    if (keys.length === 0) {
+        return () => {};
+    }
+
+    for (const key of keys) {
+        router.replaceProp(key, patch[key]);
+    }
+
+    return () => {
+        for (const key of keys) {
+            router.replaceProp(key, previous[key]);
+        }
+    };
+}
+
+/**
+ * Optimistic props patch + JSON mutation + toast. Rolls back props on failure.
+ *
+ * @param {(props: object) => object | null} mapper
+ * @param {() => Promise<object>} mutate
+ * @param {{
+ *   reportError?: (message: string) => void,
+ *   reportSuccess?: (message: string) => void,
+ *   successMessage?: string | ((data: object) => string),
+ *   errorFallback?: string,
+ *   onSuccess?: (data: object) => void,
+ *   onError?: (error: Error) => void,
+ * }} [options]
+ */
+export async function runSocialMutation(mapper, mutate, options = {}) {
+    const {
+        reportError,
+        reportSuccess,
+        successMessage,
+        errorFallback = 'Action failed — rolled back.',
+        onSuccess,
+        onError,
+    } = options;
+
+    const rollback = typeof mapper === 'function' ? applyOptimisticProps(mapper) : () => {};
+
+    try {
+        const data = await mutate();
+        const message =
+            typeof successMessage === 'function'
+                ? successMessage(data)
+                : successMessage || data?.message;
+
+        if (message) {
+            reportSuccess?.(message);
+        }
+
+        onSuccess?.(data);
+
+        return data;
+    } catch (error) {
+        rollback();
+
+        const message =
+            error instanceof Error && error.message ? error.message : errorFallback;
+        reportError?.(message);
+        onError?.(error);
+
+        throw error;
+    }
 }
 
 function mapList(list, mapFn) {

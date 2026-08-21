@@ -18,12 +18,13 @@ class SocialHomeController extends Controller
         $user = $request->user();
         $user->loadMissing('favouriteClub.league');
 
-        $mode = $request->string('mode')->toString() === 'following' ? 'following' : 'club';
+        $requestedMode = $request->string('mode')->toString();
+        $mode = $requestedMode === 'following' ? 'following' : 'global';
         $club = $user->favouriteClub;
 
         $paginator = $mode === 'following'
             ? $feedService->followingFeed($user)
-            : $feedService->clubFeed($user);
+            : $feedService->globalFeed($user);
 
         // Once-per-user feed impression (unique post_views); does not re-increment on reloads.
         $recordPostView->forFeed($paginator->items(), $user);
@@ -32,7 +33,7 @@ class SocialHomeController extends Controller
 
         $emptyMessage = $mode === 'following'
             ? 'Follow fans to fill this terrace. Your own posts appear here too.'
-            : 'Quiet floodlights — kick the first ball for '.($club?->name ?? 'your club').'.';
+            : 'Quiet floodlights — kick the first ball across every terrace.';
 
         return Inertia::render('Social/Home', [
             'club' => $club ? [

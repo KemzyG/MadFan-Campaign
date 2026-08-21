@@ -433,16 +433,42 @@ export default function SocialShell({ children, title, showTabs = true, backHref
     const profileHref = handle ? `/social/u/${handle}` : '/social/passport';
 
     const [composeOpen, setComposeOpen] = useState(false);
-    const [clientError, setClientError] = useState('');
+    const [toasts, setToasts] = useState([]);
     const [navSkeletonKind, setNavSkeletonKind] = useState(null);
     const navSkeletonTimer = useRef(null);
+    const toastId = useRef(0);
 
     const openCompose = useCallback(() => setComposeOpen(true), []);
     const closeCompose = useCallback(() => setComposeOpen(false), []);
-    const reportError = useCallback((message) => {
-        setClientError(message || 'Action failed — rolled back.');
+
+    const pushToast = useCallback((tone, message) => {
+        const text = typeof message === 'string' ? message.trim() : '';
+        if (!text) {
+            return;
+        }
+
+        toastId.current += 1;
+        const id = toastId.current;
+        setToasts((current) => [...current.slice(-4), { id, tone, message: text }]);
+
+        window.setTimeout(() => {
+            setToasts((current) => current.filter((toast) => toast.id !== id));
+        }, 4200);
     }, []);
-    const clearError = useCallback(() => setClientError(''), []);
+
+    const reportError = useCallback(
+        (message) => {
+            pushToast('err', message || 'Action failed — rolled back.');
+        },
+        [pushToast],
+    );
+    const reportSuccess = useCallback(
+        (message) => {
+            pushToast('ok', message || 'Done.');
+        },
+        [pushToast],
+    );
+    const clearError = useCallback(() => {}, []);
 
     const clearNavSkeleton = useCallback(() => {
         if (navSkeletonTimer.current) {
@@ -458,19 +484,18 @@ export default function SocialShell({ children, title, showTabs = true, backHref
     );
 
     const flashApi = useMemo(
-        () => ({ reportError, clearError }),
-        [reportError, clearError],
+        () => ({ reportError, reportSuccess, clearError }),
+        [reportError, reportSuccess, clearError],
     );
 
     useEffect(() => {
-        if (!clientError) {
-            return undefined;
+        if (flash?.success) {
+            pushToast('ok', flash.success);
         }
-
-        const timer = window.setTimeout(() => setClientError(''), 4500);
-
-        return () => window.clearTimeout(timer);
-    }, [clientError]);
+        if (flash?.error) {
+            pushToast('err', flash.error);
+        }
+    }, [flash?.success, flash?.error, pushToast]);
 
     useEffect(() => {
         if (!showTabs) {
@@ -694,14 +719,6 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                             </header>
                         )}
 
-                        {flash?.success ? <div className="mf-flash mf-flash--ok">{flash.success}</div> : null}
-                        {flash?.error ? <div className="mf-flash mf-flash--err">{flash.error}</div> : null}
-                        {clientError ? (
-                            <div className="mf-flash mf-flash--err" role="alert">
-                                {clientError}
-                            </div>
-                        ) : null}
-
                         <main className={`mf-main ${showTabs ? '' : 'pb-[max(1rem,var(--mf-safe-bottom))]'}`}>
                             {navSkeletonKind ? <SocialPageSkeleton kind={navSkeletonKind} /> : children}
                         </main>
@@ -744,6 +761,29 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                 ) : null}
 
                 <StageChrome />
+
+                <div className="mf-toast-stack" aria-live="polite" aria-relevant="additions">
+                    {toasts.map((toast) => (
+                        <div
+                            key={toast.id}
+                            className={`mf-toast mf-toast--${toast.tone}`}
+                            role={toast.tone === 'err' ? 'alert' : 'status'}
+                        >
+                            <span className="mf-toast__mark" aria-hidden />
+                            <p className="mf-toast__copy">{toast.message}</p>
+                            <button
+                                type="button"
+                                className="mf-toast__dismiss"
+                                aria-label="Dismiss"
+                                onClick={() =>
+                                    setToasts((current) => current.filter((item) => item.id !== toast.id))
+                                }
+                            >
+                                ×
+                            </button>
+                        </div>
+                    ))}
+                </div>
             </div>
             </SocialComposeContext.Provider>
         </SocialFlashContext.Provider>

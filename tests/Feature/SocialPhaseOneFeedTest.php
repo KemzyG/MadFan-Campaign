@@ -4,10 +4,11 @@ use App\Models\Club;
 use App\Models\Post;
 use App\Models\PostLike;
 
-test('club feed lists top-level posts for the favourite club', function () {
+test('global feed lists top-level posts across clubs', function () {
     $club = Club::factory()->create(['name' => 'Home United']);
     $otherClub = Club::factory()->create();
     $user = socialReadyUser($club);
+    $otherFan = socialReadyUser($otherClub);
 
     Post::factory()->create([
         'author_id' => $user->id,
@@ -16,9 +17,9 @@ test('club feed lists top-level posts for the favourite club', function () {
     ]);
 
     Post::factory()->create([
-        'author_id' => $user->id,
+        'author_id' => $otherFan->id,
         'club_id' => $otherClub->id,
-        'body' => 'Wrong end',
+        'body' => 'Away terrace',
     ]);
 
     $replyParent = Post::factory()->create([
@@ -37,9 +38,22 @@ test('club feed lists top-level posts for the favourite club', function () {
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Home')
-            ->has('feed.posts', 2)
+            ->where('feed.mode', 'global')
+            ->has('feed.posts', 3)
             ->where('feed.posts.0.body', 'Parent')
-            ->where('feed.posts.1.body', 'Kickoff vibes'));
+            ->where('feed.posts.1.body', 'Away terrace')
+            ->where('feed.posts.2.body', 'Kickoff vibes'));
+});
+
+test('legacy club mode query still resolves to the global feed', function () {
+    $user = socialReadyUser();
+
+    $this->actingAs($user)
+        ->get('/social?mode=club')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Home')
+            ->where('feed.mode', 'global'));
 });
 
 test('onboarded fans can create a text post on the club terrace', function () {
