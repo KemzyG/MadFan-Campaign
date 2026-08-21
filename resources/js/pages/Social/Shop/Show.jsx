@@ -8,6 +8,17 @@ export default function Show({ jersey, cart_count = 0 }) {
         () => (jersey.variants || []).filter((variant) => variant.in_stock),
         [jersey.variants],
     );
+    const images = useMemo(() => {
+        if (jersey.images?.length) {
+            return jersey.images;
+        }
+
+        return jersey.image_url
+            ? [{ id: 'primary', url: jersey.image_url, alt: jersey.name, title: jersey.name }]
+            : [];
+    }, [jersey]);
+
+    const [activeImage, setActiveImage] = useState(0);
     const [sizeId, setSizeId] = useState(inStockVariants[0]?.id ?? jersey.variants?.[0]?.id ?? '');
     const { data, setData, post, processing, errors } = useForm({
         variant_id: sizeId,
@@ -15,6 +26,7 @@ export default function Show({ jersey, cart_count = 0 }) {
     });
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
+    const current = images[activeImage] ?? null;
 
     function selectSize(id) {
         setSizeId(id);
@@ -32,19 +44,46 @@ export default function Show({ jersey, cart_count = 0 }) {
 
             <div className="mf-shop mf-shop--detail">
                 <div className="mf-shop-detail">
-                    <div className="mf-shop-detail__media">
-                        {jersey.image_url ? (
-                            <img
-                                src={jersey.image_url}
-                                alt=""
-                                className="mf-shop-detail__img"
-                                onError={(event) => onImageError(event, fallbackUrl)}
-                            />
-                        ) : (
-                            <div className="mf-shop-detail__placeholder mf-display">
-                                {(jersey.club?.short || 'MF').slice(0, 3)}
+                    <div className="mf-shop-gallery">
+                        <div className="mf-shop-detail__media">
+                            {current ? (
+                                <img
+                                    src={current.url}
+                                    alt={current.alt || jersey.name}
+                                    className="mf-shop-detail__img"
+                                    onError={(event) => onImageError(event, fallbackUrl)}
+                                />
+                            ) : (
+                                <div className="mf-shop-detail__placeholder mf-display">
+                                    {(jersey.club?.short || 'MF').slice(0, 3)}
+                                </div>
+                            )}
+                        </div>
+                        {images.length > 1 ? (
+                            <div className="mf-shop-thumbs" role="list">
+                                {images.map((image, index) => (
+                                    <button
+                                        key={image.id}
+                                        type="button"
+                                        role="listitem"
+                                        className={[
+                                            'mf-shop-thumb',
+                                            index === activeImage ? 'is-active' : '',
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' ')}
+                                        onClick={() => setActiveImage(index)}
+                                        aria-label={`View image ${index + 1}`}
+                                    >
+                                        <img
+                                            src={image.url}
+                                            alt=""
+                                            onError={(event) => onImageError(event, fallbackUrl)}
+                                        />
+                                    </button>
+                                ))}
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     <div className="mf-shop-detail__info">

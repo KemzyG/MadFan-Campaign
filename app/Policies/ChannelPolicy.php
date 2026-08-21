@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\ClubMembership;
 use App\Models\User;
@@ -19,9 +20,10 @@ class ChannelPolicy
             return false;
         }
 
-        $channel->loadMissing('clubServer');
-
-        return $this->belongsToClub($user, (int) $channel->clubServer->club_id);
+        return match ($channel->scope ?? ChannelScope::Club) {
+            ChannelScope::Club => $this->belongsToClubChannel($user, $channel),
+            ChannelScope::Direct, ChannelScope::Group => $channel->hasMember($user),
+        };
     }
 
     public function sendMessage(User $user, Channel $channel): bool
@@ -31,6 +33,17 @@ class ChannelPolicy
         }
 
         return ! $channel->is_read_only;
+    }
+
+    private function belongsToClubChannel(User $user, Channel $channel): bool
+    {
+        $channel->loadMissing('clubServer');
+
+        if ($channel->clubServer === null) {
+            return false;
+        }
+
+        return $this->belongsToClub($user, (int) $channel->clubServer->club_id);
     }
 
     private function belongsToClub(User $user, int $clubId): bool

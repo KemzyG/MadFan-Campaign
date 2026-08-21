@@ -27,7 +27,7 @@ class ChatMessageController extends Controller
 
         return response()->json([
             'message' => 'Message sent.',
-            'data' => $chatService->presentMessage($message),
+            'data' => $chatService->presentMessage($message, $request->user()),
         ], 201);
     }
 }

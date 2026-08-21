@@ -26,6 +26,8 @@ enum AdminPermission: string
     case JerseyOrdersView = 'jersey-orders.view';
     case JerseyOrdersManage = 'jersey-orders.manage';
 
+    case MediaManage = 'media.manage';
+
     case ReferralsView = 'referrals.view';
     case PointTransactionsView = 'point-transactions.view';
 

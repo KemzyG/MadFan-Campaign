@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ClubChatSeeder::class,
             MatchSeeder::class,
             JerseySeeder::class,
+            LandingMediaSeeder::class,
             TestDataSeeder::class,
             SettingSeeder::class,
         ]);

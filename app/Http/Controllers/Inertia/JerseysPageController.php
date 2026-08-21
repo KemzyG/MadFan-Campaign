@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inertia;
 use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\Jersey;
+use App\Models\MediaAsset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ class JerseysPageController extends Controller
         Gate::authorize('manageJerseys');
 
         $jerseys = Jersey::query()
-            ->with(['club:id,name,short', 'variants'])
+            ->with(['club:id,name,short', 'variants', 'mediaAssets'])
             ->when($request->filled('club_id'), fn ($query) => $query->where('club_id', $request->integer('club_id')))
             ->when($request->filled('q'), function ($query) use ($request): void {
                 $term = '%'.$request->string('q').'%';
@@ -40,6 +41,8 @@ class JerseysPageController extends Controller
                 'club_id' => $jersey->club_id,
                 'club' => $jersey->club,
                 'stock_total' => $jersey->totalStock(),
+                'media_asset_ids' => $jersey->mediaAssets->pluck('id')->all(),
+                'gallery' => $jersey->mediaAssets->map(fn (MediaAsset $asset): array => $asset->toShopImage())->all(),
                 'variants' => $jersey->variants->map(fn ($variant): array => [
                     'id' => $variant->id,
                     'size' => $variant->size->value,
@@ -51,6 +54,12 @@ class JerseysPageController extends Controller
         return Inertia::render('Admin/Jerseys/Index', [
             'jerseys' => $jerseys,
             'clubs' => Club::query()->orderBy('name')->get(['id', 'name', 'short']),
+            'gallery_assets' => MediaAsset::query()
+                ->orderByDesc('id')
+                ->limit(120)
+                ->get()
+                ->map(fn (MediaAsset $asset): array => $asset->toAdminArray())
+                ->all(),
             'filters' => [
                 'club_id' => $request->integer('club_id') ?: null,
                 'q' => $request->string('q')->toString() ?: null,

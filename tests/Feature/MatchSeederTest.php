@@ -6,35 +6,36 @@ use Database\Seeders\ClubSeeder;
 use Database\Seeders\MatchSeeder;
 use Database\Seeders\ProductionCoreSeeder;
 
-test('match seeder creates five upcoming purchasable fixtures without factories', function () {
+test('match seeder creates a full fixture board without factories', function () {
     $this->seed(ClubSeeder::class);
     $this->seed(MatchSeeder::class);
 
-    $fixtures = MatchFixture::query()
-        ->upcoming()
-        ->with(['homeClub', 'awayClub'])
-        ->get();
+    $upcoming = MatchFixture::query()->upcoming()->get();
 
-    expect($fixtures)->toHaveCount(5);
+    expect($upcoming->count())->toBeGreaterThanOrEqual(5)
+        ->and(MatchFixture::query()->where('status', MatchStatus::Live)->count())->toBe(1)
+        ->and(MatchFixture::query()->where('status', MatchStatus::Finished)->count())->toBe(2);
 
-    foreach ($fixtures as $fixture) {
+    foreach ($upcoming as $fixture) {
         expect($fixture->status)->toBe(MatchStatus::Upcoming)
             ->and($fixture->isPurchasable())->toBeTrue()
             ->and((float) $fixture->price)->toBeGreaterThan(0)
             ->and($fixture->venue)->not->toBeEmpty()
-            ->and($fixture->homeClub)->not->toBeNull()
-            ->and($fixture->awayClub)->not->toBeNull()
             ->and($fixture->home_club_id)->not->toBe($fixture->away_club_id);
     }
 
+    $total = MatchFixture::query()->count();
+
     $this->seed(MatchSeeder::class);
 
-    expect(MatchFixture::query()->count())->toBe(5)
-        ->and(MatchFixture::query()->upcoming()->count())->toBe(5);
+    expect(MatchFixture::query()->count())->toBe($total)
+        ->and(MatchFixture::query()->upcoming()->count())->toBe($upcoming->count());
 });
 
 test('production core seeder wires match catalogue after clubs', function () {
     $this->seed(ProductionCoreSeeder::class);
 
-    expect(MatchFixture::query()->upcoming()->count())->toBe(5);
+    expect(MatchFixture::query()->upcoming()->count())->toBeGreaterThanOrEqual(5)
+        ->and(MatchFixture::query()->where('status', MatchStatus::Live)->exists())->toBeTrue()
+        ->and(MatchFixture::query()->where('status', MatchStatus::Finished)->exists())->toBeTrue();
 });

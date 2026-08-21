@@ -45,6 +45,7 @@ class AdminPermissionsSeeder extends Seeder
                 AdminPermission::JerseysManage->value,
                 AdminPermission::JerseyOrdersView->value,
                 AdminPermission::JerseyOrdersManage->value,
+                AdminPermission::MediaManage->value,
                 AdminPermission::ReferralsView->value,
                 AdminPermission::PointTransactionsView->value,
             ],

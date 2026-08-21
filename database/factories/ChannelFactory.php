@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ChannelScope;
 use App\Enums\ChannelType;
 use App\Models\Channel;
 use App\Models\ClubServer;
@@ -21,6 +22,9 @@ class ChannelFactory extends Factory
     {
         return [
             'club_server_id' => ClubServer::factory(),
+            'scope' => ChannelScope::Club,
+            'conversation_key' => null,
+            'created_by_id' => null,
             'slug' => 'general',
             'name' => 'general',
             'type' => ChannelType::Text,

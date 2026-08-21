@@ -27,6 +27,7 @@ class ProductionCoreSeeder extends Seeder
             MatchSeeder::class,
             SettingSeeder::class,
             SportsPostSeeder::class,
+            LandingMediaSeeder::class,
         ]);
     }
 }

@@ -110,11 +110,18 @@ export default function CampaignNav({
                     </div>
                     <div className="campaign-nav-panel-links">
                         <Link
+                            href="/campaign"
+                            className={`campaign-nav-drawer-link${pathname === '/campaign' ? ' active' : ''}`}
+                            onClick={onClose}
+                        >
+                            Campaign
+                        </Link>
+                        <Link
                             href="/"
                             className={`campaign-nav-drawer-link${pathname === '/' ? ' active' : ''}`}
                             onClick={onClose}
                         >
-                            Home
+                            Site home
                         </Link>
                         {!isGuest && (
                             <Link

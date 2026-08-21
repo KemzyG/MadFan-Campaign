@@ -21,7 +21,7 @@ class JerseysController extends Controller
         Gate::authorize('manageJerseys');
 
         $jerseys = Jersey::query()
-            ->with(['club:id,name,short', 'variants'])
+            ->with(['club:id,name,short', 'variants', 'mediaAssets'])
             ->when($request->filled('club_id'), fn ($query) => $query->where('club_id', $request->integer('club_id')))
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 20));
@@ -33,7 +33,7 @@ class JerseysController extends Controller
     {
         Gate::authorize('manageJerseys');
 
-        return response()->json($jersey->load(['club:id,name,short', 'variants']));
+        return response()->json($jersey->load(['club:id,name,short', 'variants', 'mediaAssets']));
     }
 
     public function store(StoreJerseyRequest $request): JsonResponse
@@ -62,12 +62,14 @@ class JerseysController extends Controller
                 ]);
             }
 
+            $this->syncMediaAssets($jersey, $request->validated('media_asset_ids') ?? []);
+
             return $jersey;
         });
 
         ActivityLog::record('jersey.created', "Created jersey {$jersey->name}");
 
-        return response()->json($jersey->load(['club:id,name,short', 'variants']), 201);
+        return response()->json($jersey->load(['club:id,name,short', 'variants', 'mediaAssets']), 201);
     }
 
     public function update(UpdateJerseyRequest $request, Jersey $jersey): JsonResponse
@@ -126,11 +128,15 @@ class JerseysController extends Controller
             }
 
             $jersey->variants()->whereNotIn('id', $keptIds)->delete();
+
+            if ($request->boolean('sync_gallery') || $request->exists('media_asset_ids')) {
+                $this->syncMediaAssets($jersey, $request->input('media_asset_ids', []));
+            }
         });
 
         ActivityLog::record('jersey.updated', "Updated jersey {$jersey->name}");
 
-        return response()->json($jersey->fresh()->load(['club:id,name,short', 'variants']));
+        return response()->json($jersey->fresh()->load(['club:id,name,short', 'variants', 'mediaAssets']));
     }
 
     public function destroy(Jersey $jersey): JsonResponse
@@ -142,5 +148,19 @@ class JerseysController extends Controller
         $jersey->delete();
 
         return response()->json(['message' => 'Jersey deleted.']);
+    }
+
+    /**
+     * @param  list<int|string>  $mediaAssetIds
+     */
+    private function syncMediaAssets(Jersey $jersey, array $mediaAssetIds): void
+    {
+        $sync = [];
+
+        foreach (array_values($mediaAssetIds) as $index => $mediaAssetId) {
+            $sync[(int) $mediaAssetId] = ['sort_order' => $index];
+        }
+
+        $jersey->mediaAssets()->sync($sync);
     }
 }

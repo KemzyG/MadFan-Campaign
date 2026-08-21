@@ -96,7 +96,7 @@ test('campaign leaderboard exposes masked emails', function () {
     ]);
     createUser(['total_points' => 100]);
 
-    $this->get('/')
+    $this->get('/campaign')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Campaign')
@@ -110,7 +110,7 @@ test('campaign leaderboard excludes admin accounts', function () {
     createAdminUser(['total_points' => 50000, 'email' => 'board-admin@madfan.test']);
     $fan = createUser(['total_points' => 200, 'email' => 'board-fan@madfan.test']);
 
-    $this->get('/')
+    $this->get('/campaign')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Campaign')

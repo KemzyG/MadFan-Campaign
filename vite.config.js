@@ -10,6 +10,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/madfan.css',
+                'resources/css/landing.css',
                 'resources/css/social.css',
                 'resources/js/app.js',
                 'resources/js/admin.jsx',

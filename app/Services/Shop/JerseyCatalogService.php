@@ -3,9 +3,12 @@
 namespace App\Services\Shop;
 
 use App\Enums\JerseySize;
+use App\Models\Club;
 use App\Models\Jersey;
 use App\Models\JerseyOrder;
+use App\Models\MediaAsset;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class JerseyCatalogService
 {
@@ -14,15 +17,35 @@ class JerseyCatalogService
     /**
      * @return list<array<string, mixed>>
      */
-    public function presentCatalog(?int $clubId = null): array
+    public function presentCatalog(?int $clubId = null, string $sort = 'name', ?bool $inStockOnly = null): array
     {
         return Jersey::query()
             ->active()
-            ->with(['club:id,name,short,logo', 'variants'])
+            ->with(['club:id,name,short,logo', 'variants', 'mediaAssets'])
             ->when($clubId, fn ($query) => $query->where('club_id', $clubId))
-            ->orderBy('name')
+            ->when($inStockOnly === true, function (Builder $query): void {
+                $query->whereHas('variants', fn (Builder $variants) => $variants->where('stock', '>', 0));
+            })
+            ->tap(fn (Builder $query) => $this->applySort($query, $sort))
             ->get()
             ->map(fn (Jersey $jersey): array => $this->presentJerseyCard($jersey))
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, name: string, short: string|null}>
+     */
+    public function presentClubsWithStock(): array
+    {
+        return Club::query()
+            ->whereHas('jerseys', fn (Builder $query) => $query->active())
+            ->orderBy('name')
+            ->get(['id', 'name', 'short'])
+            ->map(fn (Club $club): array => [
+                'id' => $club->id,
+                'name' => $club->name,
+                'short' => $club->short,
+            ])
             ->all();
     }
 
@@ -31,11 +54,12 @@ class JerseyCatalogService
      */
     public function presentJersey(Jersey $jersey): array
     {
-        $jersey->loadMissing(['club:id,name,short,logo', 'variants']);
+        $jersey->loadMissing(['club:id,name,short,logo', 'variants', 'mediaAssets']);
 
         return [
             ...$this->presentJerseyCard($jersey),
             'description' => $jersey->description,
+            'images' => $this->presentImages($jersey),
             'variants' => $jersey->variants
                 ->sortBy(fn ($variant) => array_search($variant->size->value, JerseySize::values(), true))
                 ->values()
@@ -135,14 +159,17 @@ class JerseyCatalogService
      */
     private function presentJerseyCard(Jersey $jersey): array
     {
+        $images = $this->presentImages($jersey);
+
         return [
             'id' => $jersey->id,
             'name' => $jersey->name,
             'slug' => $jersey->slug,
             'price' => (string) $jersey->price,
-            'image_url' => $jersey->image_url,
+            'image_url' => $images[0]['url'] ?? $jersey->image_url,
             'purchasable' => $jersey->isPurchasable(),
             'stock_total' => $jersey->totalStock(),
+            'gallery_count' => count($images),
             'club' => $jersey->club ? [
                 'id' => $jersey->club->id,
                 'name' => $jersey->club->name,
@@ -150,5 +177,37 @@ class JerseyCatalogService
                 'logo_url' => $jersey->club->logo_url,
             ] : null,
         ];
+    }
+
+    /**
+     * @return list<array{id: int|string, url: string, alt: string|null, title: string|null}>
+     */
+    private function presentImages(Jersey $jersey): array
+    {
+        $images = $jersey->mediaAssets
+            ->map(fn (MediaAsset $asset): array => $asset->toShopImage())
+            ->values()
+            ->all();
+
+        if ($images === [] && filled($jersey->image)) {
+            $images[] = [
+                'id' => 'primary',
+                'url' => $jersey->image_url,
+                'alt' => $jersey->name,
+                'title' => $jersey->name,
+            ];
+        }
+
+        return $images;
+    }
+
+    private function applySort(Builder $query, string $sort): void
+    {
+        match ($sort) {
+            'price_asc' => $query->orderBy('price')->orderBy('name'),
+            'price_desc' => $query->orderByDesc('price')->orderBy('name'),
+            'newest' => $query->orderByDesc('id'),
+            default => $query->orderBy('name'),
+        };
     }
 }

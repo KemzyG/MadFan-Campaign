@@ -122,6 +122,20 @@ function IconCampaign() {
     );
 }
 
+function IconFixtures({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M5 5.5h14v13H5z"
+            />
+            <path strokeLinecap="round" strokeWidth={active ? 2 : 1.6} d="M5 9.5h14M9.5 5.5v13" />
+        </svg>
+    );
+}
+
 function IconTickets({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -350,7 +364,7 @@ function SocialHeaderNavMenu({ tabs, onCompose }) {
                             onCompose();
                         }}
                     />
-                    <HeaderMenuItem href="/" label="Campaign" icon={IconCampaign} onClick={close} />
+                    <HeaderMenuItem href="/campaign" label="Campaign" icon={IconCampaign} onClick={close} />
                     <HeaderMenuItem
                         href="/logout"
                         method="post"
@@ -407,7 +421,7 @@ function SocialHeaderAccountMenu({ user, handle, profileHref }) {
                     <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
                     <HeaderMenuItem href={profileHref} label="You" icon={IconProfile} onClick={close} />
                     <HeaderMenuItem href="/social/passport" label="Passport" icon={IconPassport} onClick={close} />
-                    <HeaderMenuItem href="/" label="Campaign" icon={IconCampaign} onClick={close} />
+                    <HeaderMenuItem href="/campaign" label="Campaign" icon={IconCampaign} onClick={close} />
                     <HeaderMenuItem
                         href="/logout"
                         method="post"
@@ -563,6 +577,12 @@ export default function SocialShell({ children, title, showTabs = true, backHref
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
     const secondaryTabs = [
+        {
+            href: '/social/fixtures',
+            label: 'Fixtures',
+            icon: IconFixtures,
+            active: pathMatches(current, '/social/fixtures'),
+        },
         {
             href: '/social/shop',
             label: 'Shop',

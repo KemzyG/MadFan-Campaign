@@ -84,11 +84,31 @@ class CloudinaryImageStorage
 
     public static function store(UploadedFile $file, string $directory): string
     {
+        return self::storeWithMeta($file, $directory)['path'];
+    }
+
+    /**
+     * Store an image and return path + optional Cloudinary public_id.
+     *
+     * @return array{path: string, public_id: ?string, remote: bool}
+     */
+    public static function storeWithMeta(UploadedFile $file, string $directory): array
+    {
         if (! self::configured()) {
-            return $file->store($directory, 'public');
+            return [
+                'path' => $file->store($directory, 'public'),
+                'public_id' => null,
+                'remote' => false,
+            ];
         }
 
-        return self::upload($file, $directory)['secure_url'];
+        $result = self::upload($file, $directory);
+
+        return [
+            'path' => $result['secure_url'],
+            'public_id' => $result['public_id'],
+            'remote' => true,
+        ];
     }
 
     public static function delete(?string $path): void
@@ -188,6 +208,83 @@ class CloudinaryImageStorage
     {
         self::$uploadUsing = null;
         self::$destroyUsing = null;
+    }
+
+    /**
+     * Absolute Cloudinary delivery URL for a known public_id.
+     *
+     * @param  list<string>  $transforms  Optional Cloudinary transformation segments (e.g. ['f_auto', 'q_auto']).
+     */
+    public static function deliveryUrl(string $publicId, array $transforms = []): ?string
+    {
+        $cloudName = self::cloudName();
+        $publicId = ltrim(str_replace('\\', '/', $publicId), '/');
+
+        if ($cloudName === null || $publicId === '') {
+            return null;
+        }
+
+        $transformPath = $transforms === []
+            ? ''
+            : implode(',', $transforms).'/';
+
+        return 'https://res.cloudinary.com/'.$cloudName.'/image/upload/'.$transformPath.$publicId;
+    }
+
+    /**
+     * Upload a local filesystem image to a stable Cloudinary public_id (overwrite).
+     *
+     * @return array{secure_url: string, public_id: string}
+     */
+    public static function uploadLocalPath(string $absolutePath, string $publicId, bool $overwrite = true): array
+    {
+        if (! is_file($absolutePath)) {
+            throw new \InvalidArgumentException("Landing media file missing: {$absolutePath}");
+        }
+
+        if (! self::configured()) {
+            throw new \RuntimeException('Cloudinary is not configured; cannot upload landing media.');
+        }
+
+        if (self::$uploadUsing !== null) {
+            $cloud = self::cloudName() ?? 'test-cloud';
+            $stableId = ltrim(str_replace('\\', '/', $publicId), '/');
+
+            return [
+                'public_id' => $stableId,
+                'secure_url' => 'https://res.cloudinary.com/'.$cloud.'/image/upload/v1/'.$stableId.'.jpg',
+            ];
+        }
+
+        $options = [
+            'public_id' => ltrim(str_replace('\\', '/', $publicId), '/'),
+            'resource_type' => 'image',
+            'overwrite' => $overwrite,
+            'invalidate' => true,
+            'unique_filename' => false,
+            'use_filename' => false,
+        ];
+
+        $preset = config('cloudinary.upload_preset');
+
+        if (filled($preset)) {
+            $options['upload_preset'] = $preset;
+        }
+
+        /** @var array{secure_url?: string, public_id?: string} $result */
+        $result = self::uploadApi()->upload($absolutePath, $options);
+
+        $secureUrl = $result['secure_url'] ?? null;
+        $resultPublicId = $result['public_id'] ?? null;
+
+        if (! filled($secureUrl) || ! filled($resultPublicId)) {
+            throw new \RuntimeException('Cloudinary upload did not return a secure URL and public_id.');
+        }
+
+        return [
+            'secure_url' => $secureUrl,
+            'public_id' => $resultPublicId,
+        ];
     }
 
     /**

@@ -53,4 +53,19 @@ return [
 
     'local_default_image' => env('CLOUDINARY_LOCAL_DEFAULT_IMAGE', 'default-avatar.png'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Image Generation (text-to-image)
+    |--------------------------------------------------------------------------
+    |
+    | Requires the Cloudinary Image Generation add-on. When credentials are
+    | missing, admin generate endpoints return a clear configuration error
+    | (uploads still fall back to the local public disk).
+    |
+    */
+
+    'generation_model' => env('CLOUDINARY_GENERATION_MODEL'),
+
+    'generation_timeout' => (int) env('CLOUDINARY_GENERATION_TIMEOUT', 90),
+
 ];

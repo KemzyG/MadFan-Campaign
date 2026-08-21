@@ -49,7 +49,7 @@ export default function FanSidebar({
                 <nav className="campaign-sidebar-nav">
                     {isAuthenticated ? (
                         <>
-                            <Link href="/" className={linkClass('/')} onClick={onClose}>
+                            <Link href="/campaign" className={linkClass('/campaign')} onClick={onClose}>
                                 Campaign Home
                             </Link>
                             <Link href="/dashboard" className={linkClass('/dashboard')} onClick={onClose}>
@@ -78,7 +78,7 @@ export default function FanSidebar({
                         </>
                     ) : (
                         <>
-                            <Link href="/" className={linkClass('/')} onClick={onClose}>
+                            <Link href="/campaign" className={linkClass('/campaign')} onClick={onClose}>
                                 Campaign Home
                             </Link>
                             {socialVerificationRequired && (

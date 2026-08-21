@@ -8,6 +8,7 @@ use App\Models\JerseyOrder;
 use App\Models\User;
 use App\Services\Shop\JerseyCatalogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,13 +20,26 @@ class SocialShopController extends Controller
         $user = $request->user();
         $this->authorize('viewAny', JerseyOrder::class);
 
-        $clubId = $request->integer('club_id') ?: null;
+        $validated = $request->validate([
+            'club_id' => ['nullable', 'integer', 'exists:clubs,id'],
+            'sort' => ['nullable', 'string', Rule::in(['name', 'price_asc', 'price_desc', 'newest'])],
+            'in_stock' => ['nullable', 'boolean'],
+        ]);
+
+        $clubId = isset($validated['club_id']) ? (int) $validated['club_id'] : null;
+        $sort = $validated['sort'] ?? 'name';
+        $inStockOnly = array_key_exists('in_stock', $validated)
+            ? (bool) $validated['in_stock']
+            : null;
 
         return Inertia::render('Social/Shop/Index', [
-            'jerseys' => $catalog->presentCatalog($clubId),
+            'jerseys' => $catalog->presentCatalog($clubId, $sort, $inStockOnly),
+            'clubs' => $catalog->presentClubsWithStock(),
             'cart_count' => $catalog->presentCart()['count'],
             'filters' => [
                 'club_id' => $clubId,
+                'sort' => $sort,
+                'in_stock' => $inStockOnly,
             ],
             'favourite_club_id' => $user->favourite_club_id,
         ]);

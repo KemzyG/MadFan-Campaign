@@ -22,7 +22,7 @@ test('onboarded members can send a chat message to their club channel', function
         ->post(route('social.chat.messages.store', $channel), [
             'body' => 'Floodlights look good tonight.',
         ])
-        ->assertRedirect(route('social.chat', ['channel' => 'general']));
+        ->assertRedirect(route('social.chat', ['inbox' => 'club', 'channel' => 'general']));
 
     $message = Message::query()->first();
 

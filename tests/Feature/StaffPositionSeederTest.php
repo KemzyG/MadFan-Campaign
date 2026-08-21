@@ -42,7 +42,7 @@ test('seeded staff demo user sees staff dashboard link in fan sidebar', function
             ->where('auth.user.staff_position', StaffPosition::Ambassador->value));
 
     $this->actingAs($staff)
-        ->get('/')
+        ->get('/campaign')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Campaign')

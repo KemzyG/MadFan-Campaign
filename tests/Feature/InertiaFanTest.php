@@ -14,7 +14,7 @@ beforeEach(function () {
 test('campaign page is public', function () {
     $this->seed(TaskSeeder::class);
 
-    $this->get('/')
+    $this->get('/campaign')
         ->assertSuccessful()
         ->assertSee('favicon.jpg', false)
         ->assertInertia(fn ($page) => $page
@@ -32,7 +32,7 @@ test('favicon asset exists in public directory', function () {
 test('fan nav reflects enabled social verification setting', function () {
     ApplicationSettings::sync(['social_verification_required' => 'true']);
 
-    $this->get('/')
+    $this->get('/campaign')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('fanNav.social_verification_required', true));

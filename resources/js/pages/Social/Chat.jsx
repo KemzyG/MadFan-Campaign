@@ -7,6 +7,12 @@ import { socialApi } from '../../lib/socialApi';
 import { ChatSkeleton } from './components/Skeletons';
 import { applyOptimisticProps, useSocialFlash } from './optimistic';
 
+const INBOXES = [
+    { id: 'club', label: 'Club' },
+    { id: 'friends', label: 'Friends' },
+    { id: 'groups', label: 'Groups' },
+];
+
 function formatTime(iso) {
     if (!iso) {
         return '';
@@ -68,16 +74,17 @@ function dayKey(iso) {
     }
 }
 
-function AuthorAvatar({ author }) {
+function AuthorAvatar({ author, size = 'md' }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
+    const sizeClass = size === 'sm' ? 'h-7 w-7' : 'h-9 w-9';
 
     if (author?.avatar_url) {
         return (
             <img
                 src={author.avatar_url}
                 alt=""
-                className="mf-avatar h-9 w-9"
+                className={`mf-avatar ${sizeClass}`}
                 onError={(event) => onImageError(event, fallbackUrl)}
             />
         );
@@ -86,47 +93,50 @@ function AuthorAvatar({ author }) {
     const label = (author?.name || author?.handle || '?').slice(0, 1).toUpperCase();
 
     return (
-        <span className="mf-avatar mf-text-meta h-9 w-9" aria-hidden>
+        <span className={`mf-avatar mf-text-meta ${sizeClass}`} aria-hidden>
             {author?.avatar_emoji || label}
         </span>
     );
 }
 
-function ChatMessageRow({ message, isGrouped }) {
+function ChatMessageRow({ message, isGrouped, showAuthor }) {
     const author = message.author;
+    const isMine = Boolean(message.is_mine);
+    const side = isMine ? 'is-mine' : 'is-theirs';
 
     return (
         <article
-            className={`mf-chat-msg ${isGrouped ? 'is-grouped' : ''} ${message._optimistic ? 'is-optimistic' : ''}`}
+            className={`mf-chat-bubble ${side} ${isGrouped ? 'is-grouped' : ''} ${message._optimistic ? 'is-optimistic' : ''}`}
         >
-            <div className="mf-chat-msg__gutter">
-                {isGrouped ? (
-                    <span className="mf-chat-msg__time-hover mf-text-micro text-[var(--mf-muted)]">
-                        {formatTime(message.created_at)}
-                    </span>
-                ) : (
-                    <AuthorAvatar author={author} />
-                )}
-            </div>
-            <div className="mf-chat-msg__body">
-                {!isGrouped ? (
-                    <div className="mf-chat-msg__meta">
-                        <span className="mf-chat-msg__name">{author?.name || 'Fan'}</span>
-                        <time className="mf-text-meta text-[var(--mf-muted)]" dateTime={message.created_at}>
+            {!isMine ? (
+                <div className="mf-chat-bubble__gutter">
+                    {isGrouped ? (
+                        <span className="mf-chat-bubble__time-hover mf-text-micro text-[var(--mf-muted)]">
                             {formatTime(message.created_at)}
-                        </time>
-                        {message._optimistic ? (
-                            <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">sending…</span>
-                        ) : null}
-                    </div>
+                        </span>
+                    ) : (
+                        <AuthorAvatar author={author} size="sm" />
+                    )}
+                </div>
+            ) : null}
+
+            <div className="mf-chat-bubble__stack">
+                {showAuthor && !isMine && !isGrouped ? (
+                    <span className="mf-chat-bubble__name">{author?.name || 'Fan'}</span>
                 ) : null}
-                <p className="mf-chat-msg__text">{message.body}</p>
+                <div className="mf-chat-bubble__pill">
+                    <p className="mf-chat-bubble__text">{message.body}</p>
+                    <div className="mf-chat-bubble__meta">
+                        <time dateTime={message.created_at}>{formatTime(message.created_at)}</time>
+                        {message._optimistic ? <span>sending…</span> : null}
+                    </div>
+                </div>
             </div>
         </article>
     );
 }
 
-function ChatComposer({ channel, maxBodyLength }) {
+function ChatComposer({ channel, maxBodyLength, inbox }) {
     const page = usePage();
     const user = page.props?.auth?.user;
     const { reportError, reportSuccess } = useSocialFlash();
@@ -168,6 +178,7 @@ function ChatComposer({ channel, maxBodyLength }) {
                             type: 'text',
                             created_at: new Date().toISOString(),
                             edited_at: null,
+                            is_mine: true,
                             author: {
                                 id: user?.id,
                                 name: user?.name || 'You',
@@ -197,9 +208,8 @@ function ChatComposer({ channel, maxBodyLength }) {
                         ...props.messages,
                         items: items.map((item) =>
                             item.id === tempId
-                                ? { ...(presented || item), _optimistic: false }
-                                : item,
-                        ),
+                                ? { ...(presented || item), is_mine: true, _optimistic: false }
+                                : item),
                     },
                 };
             });
@@ -218,6 +228,13 @@ function ChatComposer({ channel, maxBodyLength }) {
         }
     }
 
+    const placeholder =
+        inbox === 'friends'
+            ? `Message ${channel?.name || 'friend'}`
+            : inbox === 'groups'
+                ? `Message ${channel?.name || 'group'}`
+                : `Message #${channel?.name || 'general'}`;
+
     return (
         <form className="mf-chat-composer" onSubmit={submit}>
             {channel?.is_read_only ? (
@@ -230,7 +247,7 @@ function ChatComposer({ channel, maxBodyLength }) {
                             className="mf-chat-composer__input"
                             rows={1}
                             maxLength={maxBodyLength}
-                            placeholder={`Message #${channel?.name || 'general'}`}
+                            placeholder={placeholder}
                             value={body}
                             onChange={(e) => setBody(e.target.value)}
                             onKeyDown={(e) => {
@@ -267,9 +284,181 @@ function ChatComposer({ channel, maxBodyLength }) {
     );
 }
 
+function InboxTabs({ inbox }) {
+    return (
+        <div className="mf-chat-inboxes" role="tablist" aria-label="Chat inboxes">
+            {INBOXES.map((item) => (
+                <Link
+                    key={item.id}
+                    href={`/social/chat?inbox=${item.id}`}
+                    className={inbox === item.id ? 'is-active' : ''}
+                    preserveScroll
+                    prefetch
+                    role="tab"
+                    aria-selected={inbox === item.id}
+                >
+                    {item.label}
+                </Link>
+            ))}
+        </div>
+    );
+}
+
+function StartFriendChat({ candidates }) {
+    const [open, setOpen] = useState(false);
+    const [processing, setProcessing] = useState(false);
+
+    function start(userId) {
+        if (processing) {
+            return;
+        }
+        setProcessing(true);
+        router.post('/social/chat/direct', { user_id: userId }, {
+            preserveScroll: true,
+            onFinish: () => setProcessing(false),
+        });
+    }
+
+    if (!candidates?.length) {
+        return null;
+    }
+
+    return (
+        <div className="mf-chat-start">
+            <button
+                type="button"
+                className="mf-chat-start__toggle"
+                onClick={() => setOpen((value) => !value)}
+                aria-expanded={open}
+            >
+                {open ? 'Hide fans' : 'New friend chat'}
+            </button>
+            {open ? (
+                <ul className="mf-chat-start__list">
+                    {candidates.map((fan) => (
+                        <li key={fan.id}>
+                            <button type="button" onClick={() => start(fan.id)} disabled={processing}>
+                                <AuthorAvatar author={fan} size="sm" />
+                                <span className="min-w-0">
+                                    <span className="mf-chat-start__name">{fan.name}</span>
+                                    {fan.handle ? (
+                                        <span className="mf-text-meta text-[var(--mf-muted)]">@{fan.handle}</span>
+                                    ) : null}
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : null}
+        </div>
+    );
+}
+
+function CreateGroupChat({ candidates }) {
+    const [open, setOpen] = useState(false);
+    const [name, setName] = useState('');
+    const [selected, setSelected] = useState([]);
+    const [processing, setProcessing] = useState(false);
+
+    function toggle(id) {
+        setSelected((current) =>
+            current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+    }
+
+    function submit(e) {
+        e.preventDefault();
+        if (!name.trim() || selected.length === 0 || processing) {
+            return;
+        }
+
+        setProcessing(true);
+        router.post('/social/chat/groups', {
+            name: name.trim(),
+            member_ids: selected,
+        }, {
+            preserveScroll: true,
+            onFinish: () => {
+                setProcessing(false);
+                setOpen(false);
+                setName('');
+                setSelected([]);
+            },
+        });
+    }
+
+    return (
+        <div className="mf-chat-start">
+            <button
+                type="button"
+                className="mf-chat-start__toggle"
+                onClick={() => setOpen((value) => !value)}
+                aria-expanded={open}
+            >
+                {open ? 'Cancel group' : 'New group'}
+            </button>
+            {open ? (
+                <form className="mf-chat-group-form" onSubmit={submit}>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Group name"
+                        maxLength={60}
+                        required
+                    />
+                    {candidates?.length ? (
+                        <ul className="mf-chat-start__list">
+                            {candidates.map((fan) => {
+                                const checked = selected.includes(fan.id);
+                                return (
+                                    <li key={fan.id}>
+                                        <button
+                                            type="button"
+                                            className={checked ? 'is-selected' : ''}
+                                            onClick={() => toggle(fan.id)}
+                                        >
+                                            <AuthorAvatar author={fan} size="sm" />
+                                            <span className="min-w-0">
+                                                <span className="mf-chat-start__name">{fan.name}</span>
+                                                {fan.handle ? (
+                                                    <span className="mf-text-meta text-[var(--mf-muted)]">
+                                                        @{fan.handle}
+                                                    </span>
+                                                ) : null}
+                                            </span>
+                                            <span className="mf-chat-start__check" aria-hidden>
+                                                {checked ? '✓' : ''}
+                                            </span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    ) : (
+                        <p className="mf-text-meta text-[var(--mf-muted)]">
+                            Follow fans first to invite them into a group.
+                        </p>
+                    )}
+                    <button
+                        type="submit"
+                        className="mf-chat-group-form__submit"
+                        disabled={processing || !name.trim() || selected.length === 0}
+                    >
+                        {processing ? 'Creating…' : 'Create group'}
+                    </button>
+                </form>
+            ) : null}
+        </div>
+    );
+}
+
 export default function Chat({
+    inbox = 'club',
     club,
     channels = [],
+    threads = [],
+    friend_candidates = [],
+    group_candidates = [],
     channel,
     messages,
     max_body_length = 500,
@@ -284,19 +473,21 @@ export default function Chat({
     const fallbackPollMs = usingReverb ? Math.max(poll_ms, 30000) : poll_ms;
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
+    const showAuthorNames = inbox !== 'friends';
 
     const filteredChannels = useMemo(() => {
         const q = channelQuery.trim().toLowerCase();
+        const source = inbox === 'club' ? channels : threads;
         if (!q) {
-            return channels;
+            return source;
         }
 
-        return channels.filter((ch) =>
+        return source.filter((ch) =>
             [ch.name, ch.slug, ch.topic].filter(Boolean).join(' ').toLowerCase().includes(q));
-    }, [channels, channelQuery]);
+    }, [channels, threads, channelQuery, inbox]);
 
     usePoll(fallbackPollMs, {
-        only: ['messages', 'channels', 'channel'],
+        only: ['messages', 'channels', 'threads', 'channel', 'friend_candidates', 'group_candidates'],
         preserveScroll: true,
     });
 
@@ -313,7 +504,7 @@ export default function Chat({
         const name = `social.chat.${channel.id}`;
         const subscription = echo.private(name).listen('.message.created', () => {
             router.reload({
-                only: ['messages'],
+                only: ['messages', 'threads'],
                 preserveScroll: true,
                 preserveState: true,
             });
@@ -344,9 +535,44 @@ export default function Chat({
         wasNearBottom.current = distance < 80;
     }
 
+    const headerTitle =
+        inbox === 'friends'
+            ? channel?.name || 'Friends'
+            : inbox === 'groups'
+                ? channel?.name || 'Groups'
+                : club?.name || 'Club radio';
+
+    const headerCaption =
+        inbox === 'friends'
+            ? 'Friends chat'
+            : inbox === 'groups'
+                ? 'Group chat'
+                : 'Club radio';
+
+    const headerSub =
+        inbox === 'club'
+            ? `#${channel?.name || 'general'}${channel?.topic ? ` · ${channel.topic}` : ''}`
+            : channel?.topic || (inbox === 'friends' ? 'Direct messages' : 'Private groups');
+
+    const emptyCopy =
+        inbox === 'friends'
+            ? {
+                title: 'No friend chats yet',
+                body: 'Start a chat with someone you follow — messages land left and right like WhatsApp.',
+            }
+            : inbox === 'groups'
+                ? {
+                    title: 'No groups yet',
+                    body: 'Create a group with fellow fans and keep the banter in one thread.',
+                }
+                : {
+                    title: 'Quiet radio',
+                    body: `Kick the first shout in #${channel?.name || 'general'}${club?.name ? ` for ${club.name}` : ''}.`,
+                };
+
     return (
         <SocialShell title="Chat">
-            <Head title={channel ? `#${channel.name}` : 'Chat'} />
+            <Head title={channel ? channel.name : 'Chat'} />
 
             {messages == null ? (
                 <ChatSkeleton />
@@ -354,32 +580,29 @@ export default function Chat({
                 <div className="mf-chat">
                     <header className="mf-chat-header">
                         <div className="mf-chat-header__main">
-                            {club ? (
-                                <div className="mf-chat-header__club">
-                                    {club.logo_url ? (
-                                        <img
-                                            src={club.logo_url}
-                                            alt=""
-                                            className="mf-avatar h-10 w-10"
-                                            onError={(event) => onImageError(event, fallbackUrl)}
-                                        />
-                                    ) : (
-                                        <span className="mf-avatar mf-text-meta h-10 w-10">
-                                            {(club.short || club.name || '?').slice(0, 2)}
-                                        </span>
-                                    )}
-                                    <div className="min-w-0">
-                                        <p className="mf-text-caption text-[var(--mf-pitch)]">Club radio</p>
-                                        <p className="mf-display mf-text-ui truncate tracking-[0.02em] text-[var(--mf-text)]">
-                                            {club.name}
-                                        </p>
-                                        <p className="mf-text-meta truncate text-[var(--mf-muted)]">
-                                            #{channel?.name || 'general'}
-                                            {channel?.topic ? ` · ${channel.topic}` : ''}
-                                        </p>
-                                    </div>
+                            <div className="mf-chat-header__club">
+                                {inbox === 'club' && club?.logo_url ? (
+                                    <img
+                                        src={club.logo_url}
+                                        alt=""
+                                        className="mf-avatar h-10 w-10"
+                                        onError={(event) => onImageError(event, fallbackUrl)}
+                                    />
+                                ) : inbox === 'friends' && channel?.peer ? (
+                                    <AuthorAvatar author={channel.peer} />
+                                ) : (
+                                    <span className="mf-avatar mf-text-meta h-10 w-10">
+                                        {(headerTitle || '?').slice(0, 2).toUpperCase()}
+                                    </span>
+                                )}
+                                <div className="min-w-0">
+                                    <p className="mf-text-caption text-[var(--mf-pitch)]">{headerCaption}</p>
+                                    <p className="mf-display mf-text-ui truncate tracking-[0.02em] text-[var(--mf-text)]">
+                                        {headerTitle}
+                                    </p>
+                                    <p className="mf-text-meta truncate text-[var(--mf-muted)]">{headerSub}</p>
                                 </div>
-                            ) : null}
+                            </div>
                         </div>
                         {realtime?.mode ? (
                             <span className="mf-chat-live mf-text-micro" title={realtime.note}>
@@ -389,9 +612,13 @@ export default function Chat({
                         ) : null}
                     </header>
 
+                    <InboxTabs inbox={inbox} />
+
                     <div className="mf-chat-rail">
                         <label className="mf-chat-search">
-                            <span className="sr-only">Filter channels</span>
+                            <span className="sr-only">
+                                {inbox === 'club' ? 'Filter channels' : 'Filter chats'}
+                            </span>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
                                 <circle cx="11" cy="11" r="6.5" strokeWidth="1.75" />
                                 <path strokeLinecap="round" strokeWidth="1.75" d="m16 16 3.5 3.5" />
@@ -400,28 +627,33 @@ export default function Chat({
                                 type="search"
                                 value={channelQuery}
                                 onChange={(e) => setChannelQuery(e.target.value)}
-                                placeholder="Find a channel"
+                                placeholder={inbox === 'club' ? 'Find a channel' : 'Find a chat'}
                                 autoComplete="off"
                             />
                         </label>
 
-                        <div className="mf-chat-channels" role="tablist" aria-label="Channels">
+                        {inbox === 'friends' ? <StartFriendChat candidates={friend_candidates} /> : null}
+                        {inbox === 'groups' ? <CreateGroupChat candidates={group_candidates} /> : null}
+
+                        <div className="mf-chat-channels" role="tablist" aria-label={inbox === 'club' ? 'Channels' : 'Chats'}>
                             {filteredChannels.length === 0 ? (
                                 <p className="mf-chat-channels__empty mf-text-meta text-[var(--mf-muted)]">
-                                    No channels match.
+                                    {inbox === 'club' ? 'No channels match.' : 'No chats yet.'}
                                 </p>
                             ) : (
                                 filteredChannels.map((ch) => (
                                     <Link
                                         key={ch.id}
-                                        href={`/social/chat?channel=${encodeURIComponent(ch.slug)}`}
+                                        href={ch.href || `/social/chat?inbox=${inbox}&channel=${encodeURIComponent(ch.slug || ch.id)}`}
                                         className={ch.is_active ? 'is-active' : ''}
                                         preserveScroll
                                         prefetch
                                         role="tab"
                                         aria-selected={ch.is_active}
                                     >
-                                        <span className="mf-chat-channels__hash">#</span>
+                                        {inbox === 'club' ? (
+                                            <span className="mf-chat-channels__hash">#</span>
+                                        ) : null}
                                         {ch.name}
                                     </Link>
                                 ))
@@ -429,18 +661,24 @@ export default function Chat({
                         </div>
                     </div>
 
-                    <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll}>
-                        {items.length === 0 ? (
+                    <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll} role="log">
+                        {!channel ? (
                             <div className="mf-empty mf-empty--compact mf-chat-empty">
                                 <div className="mf-chat-empty__mark" aria-hidden>
                                     <span />
                                     <span />
                                 </div>
-                                <p className="mf-empty-title">Quiet radio</p>
-                                <p>
-                                    Kick the first shout in #{channel?.name || 'general'}
-                                    {club?.name ? ` for ${club.name}` : ''}.
-                                </p>
+                                <p className="mf-empty-title">{emptyCopy.title}</p>
+                                <p>{emptyCopy.body}</p>
+                            </div>
+                        ) : items.length === 0 ? (
+                            <div className="mf-empty mf-empty--compact mf-chat-empty">
+                                <div className="mf-chat-empty__mark" aria-hidden>
+                                    <span />
+                                    <span />
+                                </div>
+                                <p className="mf-empty-title">No messages yet</p>
+                                <p>Say hello — your messages appear on the right.</p>
                             </div>
                         ) : (
                             items.map((message, index) => {
@@ -450,6 +688,7 @@ export default function Chat({
                                 const isGrouped =
                                     prev
                                     && prev.author?.id === message.author?.id
+                                    && Boolean(prev.is_mine) === Boolean(message.is_mine)
                                     && dayKey(prev.created_at) === dayKey(message.created_at)
                                     && Math.abs(new Date(message.created_at) - new Date(prev.created_at)) < 5 * 60 * 1000;
 
@@ -460,14 +699,20 @@ export default function Chat({
                                                 <span>{formatDayLabel(message.created_at)}</span>
                                             </div>
                                         ) : null}
-                                        <ChatMessageRow message={message} isGrouped={Boolean(isGrouped)} />
+                                        <ChatMessageRow
+                                            message={message}
+                                            isGrouped={Boolean(isGrouped)}
+                                            showAuthor={showAuthorNames}
+                                        />
                                     </div>
                                 );
                             })
                         )}
                     </div>
 
-                    <ChatComposer channel={channel} maxBodyLength={max_body_length} />
+                    {channel ? (
+                        <ChatComposer channel={channel} maxBodyLength={max_body_length} inbox={inbox} />
+                    ) : null}
                 </div>
             )}
         </SocialShell>

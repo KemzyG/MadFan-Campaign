@@ -10,10 +10,10 @@ use Illuminate\Database\Seeder;
 class MatchSeeder extends Seeder
 {
     /**
-     * Seed upcoming fixtures for Social ticketing (idempotent, no factories).
+     * Seed fixtures for Social ticketing + fixture board (idempotent, no factories).
      *
-     * Lookup key is home + away + venue so re-runs refresh kickoff/price instead of
-     * inserting duplicates when `now()` drifts between deploys.
+     * Lookup key is home + away + venue so re-runs refresh kickoff/price/status
+     * instead of inserting duplicates when `now()` drifts between deploys.
      */
     public function run(): void
     {
@@ -26,6 +26,7 @@ class MatchSeeder extends Seeder
                 'price' => '45.00',
                 'days' => 5,
                 'hour' => 16,
+                'status' => MatchStatus::Upcoming,
             ],
             [
                 'home' => 'LIV',
@@ -35,6 +36,7 @@ class MatchSeeder extends Seeder
                 'price' => '55.00',
                 'days' => 8,
                 'hour' => 17,
+                'status' => MatchStatus::Upcoming,
             ],
             [
                 'home' => 'MUN',
@@ -44,6 +46,7 @@ class MatchSeeder extends Seeder
                 'price' => '42.00',
                 'days' => 12,
                 'hour' => 15,
+                'status' => MatchStatus::Upcoming,
             ],
             [
                 'home' => 'RMA',
@@ -53,6 +56,7 @@ class MatchSeeder extends Seeder
                 'price' => '65.00',
                 'days' => 14,
                 'hour' => 21,
+                'status' => MatchStatus::Upcoming,
             ],
             [
                 'home' => 'JUV',
@@ -62,6 +66,48 @@ class MatchSeeder extends Seeder
                 'price' => '38.00',
                 'days' => 18,
                 'hour' => 20,
+                'status' => MatchStatus::Upcoming,
+            ],
+            [
+                'home' => 'ARS',
+                'away' => 'LIV',
+                'venue' => 'Emirates Stadium — Live wire',
+                'competition' => 'Premier League',
+                'price' => '48.00',
+                'days' => 0,
+                'hour' => null,
+                'minutes_ago' => 35,
+                'status' => MatchStatus::Live,
+            ],
+            [
+                'home' => 'CHE',
+                'away' => 'TOT',
+                'venue' => 'Stamford Bridge',
+                'competition' => 'Premier League',
+                'price' => '40.00',
+                'days' => 0,
+                'hour' => 20,
+                'status' => MatchStatus::Upcoming,
+            ],
+            [
+                'home' => 'MCI',
+                'away' => 'MUN',
+                'venue' => 'Etihad Stadium',
+                'competition' => 'Premier League',
+                'price' => '50.00',
+                'days' => -4,
+                'hour' => 16,
+                'status' => MatchStatus::Finished,
+            ],
+            [
+                'home' => 'BAR',
+                'away' => 'RMA',
+                'venue' => 'Spotify Camp Nou',
+                'competition' => 'La Liga',
+                'price' => '70.00',
+                'days' => -9,
+                'hour' => 21,
+                'status' => MatchStatus::Finished,
             ],
         ];
 
@@ -77,6 +123,10 @@ class MatchSeeder extends Seeder
                 continue;
             }
 
+            $kickoff = isset($pair['minutes_ago'])
+                ? now()->subMinutes((int) $pair['minutes_ago'])
+                : now()->addDays($pair['days'])->setTime((int) $pair['hour'], 0);
+
             MatchFixture::query()->updateOrCreate(
                 [
                     'home_club_id' => $home->id,
@@ -84,8 +134,8 @@ class MatchSeeder extends Seeder
                     'venue' => $pair['venue'],
                 ],
                 [
-                    'kickoff_at' => now()->addDays($pair['days'])->setTime($pair['hour'], 0),
-                    'status' => MatchStatus::Upcoming,
+                    'kickoff_at' => $kickoff,
+                    'status' => $pair['status'],
                     'price' => $pair['price'],
                     'competition' => $pair['competition'],
                 ],
@@ -95,7 +145,11 @@ class MatchSeeder extends Seeder
         }
 
         $upcoming = MatchFixture::query()->upcoming()->count();
+        $live = MatchFixture::query()->where('status', MatchStatus::Live)->count();
+        $finished = MatchFixture::query()->where('status', MatchStatus::Finished)->count();
 
-        $this->command?->info("Match fixtures ready: {$createdOrUpdated} seeded catalogue, {$upcoming} upcoming purchasable.");
+        $this->command?->info(
+            "Match fixtures ready: {$createdOrUpdated} seeded catalogue, {$upcoming} upcoming, {$live} live, {$finished} finished.",
+        );
     }
 }

@@ -6,29 +6,6 @@ import PullToRefresh from './components/PullToRefresh';
 import { FeedSkeleton } from './components/Skeletons';
 import { useStageSessionOptional } from './Stage/StageSessionContext';
 
-function GlobalStrip({ club }) {
-    return (
-        <div className="mf-club-strip mf-club-strip--global">
-            <div className="mf-club-strip__glow" aria-hidden />
-            <div className="mf-club-strip__mark" aria-hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <circle cx="12" cy="12" r="8.25" strokeWidth="1.5" />
-                    <path strokeWidth="1.5" d="M3.75 12h16.5M12 3.75c2.4 2.6 3.6 5.4 3.6 8.25S14.4 17.65 12 20.25C9.6 17.65 8.4 14.85 8.4 12S9.6 6.35 12 3.75Z" />
-                </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-                <p className="mf-text-caption text-[var(--mf-pitch)]">Global terrace</p>
-                <p className="mf-display mf-text-ui truncate tracking-[0.02em] text-[var(--mf-text)]">
-                    Every club · every fan
-                </p>
-                <p className="mf-text-meta truncate text-[var(--mf-muted)]">
-                    {club?.name ? `Your end: ${club.name}` : 'Open timeline across the network'}
-                </p>
-            </div>
-        </div>
-    );
-}
-
 function FeedEmpty({ mode, message, onCompose }) {
     const isFollowing = mode === 'following';
 
@@ -51,7 +28,7 @@ function FeedEmpty({ mode, message, onCompose }) {
     );
 }
 
-function HomeFeed({ club, feed }) {
+function HomeFeed({ feed }) {
     const { openCompose, composeOpen } = useSocialCompose();
     const stageSession = useStageSessionOptional();
     const [dismissedIds, setDismissedIds] = useState([]);
@@ -109,15 +86,6 @@ function HomeFeed({ club, feed }) {
                     </button>
                 </div>
 
-                {mode === 'global' ? <GlobalStrip club={club} /> : (
-                    <div className="mf-club-strip mf-club-strip--following">
-                        <p className="mf-text-caption text-[var(--mf-amber)]">Following</p>
-                        <p className="mf-text-meta text-[var(--mf-muted)]">
-                            Fans you follow · plus your posts
-                        </p>
-                    </div>
-                )}
-
                 {posts.length === 0 ? (
                     <FeedEmpty mode={mode} message={feed?.empty_message} onCompose={openCompose} />
                 ) : (
@@ -164,11 +132,11 @@ function HomeFeed({ club, feed }) {
     );
 }
 
-export default function Home({ club, feed }) {
+export default function Home({ feed }) {
     return (
         <SocialShell title="Home">
             <Head title="Home" />
-            {feed == null ? <FeedSkeleton /> : <HomeFeed club={club} feed={feed} />}
+            {feed == null ? <FeedSkeleton /> : <HomeFeed feed={feed} />}
         </SocialShell>
     );
 }

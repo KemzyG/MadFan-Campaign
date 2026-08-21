@@ -22,29 +22,55 @@ class SocialChatController extends Controller
 
         abort_if($club === null, 403);
 
+        $inbox = $chatService->normalizeInbox($request->string('inbox')->toString() ?: null);
+        $channelKey = $request->string('channel')->toString() ?: null;
+
         $server = $chatService->serverForClub($club);
-        $channel = $chatService->resolveChannel($server, $request->string('channel')->toString() ?: null);
+        $channel = $chatService->resolveInboxChannel($user, $inbox, $channelKey);
 
-        $this->authorize('view', $channel);
+        $channels = [];
+        $threads = [];
+        $friendCandidates = [];
+        $groupCandidates = [];
 
-        $messages = $chatService->latestMessages($channel);
+        if ($inbox === ChatService::INBOX_CLUB) {
+            $channel ??= $chatService->resolveChannel($server, $channelKey);
+            $this->authorize('view', $channel);
+            $channels = $chatService->presentChannels($server, $channel);
+        } elseif ($inbox === ChatService::INBOX_FRIENDS) {
+            $threads = $chatService->presentDirectThreads($user, $channel);
+            $friendCandidates = $chatService->presentFriendCandidates($user);
+            if ($channel !== null) {
+                $this->authorize('view', $channel);
+            }
+        } else {
+            $threads = $chatService->presentGroupThreads($user, $channel);
+            $groupCandidates = $chatService->presentGroupCandidates($user);
+            if ($channel !== null) {
+                $this->authorize('view', $channel);
+            }
+        }
+
+        $messages = $channel !== null
+            ? $chatService->latestMessages($channel)
+            : [];
 
         return Inertia::render('Social/Chat', [
+            'inbox' => $inbox,
             'club' => $chatService->presentClub($club),
             'server' => [
                 'id' => $server->id,
                 'name' => $server->name,
             ],
-            'channels' => $chatService->presentChannels($server, $channel),
-            'channel' => [
-                'id' => $channel->id,
-                'slug' => $channel->slug,
-                'name' => $channel->name,
-                'topic' => $channel->topic,
-                'is_read_only' => $channel->is_read_only,
-            ],
+            'channels' => $channels,
+            'threads' => $threads,
+            'friend_candidates' => $friendCandidates,
+            'group_candidates' => $groupCandidates,
+            'channel' => $channel !== null
+                ? $chatService->presentActiveChannel($channel, $user)
+                : null,
             'messages' => [
-                'items' => $chatService->presentMessages($messages),
+                'items' => $chatService->presentMessages($messages, $user),
             ],
             'max_body_length' => ChatService::MAX_BODY_LENGTH,
             'poll_ms' => SocialRealtime::enabled()

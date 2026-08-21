@@ -33,7 +33,7 @@ export default function FanLayout({
     const isAuthPage = pathname === '/login' || pathname === '/register';
     const isConnectAccountsPage = pathname === '/connect-accounts';
     const isWelcomeArea = isWelcomeAreaPath(pathname);
-    const isCampaignPage = pathname === '/';
+    const isCampaignPage = pathname === '/campaign';
     const isAuthenticated = Boolean(user);
 
     const showStaffNav = Boolean(user?.staff_active);
@@ -63,7 +63,7 @@ export default function FanLayout({
         }
 
         const params = new URLSearchParams(window.location.search);
-        if (params.get('onboarding') === '1' && pathname === '/') {
+        if (params.get('onboarding') === '1' && (pathname === '/' || pathname === '/campaign')) {
             setShowOnboardingModal(true);
         }
     }, [pathname, socialVerificationRequired]);

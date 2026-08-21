@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\JerseyOrdersController;
 use App\Http\Controllers\Admin\JerseysController;
 use App\Http\Controllers\Admin\LeaguesController;
 use App\Http\Controllers\Admin\LoyaltyTiersController;
+use App\Http\Controllers\Admin\MediaAssetsController;
 use App\Http\Controllers\Admin\PointTransactionsController;
 use App\Http\Controllers\Admin\ReferralsController;
 use App\Http\Controllers\Admin\SeasonsController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Inertia\Fan\CampaignPageController;
 use App\Http\Controllers\Inertia\Fan\ConnectAccountsPageController;
 use App\Http\Controllers\Inertia\Fan\DailyClaimPageController;
 use App\Http\Controllers\Inertia\Fan\DashboardPageController;
+use App\Http\Controllers\Inertia\Fan\LandingPageController;
 use App\Http\Controllers\Inertia\Fan\PassportPageController;
 use App\Http\Controllers\Inertia\Fan\StaticPageController;
 use App\Http\Controllers\Inertia\Fan\TasksPageController as FanTasksPageController;
@@ -47,13 +49,17 @@ use App\Http\Controllers\Inertia\JerseyOrdersPageController;
 use App\Http\Controllers\Inertia\JerseysPageController;
 use App\Http\Controllers\Inertia\LeaguesPageController;
 use App\Http\Controllers\Inertia\LoyaltyTiersPageController;
+use App\Http\Controllers\Inertia\MediaGalleryPageController;
 use App\Http\Controllers\Inertia\PointTransactionsPageController;
 use App\Http\Controllers\Inertia\ReferralsPageController;
 use App\Http\Controllers\Inertia\SeasonsPageController;
 use App\Http\Controllers\Inertia\SettingsPageController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
+use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
+use App\Http\Controllers\Inertia\Social\SocialFixtureController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
+use App\Http\Controllers\Inertia\Social\SocialGroupChatController;
 use App\Http\Controllers\Inertia\Social\SocialHomeController;
 use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
 use App\Http\Controllers\Inertia\Social\SocialPassportController;
@@ -93,7 +99,8 @@ use Illuminate\Support\Facades\Route;
 // --------------------------------------------------------------------------
 // Fan app (Inertia + sample UI)
 // --------------------------------------------------------------------------
-Route::get('/', CampaignPageController::class)->name('fan.campaign');
+Route::get('/', LandingPageController::class)->name('fan.home');
+Route::get('/campaign', CampaignPageController::class)->name('fan.campaign');
 Route::get('/r/{fanId}', ReferralLandingController::class)->name('fan.referral');
 
 Route::redirect('/whitepaper', '/about')->name('fan.whitepaper');
@@ -200,6 +207,12 @@ Route::middleware('app.maintenance')->group(function () {
                 Route::redirect('/home', '/social');
                 Route::get('/passport', SocialPassportController::class)->name('passport');
                 Route::get('/chat', SocialChatController::class)->name('chat');
+                Route::post('/chat/direct', [SocialDirectChatController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('chat.direct.store');
+                Route::post('/chat/groups', [SocialGroupChatController::class, 'store'])
+                    ->middleware('throttle:20,1')
+                    ->name('chat.groups.store');
                 Route::post('/chat/channels/{channel}/messages', [SocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
                     ->name('chat.messages.store');
@@ -249,6 +262,7 @@ Route::middleware('app.maintenance')->group(function () {
                     ->middleware('throttle:60,1')
                     ->name('stage.livekit-token');
 
+                Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
                 Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');
                 Route::get('/tickets/{ticket}', [SocialTicketController::class, 'show'])->name('tickets.show');
@@ -416,6 +430,7 @@ $registerAdminRoutes = function (): void {
             Route::get('/leagues', [LeaguesPageController::class, 'index'])->name('leagues');
             Route::get('/clubs', [ClubsPageController::class, 'index'])->name('clubs');
             Route::get('/jerseys', [JerseysPageController::class, 'index'])->name('jerseys');
+            Route::get('/media', [MediaGalleryPageController::class, 'index'])->name('media');
             Route::get('/jersey-orders', [JerseyOrdersPageController::class, 'index'])->name('jersey-orders');
             Route::get('/referrals', [ReferralsPageController::class, 'index'])->name('referrals');
             Route::get('/point-transactions', [PointTransactionsPageController::class, 'index'])->name('point-transactions');
@@ -444,6 +459,12 @@ $registerAdminRoutes = function (): void {
                 Route::apiResource('leagues', LeaguesController::class);
                 Route::apiResource('clubs', ClubsController::class);
                 Route::apiResource('jerseys', JerseysController::class);
+                Route::get('media-assets', [MediaAssetsController::class, 'index'])->name('media-assets.index');
+                Route::post('media-assets', [MediaAssetsController::class, 'store'])->name('media-assets.store');
+                Route::post('media-assets/generate', [MediaAssetsController::class, 'generate'])->name('media-assets.generate');
+                Route::get('media-assets/{mediaAsset}', [MediaAssetsController::class, 'show'])->name('media-assets.show');
+                Route::put('media-assets/{mediaAsset}', [MediaAssetsController::class, 'update'])->name('media-assets.update');
+                Route::delete('media-assets/{mediaAsset}', [MediaAssetsController::class, 'destroy'])->name('media-assets.destroy');
                 Route::get('jersey-orders', [JerseyOrdersController::class, 'index'])->name('jersey-orders.index');
                 Route::get('jersey-orders/{jerseyOrder}', [JerseyOrdersController::class, 'show'])->name('jersey-orders.show');
                 Route::put('jersey-orders/{jerseyOrder}', [JerseyOrdersController::class, 'update'])->name('jersey-orders.update');

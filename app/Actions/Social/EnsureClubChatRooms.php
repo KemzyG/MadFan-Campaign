@@ -2,6 +2,7 @@
 
 namespace App\Actions\Social;
 
+use App\Enums\ChannelScope;
 use App\Enums\ChannelType;
 use App\Models\Channel;
 use App\Models\Club;
@@ -43,6 +44,7 @@ class EnsureClubChatRooms
                         'slug' => $channel['slug'],
                     ],
                     [
+                        'scope' => ChannelScope::Club,
                         'name' => $channel['name'],
                         'type' => ChannelType::Text,
                         'topic' => $channel['topic'],

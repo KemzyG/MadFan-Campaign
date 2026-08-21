@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\ChannelScope;
 use App\Enums\ChannelType;
 use Database\Factories\ChannelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Channel extends Model
@@ -16,6 +18,9 @@ class Channel extends Model
 
     protected $fillable = [
         'club_server_id',
+        'scope',
+        'conversation_key',
+        'created_by_id',
         'slug',
         'name',
         'type',
@@ -31,6 +36,7 @@ class Channel extends Model
     protected function casts(): array
     {
         return [
+            'scope' => ChannelScope::class,
             'type' => ChannelType::class,
             'position' => 'integer',
             'slowmode_seconds' => 'integer',
@@ -43,13 +49,54 @@ class Channel extends Model
         return $this->belongsTo(ClubServer::class);
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
     }
 
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ChannelMember::class);
+    }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'channel_members')
+            ->withPivot(['role', 'joined_at'])
+            ->withTimestamps();
+    }
+
     public function club(): ?Club
     {
         return $this->clubServer?->club;
+    }
+
+    public function isClub(): bool
+    {
+        return $this->scope === ChannelScope::Club;
+    }
+
+    public function isDirect(): bool
+    {
+        return $this->scope === ChannelScope::Direct;
+    }
+
+    public function isGroup(): bool
+    {
+        return $this->scope === ChannelScope::Group;
+    }
+
+    public function hasMember(User $user): bool
+    {
+        if ($this->relationLoaded('memberships')) {
+            return $this->memberships->contains('user_id', $user->id);
+        }
+
+        return $this->memberships()->where('user_id', $user->id)->exists();
     }
 }

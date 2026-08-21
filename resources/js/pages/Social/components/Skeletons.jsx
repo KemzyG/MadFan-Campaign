@@ -373,6 +373,9 @@ export function resolveSocialSkeletonKind(pathname) {
     if (path === '/social/chat' || path.startsWith('/social/chat/')) {
         return 'chat';
     }
+    if (path === '/social/fixtures' || path.startsWith('/social/fixtures/')) {
+        return 'fixtures';
+    }
     if (path === '/social/tickets/mine') {
         return 'wallet';
     }
@@ -408,6 +411,7 @@ export function SocialPageSkeleton({ kind = 'generic' }) {
         case 'chat':
             return <ChatSkeleton />;
         case 'tickets':
+        case 'fixtures':
             return <TicketListSkeleton />;
         case 'wallet':
         case 'ticket':

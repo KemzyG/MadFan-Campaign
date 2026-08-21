@@ -8,5 +8,7 @@ export const CAMPAIGN_NAV_LINKS = [
 export const CAMPAIGN_NAV_PATHS = CAMPAIGN_NAV_LINKS.map((link) => link.href);
 
 export function isWelcomeAreaPath(pathname) {
-    return pathname === '/' || CAMPAIGN_NAV_PATHS.includes(pathname);
+    return pathname === '/'
+        || pathname === '/campaign'
+        || CAMPAIGN_NAV_PATHS.includes(pathname);
 }

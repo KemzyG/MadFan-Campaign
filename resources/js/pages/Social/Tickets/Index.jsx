@@ -159,12 +159,17 @@ export default function Index({ matches, ticket_count = 0 }) {
                             Confirm purchase to print a GA stadium ticket to your wallet — monochrome stock
                             face, perforated stub, turnstile QR. No card rails on this pass.
                         </p>
-                        <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                            My tickets
-                            {ticket_count > 0 ? (
-                                <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                            ) : null}
-                        </Link>
+                        <div className="mf-fixtures-hero__links">
+                            <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
+                                Full fixture board
+                            </Link>
+                            <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
+                                My tickets
+                                {ticket_count > 0 ? (
+                                    <span className="mf-mono mf-tickets-count">{ticket_count}</span>
+                                ) : null}
+                            </Link>
+                        </div>
                     </div>
 
                     {matches.length === 0 ? (

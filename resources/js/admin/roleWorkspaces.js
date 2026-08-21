@@ -20,6 +20,7 @@ export function buildAdminNavigation(basePath = '/app') {
         { name: 'Leagues', href: p('leagues'), icon: '▣', permission: 'leagues.manage', key: 'leagues' },
         { name: 'Clubs', href: p('clubs'), icon: '⌂', permission: 'clubs.manage', key: 'clubs' },
         { name: 'Jerseys', href: p('jerseys'), icon: '⊞', permission: 'jerseys.manage', key: 'jerseys' },
+        { name: 'Media gallery', href: p('media'), icon: '▦', permission: 'media.manage', key: 'media' },
         { name: 'Jersey orders', href: p('jersey-orders'), icon: '▤', permission: 'jersey-orders.view', key: 'jersey-orders' },
         { name: 'Referrals', href: p('referrals'), icon: '↗', permission: 'referrals.view', key: 'referrals' },
         { name: 'Point Transactions', href: p('point-transactions'), icon: '◆', permission: 'point-transactions.view', key: 'point-transactions' },

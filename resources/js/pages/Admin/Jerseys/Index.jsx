@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Modal from '../../../Components/Admin/Modal';
 import { FormField, FormInput, FormSelect, FormTextarea } from '../../../Components/Admin/FormField';
 import AdminLayout from '../../../Layouts/AdminLayout';
@@ -7,6 +7,8 @@ import DataTable from '../../../Components/DataTable';
 import PageHeader from '../../../Components/PageHeader';
 import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
+import { adminPath } from '../../../lib/adminPath';
+import { usePage } from '@inertiajs/react';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
@@ -21,6 +23,7 @@ const emptyForm = () => ({
     is_active: true,
     imageFile: null,
     remove_image: false,
+    media_asset_ids: [],
     variants: [emptyVariant()],
 });
 
@@ -35,6 +38,7 @@ function jerseyToForm(jersey) {
         imageFile: null,
         remove_image: false,
         image_url: jersey.image_url ?? null,
+        media_asset_ids: (jersey.media_asset_ids || []).map(Number),
         variants: (jersey.variants || []).map((variant) => ({
             id: variant.id,
             size: variant.size,
@@ -62,6 +66,10 @@ function buildPayload(form) {
     if (form.remove_image) {
         data.append('remove_image', '1');
     }
+    data.append('sync_gallery', '1');
+    form.media_asset_ids.forEach((id, index) => {
+        data.append(`media_asset_ids[${index}]`, String(id));
+    });
     form.variants.forEach((variant, index) => {
         if (variant.id) {
             data.append(`variants[${index}][id]`, String(variant.id));
@@ -76,17 +84,35 @@ function buildPayload(form) {
     return data;
 }
 
-export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
+export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [], filters = {} }) {
+    const page = usePage();
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [pickerQuery, setPickerQuery] = useState('');
+
+    const selectedSet = useMemo(() => new Set(form.media_asset_ids.map(Number)), [form.media_asset_ids]);
+
+    const filteredGallery = useMemo(() => {
+        const q = pickerQuery.trim().toLowerCase();
+        if (!q) {
+            return gallery_assets;
+        }
+
+        return gallery_assets.filter((asset) => {
+            const hay = `${asset.title || ''} ${asset.alt_text || ''} ${asset.prompt || ''}`.toLowerCase();
+
+            return hay.includes(q);
+        });
+    }, [gallery_assets, pickerQuery]);
 
     function openCreate() {
         setEditingId(null);
         setForm(emptyForm());
         setError('');
+        setPickerQuery('');
         setModalOpen(true);
     }
 
@@ -94,7 +120,20 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
         setEditingId(jersey.id);
         setForm(jerseyToForm(jersey));
         setError('');
+        setPickerQuery('');
         setModalOpen(true);
+    }
+
+    function toggleMediaAsset(id) {
+        const numericId = Number(id);
+        setForm((current) => {
+            const ids = current.media_asset_ids.map(Number);
+            if (ids.includes(numericId)) {
+                return { ...current, media_asset_ids: ids.filter((value) => value !== numericId) };
+            }
+
+            return { ...current, media_asset_ids: [...ids, numericId] };
+        });
     }
 
     async function saveJersey(e) {
@@ -110,7 +149,7 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
                 await adminApi('/jerseys', { method: 'POST', body: payload });
             }
             setModalOpen(false);
-            router.reload({ only: ['jerseys'] });
+            router.reload({ only: ['jerseys', 'gallery_assets'] });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -136,6 +175,7 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
         { key: 'club', label: 'Club' },
         { key: 'price', label: 'Price' },
         { key: 'stock', label: 'Stock' },
+        { key: 'gallery', label: 'Gallery' },
         { key: 'status', label: 'Status' },
         { key: 'actions', label: '' },
     ];
@@ -152,6 +192,7 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
         club: jersey.club?.name ?? '—',
         price: `£${jersey.price}`,
         stock: jersey.stock_total,
+        gallery: jersey.media_asset_ids?.length ?? 0,
         status: jersey.is_active ? 'Active' : 'Hidden',
         actions: (
             <div className="flex justify-end gap-2">
@@ -169,15 +210,23 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
         <AdminLayout title="Jerseys">
             <PageHeader
                 title="Jerseys"
-                description="Marketplace listings with size stock."
+                description="Marketplace listings with size stock and gallery images."
                 actions={
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                    >
-                        Add jersey
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                        <a
+                            href={adminPath(page.props, 'media')}
+                            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-zinc-200"
+                        >
+                            Media gallery
+                        </a>
+                        <button
+                            type="button"
+                            onClick={openCreate}
+                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
+                        >
+                            Add jersey
+                        </button>
+                    </div>
                 }
             />
 
@@ -256,13 +305,60 @@ export default function JerseysIndex({ jerseys, clubs = [], filters = {} }) {
                         />
                         Active listing
                     </label>
-                    <FormField label="Image">
+                    <FormField label="Cover image (optional fallback)">
                         <input
                             type="file"
                             accept="image/*"
                             onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] ?? null })}
                         />
                     </FormField>
+
+                    <div className="space-y-3 rounded-lg border border-white/10 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-zinc-200">
+                                Gallery images ({form.media_asset_ids.length})
+                            </p>
+                            <FormInput
+                                placeholder="Filter gallery…"
+                                value={pickerQuery}
+                                onChange={(e) => setPickerQuery(e.target.value)}
+                            />
+                        </div>
+                        {gallery_assets.length === 0 ? (
+                            <p className="text-xs text-zinc-500">
+                                No gallery assets yet. Upload or generate images in Media gallery first.
+                            </p>
+                        ) : (
+                            <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
+                                {filteredGallery.map((asset) => {
+                                    const selected = selectedSet.has(Number(asset.id));
+
+                                    return (
+                                        <button
+                                            key={asset.id}
+                                            type="button"
+                                            onClick={() => toggleMediaAsset(asset.id)}
+                                            className={`overflow-hidden rounded-lg border text-left transition ${
+                                                selected
+                                                    ? 'border-brand-400 ring-1 ring-brand-400/50'
+                                                    : 'border-white/10 hover:border-white/30'
+                                            }`}
+                                        >
+                                            <img
+                                                src={asset.url}
+                                                alt=""
+                                                className="aspect-[4/5] w-full object-cover"
+                                            />
+                                            <span className="block truncate px-1.5 py-1 text-[10px] text-zinc-400">
+                                                {asset.title || `#${asset.id}`}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-3 rounded-lg border border-white/10 p-3">
                         <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-zinc-200">Sizes</p>

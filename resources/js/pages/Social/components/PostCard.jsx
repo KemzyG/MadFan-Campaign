@@ -549,7 +549,7 @@ export default function PostCard({ post, compact = false, onDismiss }) {
                 </p>
             ) : null}
 
-            <div className="mf-post__row">
+            <div className="mf-post__header-row">
                 <Link
                     href={handle ? `/social/u/${handle}` : '/social'}
                     className="mf-avatar mf-text-meta h-10 w-10"
@@ -558,34 +558,35 @@ export default function PostCard({ post, compact = false, onDismiss }) {
                     {(post.author?.name || '?').slice(0, 1).toUpperCase()}
                 </Link>
 
-                <div className="mf-post__body">
-                    <div className="mf-post__header">
-                        <div className="mf-post__meta">
-                            <Link
-                                href={handle ? `/social/u/${handle}` : '/social'}
-                                className="mf-post__name"
-                            >
-                                {post.author?.name}
-                            </Link>
-                            {post.club?.short || post.club?.name ? (
-                                <span className="mf-club-flake">
-                                    {post.club.short || post.club.name}
-                                </span>
-                            ) : null}
-                            <span className="mf-post__dot" aria-hidden>
-                                ·
+                <div className="mf-post__header">
+                    <div className="mf-post__meta">
+                        <Link
+                            href={handle ? `/social/u/${handle}` : '/social'}
+                            className="mf-post__name"
+                        >
+                            {post.author?.name}
+                        </Link>
+                        {post.club?.short || post.club?.name ? (
+                            <span className="mf-club-flake">
+                                {post.club.short || post.club.name}
                             </span>
-                            <time
-                                className="mf-text-meta text-[var(--mf-muted)]"
-                                dateTime={post.published_at || post.created_at || undefined}
-                            >
-                                {formatTime(post.published_at || post.created_at)}
-                            </time>
-                        </div>
-
-                        <PostOverflowMenu post={post} onDismiss={onDismiss} />
+                        ) : null}
+                        <span className="mf-post__dot" aria-hidden>
+                            ·
+                        </span>
+                        <time
+                            className="mf-text-meta text-[var(--mf-muted)]"
+                            dateTime={post.published_at || post.created_at || undefined}
+                        >
+                            {formatTime(post.published_at || post.created_at)}
+                        </time>
                     </div>
 
+                    <PostOverflowMenu post={post} onDismiss={onDismiss} />
+                </div>
+            </div>
+
+            <div className="mf-post__body">
                     <Link href={`/social/posts/${post.id}`} className="mf-post__content">
                         {post.body ? (
                             <p className={`mf-post__text whitespace-pre-wrap ${compact ? 'mf-text-ui' : 'mf-text-body'}`}>
@@ -745,7 +746,6 @@ export default function PostCard({ post, compact = false, onDismiss }) {
                             )}
                         </Form>
                     ) : null}
-                </div>
             </div>
         </article>
     );
