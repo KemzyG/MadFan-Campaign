@@ -1,13 +1,24 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { StageLobbySkeleton } from '../components/Skeletons';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
 import { useStageSessionOptional } from './StageSessionContext';
 
 function Avatar({ user, size = 'md' }) {
     const sizeClass = size === 'sm' ? 'h-8 w-8' : 'h-10 w-10';
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (user?.avatar_url) {
-        return <img src={user.avatar_url} alt="" className={`mf-avatar ${sizeClass}`} />;
+        return (
+            <img
+                src={user.avatar_url}
+                alt=""
+                className={`mf-avatar ${sizeClass}`}
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
     const label = (user?.handle || user?.name || '?').slice(0, 2).toUpperCase();
     return (

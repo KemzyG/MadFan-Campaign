@@ -6,7 +6,9 @@ use App\Models\PointTransaction;
 use App\Models\Season;
 use App\Models\User;
 use App\Services\Social\SocialPassportService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AwardSocialPoints
 {
@@ -83,41 +85,53 @@ class AwardSocialPoints
         $cap = $rule['cap'];
         $idempotencyKey = "{$sourceType}-{$user->id}-{$sourceId}";
 
-        return DB::transaction(function () use ($user, $sourceType, $sourceId, $reason, $points, $cap, $idempotencyKey): ?PointTransaction {
-            if (PointTransaction::query()->where('idempotency_key', $idempotencyKey)->exists()) {
-                return null;
-            }
+        try {
+            return DB::transaction(function () use ($user, $sourceType, $sourceId, $reason, $points, $cap, $idempotencyKey): ?PointTransaction {
+                if (PointTransaction::query()->where('idempotency_key', $idempotencyKey)->exists()) {
+                    return null;
+                }
 
-            $awardedToday = (int) PointTransaction::query()
-                ->where('user_id', $user->id)
-                ->where('source_type', $sourceType)
-                ->whereDate('created_at', today())
-                ->count();
+                $awardedToday = (int) PointTransaction::query()
+                    ->where('user_id', $user->id)
+                    ->where('source_type', $sourceType)
+                    ->whereDate('created_at', today())
+                    ->count();
 
-            if ($awardedToday >= $cap) {
-                return null;
-            }
+                if ($awardedToday >= $cap) {
+                    return null;
+                }
 
-            $season = Season::query()->where('status', 'active')->latest('starts_at')->first();
-            $user->refresh();
-            $newBalance = (int) $user->total_points + $points;
+                $season = Season::query()->where('status', 'active')->latest('starts_at')->first();
+                $user->refresh();
+                $newBalance = (int) $user->total_points + $points;
 
-            $transaction = PointTransaction::query()->create([
+                $transaction = PointTransaction::query()->create([
+                    'user_id' => $user->id,
+                    'season_id' => $season?->id,
+                    'source_type' => $sourceType,
+                    'source_id' => $sourceId,
+                    'amount' => $points,
+                    'balance_after' => $newBalance,
+                    'reason' => $reason,
+                    'idempotency_key' => $idempotencyKey,
+                ]);
+
+                $user->increment('total_points', $points);
+                $user->refresh();
+                $this->socialPassport->syncSnapshot($user);
+
+                return $transaction;
+            });
+        } catch (QueryException $exception) {
+            Log::warning('Social points award failed; primary social action continues.', [
                 'user_id' => $user->id,
-                'season_id' => $season?->id,
                 'source_type' => $sourceType,
                 'source_id' => $sourceId,
-                'amount' => $points,
-                'balance_after' => $newBalance,
-                'reason' => $reason,
                 'idempotency_key' => $idempotencyKey,
+                'error' => $exception->getMessage(),
             ]);
 
-            $user->increment('total_points', $points);
-            $user->refresh();
-            $this->socialPassport->syncSnapshot($user);
-
-            return $transaction;
-        });
+            return null;
+        }
     }
 }

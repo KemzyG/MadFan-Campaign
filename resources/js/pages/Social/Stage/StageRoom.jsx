@@ -1,12 +1,23 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
 import { isMicBlockedStatus } from './stageMicPermission';
 import { useStageSession } from './StageSessionContext';
 
 function Avatar({ user, size = 'md' }) {
     const cls = size === 'lg' ? 'h-14 w-14' : size === 'sm' ? 'h-8 w-8' : 'h-9 w-9';
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (user?.avatar_url) {
-        return <img src={user.avatar_url} alt="" className={`mf-avatar ${cls}`} />;
+        return (
+            <img
+                src={user.avatar_url}
+                alt=""
+                className={`mf-avatar ${cls}`}
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
     const label = (user?.handle || user?.name || '?').slice(0, 2).toUpperCase();
     return (

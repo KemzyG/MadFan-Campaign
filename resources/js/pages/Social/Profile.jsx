@@ -1,5 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import SocialShell from '../../Layouts/SocialShell';
+import { onImageError, resolveDefaultImageUrl } from '../../lib/defaultImage';
 import { socialApi } from '../../lib/socialApi';
 import PostCard from './components/PostCard';
 import { PostCardSkeleton, ProfileSkeleton } from './components/Skeletons';
@@ -31,6 +32,8 @@ function StatCell({ label, value }) {
 export default function Profile({ profile, feed }) {
     const posts = feed?.posts || [];
     const { reportError, reportSuccess } = useSocialFlash();
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
     const isVisit = Boolean(profile && !profile.is_self);
 
     function toggleFollow() {
@@ -67,6 +70,7 @@ export default function Profile({ profile, feed }) {
                                 alt=""
                                 className="mf-profile-hero__crest"
                                 aria-hidden
+                                onError={(event) => onImageError(event, fallbackUrl)}
                             />
                         ) : null}
 
@@ -95,7 +99,11 @@ export default function Profile({ profile, feed }) {
                                     {profile.club ? (
                                         <span className="mf-profile-chip">
                                             {profile.club.logo_url ? (
-                                                <img src={profile.club.logo_url} alt="" />
+                                                <img
+                                                    src={profile.club.logo_url}
+                                                    alt=""
+                                                    onError={(event) => onImageError(event, fallbackUrl)}
+                                                />
                                             ) : null}
                                             {profile.club.short || profile.club.name}
                                         </span>

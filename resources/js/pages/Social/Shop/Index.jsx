@@ -1,9 +1,20 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
 function ClubCrest({ club }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (club?.logo_url) {
-        return <img src={club.logo_url} alt="" className="mf-shop-crest__img" />;
+        return (
+            <img
+                src={club.logo_url}
+                alt=""
+                className="mf-shop-crest__img"
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
 
     return (
@@ -14,11 +25,19 @@ function ClubCrest({ club }) {
 }
 
 function JerseyCard({ jersey }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     return (
         <Link href={`/social/shop/${jersey.slug}`} className="mf-shop-card" prefetch>
             <div className="mf-shop-card__media">
                 {jersey.image_url ? (
-                    <img src={jersey.image_url} alt="" className="mf-shop-card__img" />
+                    <img
+                        src={jersey.image_url}
+                        alt=""
+                        className="mf-shop-card__img"
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
                 ) : (
                     <div className="mf-shop-card__placeholder">
                         <ClubCrest club={jersey.club} />

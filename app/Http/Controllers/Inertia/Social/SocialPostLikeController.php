@@ -17,8 +17,9 @@ class SocialPostLikeController extends Controller
         $this->authorize('like', $post);
 
         $user = $request->user();
+        $shouldAward = false;
 
-        DB::transaction(function () use ($post, $user, $awardSocialPoints): void {
+        DB::transaction(function () use ($post, $user, &$shouldAward): void {
             $created = PostLike::query()->firstOrCreate(
                 [
                     'post_id' => $post->id,
@@ -31,13 +32,18 @@ class SocialPostLikeController extends Controller
 
             if ($created->wasRecentlyCreated) {
                 $post->increment('likes_count');
-                $post->loadMissing('author');
-
-                if ($post->author !== null) {
-                    $awardSocialPoints->forLikeReceived($post->author, $post->id, $user->id);
-                }
+                $shouldAward = true;
             }
         });
+
+        if ($shouldAward) {
+            $post->loadMissing('author');
+
+            if ($post->author !== null) {
+                // After commit so a points CHECK failure cannot abort the like.
+                $awardSocialPoints->forLikeReceived($post->author, $post->id, $user->id);
+            }
+        }
 
         return back();
     }

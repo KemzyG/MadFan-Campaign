@@ -1,15 +1,26 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { socialApi } from '../../../lib/socialApi';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { formatKickoff } from '../components/StadiumTicket';
 import { TicketListSkeleton } from '../components/Skeletons';
 import TicketDetailModal from '../components/TicketDetailModal';
 import { applyOptimisticProps, useSocialFlash } from '../optimistic';
 
 function ClubCrest({ club }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (club?.logo_url) {
-        return <img src={club.logo_url} alt="" className="mf-ticket-crest__img" />;
+        return (
+            <img
+                src={club.logo_url}
+                alt=""
+                className="mf-ticket-crest__img"
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
 
     return (

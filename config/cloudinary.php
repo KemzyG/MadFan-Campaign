@@ -34,4 +34,23 @@ return [
 
     'folder' => env('CLOUDINARY_FOLDER', 'madfan'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Default thumbnail
+    |--------------------------------------------------------------------------
+    |
+    | Used when an image path is null, empty, or a local file is missing.
+    | Accepts a Cloudinary public_id (e.g. madfan/defaults/thumbnail) or a
+    | full https URL. Delivery URLs only need the cloud name (upload
+    | credentials are not required to serve the default).
+    |
+    | When neither a usable default nor cloud name is available, the local
+    | public asset below is used instead.
+    |
+    */
+
+    'default_image' => env('CLOUDINARY_DEFAULT_IMAGE', 'madfan/defaults/thumbnail'),
+
+    'local_default_image' => env('CLOUDINARY_LOCAL_DEFAULT_IMAGE', 'default-avatar.png'),
+
 ];

@@ -1,5 +1,6 @@
 import { Form, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { socialApi } from '../../../lib/socialApi';
 import {
     applyOptimisticProps,
@@ -130,6 +131,9 @@ function ActionCount({ value }) {
 }
 
 function MediaGrid({ media }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (!media?.length) {
         return null;
     }
@@ -141,7 +145,12 @@ function MediaGrid({ media }) {
         <div className={`mf-media mf-media--${count}`} role="group" aria-label="Attachments">
             {items.map((item, index) => (
                 <div key={item.id} className={`mf-media__cell mf-media__cell--${index + 1}`}>
-                    <img src={item.url} alt="" loading="lazy" />
+                    <img
+                        src={item.url}
+                        alt=""
+                        loading="lazy"
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
                 </div>
             ))}
         </div>

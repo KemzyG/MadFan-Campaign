@@ -87,9 +87,69 @@ test('it extracts public ids from cloudinary delivery urls', function () {
     expect(CloudinaryImageStorage::publicIdFromUrl($url))->toBe('madfan/avatars/abc123');
 });
 
+test('default image url builds from cloud name and public id', function () {
+    config([
+        'cloudinary.cloud_url' => null,
+        'cloudinary.cloud_name' => 'demo-cloud',
+        'cloudinary.default_image' => 'madfan/defaults/thumbnail',
+    ]);
+
+    expect(CloudinaryImageStorage::defaultImageUrl())
+        ->toBe('https://res.cloudinary.com/demo-cloud/image/upload/madfan/defaults/thumbnail')
+        ->and(PublicStorageUrl::defaultImageUrl())
+        ->toBe('https://res.cloudinary.com/demo-cloud/image/upload/madfan/defaults/thumbnail');
+});
+
+test('default image url accepts a full https url', function () {
+    config([
+        'cloudinary.cloud_name' => null,
+        'cloudinary.cloud_url' => null,
+        'cloudinary.default_image' => 'https://res.cloudinary.com/x/image/upload/custom/default.png',
+    ]);
+
+    expect(CloudinaryImageStorage::defaultImageUrl())
+        ->toBe('https://res.cloudinary.com/x/image/upload/custom/default.png');
+});
+
+test('default image url falls back to local asset without cloud name', function () {
+    config([
+        'cloudinary.cloud_url' => null,
+        'cloudinary.cloud_name' => null,
+        'cloudinary.default_image' => 'madfan/defaults/thumbnail',
+        'cloudinary.local_default_image' => 'default-avatar.png',
+    ]);
+
+    expect(CloudinaryImageStorage::defaultImageUrl())->toBe('/default-avatar.png');
+});
+
+test('public storage url returns default for null or empty paths', function () {
+    config([
+        'cloudinary.cloud_name' => 'demo-cloud',
+        'cloudinary.default_image' => 'madfan/defaults/thumbnail',
+    ]);
+
+    $default = 'https://res.cloudinary.com/demo-cloud/image/upload/madfan/defaults/thumbnail';
+
+    expect(PublicStorageUrl::path(null))->toBe($default)
+        ->and(PublicStorageUrl::path(''))->toBe($default);
+});
+
 test('public storage url passes through absolute remote urls', function () {
     $url = 'https://res.cloudinary.com/demo/image/upload/v1/madfan/posts/x.png';
 
-    expect(PublicStorageUrl::path($url))->toBe($url)
-        ->and(PublicStorageUrl::path('clubs/logo.png'))->toBe('/storage/clubs/logo.png');
+    expect(PublicStorageUrl::path($url))->toBe($url);
+});
+
+test('public storage url keeps existing local files and defaults missing ones', function () {
+    config([
+        'cloudinary.cloud_name' => 'demo-cloud',
+        'cloudinary.default_image' => 'madfan/defaults/thumbnail',
+    ]);
+
+    Storage::fake('public');
+    Storage::disk('public')->put('clubs/logo.png', 'crest');
+
+    expect(PublicStorageUrl::path('clubs/logo.png'))->toBe('/storage/clubs/logo.png')
+        ->and(PublicStorageUrl::path('clubs/missing.png'))
+        ->toBe('https://res.cloudinary.com/demo-cloud/image/upload/madfan/defaults/thumbnail');
 });

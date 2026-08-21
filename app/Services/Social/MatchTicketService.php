@@ -118,7 +118,7 @@ class MatchTicketService
     }
 
     /**
-     * @return array{id: int, name: string, short: string|null, logo_url: string|null}|null
+     * @return array{id: int, name: string, short: string|null, logo_url: string}|null
      */
     public function presentClub(?Club $club): ?array
     {

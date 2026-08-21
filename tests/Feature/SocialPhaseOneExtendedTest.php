@@ -1,15 +1,17 @@
 <?php
 
 use App\Actions\Social\AwardSocialPoints;
+use App\Actions\Social\CreateSocialPost;
 use App\Enums\PostType;
 use App\Models\Club;
 use App\Models\Follow;
 use App\Models\PointTransaction;
 use App\Models\Post;
+use App\Models\PostLike;
 use App\Models\PostMedia;
 use App\Models\SocialReport;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 test('fans can follow users and see following feed without other authors', function () {
@@ -87,15 +89,13 @@ test('publishing a post awards social points until the daily cap', function () {
         ->count())->toBe(3);
 });
 
-test('AwardSocialPoints inserts social_post source_type on sqlite without check failures', function () {
-    expect(DB::connection()->getDriverName())->toBe('sqlite');
-
+test('AwardSocialPoints inserts social_post source_type without check failures', function () {
     $club = Club::factory()->create();
     $user = socialReadyUser($club);
     $post = Post::factory()->create([
         'author_id' => $user->id,
         'club_id' => $club->id,
-        'body' => 'SQLite source_type check',
+        'body' => 'source_type check',
     ]);
 
     $transaction = app(AwardSocialPoints::class)->forPost($user, $post->id);
@@ -112,6 +112,23 @@ test('AwardSocialPoints inserts social_post source_type on sqlite without check 
     ]);
 });
 
+test('CreateSocialPost awards a social_post point transaction', function () {
+    $user = socialReadyUser();
+
+    $post = app(CreateSocialPost::class)->handle($user, [
+        'body' => 'CreateSocialPost awards points',
+    ]);
+
+    $this->assertDatabaseHas('point_transactions', [
+        'user_id' => $user->id,
+        'source_type' => AwardSocialPoints::SOURCE_POST,
+        'source_id' => (string) $post->id,
+        'amount' => AwardSocialPoints::RULES[AwardSocialPoints::SOURCE_POST]['points'],
+    ]);
+
+    expect((int) $user->fresh()->total_points)
+        ->toBe(AwardSocialPoints::RULES[AwardSocialPoints::SOURCE_POST]['points']);
+});
 test('meaningful replies award reply points and short replies do not', function () {
     $club = Club::factory()->create();
     $author = socialReadyUser($club);
@@ -160,8 +177,71 @@ test('likes award the author when received from another fan', function () {
         ->assertRedirect();
 
     expect((int) $author->fresh()->total_points)->toBe($start + 1);
+
+    $this->assertDatabaseHas('point_transactions', [
+        'user_id' => $author->id,
+        'source_type' => AwardSocialPoints::SOURCE_LIKE_RECEIVED,
+        'source_id' => $post->id.'-'.$viewer->id,
+        'amount' => AwardSocialPoints::RULES[AwardSocialPoints::SOURCE_LIKE_RECEIVED]['points'],
+    ]);
 });
 
+test('AwardSocialPoints inserts social_like_received without check failures', function () {
+    $club = Club::factory()->create();
+    $author = socialReadyUser($club);
+    $liker = socialReadyUser($club);
+    $post = Post::factory()->create([
+        'author_id' => $author->id,
+        'club_id' => $club->id,
+        'body' => 'like points source_type',
+    ]);
+
+    $transaction = app(AwardSocialPoints::class)->forLikeReceived($author, $post->id, $liker->id);
+
+    expect($transaction)->not->toBeNull()
+        ->and($transaction->source_type)->toBe(AwardSocialPoints::SOURCE_LIKE_RECEIVED)
+        ->and((int) $author->fresh()->total_points)
+        ->toBe(AwardSocialPoints::RULES[AwardSocialPoints::SOURCE_LIKE_RECEIVED]['points']);
+
+    $this->assertDatabaseHas('point_transactions', [
+        'user_id' => $author->id,
+        'source_type' => AwardSocialPoints::SOURCE_LIKE_RECEIVED,
+        'source_id' => $post->id.'-'.$liker->id,
+    ]);
+});
+
+test('api like succeeds when social points award hits a query exception', function () {
+    $club = Club::factory()->create();
+    $author = socialReadyUser($club);
+    $viewer = socialReadyUser($club);
+    $authorPoints = (int) $author->total_points;
+
+    $post = Post::factory()->create([
+        'author_id' => $author->id,
+        'club_id' => $club->id,
+        'body' => 'Like despite points failure',
+        'likes_count' => 0,
+    ]);
+
+    PointTransaction::creating(function (): void {
+        throw new QueryException(
+            'pgsql',
+            'insert into "point_transactions" ("source_type") values ($1)',
+            ['social_like_received'],
+            new Exception('new row for relation "point_transactions" violates check constraint "point_transactions_source_type_check"'),
+        );
+    });
+
+    $this->actingAs($viewer)
+        ->postJson(route('api.social.posts.like', $post))
+        ->assertSuccessful()
+        ->assertJsonPath('liked', true)
+        ->assertJsonPath('likes_count', 1);
+
+    expect(PostLike::query()->where('post_id', $post->id)->where('user_id', $viewer->id)->exists())->toBeTrue()
+        ->and((int) $author->fresh()->total_points)->toBe($authorPoints)
+        ->and(PointTransaction::query()->where('source_type', AwardSocialPoints::SOURCE_LIKE_RECEIVED)->count())->toBe(0);
+});
 test('reporting a post hides it from the reporter feed', function () {
     $club = Club::factory()->create();
     $author = socialReadyUser($club);

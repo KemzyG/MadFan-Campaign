@@ -1,4 +1,6 @@
+import { usePage } from '@inertiajs/react';
 import PassportQrCode from '../../../Components/Fan/PassportQrCode';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
 function formatKickoff(iso, style = 'long') {
     if (!iso) {
@@ -59,8 +61,19 @@ function statusLabel(status) {
 }
 
 function ClubMark({ club, className = '' }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (club?.logo_url) {
-        return <img src={club.logo_url} alt="" className={className} decoding="async" />;
+        return (
+            <img
+                src={club.logo_url}
+                alt=""
+                className={className}
+                decoding="async"
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
 
     return (

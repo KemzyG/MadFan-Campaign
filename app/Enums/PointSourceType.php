@@ -11,6 +11,11 @@ enum PointSourceType: string
     case ClubPick = 'club_pick';
     case AdminAdjustment = 'admin_adjustment';
     case PenaltyShootout = 'penalty_shootout';
+    case SocialPost = 'social_post';
+    case SocialReply = 'social_reply';
+    case SocialLikeReceived = 'social_like_received';
+    case SocialChat = 'social_chat';
+    case SocialMatchdayBonus = 'social_matchday_bonus';
 
     public function label(): string
     {
@@ -22,6 +27,11 @@ enum PointSourceType: string
             self::ClubPick => 'Club Pick',
             self::AdminAdjustment => 'Adjustments',
             self::PenaltyShootout => 'Penalty Shootout',
+            self::SocialPost => 'Social Post',
+            self::SocialReply => 'Social Reply',
+            self::SocialLikeReceived => 'Social Like Received',
+            self::SocialChat => 'Social Chat',
+            self::SocialMatchdayBonus => 'Social Matchday Bonus',
         };
     }
 
@@ -62,6 +72,11 @@ enum PointSourceType: string
             self::PenaltyShootout->value,
             self::ClubPick->value,
             self::AdminAdjustment->value,
+            self::SocialPost->value,
+            self::SocialReply->value,
+            self::SocialLikeReceived->value,
+            self::SocialChat->value,
+            self::SocialMatchdayBonus->value,
         ];
     }
-}
+};

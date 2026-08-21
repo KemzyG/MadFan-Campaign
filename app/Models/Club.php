@@ -44,12 +44,8 @@ class Club extends Model
         return $this->hasMany(Jersey::class);
     }
 
-    public function getLogoUrlAttribute(): ?string
+    public function getLogoUrlAttribute(): string
     {
-        if (! $this->logo) {
-            return null;
-        }
-
         return PublicStorageUrl::path($this->logo);
     }
 }

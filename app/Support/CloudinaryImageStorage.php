@@ -32,6 +32,56 @@ class CloudinaryImageStorage
             && filled(config('cloudinary.api_secret'));
     }
 
+    /**
+     * Cloud name for delivery URLs (from CLOUDINARY_CLOUD_NAME or CLOUDINARY_URL host).
+     */
+    public static function cloudName(): ?string
+    {
+        if (filled(config('cloudinary.cloud_name'))) {
+            return (string) config('cloudinary.cloud_name');
+        }
+
+        $cloudUrl = config('cloudinary.cloud_url');
+
+        if (! filled($cloudUrl)) {
+            return null;
+        }
+
+        $host = parse_url((string) $cloudUrl, PHP_URL_HOST);
+
+        return is_string($host) && $host !== '' ? $host : null;
+    }
+
+    /**
+     * Default thumbnail URL for missing / broken / empty images.
+     *
+     * Prefers CLOUDINARY_DEFAULT_IMAGE as a full URL or public_id (built with
+     * the cloud name). Falls back to the local public asset when Cloudinary
+     * delivery cannot be resolved.
+     */
+    public static function defaultImageUrl(): string
+    {
+        $configured = config('cloudinary.default_image');
+
+        if (filled($configured)) {
+            if (self::isRemoteUrl((string) $configured)) {
+                return (string) $configured;
+            }
+
+            $cloudName = self::cloudName();
+
+            if (filled($cloudName)) {
+                $publicId = ltrim(str_replace('\\', '/', (string) $configured), '/');
+
+                return 'https://res.cloudinary.com/'.$cloudName.'/image/upload/'.$publicId;
+            }
+        }
+
+        $local = (string) config('cloudinary.local_default_image', 'default-avatar.png');
+
+        return '/'.ltrim(str_replace('\\', '/', $local), '/');
+    }
+
     public static function store(UploadedFile $file, string $directory): string
     {
         if (! self::configured()) {
@@ -117,6 +167,7 @@ class CloudinaryImageStorage
             'cloudinary.api_key' => 'test-key',
             'cloudinary.api_secret' => 'test-secret',
             'cloudinary.folder' => 'madfan',
+            'cloudinary.default_image' => 'madfan/defaults/thumbnail',
         ]);
 
         self::$uploadUsing = function (UploadedFile $file, string $directory): array {

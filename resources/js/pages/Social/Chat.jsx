@@ -2,6 +2,7 @@ import { Head, Link, router, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getEcho, leaveEchoChannel } from '../../echo';
 import SocialShell from '../../Layouts/SocialShell';
+import { onImageError, resolveDefaultImageUrl } from '../../lib/defaultImage';
 import { socialApi } from '../../lib/socialApi';
 import { ChatSkeleton } from './components/Skeletons';
 import { applyOptimisticProps, useSocialFlash } from './optimistic';
@@ -68,8 +69,18 @@ function dayKey(iso) {
 }
 
 function AuthorAvatar({ author }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
     if (author?.avatar_url) {
-        return <img src={author.avatar_url} alt="" className="mf-avatar h-9 w-9" />;
+        return (
+            <img
+                src={author.avatar_url}
+                alt=""
+                className="mf-avatar h-9 w-9"
+                onError={(event) => onImageError(event, fallbackUrl)}
+            />
+        );
     }
 
     const label = (author?.name || author?.handle || '?').slice(0, 1).toUpperCase();
@@ -271,6 +282,8 @@ export default function Chat({
     const [channelQuery, setChannelQuery] = useState('');
     const usingReverb = realtime?.mode === 'reverb';
     const fallbackPollMs = usingReverb ? Math.max(poll_ms, 30000) : poll_ms;
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
 
     const filteredChannels = useMemo(() => {
         const q = channelQuery.trim().toLowerCase();
@@ -344,7 +357,12 @@ export default function Chat({
                             {club ? (
                                 <div className="mf-chat-header__club">
                                     {club.logo_url ? (
-                                        <img src={club.logo_url} alt="" className="mf-avatar h-10 w-10" />
+                                        <img
+                                            src={club.logo_url}
+                                            alt=""
+                                            className="mf-avatar h-10 w-10"
+                                            onError={(event) => onImageError(event, fallbackUrl)}
+                                        />
                                     ) : (
                                         <span className="mf-avatar mf-text-meta h-10 w-10">
                                             {(club.short || club.name || '?').slice(0, 2)}

@@ -73,12 +73,8 @@ class Jersey extends Model
         return $query->where('is_active', true);
     }
 
-    public function getImageUrlAttribute(): ?string
+    public function getImageUrlAttribute(): string
     {
-        if (! $this->image) {
-            return null;
-        }
-
         return PublicStorageUrl::path($this->image);
     }
 

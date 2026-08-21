@@ -1,6 +1,7 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
 export default function Show({ jersey, cart_count = 0 }) {
     const inStockVariants = useMemo(
@@ -12,6 +13,8 @@ export default function Show({ jersey, cart_count = 0 }) {
         variant_id: sizeId,
         quantity: 1,
     });
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
 
     function selectSize(id) {
         setSizeId(id);
@@ -31,7 +34,12 @@ export default function Show({ jersey, cart_count = 0 }) {
                 <div className="mf-shop-detail">
                     <div className="mf-shop-detail__media">
                         {jersey.image_url ? (
-                            <img src={jersey.image_url} alt="" className="mf-shop-detail__img" />
+                            <img
+                                src={jersey.image_url}
+                                alt=""
+                                className="mf-shop-detail__img"
+                                onError={(event) => onImageError(event, fallbackUrl)}
+                            />
                         ) : (
                             <div className="mf-shop-detail__placeholder mf-display">
                                 {(jersey.club?.short || 'MF').slice(0, 3)}

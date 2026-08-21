@@ -31,12 +31,8 @@ class League extends Model
         return $this->hasMany(Club::class);
     }
 
-    public function getLogoUrlAttribute(): ?string
+    public function getLogoUrlAttribute(): string
     {
-        if (! $this->logo) {
-            return null;
-        }
-
         return PublicStorageUrl::path($this->logo);
     }
 }

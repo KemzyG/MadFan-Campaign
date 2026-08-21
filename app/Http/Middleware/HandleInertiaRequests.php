@@ -11,6 +11,7 @@ use App\Services\Staff\StaffAssignmentService;
 use App\Support\AdminRouting;
 use App\Support\AdminWorkspace;
 use App\Support\ApplicationSettings;
+use App\Support\PublicStorageUrl;
 use App\Support\SocialRouting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -59,6 +60,7 @@ class HandleInertiaRequests extends Middleware
                 'logo_url' => is_file(public_path('favicon.jpg'))
                     ? asset('favicon.jpg')
                     : null,
+                'default_image_url' => PublicStorageUrl::defaultImageUrl(),
             ],
             'auth' => [
                 'user' => $user ? [
