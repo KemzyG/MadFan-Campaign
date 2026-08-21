@@ -20,7 +20,7 @@ return [
         'hero' => [
             'file' => 'hero.png',
             'public_id' => 'madfan/landing/hero',
-            'alt' => 'Mad Fan matchday kit under floodlights',
+            'alt' => 'Mad Fan player shooting — striped kit with MF crest',
             'role' => 'hero',
         ],
         'campaign' => [

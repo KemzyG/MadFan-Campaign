@@ -38,8 +38,130 @@ class MadFanStory
     }
 
     /**
-     * Reserved / unused for now, content lives on the About page.
+     * Compact narrative blocks for the public marketing landing (`/`).
      *
+     * @return array{
+     *     thesis: array{eyebrow: string, title: string, body: string},
+     *     primitives: list<array{label: string, title: string, body: string}>,
+     *     earn: list<array{pts: string, name: string, desc: string}>,
+     *     weeks: list<array{num: string, name: string, desc: string}>,
+     *     roadmap: list<array{label: string, title: string, body: string}>,
+     *     regions: list<array{label: string, title: string, body: string}>,
+     *     team: list<array{name: string, role: string, photo: string|null}>,
+     *     pages: list<array{href: string, label: string, title: string, body: string}>
+     * }
+     */
+    public static function landingHighlights(): array
+    {
+        $about = self::about();
+        $roadmap = self::roadmap();
+        $region = self::region();
+        $team = self::team();
+
+        $primitiveSection = collect($about['sections'])->firstWhere('title', 'Interconnected Building Blocks');
+        $timelineSection = collect($roadmap['sections'])->firstWhere('title', 'Milestones With Staying Power');
+        $hubSection = collect($region['sections'])->firstWhere('title', 'How Regions Show Up Online');
+
+        return [
+            'thesis' => [
+                'eyebrow' => 'Why Mad Fan',
+                'title' => 'Loyalty deserves infrastructure',
+                'body' => 'Platforms reward noise. Fans invest time, emotion, and identity — and get almost nothing back. Mad Fan makes loyalty visible, verifiable, and valuable: Season 01 proves it with football, then the Loyalty Layer scales globally.',
+            ],
+            'primitives' => array_values(array_map(
+                static fn (array $card): array => [
+                    'label' => (string) $card['label'],
+                    'title' => (string) $card['title'],
+                    'body' => (string) $card['body'],
+                ],
+                $primitiveSection['cards'] ?? [],
+            )),
+            'earn' => [
+                [
+                    'pts' => '+50–150 / day',
+                    'name' => 'Daily check-in',
+                    'desc' => 'Claim every day. Streaks raise value from 50 to 150 points.',
+                ],
+                [
+                    'pts' => '+500 / referral',
+                    'name' => 'Refer a fan',
+                    'desc' => 'Friends who join and complete a profile earn you uncapped referral points.',
+                ],
+                [
+                    'pts' => '+100–1000',
+                    'name' => 'Season tasks',
+                    'desc' => 'Social proof, club pick, passport share, and weekly challenges.',
+                ],
+                [
+                    'pts' => '+500 bonus',
+                    'name' => '7-day streak',
+                    'desc' => 'Finish a full week to unlock bonus points and a higher multiplier.',
+                ],
+            ],
+            'weeks' => [
+                ['num' => 'W1', 'name' => 'Kickoff', 'desc' => 'Sign up, pick your club, 2× multiplier.'],
+                ['num' => 'W2', 'name' => 'Squad Up', 'desc' => 'First referrals and the referral board.'],
+                ['num' => 'W3', 'name' => 'Daily Grind', 'desc' => '7-day streak bonus unlocked.'],
+                ['num' => 'W4', 'name' => 'Social Proof', 'desc' => 'Share your Fan Passport publicly.'],
+                ['num' => 'W5', 'name' => 'Loyalty Test', 'desc' => 'Knowledge and prediction challenges.'],
+                ['num' => 'W6', 'name' => 'Top 100 Race', 'desc' => 'Leaderboard snapshot for exclusive tiers.'],
+                ['num' => 'W7', 'name' => 'Final Push', 'desc' => 'Bonus drops and 3× referral multiplier.'],
+                ['num' => 'W8', 'name' => 'Judgment Day', 'desc' => 'Final board, early access, rewards.'],
+            ],
+            'roadmap' => array_values(array_map(
+                static fn (array $card): array => [
+                    'label' => (string) $card['label'],
+                    'title' => (string) $card['title'],
+                    'body' => (string) $card['body'],
+                ],
+                $timelineSection['cards'] ?? [],
+            )),
+            'regions' => array_values(array_map(
+                static fn (array $card): array => [
+                    'label' => (string) $card['label'],
+                    'title' => (string) $card['title'],
+                    'body' => (string) $card['body'],
+                ],
+                $hubSection['cards'] ?? [],
+            )),
+            'team' => array_values(array_map(
+                static fn (array $member): array => [
+                    'name' => (string) $member['name'],
+                    'role' => (string) $member['role'],
+                    'photo' => $member['photo'] ?? null,
+                ],
+                array_slice($team['members'] ?? [], 0, 3),
+            )),
+            'pages' => [
+                [
+                    'href' => '/about',
+                    'label' => 'About',
+                    'title' => 'Vision & origin',
+                    'body' => 'Why attention failed fans, and the Loyalty Layer we are building.',
+                ],
+                [
+                    'href' => '/roadmap',
+                    'label' => 'Roadmap',
+                    'title' => 'Season 01 to global rails',
+                    'body' => 'Proof first, then identity, marketplace, and the Global Loyalty Index.',
+                ],
+                [
+                    'href' => '/region',
+                    'label' => 'Region',
+                    'title' => 'Football first, global next',
+                    'body' => 'Regional hubs that feed one portable loyalty identity.',
+                ],
+                [
+                    'href' => '/team',
+                    'label' => 'Team',
+                    'title' => 'Built by fans',
+                    'body' => 'A lean crew shipping infrastructure meant to outlast any season.',
+                ],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private static function whitepaper(): array

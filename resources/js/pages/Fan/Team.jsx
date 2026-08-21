@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import FanLayout from '../../Layouts/FanLayout';
+import { Link } from '@inertiajs/react';
+import LandingChrome from '../../Components/Fan/LandingChrome';
 import { teamPhotoUrl } from '../../Components/Fan/teamPhotos';
 
 /**
@@ -33,77 +33,85 @@ export default function Team({
     contact_email: contactEmail = 'career.madfan@gmail.com',
 }) {
     return (
-        <FanLayout withSidebar={false}>
-            <Head title={title} />
+        <LandingChrome title={title} activeHref="/team">
+            <header className="mf-land__page-hero">
+                <div className="mf-land__page-hero-inner">
+                    <p className="mf-land__eyebrow">{eyebrow}</p>
+                    <h1>{title}</h1>
+                    {description ? <p className="mf-land__page-lead">{description}</p> : null}
+                </div>
+            </header>
 
-            <div className="wrap static-page-wrap team-page">
-                <div className="page-header">
-                    <div className="page-eye">{eyebrow}</div>
-                    <div className="page-title">{title.toUpperCase()}</div>
-                    {description ? <p className="page-sub">{description}</p> : null}
+            {intro.map((section, index) => (
+                <section
+                    key={section.title}
+                    className={`mf-land__band${index % 2 === 1 ? ' mf-land__band--mist' : ''}`}
+                    aria-labelledby={`team-intro-${index}`}
+                >
+                    <div className="mf-land__section-head">
+                        <div className="mf-land__section-copy">
+                            {section.eyebrow ? (
+                                <p className="mf-land__eyebrow">{section.eyebrow}</p>
+                            ) : null}
+                            <h2 id={`team-intro-${index}`}>{section.title}</h2>
+                            <div className="mf-land__story-copy">
+                                {(section.bodies ?? []).map((paragraph) => (
+                                    <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {section.bullets?.length ? (
+                        <ul className="mf-land__story-bullets">
+                            {section.bullets.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    ) : null}
+                </section>
+            ))}
+
+            <section
+                className={`mf-land__band${intro.length % 2 === 0 ? '' : ' mf-land__band--mist'}`}
+                aria-labelledby="team-members-title"
+            >
+                <div className="mf-land__section-head">
+                    <div className="mf-land__section-copy">
+                        <p className="mf-land__eyebrow">Leadership</p>
+                        <h2 id="team-members-title">Who is building Mad Fan</h2>
+                        <p>A lean crew with craft, consistency, and respect for lifelong supporters.</p>
+                    </div>
                 </div>
 
-                {intro.length > 0 ? (
-                    <div className="story-sections team-intro">
-                        {intro.map((section) => (
-                            <article key={section.title} className="story-section">
-                                {section.eyebrow ? <div className="section-eye">{section.eyebrow}</div> : null}
-                                <h2 className="story-section__title">{section.title}</h2>
-                                <div className="story-section__copy">
-                                    {(section.bodies ?? []).map((paragraph) => (
-                                        <p key={paragraph.slice(0, 48)} className="story-section__body">
-                                            {paragraph}
-                                        </p>
-                                    ))}
-                                </div>
-                                {section.bullets?.length ? (
-                                    <ul className="story-section__bullets">
-                                        {section.bullets.map((item) => (
-                                            <li key={item}>{item}</li>
-                                        ))}
-                                    </ul>
-                                ) : null}
-                            </article>
-                        ))}
-                    </div>
-                ) : null}
-
-                <section className="team-members" aria-label="Core team">
-                    <div className="section-eye">Leadership</div>
-                    <h2 className="story-section__title">WHO IS BUILDING MAD FAN</h2>
+                <div className="mf-land__member-grid">
                     {members.map((member) => {
                         const photoSrc = teamPhotoUrl(member.photo);
 
                         return (
-                            <article key={member.name} className="team-member-card">
-                                <div className="team-member-card__media">
+                            <article key={member.name} className="mf-land__member">
+                                <div className="mf-land__member-photo">
                                     {photoSrc ? (
                                         <img
                                             src={photoSrc}
                                             alt={`${member.name}, ${member.role}`}
-                                            className="team-member-card__photo"
                                             width={320}
                                             height={400}
                                             loading="lazy"
                                             decoding="async"
                                         />
                                     ) : (
-                                        <div className="team-member-card__mark" aria-hidden="true">
-                                            {member.name.slice(0, 1)}
-                                        </div>
+                                        <span aria-hidden>{member.name.slice(0, 1)}</span>
                                     )}
                                 </div>
-                                <div className="team-member-card__body">
-                                    <div className="team-member-card__meta">
-                                        <span className="team-member-card__role">{member.role}</span>
-                                        {member.location ? (
-                                            <span className="team-member-card__location">{member.location}</span>
-                                        ) : null}
-                                    </div>
-                                    <h3 className="team-member-card__name">{member.name}</h3>
-                                    <p className="team-member-card__bio">{member.bio}</p>
+                                <div className="mf-land__member-body">
+                                    <p className="mf-land__info-label">{member.role}</p>
+                                    {member.location ? (
+                                        <p className="mf-land__member-location">{member.location}</p>
+                                    ) : null}
+                                    <h3>{member.name}</h3>
+                                    <p className="mf-land__member-bio">{member.bio}</p>
                                     {member.focus?.length ? (
-                                        <ul className="team-member-card__focus">
+                                        <ul className="mf-land__story-bullets mf-land__story-bullets--compact">
                                             {member.focus.map((item) => (
                                                 <li key={item}>{item}</li>
                                             ))}
@@ -112,7 +120,7 @@ export default function Team({
                                     {member.social ? (
                                         <a
                                             href={member.social.url}
-                                            className="team-member-card__social"
+                                            className="mf-land__text-link"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
@@ -123,69 +131,81 @@ export default function Team({
                             </article>
                         );
                     })}
-                </section>
+                </div>
+            </section>
 
-                {culture ? (
-                    <section className="team-culture story-section" aria-labelledby="team-culture-title">
-                        <div className="section-eye">Culture</div>
-                        <h2 id="team-culture-title" className="story-section__title">
-                            {culture.title}
-                        </h2>
-                        <div className="story-section__copy">
-                            {(culture.bodies ?? []).map((paragraph) => (
-                                <p key={paragraph.slice(0, 48)} className="story-section__body">
-                                    {paragraph}
-                                </p>
-                            ))}
-                        </div>
-                        {culture.bullets?.length ? (
-                            <ul className="story-section__bullets">
-                                {culture.bullets.map((item) => (
-                                    <li key={item}>{item}</li>
+            {culture ? (
+                <section className="mf-land__band mf-land__band--mist" aria-labelledby="team-culture-title">
+                    <div className="mf-land__section-head">
+                        <div className="mf-land__section-copy">
+                            <p className="mf-land__eyebrow">Culture</p>
+                            <h2 id="team-culture-title">{culture.title}</h2>
+                            <div className="mf-land__story-copy">
+                                {(culture.bodies ?? []).map((paragraph) => (
+                                    <p key={paragraph.slice(0, 48)}>{paragraph}</p>
                                 ))}
-                            </ul>
-                        ) : null}
-                    </section>
-                ) : null}
-
-                {openRoles.length > 0 ? (
-                    <section className="team-roles" aria-labelledby="team-roles-title">
-                        <div className="section-eye">Join the Squad</div>
-                        <h2 id="team-roles-title" className="story-section__title">
-                            OPEN ROLES
-                        </h2>
-                        <p className="story-section__body">
-                            These seats are for people who want to build loyalty infrastructure with staying power:
-                            multi season communities, production grade product, and partnerships that compound over
-                            years. If that is you, write to us.
-                        </p>
-                        <div className="team-roles__grid">
-                            {openRoles.map((role) => (
-                                <div key={role.title} className="team-role-card">
-                                    <div className="team-role-card__type">{role.type}</div>
-                                    <div className="team-role-card__title">{role.title}</div>
-                                    <p className="team-role-card__summary">{role.summary}</p>
-                                </div>
-                            ))}
+                            </div>
                         </div>
-                        <a href={`mailto:${contactEmail}`} className="btn-join team-roles__cta">
+                    </div>
+                    {culture.bullets?.length ? (
+                        <ul className="mf-land__story-bullets">
+                            {culture.bullets.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    ) : null}
+                </section>
+            ) : null}
+
+            {openRoles.length > 0 ? (
+                <section className="mf-land__band" aria-labelledby="team-roles-title">
+                    <div className="mf-land__section-head">
+                        <div className="mf-land__section-copy">
+                            <p className="mf-land__eyebrow">Join the squad</p>
+                            <h2 id="team-roles-title">Open roles</h2>
+                            <p>
+                                These seats are for people who want to build loyalty infrastructure with staying
+                                power: multi season communities, production grade product, and partnerships that
+                                compound over years.
+                            </p>
+                        </div>
+                        <a href={`mailto:${contactEmail}`} className="mf-land__pill mf-land__pill--dark">
                             Email {contactEmail}
                         </a>
-                    </section>
-                ) : null}
+                    </div>
+                    <div className="mf-land__card-grid mf-land__card-grid--3">
+                        {openRoles.map((role) => (
+                            <article key={role.title} className="mf-land__info-card">
+                                <p className="mf-land__info-label">{role.type}</p>
+                                <h3>{role.title}</h3>
+                                <p>{role.summary}</p>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+            ) : null}
 
-                <div className="static-page-cta">
-                    <Link href="/about" className="btn-action btn-go">
-                        About Mad Fan
-                    </Link>
-                    <Link href="/roadmap" className="btn-action btn-go">
-                        View roadmap
-                    </Link>
-                    <Link href="/" className="btn-action btn-go">
-                        ← Back to Season 01
-                    </Link>
+            <section className="mf-land__cta" aria-label="Continue">
+                <div className="mf-land__cta-inner">
+                    <p className="mf-land__eyebrow">Season 01 is live</p>
+                    <h2>Back home or enter the campaign</h2>
+                    <p>Meet the product surface, then earn your standing on Season 01.</p>
+                    <div className="mf-land__hero-actions">
+                        <Link href="/" className="mf-land__pill mf-land__pill--ghost">
+                            ← Back to Mad Fan
+                        </Link>
+                        <Link href="/campaign" className="mf-land__pill mf-land__pill--light">
+                            Enter Season 01
+                        </Link>
+                        <Link href="/about" className="mf-land__pill mf-land__pill--ghost">
+                            About Mad Fan
+                        </Link>
+                        <Link href="/roadmap" className="mf-land__pill mf-land__pill--ghost">
+                            View roadmap
+                        </Link>
+                    </div>
                 </div>
-            </div>
-        </FanLayout>
+            </section>
+        </LandingChrome>
     );
 }

@@ -98,12 +98,12 @@ class LandingMediaService
             }
 
             if (filled($storedPath) && ! CloudinaryImageStorage::isRemoteUrl((string) $storedPath) && is_file(public_path((string) $storedPath))) {
-                return asset((string) $storedPath);
+                return '/'.ltrim(str_replace('\\', '/', (string) $storedPath), '/');
             }
         }
 
         if ($filename !== '' && is_file($localPublicAbsolute)) {
-            return asset($localPublicRelative);
+            return '/'.ltrim(str_replace('\\', '/', $localPublicRelative), '/');
         }
 
         return null;
@@ -174,8 +174,6 @@ class LandingMediaService
         $filename = (string) $meta['file'];
         File::copy($source, $destDir.DIRECTORY_SEPARATOR.$filename);
 
-        $localUrl = asset('landing-media/'.$filename);
-
         MediaAsset::query()->updateOrCreate(
             ['cloudinary_public_id' => $publicId],
             [
@@ -192,7 +190,7 @@ class LandingMediaService
         return [
             'key' => $key,
             'storage' => 'local',
-            'url' => $localUrl,
+            'url' => '/landing-media/'.$filename,
             'public_id' => null,
         ];
     }

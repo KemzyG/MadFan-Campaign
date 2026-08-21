@@ -13,6 +13,13 @@ beforeEach(function (): void {
     CloudinaryImageGeneration::fakeReset();
 });
 
+function fakeGeneratedUpload(string $name = 'cloud.png'): UploadedFile
+{
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+
+    return UploadedFile::fake()->createWithContent($name, $png);
+}
+
 test('generate endpoint returns a clear error when cloudinary is not configured', function () {
     $admin = createAdminUser();
     $admin->givePermissionTo(Permission::findOrCreate(AdminPermission::MediaManage->value, 'web'));
@@ -62,7 +69,7 @@ test('cloudinary upload stores remote meta when configured', function () {
     $this->actingAs($admin)
         ->postJson(route('admin.api.media-assets.store'), [
             'title' => 'Cloud kit',
-            'image' => UploadedFile::fake()->image('cloud.jpg'),
+            'image' => fakeGeneratedUpload('cloud.jpg'),
         ])
         ->assertCreated()
         ->assertJsonPath('storage', 'cloudinary')

@@ -436,7 +436,7 @@ function SocialHeaderAccountMenu({ user, handle, profileHref }) {
     );
 }
 
-export default function SocialShell({ children, title, showTabs = true, backHref }) {
+export default function SocialShell({ children, title, showTabs = true, backHref, fillViewport = false }) {
     const page = usePage();
     const { auth, flash, app } = page.props;
     const user = auth?.user;
@@ -616,7 +616,15 @@ export default function SocialShell({ children, title, showTabs = true, backHref
         <SocialFlashContext.Provider value={flashApi}>
             <SocialComposeContext.Provider value={composeApi}>
                 <div className="mf-stage">
-                <div className={`mf-shell ${showTabs ? 'mf-shell--nav' : 'mf-shell--bare'}`}>
+                <div
+                    className={[
+                        'mf-shell',
+                        showTabs ? 'mf-shell--nav' : 'mf-shell--bare',
+                        fillViewport ? 'mf-shell--fill' : '',
+                    ]
+                        .filter(Boolean)
+                        .join(' ')}
+                >
                     {showTabs ? (
                         <aside className="mf-sidebar" aria-label="Social navigation">
                             <div className="mf-sidebar__top">
@@ -685,9 +693,9 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                         </aside>
                     ) : null}
 
-                    <div className="mf-app">
+                    <div className={`mf-app ${fillViewport ? 'mf-app--fill' : ''}`}>
                         {(title || backHref || showTabs) && (
-                            <header className="mf-header">
+                            <header className={`mf-header ${fillViewport ? 'mf-header--compact' : ''}`}>
                                 {showTabs ? (
                                     <SocialHeaderNavMenu tabs={tabs} onCompose={openCompose} />
                                 ) : null}
@@ -716,7 +724,7 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                                         </p>
                                     ) : null}
                                 </div>
-                                {user ? (
+                                {user && !fillViewport ? (
                                     <Link
                                         href="/social/passport"
                                         className="mf-header__passport flex max-w-[7.5rem] flex-col items-end rounded-lg px-1.5 py-1 transition-colors hover:bg-[var(--mf-elevated)]"
@@ -739,7 +747,15 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                             </header>
                         )}
 
-                        <main className={`mf-main ${showTabs ? '' : 'pb-[max(1rem,var(--mf-safe-bottom))]'}`}>
+                        <main
+                            className={[
+                                'mf-main',
+                                fillViewport ? 'mf-main--fill' : '',
+                                showTabs ? '' : 'pb-[max(1rem,var(--mf-safe-bottom))]',
+                            ]
+                                .filter(Boolean)
+                                .join(' ')}
+                        >
                             {navSkeletonKind ? <SocialPageSkeleton kind={navSkeletonKind} /> : children}
                         </main>
 

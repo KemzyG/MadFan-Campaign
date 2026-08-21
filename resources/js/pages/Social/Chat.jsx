@@ -271,7 +271,7 @@ function ChatComposer({ channel, maxBodyLength, inbox }) {
                         </button>
                     </div>
                     <div className="mf-chat-composer__bar">
-                        <span className="mf-text-meta text-[var(--mf-muted)]">
+                        <span className="mf-chat-composer__hint mf-text-meta text-[var(--mf-muted)]">
                             Enter to send · Shift+Enter for line
                         </span>
                         <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">
@@ -469,6 +469,7 @@ export default function Chat({
     const scrollerRef = useRef(null);
     const wasNearBottom = useRef(true);
     const [channelQuery, setChannelQuery] = useState('');
+    const [railExpanded, setRailExpanded] = useState(false);
     const usingReverb = realtime?.mode === 'reverb';
     const fallbackPollMs = usingReverb ? Math.max(poll_ms, 30000) : poll_ms;
     const { app } = usePage().props;

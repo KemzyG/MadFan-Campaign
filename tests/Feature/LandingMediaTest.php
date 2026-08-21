@@ -32,7 +32,7 @@ test('landing media sync publishes images locally when cloudinary is absent', fu
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Landing')
-            ->where('images.hero.url', asset('landing-media/hero.png'))
+            ->where('images.hero.url', '/landing-media/hero.png')
             ->has('images.categories.campaign')
             ->has('images.categories.social')
             ->has('images.categories.shop')

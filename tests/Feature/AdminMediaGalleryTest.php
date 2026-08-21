@@ -17,6 +17,13 @@ beforeEach(function (): void {
     Storage::fake('public');
 });
 
+function fakeMediaUpload(string $name = 'kit.png'): UploadedFile
+{
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+
+    return UploadedFile::fake()->createWithContent($name, $png);
+}
+
 test('admins can open the media gallery page', function () {
     $admin = createAdminUser();
     $admin->givePermissionTo(Permission::findOrCreate(AdminPermission::MediaManage->value, 'web'));
@@ -36,7 +43,7 @@ test('admins can upload a media asset with local disk fallback', function () {
     $admin = createAdminUser();
     $admin->givePermissionTo(Permission::findOrCreate(AdminPermission::MediaManage->value, 'web'));
 
-    $file = UploadedFile::fake()->image('kit.jpg', 400, 500);
+    $file = fakeMediaUpload('kit.jpg');
 
     $this->actingAs($admin)
         ->postJson(route('admin.api.media-assets.store'), [
@@ -90,7 +97,7 @@ test('support staff without media permission cannot manage the gallery', functio
 
     $this->actingAs($support)
         ->postJson(route('admin.api.media-assets.store'), [
-            'image' => UploadedFile::fake()->image('x.jpg'),
+            'image' => fakeMediaUpload('x.png'),
         ])
         ->assertForbidden();
 });

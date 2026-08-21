@@ -1,14 +1,18 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import FanBrandLogo from '../../Components/Fan/FanBrandLogo';
+import { Head, Link } from '@inertiajs/react';
+import { teamPhotoUrl } from '../../Components/Fan/teamPhotos';
+import {
+    LandingFooter,
+    LandingNav,
+    LandingUtil,
+} from '../../Components/Fan/LandingChrome';
 
-const CATEGORY_COPY = [
+const CATEGORIES = [
     {
         key: 'campaign',
         label: 'Season campaign',
         title: 'Earn loyalty for your club',
         href: '/campaign',
         cta: 'Enter campaign',
-        body: 'Daily claims, tasks, and referrals — one ledger into your passport.',
     },
     {
         key: 'social',
@@ -16,168 +20,121 @@ const CATEGORY_COPY = [
         title: 'Feed, chat, fixtures',
         href: '/social',
         cta: 'Open terrace',
-        body: 'Club-first posts, hangouts, and match boards that feel like matchday.',
     },
     {
         key: 'shop',
         label: 'Kit room',
-        title: 'Jerseys as loyalty merch',
+        title: 'Jerseys as matchday art',
         href: '/social/shop',
-        cta: 'Browse kits',
-        body: 'Wear the allegiance — product photography, not chrome.',
+        cta: 'Browse shop',
     },
     {
         key: 'passport',
         label: 'Fan passport',
-        title: 'Your score is your identity',
+        title: 'Your score is identity',
         href: '/social/passport',
         cta: 'View passport',
-        body: 'Points, streak, club crest, and the full activity ledger in one place.',
     },
 ];
 
-const FOOTER = [
-    {
-        title: 'Product',
-        links: [
-            { href: '/campaign', label: 'Campaign' },
-            { href: '/social', label: 'Social' },
-            { href: '/social/shop', label: 'Shop' },
-            { href: '/social/fixtures', label: 'Fixtures' },
-        ],
+const EMPTY_STORY = {
+    thesis: {
+        eyebrow: 'Why Mad Fan',
+        title: 'Loyalty deserves infrastructure',
+        body: 'Mad Fan makes loyalty visible, verifiable, and valuable.',
     },
-    {
-        title: 'Company',
-        links: [
-            { href: '/about', label: 'About' },
-            { href: '/roadmap', label: 'Roadmap' },
-            { href: '/team', label: 'Team' },
-            { href: '/region', label: 'Region' },
-        ],
-    },
-    {
-        title: 'Help',
-        links: [
-            { href: '/login', label: 'Sign in' },
-            { href: '/register', label: 'Create account' },
-            { href: '/campaign', label: 'Season guide' },
-        ],
-    },
-    {
-        title: 'Community',
-        links: [
-            { href: '/social', label: 'Global feed' },
-            { href: '/social/stage', label: 'Live stage' },
-            { href: '/social/tickets', label: 'Match tickets' },
-        ],
-    },
-];
+    primitives: [],
+    earn: [],
+    weeks: [],
+    roadmap: [],
+    regions: [],
+    team: [],
+    pages: [],
+};
 
-function SearchIcon() {
+function SectionHead({ eyebrow, title, body, action }) {
     return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <circle cx="11" cy="11" r="6.5" />
-            <path strokeLinecap="round" d="m16 16 3.5 3.5" />
-        </svg>
+        <div className="mf-land__section-head">
+            <div className="mf-land__section-copy">
+                {eyebrow ? <p className="mf-land__eyebrow">{eyebrow}</p> : null}
+                <h2>{title}</h2>
+                {body ? <p>{body}</p> : null}
+            </div>
+            {action}
+        </div>
     );
 }
 
-function BagIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 9.5 8 5.5h8l1.5 4M5.5 9.5h13v8.2A1.8 1.8 0 0 1 16.7 19.5H7.3A1.8 1.8 0 0 1 5.5 17.7V9.5Z" />
-        </svg>
-    );
-}
-
-function HeartIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19s-6.5-4.1-6.5-8.2A3.7 3.7 0 0 1 12 8.1a3.7 3.7 0 0 1 6.5 2.7C18.5 14.9 12 19 12 19Z" />
-        </svg>
-    );
-}
-
-export default function Landing({ images = {}, featured = [] }) {
-    const { auth, app } = usePage().props;
-    const user = auth?.user;
+export default function Landing({
+    images = {},
+    featured = [],
+    stats = {},
+    story = EMPTY_STORY,
+}) {
     const hero = images?.hero;
     const categoryImages = images?.categories || {};
     const products = featured.length > 0 ? featured.slice(0, 6) : [];
+    const thesis = story.thesis || EMPTY_STORY.thesis;
+    const waitlist = Number(stats.waitlist_count || 0).toLocaleString();
 
     return (
         <div className="mf-land">
-            <Head title="Mad Fan — The loyalty layer of football" />
+            <Head title="Mad Fan — The loyalty layer of football">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap"
+                    rel="stylesheet"
+                />
+            </Head>
 
-            <div className="mf-land__util">
-                <Link href="/about">Help</Link>
-                {user ? (
-                    <Link href="/dashboard">Dashboard</Link>
-                ) : (
-                    <Link href="/login">Sign in</Link>
-                )}
-                <Link href="/campaign">Campaign</Link>
-            </div>
-
-            <header className="mf-land__nav">
-                <Link href="/" className="mf-land__brand" aria-label="Mad Fan home">
-                    <FanBrandLogo asLink={false} size={32} className="" />
-                    <span>Mad Fan</span>
-                </Link>
-
-                <nav className="mf-land__links" aria-label="Primary">
-                    <Link href="/campaign">Campaign</Link>
-                    <Link href="/social">Social</Link>
-                    <Link href="/social/shop">Shop</Link>
-                    <Link href="/social/fixtures">Fixtures</Link>
-                    <Link href="/about">About</Link>
-                    <Link href="/roadmap">Roadmap</Link>
-                </nav>
-
-                <div className="mf-land__tools">
-                    <span className="mf-land__search" aria-hidden>
-                        <SearchIcon />
-                        Search
-                    </span>
-                    <Link href="/social" className="mf-land__icon" aria-label="Social">
-                        <HeartIcon />
-                    </Link>
-                    <Link href="/social/shop" className="mf-land__icon" aria-label="Shop">
-                        <BagIcon />
-                    </Link>
-                </div>
-            </header>
+            <LandingUtil />
+            <LandingNav />
 
             <section className="mf-land__hero" aria-label="Hero">
                 {hero?.url ? (
-                    <img
-                        className="mf-land__hero-photo"
-                        src={hero.url}
-                        alt={hero.alt || 'Mad Fan'}
-                    />
+                    <img className="mf-land__hero-photo" src={hero.url} alt={hero.alt || 'Mad Fan'} />
                 ) : (
-                    <div className="mf-land__hero-visual" aria-hidden />
+                    <div className="mf-land__hero-fallback" aria-hidden />
                 )}
+                <div className="mf-land__hero-scrim" aria-hidden />
                 <div className="mf-land__hero-copy">
-                    <p className="mf-land__hero-brand">{app?.name || 'Mad Fan'}</p>
+                    <p className="mf-land__hero-brand">Mad Fan</p>
                     <h1 className="mf-land__hero-title">Loyalty that counts</h1>
                     <p className="mf-land__hero-lead">
-                        The loyalty layer of the football internet. Pick your club, engage on the terrace,
-                        earn on the campaign, and wear your standing on a passport — one score, one identity.
+                        The loyalty layer of the football internet. Pick your club, earn on Season 01,
+                        engage on the terrace, and wear your standing on a passport.
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+                    <div className="mf-land__hero-actions">
                         <Link href="/campaign" className="mf-land__pill mf-land__pill--light">
                             Enter campaign
                         </Link>
-                        <Link href="/social" className="mf-land__pill mf-land__pill--light">
-                            Join the terrace
+                        <Link href="/about" className="mf-land__pill mf-land__pill--ghost">
+                            About Mad Fan
                         </Link>
                     </div>
                 </div>
             </section>
 
+            <section className="mf-land__stats" aria-label="Season pulse">
+                <div className="mf-land__stats-inner">
+                    <div>
+                        <strong>{waitlist}</strong>
+                        <span>Fans on waitlist</span>
+                    </div>
+                    <div>
+                        <strong>{stats.season_weeks ?? 8}</strong>
+                        <span>Weeks in Season 01</span>
+                    </div>
+                    <div>
+                        <strong>{stats.points_pool ?? '500K'}</strong>
+                        <span>Points up for grabs</span>
+                    </div>
+                </div>
+            </section>
+
             <section className="mf-land__categories" aria-label="Explore Mad Fan">
-                {CATEGORY_COPY.map((item) => {
+                {CATEGORIES.map((item) => {
                     const image = categoryImages[item.key];
 
                     return (
@@ -189,23 +146,183 @@ export default function Landing({ images = {}, featured = [] }) {
                                     alt={image.alt || item.title}
                                 />
                             ) : (
-                                <div className="mf-land__cat-media mf-land__cat-media--fallback" aria-hidden />
+                                <div className="mf-land__cat-fallback" aria-hidden />
                             )}
                             <div className="mf-land__cat-scrim" aria-hidden />
                             <div className="mf-land__cat-body">
                                 <p className="mf-land__cat-label">{item.label}</p>
                                 <h2 className="mf-land__cat-title">{item.title}</h2>
-                                <p className="mf-land__cat-lead">{item.body}</p>
-                                <div className="mf-land__cat-actions">
-                                    <Link href={item.href} className="mf-land__pill mf-land__pill--light">
-                                        {item.cta}
-                                    </Link>
-                                </div>
+                                <Link href={item.href} className="mf-land__pill mf-land__pill--light">
+                                    {item.cta}
+                                </Link>
                             </div>
                         </article>
                     );
                 })}
             </section>
+
+            <section className="mf-land__band" aria-label="Why Mad Fan">
+                <SectionHead
+                    eyebrow={thesis.eyebrow}
+                    title={thesis.title}
+                    body={thesis.body}
+                    action={
+                        <Link href="/about" className="mf-land__text-link">
+                            Read about us
+                        </Link>
+                    }
+                />
+                {story.primitives?.length > 0 ? (
+                    <div className="mf-land__card-grid mf-land__card-grid--5">
+                        {story.primitives.map((item) => (
+                            <article key={item.title} className="mf-land__info-card">
+                                <p className="mf-land__info-label">{item.label}</p>
+                                <h3>{item.title}</h3>
+                                <p>{item.body}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : null}
+            </section>
+
+            <section className="mf-land__band mf-land__band--mist" aria-label="Season 01">
+                <SectionHead
+                    eyebrow="Season 01"
+                    title="8 weeks. Earn your standing."
+                    body="Daily claims, referrals, tasks, and streaks feed one passport ledger. Climb THE BOARD for early access and founding status."
+                    action={
+                        <Link href="/campaign" className="mf-land__pill mf-land__pill--dark">
+                            Open campaign
+                        </Link>
+                    }
+                />
+                {story.earn?.length > 0 ? (
+                    <div className="mf-land__card-grid mf-land__card-grid--4">
+                        {story.earn.map((item) => (
+                            <article key={item.name} className="mf-land__info-card">
+                                <p className="mf-land__info-label">{item.pts}</p>
+                                <h3>{item.name}</h3>
+                                <p>{item.desc}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : null}
+                {story.weeks?.length > 0 ? (
+                    <div className="mf-land__week-grid" aria-label="Season chapters">
+                        {story.weeks.map((week) => (
+                            <article key={week.num} className="mf-land__week">
+                                <p className="mf-land__info-label">{week.num}</p>
+                                <h3>{week.name}</h3>
+                                <p>{week.desc}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : null}
+            </section>
+
+            <section className="mf-land__band" aria-label="Roadmap">
+                <SectionHead
+                    eyebrow="Roadmap"
+                    title="Proof before scale"
+                    body="Ship trust with live fans first, harden identity next, then unlock markets that compound for years."
+                    action={
+                        <Link href="/roadmap" className="mf-land__text-link">
+                            Full roadmap
+                        </Link>
+                    }
+                />
+                {story.roadmap?.length > 0 ? (
+                    <div className="mf-land__card-grid mf-land__card-grid--3">
+                        {story.roadmap.map((item) => (
+                            <article key={item.title} className="mf-land__info-card">
+                                <p className="mf-land__info-label">{item.label}</p>
+                                <h3>{item.title}</h3>
+                                <p>{item.body}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : null}
+            </section>
+
+            <section className="mf-land__band mf-land__band--mist" aria-label="Region">
+                <SectionHead
+                    eyebrow="Region"
+                    title="Football first, global next"
+                    body="Root where passion is lifelong, then grow hubs that feed one portable Loyalty Layer."
+                    action={
+                        <Link href="/region" className="mf-land__text-link">
+                            Explore regions
+                        </Link>
+                    }
+                />
+                {story.regions?.length > 0 ? (
+                    <div className="mf-land__card-grid mf-land__card-grid--3">
+                        {story.regions.map((item) => (
+                            <article key={item.title} className="mf-land__info-card">
+                                <p className="mf-land__info-label">{item.label}</p>
+                                <h3>{item.title}</h3>
+                                <p>{item.body}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : null}
+            </section>
+
+            <section className="mf-land__band" aria-label="Team">
+                <SectionHead
+                    eyebrow="Team"
+                    title="Built by fans"
+                    body="A lean crew with a long horizon — shipping loyalty infrastructure meant to endure longer than any single season."
+                    action={
+                        <Link href="/team" className="mf-land__text-link">
+                            Meet the team
+                        </Link>
+                    }
+                />
+                {story.team?.length > 0 ? (
+                    <div className="mf-land__team-grid">
+                        {story.team.map((member) => {
+                            const photo = teamPhotoUrl(member.photo);
+
+                            return (
+                                <article key={member.name} className="mf-land__team-card">
+                                    <div className="mf-land__team-photo">
+                                        {photo ? (
+                                            <img src={photo} alt="" loading="lazy" />
+                                        ) : (
+                                            <span aria-hidden>{member.name.slice(0, 1)}</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3>{member.name}</h3>
+                                        <p>{member.role}</p>
+                                    </div>
+                                </article>
+                            );
+                        })}
+                    </div>
+                ) : null}
+            </section>
+
+            {story.pages?.length > 0 ? (
+                <section className="mf-land__band mf-land__band--mist" aria-label="Company pages">
+                    <SectionHead
+                        eyebrow="Company"
+                        title="Go deeper"
+                        body="Full narrative pages for vision, roadmap, regions, and the people building Mad Fan."
+                    />
+                    <div className="mf-land__page-grid">
+                        {story.pages.map((page) => (
+                            <Link key={page.href} href={page.href} className="mf-land__page-card">
+                                <p className="mf-land__info-label">{page.label}</p>
+                                <h3>{page.title}</h3>
+                                <p>{page.body}</p>
+                                <span>Open</span>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            ) : null}
 
             <section className="mf-land__shelf" aria-label="Featured kits">
                 <div className="mf-land__shelf-head">
@@ -236,31 +353,25 @@ export default function Landing({ images = {}, featured = [] }) {
                 )}
             </section>
 
-            <footer className="mf-land__footer">
-                <div className="mf-land__footer-inner">
-                    <div className="mf-land__footer-top">
-                        <p>Mad Fan</p>
-                        <span>Football loyalty · Global</span>
-                    </div>
-                    <div className="mf-land__footer-grid">
-                        {FOOTER.map((column) => (
-                            <div key={column.title} className="mf-land__footer-col">
-                                <h3>{column.title}</h3>
-                                <ul>
-                                    {column.links.map((link) => (
-                                        <li key={link.href + link.label}>
-                                            <Link href={link.href}>{link.label}</Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                    <p className="mf-land__legal">
-                        © {new Date().getFullYear()} Mad Fan. Belonging, contribution, and loyalty as identity.
+            <section className="mf-land__cta" aria-label="Join">
+                <div className="mf-land__cta-inner">
+                    <p className="mf-land__eyebrow">Season 01 is live</p>
+                    <h2>Claim your spot. Build your passport.</h2>
+                    <p>
+                        Join the waitlist campaign, create your Fan Passport, and start earning on the terrace.
                     </p>
+                    <div className="mf-land__hero-actions">
+                        <Link href="/campaign" className="mf-land__pill mf-land__pill--light">
+                            Enter campaign
+                        </Link>
+                        <Link href="/register" className="mf-land__pill mf-land__pill--ghost">
+                            Create account
+                        </Link>
+                    </div>
                 </div>
-            </footer>
+            </section>
+
+            <LandingFooter />
         </div>
     );
 }
