@@ -160,6 +160,26 @@ test('local CSP rewrites ipv6 vite hot origins to 127.0.0.1', function () {
     }
 });
 
+test('local CSP allows reverb websocket origins', function () {
+    config([
+        'broadcasting.default' => 'reverb',
+        'broadcasting.connections.reverb.options' => [
+            'host' => 'localhost',
+            'port' => 8080,
+            'scheme' => 'http',
+        ],
+    ]);
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+    expect($csp)
+        ->toContain('ws://localhost:8080')
+        ->toContain('ws://127.0.0.1:8080')
+        ->toContain('wss://localhost:8080')
+        ->toMatch('/connect-src[^;]*ws:\/\/127\.0\.0\.1:8080/');
+});
+
 test('fan layout injects vite react refresh preamble before entry when hot', function () {
     $this->withVite();
 

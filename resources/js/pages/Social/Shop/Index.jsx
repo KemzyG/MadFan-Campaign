@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
@@ -99,6 +99,149 @@ function JerseyCard({ jersey, index = 0, compact = false }) {
     );
 }
 
+function HeroKitCard({ jersey, isActive = false }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
+    return (
+        <Link
+            href={`/social/shop/${jersey.slug}`}
+            className="mf-shop-hero-kit"
+            prefetch
+            aria-hidden={!isActive}
+            tabIndex={isActive ? 0 : -1}
+        >
+            <div className="mf-shop-hero-kit__media">
+                {jersey.image_url ? (
+                    <img
+                        src={jersey.image_url}
+                        alt=""
+                        className="mf-shop-hero-kit__img"
+                        loading={isActive ? 'eager' : 'lazy'}
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
+                ) : (
+                    <div className="mf-shop-hero-kit__placeholder">
+                        <ClubCrest club={jersey.club} />
+                    </div>
+                )}
+                {jersey.kit_kind ? (
+                    <span className="mf-shop-hero-kit__kind mf-mono">{jersey.kit_kind}</span>
+                ) : null}
+            </div>
+            <div className="mf-shop-hero-kit__body">
+                <p className="mf-shop-hero-kit__club mf-text-caption">
+                    {jersey.club?.name || 'Mad Fan kit'}
+                </p>
+                <p className="mf-shop-hero-kit__name mf-display">{jersey.name}</p>
+                <p className="mf-shop-hero-kit__price mf-mono">£{jersey.price}</p>
+            </div>
+        </Link>
+    );
+}
+
+function HeroKitCarousel({ jerseys = [] }) {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const touchStartX = useRef(null);
+
+    useEffect(() => {
+        setActiveIndex(0);
+    }, [jerseys]);
+
+    useEffect(() => {
+        if (jerseys.length <= 1) {
+            return undefined;
+        }
+
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        if (motionQuery.matches) {
+            return undefined;
+        }
+
+        const timer = window.setInterval(() => {
+            setActiveIndex((current) => (current + 1) % jerseys.length);
+        }, 4500);
+
+        return () => window.clearInterval(timer);
+    }, [jerseys.length]);
+
+    const goTo = (index) => {
+        if (jerseys.length === 0) {
+            return;
+        }
+
+        const wrapped =
+            ((index % jerseys.length) + jerseys.length) % jerseys.length;
+
+        setActiveIndex(wrapped);
+    };
+
+    const onTouchStart = (event) => {
+        touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+    };
+
+    const onTouchEnd = (event) => {
+        if (touchStartX.current === null) {
+            return;
+        }
+
+        const delta = touchStartX.current - (event.changedTouches[0]?.clientX ?? touchStartX.current);
+
+        if (Math.abs(delta) > 42) {
+            goTo(activeIndex + (delta > 0 ? 1 : -1));
+        }
+
+        touchStartX.current = null;
+    };
+
+    if (jerseys.length === 0) {
+        return null;
+    }
+
+    return (
+        <div
+            className="mf-shop-mall-hero__carousel"
+            aria-roledescription="carousel"
+            aria-label="Featured kits"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+        >
+            <div
+                className="mf-shop-mall-hero__track"
+                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+            >
+                {jerseys.map((jersey, index) => (
+                    <div
+                        key={jersey.id}
+                        className="mf-shop-mall-hero__slide"
+                        role="group"
+                        aria-roledescription="slide"
+                        aria-label={`${index + 1} of ${jerseys.length}`}
+                    >
+                        <HeroKitCard jersey={jersey} isActive={index === activeIndex} />
+                    </div>
+                ))}
+            </div>
+            {jerseys.length > 1 ? (
+                <div className="mf-shop-mall-hero__dots" role="tablist" aria-label="Choose kit">
+                    {jerseys.map((jersey, index) => (
+                        <button
+                            key={jersey.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={index === activeIndex}
+                            aria-label={`Show ${jersey.name}`}
+                            className={index === activeIndex ? 'is-active' : ''}
+                            onClick={() => goTo(index)}
+                        />
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
 function FeaturedCard({ jersey }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
@@ -166,6 +309,60 @@ function FeaturedSwiper({ jerseys = [] }) {
                 </div>
             </div>
         </section>
+    );
+}
+
+const CATEGORY_SEGMENTS = {
+    home: { abbr: 'H', aria: 'Home kits' },
+    away: { abbr: 'A', aria: 'Away kits' },
+    third: { abbr: '3', aria: 'Third kits' },
+    training: { abbr: 'TR', aria: 'Training kits' },
+    terrace: { abbr: 'T', aria: 'Terrace tees' },
+};
+
+function categoryAbbr(slug) {
+    return CATEGORY_SEGMENTS[slug]?.abbr ?? slug.slice(0, 2).toUpperCase();
+}
+
+function categoryAria(category) {
+    const hint = CATEGORY_SEGMENTS[category.slug];
+
+    return hint ? `${hint.aria}, ${category.count} kits` : `${category.label}, ${category.count} kits`;
+}
+
+function CategorySegment({ categories, activeCategory, onSelect }) {
+    return (
+        <div className="mf-shop-category-segment mf-segment" role="tablist" aria-label="Kit category">
+            <button
+                type="button"
+                role="tab"
+                aria-selected={!activeCategory}
+                className={!activeCategory ? 'is-active' : ''}
+                onClick={() => onSelect(undefined)}
+            >
+                All
+            </button>
+            {categories.map((category) => (
+                <button
+                    key={category.slug}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeCategory === category.slug}
+                    aria-label={categoryAria(category)}
+                    className={[
+                        activeCategory === category.slug ? 'is-active' : '',
+                        `mf-shop-segment--${category.slug}`,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    onClick={() => onSelect(category.slug)}
+                >
+                    <span className="mf-shop-segment__mark mf-mono" aria-hidden>
+                        {categoryAbbr(category.slug)}
+                    </span>
+                </button>
+            ))}
+        </div>
     );
 }
 
@@ -257,31 +454,45 @@ export default function Index({
     const selectedCategory = categories.find(
         (category) => category.slug === activeFilters.category,
     );
+    const heroKits = useMemo(() => {
+        const fromFeatured = featured.slice(0, 4);
+
+        if (fromFeatured.length >= 4 || jerseys.length === 0) {
+            return fromFeatured;
+        }
+
+        const seen = new Set(fromFeatured.map((jersey) => jersey.id));
+        const extras = jerseys
+            .filter((jersey) => jersey.purchasable && !seen.has(jersey.id))
+            .slice(0, 4 - fromFeatured.length);
+
+        return [...fromFeatured, ...extras];
+    }, [featured, jerseys]);
 
     return (
-        <SocialShell title="Shop">
+        <SocialShell title="Store">
             <Head title="Jersey mall — Mad Fan Social" />
 
             <div className="mf-shop mf-shop--mall">
                 <header className="mf-shop-mall-hero">
-                    <div>
-                        <p className="mf-tickets-kicker mf-text-caption">Mad Fan mall</p>
-                        <h1 className="mf-empty-title mf-tickets-title">Jersey floor</h1>
-                        <div className="mf-shop-hero-links">
-                            <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
-                                Bag
-                                {cart_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{cart_count}</span>
-                                ) : null}
-                            </Link>
-                            <Link href="/social/shop/orders" className="mf-tickets-mine-link" prefetch>
-                                My orders
-                            </Link>
+                    <div className="mf-shop-mall-hero__bg" aria-hidden />
+                    <div className="mf-shop-mall-hero__scrim" aria-hidden />
+                    <div className="mf-shop-mall-hero__inner">
+                        <div className="mf-shop-mall-hero__head">
+                            <p className="mf-tickets-kicker mf-text-caption">Mad Fan mall</p>
+                            <div className="mf-shop-hero-links">
+                                <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
+                                    Bag
+                                    {cart_count > 0 ? (
+                                        <span className="mf-mono mf-tickets-count">{cart_count}</span>
+                                    ) : null}
+                                </Link>
+                                <Link href="/social/shop/orders" className="mf-tickets-mine-link" prefetch>
+                                    My orders
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                    <div className="mf-shop-mall-hero__rail" aria-hidden>
-                        <span className="mf-shop-mall-hero__mark mf-display">KIT</span>
-                        <span className="mf-shop-mall-hero__mark mf-display">ROOM</span>
+                        <HeroKitCarousel jerseys={heroKits} />
                     </div>
                 </header>
 
@@ -289,28 +500,18 @@ export default function Index({
 
                 <div className="mf-shop-browse-stack">
                     {categories.length > 0 ? (
-                        <BrowseChips label="By category">
-                            <BrowseChip
-                                active={!activeFilters.category}
-                                onClick={() => updateFilters(activeFilters, { category: undefined })}
-                                ariaLabel="All categories"
-                            >
-                                All kits
-                            </BrowseChip>
-                            {categories.map((category) => (
-                                <BrowseChip
-                                    key={category.slug}
-                                    active={activeFilters.category === category.slug}
-                                    onClick={() =>
-                                        toggleFilter(activeFilters, 'category', category.slug)
-                                    }
-                                    ariaLabel={`${category.label}, ${category.count} kits`}
-                                >
-                                    {category.label}
-                                    <span className="mf-shop-browse__count mf-mono">{category.count}</span>
-                                </BrowseChip>
-                            ))}
-                        </BrowseChips>
+                        <CategorySegment
+                            categories={categories}
+                            activeCategory={activeFilters.category || undefined}
+                            onSelect={(category) =>
+                                updateFilters(activeFilters, {
+                                    category:
+                                        category && activeFilters.category === category
+                                            ? undefined
+                                            : category,
+                                })
+                            }
+                        />
                     ) : null}
 
                     {leagues.length > 0 ? (
@@ -417,7 +618,7 @@ export default function Index({
 
                     <p className="mf-shop-toolbar__count mf-mono">
                         {jerseys.length} {jerseys.length === 1 ? 'kit' : 'kits'}
-                        {selectedCategory ? ` · ${selectedCategory.label}` : ''}
+                        {selectedCategory ? ` · ${categoryAbbr(selectedCategory.slug)}` : ''}
                         {selectedLeague ? ` · ${selectedLeague.short || selectedLeague.name}` : ''}
                         {selectedClub ? ` · ${selectedClub.short || selectedClub.name}` : ''}
                     </p>

@@ -54,6 +54,8 @@ class SecurityHeaders
             $workerSrc = array_merge($workerSrc, $viteOrigins);
         }
 
+        $connectSrc = array_merge($connectSrc, $this->reverbConnectOrigins());
+
         return implode('; ', [
             "default-src 'self'",
             "base-uri 'self'",
@@ -118,5 +120,41 @@ class SecurityHeaders
         $normalized = preg_replace('#^(https?://)\[::1\]#i', '${1}127.0.0.1', $url);
 
         return is_string($normalized) ? $normalized : $url;
+    }
+
+    /**
+     * Allow Laravel Echo / Reverb WebSocket endpoints in connect-src.
+     * Local HTTP apps connect to ws://host:port; HTTPS production uses same-origin wss (self).
+     *
+     * @return list<string>
+     */
+    private function reverbConnectOrigins(): array
+    {
+        if (config('broadcasting.default') !== 'reverb') {
+            return [];
+        }
+
+        $options = config('broadcasting.connections.reverb.options', []);
+        $host = trim((string) ($options['host'] ?? ''));
+        $port = (int) ($options['port'] ?? 8080);
+        $scheme = strtolower((string) ($options['scheme'] ?? 'http'));
+
+        $origins = [];
+        $loopbackHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
+        $isLoopbackHost = $host === '' || in_array(strtolower($host), $loopbackHosts, true);
+
+        if ($host !== '' && ! $isLoopbackHost) {
+            $wsScheme = $scheme === 'https' ? 'wss' : 'ws';
+            $origins[] = "{$wsScheme}://{$host}:{$port}";
+        }
+
+        if ($this->allowsViteDevServer() || app()->environment('local')) {
+            foreach (['localhost', '127.0.0.1'] as $loopback) {
+                $origins[] = "ws://{$loopback}:{$port}";
+                $origins[] = "wss://{$loopback}:{$port}";
+            }
+        }
+
+        return array_values(array_unique($origins));
     }
 }

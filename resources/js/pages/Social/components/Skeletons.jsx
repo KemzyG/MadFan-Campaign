@@ -183,21 +183,40 @@ export function TicketWalletSkeleton({ count = 2 }) {
     );
 }
 
-export function ShopMallSkeleton({ count = 6 }) {
+export function ShopMallSkeleton({ count = 9 }) {
     return (
-        <div className="mf-skel-page mf-skel-shop" aria-busy="true" aria-label="Loading shop">
+        <div className="mf-skel-page mf-skel-shop" aria-busy="true" aria-label="Loading store">
             <div className="mf-skel-shop__hero">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--display" />
-                <Bone className="mf-skel-line mf-skel-line--body-short" />
+                <Bone className="mf-skel-shop__hero-bg" />
+                <div className="mf-skel-shop__hero-inner">
+                    <div className="mf-skel-shop__hero-head">
+                        <Bone className="mf-skel-line mf-skel-line--caption" />
+                        <Bone className="mf-skel-line mf-skel-line--body-short" />
+                    </div>
+                    <Bone className="mf-skel-shop__hero-carousel" />
+                </div>
+            </div>
+            <div className="mf-skel-shop__featured">
+                <div className="mf-skel-shop__featured-head">
+                    <Bone className="mf-skel-line mf-skel-line--caption" />
+                    <Bone className="mf-skel-line mf-skel-line--title" />
+                </div>
+                <div className="mf-skel-shop__featured-rail">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Bone
+                            key={index}
+                            className="mf-skel-shop__featured-card"
+                            style={{ '--mf-skel-stagger': `${index * 40}ms` }}
+                        />
+                    ))}
+                </div>
             </div>
             <div className="mf-skel-shop__toolbar">
                 <Bone className="mf-skel-shop__filter" />
                 <Bone className="mf-skel-chip mf-skel-chip--wide" />
             </div>
-            <div className="mf-skel-shop__browse">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-chip mf-skel-chip--wide" />
+            <div className="mf-skel-shop__segment">
+                <Bone className="mf-skel-segment" />
             </div>
             <div className="mf-skel-shop__browse">
                 <Bone className="mf-skel-line mf-skel-line--caption" />

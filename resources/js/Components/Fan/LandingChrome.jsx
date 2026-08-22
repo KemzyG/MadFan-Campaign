@@ -4,7 +4,7 @@ import FanBrandLogo from './FanBrandLogo';
 export const LANDING_NAV = [
     { href: '/campaign', label: 'Campaign' },
     { href: '/social', label: 'Social' },
-    { href: '/social/shop', label: 'Shop' },
+    { href: '/social/shop', label: 'Store' },
     { href: '/about', label: 'About' },
     { href: '/roadmap', label: 'Roadmap' },
     { href: '/team', label: 'Team' },
@@ -16,7 +16,7 @@ export const LANDING_FOOTER = [
         links: [
             { href: '/campaign', label: 'Campaign' },
             { href: '/social', label: 'Social' },
-            { href: '/social/shop', label: 'Shop' },
+            { href: '/social/shop', label: 'Store' },
             { href: '/social/fixtures', label: 'Fixtures' },
         ],
     },
@@ -129,7 +129,7 @@ export function LandingNav({ activeHref }) {
                 <Link href="/social" className="mf-land__icon" aria-label="Social">
                     <HeartIcon />
                 </Link>
-                <Link href="/social/shop" className="mf-land__icon" aria-label="Shop">
+                <Link href="/social/shop" className="mf-land__icon" aria-label="Store">
                     <BagIcon />
                 </Link>
             </div>

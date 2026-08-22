@@ -2,17 +2,20 @@
 
 namespace App\Services\Social;
 
+use App\Actions\Social\CreateSocialPost;
 use App\Enums\StageParticipantRole;
 use App\Enums\StageSignalType;
 use App\Enums\StageStatus;
 use App\Events\Social\StageMessageCreated;
 use App\Events\Social\StageRoomUpdated;
 use App\Events\Social\StageSignalCreated;
+use App\Models\Post;
 use App\Models\Stage;
 use App\Models\StageMessage;
 use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Models\User;
+use App\Support\SocialBroadcast;
 use App\Support\SocialRealtime;
 use App\Support\StageVoice;
 use App\Support\WebRtcIce;
@@ -43,6 +46,7 @@ class StageService
     {
         $stages = Stage::query()
             ->where('status', StageStatus::Live)
+            ->whereHas('participants', fn ($q) => $q->whereNull('left_at'))
             ->with([
                 'host:id,name,handle,fan_id,avatar_path,avatar_emoji',
                 'club:id,name,short,logo',
@@ -84,7 +88,7 @@ class StageService
             ]);
 
             $stage = $stage->fresh(['host', 'club']);
-            StageRoomUpdated::dispatch($stage, 'created');
+            SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage, 'created'));
 
             return $stage;
         });
@@ -102,6 +106,12 @@ class StageService
             'stage_id' => $stage->id,
             'user_id' => $user->id,
         ]);
+
+        if ($participant->exists && $participant->banned_at !== null) {
+            throw ValidationException::withMessages([
+                'stage' => 'You were removed from this Stage.',
+            ]);
+        }
 
         if ($participant->exists && $participant->left_at === null) {
             $participant->last_seen_at = now();
@@ -122,7 +132,7 @@ class StageService
         ]);
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'joined');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'joined'));
 
         return $participant;
     }
@@ -145,7 +155,7 @@ class StageService
         $participant->speak_requested_at = null;
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'left');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'left'));
     }
 
     public function end(Stage $stage, User $user): void
@@ -172,7 +182,7 @@ class StageService
                 ->update(['consumed_at' => now()]);
         });
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'ended');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'ended'));
     }
 
     public function startVoice(Stage $stage, User $user): void
@@ -189,7 +199,7 @@ class StageService
             $host->save();
         }
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'voice');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'voice'));
     }
 
     public function requestSpeak(Stage $stage, User $user): void
@@ -205,7 +215,7 @@ class StageService
         $participant->speak_requested_at = now();
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'speak_request');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'speak_request'));
     }
 
     public function promote(Stage $stage, User $host, User $target): void
@@ -237,7 +247,7 @@ class StageService
         $participant->is_muted = true;
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'promote');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'promote'));
     }
 
     public function demote(Stage $stage, User $host, User $target): void
@@ -263,7 +273,7 @@ class StageService
         $participant->speak_requested_at = null;
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'demote');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'demote'));
     }
 
     public function setMuted(Stage $stage, User $user, bool $muted): void
@@ -277,7 +287,120 @@ class StageService
         $participant->is_muted = $muted;
         $participant->save();
 
-        StageRoomUpdated::dispatch($stage->fresh(), 'mute');
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'mute'));
+    }
+
+    public function hostSetMuted(Stage $stage, User $host, User $target, bool $muted): void
+    {
+        if ((int) $stage->host_id !== (int) $host->id || ! $stage->isLive()) {
+            abort(403);
+        }
+
+        if ((int) $host->id === (int) $target->id) {
+            throw ValidationException::withMessages([
+                'user' => 'Use the mic control to mute yourself.',
+            ]);
+        }
+
+        $participant = $this->activeParticipant($stage, $target);
+
+        if ($participant === null || ! $participant->isOnStage()) {
+            throw ValidationException::withMessages([
+                'user' => 'That fan is not on stage.',
+            ]);
+        }
+
+        $participant->is_muted = $muted;
+        $participant->save();
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'host_mute'));
+    }
+
+    public function ban(Stage $stage, User $host, User $target): void
+    {
+        if ((int) $stage->host_id !== (int) $host->id || ! $stage->isLive()) {
+            abort(403);
+        }
+
+        if ((int) $host->id === (int) $target->id) {
+            throw ValidationException::withMessages([
+                'user' => 'Host cannot ban themselves.',
+            ]);
+        }
+
+        $participant = $this->activeParticipant($stage, $target);
+
+        if ($participant === null) {
+            return;
+        }
+
+        $participant->left_at = now();
+        $participant->banned_at = now();
+        $participant->speak_requested_at = null;
+        $participant->save();
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'ban'));
+    }
+
+    public function transferHost(Stage $stage, User $currentHost, User $newHost): void
+    {
+        if ((int) $stage->host_id !== (int) $currentHost->id || ! $stage->isLive()) {
+            abort(403);
+        }
+
+        if ((int) $currentHost->id === (int) $newHost->id) {
+            return;
+        }
+
+        $newParticipant = $this->activeParticipant($stage, $newHost);
+
+        if ($newParticipant === null) {
+            throw ValidationException::withMessages([
+                'user' => 'That fan must be in the Stage to become host.',
+            ]);
+        }
+
+        DB::transaction(function () use ($stage, $currentHost, $newParticipant): void {
+            $oldHostParticipant = $this->activeParticipant($stage, $currentHost);
+
+            $stage->update(['host_id' => $newParticipant->user_id]);
+
+            if ($oldHostParticipant !== null) {
+                $oldHostParticipant->role = StageParticipantRole::Speaker;
+                $oldHostParticipant->is_muted = true;
+                $oldHostParticipant->save();
+            }
+
+            $newParticipant->role = StageParticipantRole::Host;
+            $newParticipant->is_muted = false;
+            $newParticipant->speak_requested_at = null;
+            $newParticipant->save();
+        });
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'transfer_host'));
+    }
+
+    public function shareToFeed(Stage $stage, User $user, ?string $note = null): Post
+    {
+        if (! $stage->isLive()) {
+            throw ValidationException::withMessages([
+                'stage' => 'Only live Stages can be shared.',
+            ]);
+        }
+
+        if ($this->activeParticipant($stage, $user) === null) {
+            throw ValidationException::withMessages([
+                'stage' => 'Join the Stage before sharing it.',
+            ]);
+        }
+
+        $url = route('social.stage.show', $stage);
+        $note = trim((string) $note);
+        $body = $note !== ''
+            ? $note."\n".$url
+            : 'Live on Stage: '.$stage->title."\n".$url;
+
+        return app(CreateSocialPost::class)->handle($user, ['body' => $body]);
     }
 
     public function heartbeat(Stage $stage, User $user): void
@@ -298,7 +421,7 @@ class StageService
         ]);
 
         $message->load('user');
-        StageMessageCreated::dispatch($message);
+        SocialBroadcast::try(fn () => StageMessageCreated::dispatch($message));
 
         return $message;
     }
@@ -331,7 +454,7 @@ class StageService
             'payload' => $payload,
         ]);
 
-        StageSignalCreated::dispatch($signal);
+        SocialBroadcast::try(fn () => StageSignalCreated::dispatch($signal));
 
         return $signal;
     }
@@ -520,6 +643,7 @@ class StageService
             'joined_at' => $participant->joined_at?->toIso8601String(),
             'user' => $this->presentUser($participant->user),
             'on_stage' => $participant->isOnStage(),
+            'banned_at' => $participant->banned_at?->toIso8601String(),
         ];
     }
 

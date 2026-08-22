@@ -42,7 +42,7 @@ export default function Show({ jersey, cart_count = 0 }) {
 
     return (
         <SocialShell title={jersey.name} backHref="/social/shop">
-            <Head title={`${jersey.name} — Mad Fan Shop`} />
+            <Head title={`${jersey.name} — Mad Fan Store`} />
 
             <div className="mf-shop mf-shop--detail">
                 <div className="mf-shop-detail">

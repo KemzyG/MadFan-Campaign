@@ -104,6 +104,26 @@ class StagePolicy
         return $participant !== null && $participant->isOnStage();
     }
 
+    public function hostMute(User $user, Stage $stage): bool
+    {
+        return $this->manageSpeakers($user, $stage);
+    }
+
+    public function ban(User $user, Stage $stage): bool
+    {
+        return $this->manageSpeakers($user, $stage);
+    }
+
+    public function transferHost(User $user, Stage $stage): bool
+    {
+        return $this->end($user, $stage);
+    }
+
+    public function share(User $user, Stage $stage): bool
+    {
+        return $this->sendMessage($user, $stage);
+    }
+
     private function activeParticipant(Stage $stage, User $user): ?StageParticipant
     {
         return StageParticipant::query()

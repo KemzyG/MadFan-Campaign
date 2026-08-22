@@ -4,7 +4,7 @@ import SocialShell from '../../../Layouts/SocialShell';
 export default function OrderShow({ order }) {
     return (
         <SocialShell title="Order" backHref="/social/shop/orders">
-            <Head title={`Order ${order.code} — Mad Fan Shop`} />
+            <Head title={`Order ${order.code} — Mad Fan Store`} />
 
             <div className="mf-shop">
                 <div className="mf-tickets-hero mf-tickets-hero--compact">

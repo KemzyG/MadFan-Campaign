@@ -8,6 +8,7 @@ use App\Models\Channel;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\Social\ChatService;
+use App\Support\SocialBroadcast;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -80,7 +81,7 @@ class SendChatMessage
 
         $message->load('author');
 
-        ClubChatMessageCreated::dispatch($message);
+        SocialBroadcast::try(fn () => ClubChatMessageCreated::dispatch($message));
 
         return $message;
     }

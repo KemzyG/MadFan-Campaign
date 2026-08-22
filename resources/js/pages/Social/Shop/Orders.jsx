@@ -4,7 +4,7 @@ import SocialShell from '../../../Layouts/SocialShell';
 export default function Orders({ orders = [], cart_count = 0 }) {
     return (
         <SocialShell title="Orders" backHref="/social/shop">
-            <Head title="My jersey orders — Mad Fan Shop" />
+            <Head title="My jersey orders — Mad Fan Store" />
 
             <div className="mf-shop">
                 <div className="mf-tickets-hero mf-tickets-hero--compact">

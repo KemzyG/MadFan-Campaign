@@ -19,6 +19,8 @@ pest()->extend(TestCase::class)
 
 pest()->beforeEach(function (): void {
     app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+    config(['broadcasting.default' => 'null']);
 })->in('Feature');
 
 /*

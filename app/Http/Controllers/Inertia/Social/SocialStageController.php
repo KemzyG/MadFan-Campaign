@@ -121,4 +121,19 @@ class SocialStageController extends Controller
 
         return back()->with('success', 'Voice is live - allow mic access.');
     }
+
+    public function share(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('share', $stage);
+
+        $validated = $request->validate([
+            'body' => ['nullable', 'string', 'max:280'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $stages->shareToFeed($stage, $user, $validated['body'] ?? null);
+
+        return back()->with('success', 'Shared to the terrace feed.');
+    }
 }

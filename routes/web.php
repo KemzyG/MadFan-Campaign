@@ -253,6 +253,18 @@ Route::middleware('app.maintenance')->group(function () {
                 Route::post('/stage/{stage}/mute', [SocialStageParticipantController::class, 'mute'])
                     ->middleware('throttle:60,1')
                     ->name('stage.mute');
+                Route::post('/stage/{stage}/participants/{user}/host-mute', [SocialStageParticipantController::class, 'hostMute'])
+                    ->middleware('throttle:60,1')
+                    ->name('stage.participants.host-mute');
+                Route::post('/stage/{stage}/participants/{user}/ban', [SocialStageParticipantController::class, 'ban'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.participants.ban');
+                Route::post('/stage/{stage}/transfer-host', [SocialStageParticipantController::class, 'transferHost'])
+                    ->middleware('throttle:10,1')
+                    ->name('stage.transfer-host');
+                Route::post('/stage/{stage}/share', [SocialStageController::class, 'share'])
+                    ->middleware('throttle:10,1')
+                    ->name('stage.share');
                 Route::get('/stage/{stage}/signals', [SocialStageSignalController::class, 'index'])
                     ->middleware('throttle:stage-signal-poll')
                     ->name('stage.signals.index');

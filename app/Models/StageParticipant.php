@@ -21,6 +21,7 @@ class StageParticipant extends Model
         'speak_requested_at',
         'joined_at',
         'left_at',
+        'banned_at',
         'last_seen_at',
     ];
 
@@ -35,6 +36,7 @@ class StageParticipant extends Model
             'speak_requested_at' => 'datetime',
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
+            'banned_at' => 'datetime',
             'last_seen_at' => 'datetime',
         ];
     }

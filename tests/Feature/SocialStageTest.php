@@ -4,7 +4,9 @@ use App\Enums\StageParticipantRole;
 use App\Enums\StageSignalType;
 use App\Enums\StageStatus;
 use App\Models\Club;
+use App\Models\Post;
 use App\Models\Stage;
+use App\Models\StageMessage;
 use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Support\ApplicationSettings;
@@ -595,4 +597,160 @@ test('stage signal posts accept ice bursts and batched candidates', function () 
             'stage-signal-post|'.($request->user()?->id ?: $request->ip()),
         ));
     }
+});
+
+test('stage index excludes ended stages and rooms without active participants', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+
+    $live = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Active terrace',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $live->id,
+        'user_id' => $host->id,
+    ]);
+
+    Stage::factory()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Ghost room',
+        'status' => StageStatus::Ended,
+        'ended_at' => now(),
+    ]);
+
+    $this->actingAs($host)
+        ->get('/social/stage')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('stages', 1)
+            ->where('stages.0.id', $live->id));
+
+    StageParticipant::query()
+        ->where('stage_id', $live->id)
+        ->update(['left_at' => now()]);
+
+    $this->actingAs($host)
+        ->get('/social/stage')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->has('stages', 0));
+});
+
+test('stage message store succeeds when reverb is unavailable', function () {
+    $previousBroadcasting = config('broadcasting');
+
+    config([
+        'broadcasting.default' => 'reverb',
+        'broadcasting.connections.reverb.key' => 'test-key',
+        'broadcasting.connections.reverb.secret' => 'secret',
+        'broadcasting.connections.reverb.app_id' => '1',
+        'broadcasting.connections.reverb.options' => [
+            'host' => 'localhost',
+            'port' => 8080,
+            'scheme' => 'http',
+        ],
+    ]);
+
+    try {
+        $club = Club::factory()->create();
+        $host = socialReadyUser($club);
+        $guest = socialReadyUser($club);
+
+        $stage = Stage::factory()->live()->create([
+            'host_id' => $host->id,
+            'club_id' => $club->id,
+            'title' => 'Reverb down room',
+        ]);
+
+        StageParticipant::factory()->host()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $host->id,
+        ]);
+
+        StageParticipant::factory()->listener()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $guest->id,
+        ]);
+
+        $this->actingAs($guest)
+            ->post("/social/stage/{$stage->id}/messages", ['body' => 'Still lands when Reverb is down'])
+            ->assertRedirect();
+
+        expect(StageMessage::query()
+            ->where('stage_id', $stage->id)
+            ->value('body'))->toBe('Still lands when Reverb is down');
+    } finally {
+        config(['broadcasting' => $previousBroadcasting]);
+    }
+});
+
+test('host can ban transfer host mute speakers and share a live stage', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+    $speaker = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Host tools test',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $guest->id,
+    ]);
+
+    StageParticipant::factory()->speaker()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $speaker->id,
+        'is_muted' => false,
+    ]);
+
+    $this->actingAs($host)
+        ->post("/social/stage/{$stage->id}/participants/{$speaker->id}/host-mute", ['muted' => 1])
+        ->assertRedirect();
+
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $speaker->id)
+        ->value('is_muted'))->toBeTrue();
+
+    $this->actingAs($host)
+        ->post("/social/stage/{$stage->id}/transfer-host", ['user_id' => $guest->id])
+        ->assertRedirect();
+
+    expect($stage->fresh()->host_id)->toBe($guest->id);
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $guest->id)
+        ->value('role'))->toBe(StageParticipantRole::Host);
+
+    $this->actingAs($guest)
+        ->post("/social/stage/{$stage->id}/participants/{$host->id}/ban")
+        ->assertRedirect();
+
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $host->id)
+        ->whereNotNull('banned_at')
+        ->exists())->toBeTrue();
+
+    $this->actingAs($host)
+        ->post("/social/stage/{$stage->id}/join")
+        ->assertSessionHasErrors('stage');
+
+    $this->actingAs($guest)
+        ->post("/social/stage/{$stage->id}/share")
+        ->assertRedirect();
+
+    expect(Post::query()->where('author_id', $guest->id)->exists())->toBeTrue();
 });

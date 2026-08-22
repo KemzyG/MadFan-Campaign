@@ -18,7 +18,7 @@ export default function Checkout({ cart, defaults }) {
 
     return (
         <SocialShell title="Checkout" backHref="/social/shop/cart">
-            <Head title="Checkout — Mad Fan Shop" />
+            <Head title="Checkout — Mad Fan Store" />
 
             <div className="mf-shop">
                 <div className="mf-tickets-hero mf-tickets-hero--compact">

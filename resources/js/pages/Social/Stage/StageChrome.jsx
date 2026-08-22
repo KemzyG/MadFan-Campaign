@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { StageRoomSkeleton } from '../components/Skeletons';
 import StageChatModal from './StageChatModal';
+import { IconMinimize } from './StageIcons';
 import { useStageSessionOptional } from './StageSessionContext';
 import StageRoom from './StageRoom';
 
@@ -72,8 +73,8 @@ function StageModal({ stageTitle, onMinimize, chatOpen, onCloseChat, children })
                         <span className="mf-stage-live-dot" aria-hidden />
                         <span className="mf-display mf-stage-modal__brand-label">Stage</span>
                     </div>
-                    <button type="button" className="mf-stage-modal__close" onClick={onMinimize}>
-                        Minimize · keep listening
+                    <button type="button" className="mf-stage-icon-btn mf-stage-modal__close" aria-label="Minimize and keep listening" title="Minimize" onClick={onMinimize}>
+                        <IconMinimize />
                     </button>
                 </div>
                 <div className="mf-stage-modal__body">{children}</div>

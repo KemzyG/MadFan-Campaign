@@ -56,4 +56,44 @@ class SocialStageParticipantController extends Controller
 
         return back();
     }
+
+    public function hostMute(Request $request, Stage $stage, User $user, StageService $stages): RedirectResponse
+    {
+        $this->authorize('hostMute', $stage);
+
+        $muted = $request->boolean('muted', true);
+
+        /** @var User $host */
+        $host = $request->user();
+        $stages->hostSetMuted($stage, $host, $user, $muted);
+
+        return back()->with('success', $muted ? 'Speaker muted.' : 'Speaker unmuted.');
+    }
+
+    public function ban(Request $request, Stage $stage, User $user, StageService $stages): RedirectResponse
+    {
+        $this->authorize('ban', $stage);
+
+        /** @var User $host */
+        $host = $request->user();
+        $stages->ban($stage, $host, $user);
+
+        return back()->with('success', 'Removed from Stage.');
+    }
+
+    public function transferHost(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('transferHost', $stage);
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        /** @var User $host */
+        $host = $request->user();
+        $newHost = User::query()->findOrFail($validated['user_id']);
+        $stages->transferHost($stage, $host, $newHost);
+
+        return back()->with('success', 'Host transferred.');
+    }
 }

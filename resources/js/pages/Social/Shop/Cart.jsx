@@ -52,7 +52,7 @@ export default function Cart({ cart }) {
 
     return (
         <SocialShell title="Bag" backHref="/social/shop">
-            <Head title="Bag — Mad Fan Shop" />
+            <Head title="Bag — Mad Fan Store" />
 
             <div className="mf-shop">
                 <div className="mf-tickets-hero mf-tickets-hero--compact">

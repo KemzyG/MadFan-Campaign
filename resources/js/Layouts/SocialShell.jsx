@@ -604,7 +604,7 @@ export default function SocialShell({ children, title, showTabs = true, backHref
         },
         {
             href: '/social/shop',
-            label: 'Shop',
+            label: 'Store',
             icon: IconShop,
             active: pathMatches(current, '/social/shop'),
         },

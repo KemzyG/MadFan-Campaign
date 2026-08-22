@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
 import { useStageSession } from './StageSessionContext';
+import { IconClose } from './StageIcons';
 
 /**
  * Separate room-chat sheet stacked above the Stage modal.
@@ -85,8 +86,8 @@ export default function StageChatModal({ onClose }) {
                     </div>
                     <div className="mf-stage-chat-modal__tools">
                         <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">{messages.length}</span>
-                        <button type="button" className="mf-stage-chat-modal__close" onClick={onClose}>
-                            Close
+                        <button type="button" className="mf-stage-icon-btn mf-stage-chat-modal__close" aria-label="Close room chat" title="Close" onClick={onClose}>
+                            <IconClose />
                         </button>
                     </div>
                 </div>

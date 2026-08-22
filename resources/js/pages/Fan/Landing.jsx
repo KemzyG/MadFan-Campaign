@@ -26,7 +26,7 @@ const CATEGORIES = [
         label: 'Kit room',
         title: 'Jerseys as matchday art',
         href: '/social/shop',
-        cta: 'Browse shop',
+        cta: 'Browse store',
     },
     {
         key: 'passport',
@@ -312,11 +312,11 @@ export default function Landing({
             <section className="mf-land__shelf" aria-label="Featured kits">
                 <LandingReveal className="mf-land__shelf-head">
                     <h2>Featured kits</h2>
-                    <Link href="/social/shop">Shop all</Link>
+                    <Link href="/social/shop">Store all</Link>
                 </LandingReveal>
                 {products.length === 0 ? (
                     <LandingReveal as="p" className="mf-land__shelf-empty">
-                        Kit drops land here once the shop is stocked.
+                        Kit drops land here once the store is stocked.
                     </LandingReveal>
                 ) : (
                     <LandingReveal className="mf-land__products" stagger>
