@@ -127,6 +127,9 @@ export default function StageRoom() {
     const audioBlocked =
         voiceEnabled && isLive && !isHearing && statusLower.includes('tap anywhere');
     const micNeedsRecovery = onStage && voiceEnabled && isLive && isMicBlockedStatus(voiceStatus);
+    const chatAllowed = stage?.allow_chat !== false;
+    const inviteAllowed = stage?.allow_invite !== false;
+    const speakRequestsAllowed = stage?.allow_speak_requests !== false;
 
     function flashVisit(options = {}) {
         return withRollbackFlash(reportError, {
@@ -186,6 +189,11 @@ export default function StageRoom() {
                     </div>
 
                     <p className="mf-stage-room__title">{stage?.title}</p>
+                    {stage?.description ? (
+                        <p className="mf-stage-room__description mf-text-meta text-[var(--mf-muted)]">
+                            {stage.description}
+                        </p>
+                    ) : null}
 
                     <div className="mf-stage-room__identity">
                         <div className="mf-stage-room__host">
@@ -230,15 +238,17 @@ export default function StageRoom() {
                         <IconMinimize />
                     </StageIconButton>
 
-                    <StageIconButton
-                        label={chatUnread > 0 ? `Chat, ${chatUnread} unread` : 'Open chat'}
-                        badge={chatUnread > 0 ? (chatUnread > 99 ? '99+' : chatUnread) : null}
-                        onClick={openChat}
-                    >
-                        <IconChat />
-                    </StageIconButton>
+                    {chatAllowed ? (
+                        <StageIconButton
+                            label={chatUnread > 0 ? `Chat, ${chatUnread} unread` : 'Open chat'}
+                            badge={chatUnread > 0 ? (chatUnread > 99 ? '99+' : chatUnread) : null}
+                            onClick={openChat}
+                        >
+                            <IconChat />
+                        </StageIconButton>
+                    ) : null}
 
-                    {isLive && me ? (
+                    {isLive && me && inviteAllowed ? (
                         <StageIconButton
                             label="Share stage to feed"
                             pitch
@@ -316,7 +326,7 @@ export default function StageRoom() {
                         </StageIconButton>
                     ) : null}
 
-                    {me?.role === 'listener' && isLive ? (
+                    {me?.role === 'listener' && isLive && speakRequestsAllowed ? (
                         <StageIconButton
                             label={me.speak_requested_at ? 'Hand raised' : 'Request to speak'}
                             active={Boolean(me.speak_requested_at)}

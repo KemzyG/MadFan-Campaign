@@ -28,6 +28,8 @@ class StageService
 
     public const MAX_TITLE_LENGTH = 80;
 
+    public const MAX_DESCRIPTION_LENGTH = 280;
+
     public const MAX_MESSAGE_LENGTH = 280;
 
     public const POLL_INTERVAL_MS = 3000;
@@ -46,6 +48,7 @@ class StageService
     {
         $stages = Stage::query()
             ->where('status', StageStatus::Live)
+            ->where('is_public', true)
             ->whereHas('participants', fn ($q) => $q->whereNull('left_at'))
             ->with([
                 'host:id,name,handle,fan_id,avatar_path,avatar_emoji',
@@ -66,13 +69,38 @@ class StageService
         return $stages->map(fn (Stage $stage): array => $this->presentStageSummary($stage))->all();
     }
 
-    public function create(User $host, string $title): Stage
+    /**
+     * @param  array{
+     *     title: string,
+     *     description?: string|null,
+     *     is_public?: bool,
+     *     allow_invite?: bool,
+     *     allow_chat?: bool,
+     *     allow_speak_requests?: bool,
+     *     background_key?: int|null
+     * }  $data
+     */
+    public function create(User $host, array $data): Stage
     {
-        return DB::transaction(function () use ($host, $title): Stage {
+        return DB::transaction(function () use ($host, $data): Stage {
+            $backgroundKey = app(StageMediaService::class)->normalizeBackgroundKey(
+                isset($data['background_key']) ? (int) $data['background_key'] : null,
+            );
+
+            if (! isset($data['background_key'])) {
+                $backgroundKey = app(StageMediaService::class)->defaultBackgroundKey();
+            }
+
             $stage = Stage::query()->create([
                 'host_id' => $host->id,
                 'club_id' => $host->favourite_club_id,
-                'title' => $title,
+                'title' => $data['title'],
+                'description' => filled($data['description'] ?? null) ? trim((string) $data['description']) : null,
+                'is_public' => (bool) ($data['is_public'] ?? true),
+                'allow_invite' => (bool) ($data['allow_invite'] ?? true),
+                'allow_chat' => (bool) ($data['allow_chat'] ?? true),
+                'allow_speak_requests' => (bool) ($data['allow_speak_requests'] ?? true),
+                'background_key' => $backgroundKey,
                 'status' => StageStatus::Live,
                 'voice_enabled' => false,
                 'started_at' => now(),
@@ -204,6 +232,12 @@ class StageService
 
     public function requestSpeak(Stage $stage, User $user): void
     {
+        if (! $stage->allow_speak_requests) {
+            throw ValidationException::withMessages([
+                'speak' => 'Speak requests are disabled for this Stage.',
+            ]);
+        }
+
         $participant = $this->activeParticipant($stage, $user);
 
         if ($participant === null || $participant->role !== StageParticipantRole::Listener) {
@@ -382,6 +416,12 @@ class StageService
 
     public function shareToFeed(Stage $stage, User $user, ?string $note = null): Post
     {
+        if (! $stage->allow_invite) {
+            throw ValidationException::withMessages([
+                'stage' => 'Invites are disabled for this Stage.',
+            ]);
+        }
+
         if (! $stage->isLive()) {
             throw ValidationException::withMessages([
                 'stage' => 'Only live Stages can be shared.',
@@ -414,6 +454,12 @@ class StageService
 
     public function storeMessage(Stage $stage, User $user, string $body): StageMessage
     {
+        if (! $stage->allow_chat) {
+            throw ValidationException::withMessages([
+                'body' => 'Chat is disabled for this Stage.',
+            ]);
+        }
+
         $message = StageMessage::query()->create([
             'stage_id' => $stage->id,
             'user_id' => $user->id,
@@ -538,24 +584,12 @@ class StageService
 
         $me = $participants->firstWhere('user_id', $viewer->id);
 
+        $stagePayload = $this->presentStage($stage);
+        $stagePayload['speaker_count'] = $participants->filter(fn (StageParticipant $p) => $p->isOnStage())->count();
+        $stagePayload['participant_count'] = $participants->count();
+
         return [
-            'stage' => [
-                'id' => $stage->id,
-                'title' => $stage->title,
-                'status' => $stage->status->value,
-                'voice_enabled' => $stage->voice_enabled,
-                'started_at' => $stage->started_at?->toIso8601String(),
-                'ended_at' => $stage->ended_at?->toIso8601String(),
-                'host' => $this->presentUser($stage->host),
-                'club' => $stage->club ? [
-                    'id' => $stage->club->id,
-                    'name' => $stage->club->name,
-                    'short' => $stage->club->short,
-                ] : null,
-                'max_speakers' => self::MAX_SPEAKERS,
-                'speaker_count' => $participants->filter(fn (StageParticipant $p) => $p->isOnStage())->count(),
-                'participant_count' => $participants->count(),
-            ],
+            'stage' => $stagePayload,
             'participants' => $participants->map(fn (StageParticipant $p): array => $this->presentParticipant($p))->values()->all(),
             'messages' => $messages->map(fn (StageMessage $m): array => $this->presentMessage($m))->all(),
             'me' => $me ? $this->presentParticipant($me) : null,
@@ -611,22 +645,45 @@ class StageService
      */
     public function presentStageSummary(Stage $stage): array
     {
-        return [
+        return $this->presentStage($stage, includeCounts: true, stageForCounts: $stage);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentStage(Stage $stage, bool $includeCounts = false, ?Stage $stageForCounts = null): array
+    {
+        $media = app(StageMediaService::class);
+        $payload = [
             'id' => $stage->id,
             'title' => $stage->title,
+            'description' => $stage->description,
             'status' => $stage->status->value,
+            'is_public' => (bool) $stage->is_public,
+            'allow_invite' => (bool) $stage->allow_invite,
+            'allow_chat' => (bool) $stage->allow_chat,
+            'allow_speak_requests' => (bool) $stage->allow_speak_requests,
+            'background_key' => $media->normalizeBackgroundKey($stage->background_key),
+            'background_url' => $media->urlForStage($stage),
             'voice_enabled' => (bool) $stage->voice_enabled,
             'started_at' => $stage->started_at?->toIso8601String(),
+            'ended_at' => $stage->ended_at?->toIso8601String(),
             'host' => $this->presentUser($stage->host),
             'club' => $stage->club ? [
                 'id' => $stage->club->id,
                 'name' => $stage->club->name,
                 'short' => $stage->club->short,
             ] : null,
-            'speaker_count' => (int) ($stage->speaker_count ?? 0),
-            'listener_count' => (int) ($stage->listener_count ?? 0),
-            'participant_count' => (int) ($stage->participant_count ?? 0),
+            'max_speakers' => self::MAX_SPEAKERS,
         ];
+
+        if ($includeCounts) {
+            $payload['speaker_count'] = (int) ($stageForCounts?->speaker_count ?? 0);
+            $payload['listener_count'] = (int) ($stageForCounts?->listener_count ?? 0);
+            $payload['participant_count'] = (int) ($stageForCounts?->participant_count ?? 0);
+        }
+
+        return $payload;
     }
 
     /**

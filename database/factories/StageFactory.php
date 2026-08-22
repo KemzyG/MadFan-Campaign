@@ -24,6 +24,12 @@ class StageFactory extends Factory
             'host_id' => User::factory(),
             'club_id' => Club::factory(),
             'title' => fake()->sentence(4),
+            'description' => fake()->optional()->sentence(12),
+            'is_public' => true,
+            'allow_invite' => true,
+            'allow_chat' => true,
+            'allow_speak_requests' => true,
+            'background_key' => fake()->numberBetween(1, 4),
             'status' => StageStatus::Live,
             'voice_enabled' => false,
             'started_at' => now(),
@@ -53,6 +59,27 @@ class StageFactory extends Factory
     {
         return $this->state(fn (): array => [
             'voice_enabled' => true,
+        ]);
+    }
+
+    public function private(): static
+    {
+        return $this->state(fn (): array => [
+            'is_public' => false,
+        ]);
+    }
+
+    public function withoutChat(): static
+    {
+        return $this->state(fn (): array => [
+            'allow_chat' => false,
+        ]);
+    }
+
+    public function withoutInvites(): static
+    {
+        return $this->state(fn (): array => [
+            'allow_invite' => false,
         ]);
     }
 }

@@ -3,6 +3,13 @@
  * Browsers never re-prompt after a prior deny — site settings must be cleared.
  */
 
+/** WebRTC capture constraints shared by mesh getUserMedia and LiveKit publish. */
+export const STAGE_AUDIO_CONSTRAINTS = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+};
+
 export const MIC_STATUS = {
     blocked:
         'Mic blocked — allow microphone for this site, then tap Enable microphone',
@@ -101,7 +108,7 @@ export async function requestStageMicrophone(options = {}) {
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true },
+            audio: STAGE_AUDIO_CONSTRAINTS,
             video: false,
         });
         if (!keepStream) {

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Cloudinary\Api\Admin\AdminApi;
 use Cloudinary\Api\Upload\UploadApi;
 use Cloudinary\Configuration\Configuration;
 use Illuminate\Http\UploadedFile;
@@ -20,6 +21,14 @@ class CloudinaryImageStorage
 
     /** @var (callable(string): void)|null */
     public static $destroyUsing = null;
+
+    /** @var (callable(string): bool)|null */
+    public static $existsUsing = null;
+
+    /** @var list<string> */
+    public static array $fakePublicIds = [];
+
+    public static int $uploadLocalPathCallCount = 0;
 
     public static function configured(): bool
     {
@@ -192,15 +201,26 @@ class CloudinaryImageStorage
 
         self::$uploadUsing = function (UploadedFile $file, string $directory): array {
             $id = trim($directory, '/').'/'.Str::lower(Str::random(16));
+            $publicId = 'madfan/'.$id;
+            self::$fakePublicIds[] = $publicId;
 
             return [
-                'public_id' => 'madfan/'.$id,
-                'secure_url' => 'https://res.cloudinary.com/test-cloud/image/upload/v1/madfan/'.$id.'.jpg',
+                'public_id' => $publicId,
+                'secure_url' => 'https://res.cloudinary.com/test-cloud/image/upload/v1/'.$publicId.'.jpg',
             ];
         };
 
         self::$destroyUsing = static function (string $publicId): void {
-            //
+            self::$fakePublicIds = array_values(array_filter(
+                self::$fakePublicIds,
+                static fn (string $id): bool => $id !== $publicId,
+            ));
+        };
+
+        self::$existsUsing = static function (string $publicId): bool {
+            $normalized = ltrim(str_replace('\\', '/', $publicId), '/');
+
+            return in_array($normalized, self::$fakePublicIds, true);
         };
     }
 
@@ -208,6 +228,46 @@ class CloudinaryImageStorage
     {
         self::$uploadUsing = null;
         self::$destroyUsing = null;
+        self::$existsUsing = null;
+        self::$fakePublicIds = [];
+        self::$uploadLocalPathCallCount = 0;
+    }
+
+    public static function fakeMarkExists(string $publicId): void
+    {
+        $normalized = ltrim(str_replace('\\', '/', $publicId), '/');
+
+        if (! in_array($normalized, self::$fakePublicIds, true)) {
+            self::$fakePublicIds[] = $normalized;
+        }
+    }
+
+    /**
+     * Whether an image resource already exists at the given public_id.
+     */
+    public static function publicIdExists(string $publicId): bool
+    {
+        $publicId = ltrim(str_replace('\\', '/', $publicId), '/');
+
+        if ($publicId === '') {
+            return false;
+        }
+
+        if (self::$existsUsing !== null) {
+            return (self::$existsUsing)($publicId);
+        }
+
+        if (! self::configured()) {
+            return false;
+        }
+
+        try {
+            self::adminApi()->asset($publicId, ['resource_type' => 'image']);
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -249,6 +309,8 @@ class CloudinaryImageStorage
         if (self::$uploadUsing !== null) {
             $cloud = self::cloudName() ?? 'test-cloud';
             $stableId = ltrim(str_replace('\\', '/', $publicId), '/');
+            self::fakeMarkExists($stableId);
+            self::$uploadLocalPathCallCount++;
 
             return [
                 'public_id' => $stableId,
@@ -352,6 +414,11 @@ class CloudinaryImageStorage
     private static function uploadApi(): UploadApi
     {
         return new UploadApi(self::configuration());
+    }
+
+    private static function adminApi(): AdminApi
+    {
+        return new AdminApi(self::configuration());
     }
 
     private static function configuration(): Configuration

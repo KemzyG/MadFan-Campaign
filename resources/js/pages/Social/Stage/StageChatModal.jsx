@@ -19,7 +19,8 @@ export default function StageChatModal({ onClose }) {
     const messages = room?.messages || [];
     const me = room?.me;
     const maxMessageLength = room?.max_message_length ?? 280;
-    const canChat = stage?.status === 'live' && Boolean(me);
+    const canChat = stage?.status === 'live' && Boolean(me) && stage?.allow_chat !== false;
+    const chatDisabled = stage?.allow_chat === false;
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,6 +134,10 @@ export default function StageChatModal({ onClose }) {
                             </button>
                             {errors.body ? <p className="mf-field-error">{errors.body}</p> : null}
                         </form>
+                    ) : chatDisabled ? (
+                        <p className="mf-text-meta text-[var(--mf-muted)] mf-stage-chat__closed">
+                            Chat is disabled for this Stage.
+                        </p>
                     ) : (
                         <p className="mf-text-meta text-[var(--mf-muted)] mf-stage-chat__closed">
                             Stage ended — chat closed.

@@ -80,6 +80,12 @@ function StageCard({ stage, index = 0 }) {
 
                 <p className="mf-stage-card__title">{stage.title}</p>
 
+                {stage.description ? (
+                    <p className="mf-stage-card__description mf-text-meta text-[var(--mf-muted)] line-clamp-2">
+                        {stage.description}
+                    </p>
+                ) : null}
+
                 <div className="mf-stage-card__host">
                     <Avatar user={stage.host} size="sm" />
                     <div className="mf-stage-card__host-meta min-w-0">
@@ -104,7 +110,14 @@ function StageCard({ stage, index = 0 }) {
     );
 }
 
-export default function Index({ stages, max_title_length = 80, max_speakers = 8, voice_note }) {
+export default function Index({
+    stages,
+    max_title_length = 80,
+    max_description_length = 280,
+    max_speakers = 8,
+    stage_backgrounds = [],
+    voice_note,
+}) {
     const stageList = stages ?? [];
     const [createOpen, setCreateOpen] = useState(false);
 
@@ -170,6 +183,8 @@ export default function Index({ stages, max_title_length = 80, max_speakers = 8,
                         open={createOpen}
                         onClose={() => setCreateOpen(false)}
                         maxTitleLength={max_title_length}
+                        maxDescriptionLength={max_description_length}
+                        stageBackgrounds={stage_backgrounds}
                     />
                 </div>
             )}

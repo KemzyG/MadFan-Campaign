@@ -8,9 +8,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | Source PNGs live in resources/images/landing and are pushed to Cloudinary
-    | with stable public_ids via `php artisan madfan:sync-landing-media`.
-    | Redeploys do not delete Cloudinary assets; re-running the command
-    | overwrites the same public_ids so URLs stay durable.
+    | with stable public_ids via `php artisan madfan:sync-media` (or the landing-only
+    | alias `madfan:sync-landing-media`). Deploy startup uploads only when an asset
+    | is missing or the committed PNG bytes changed; use --fresh to force overwrite.
     |
     */
 

@@ -14,10 +14,14 @@ class SyncLandingMediaCommand extends Command
 
     public function handle(LandingMediaService $landingMedia): int
     {
-        $this->info('Syncing Mad Fan landing media…');
+        $overwrite = (bool) $this->option('fresh');
+
+        $this->info($overwrite
+            ? 'Force-syncing Mad Fan landing media…'
+            : 'Syncing Mad Fan landing media (upload only when missing or changed)…');
 
         try {
-            $results = $landingMedia->sync(overwrite: true);
+            $results = $landingMedia->sync($overwrite);
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 
@@ -26,15 +30,16 @@ class SyncLandingMediaCommand extends Command
 
         foreach ($results as $result) {
             $this->line(sprintf(
-                '  [%s] %s → %s',
+                '  [%s/%s] %s → %s',
                 $result['storage'],
+                $result['action'] ?? 'uploaded',
                 $result['key'],
                 $result['url'],
             ));
         }
 
         $this->newLine();
-        $this->info('Done. Cloudinary assets keep the same public_ids across deploys; re-run this command after changing source PNGs.');
+        $this->info('Done. Use madfan:sync-media to sync all static catalogs, or --fresh to force overwrite.');
 
         return self::SUCCESS;
     }

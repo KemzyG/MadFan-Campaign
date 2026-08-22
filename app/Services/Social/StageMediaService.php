@@ -1,97 +1,54 @@
 <?php
 
-namespace App\Services\Fan;
+namespace App\Services\Social;
 
 use App\Enums\MediaAssetSource;
 use App\Models\MediaAsset;
+use App\Models\Stage;
 use App\Support\CloudinaryImageStorage;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
-class LandingMediaService
+class StageMediaService
 {
-    /**
-     * Absolute path to the committed source PNG for a landing asset key.
-     */
-    public function sourcePath(string $key): string
-    {
-        $file = (string) config("landing.assets.{$key}.file");
+    public const BACKGROUND_COUNT = 4;
 
-        return resource_path('images/landing/'.$file);
+    /**
+     * @return list<int>
+     */
+    public function backgroundKeys(): array
+    {
+        return range(1, self::BACKGROUND_COUNT);
     }
 
-    /**
-     * Resolve delivery URLs for the marketing landing page.
-     *
-     * Prefers Cloudinary delivery for stable public_ids (survive deploys).
-     * Falls back to locally published copies under /landing-media when
-     * Cloudinary is not configured.
-     *
-     * @return array{
-     *     hero: array{url: string, alt: string}|null,
-     *     phones: list<array{key: string, url: string, alt: string, stack: string}>,
-     *     categories: array<string, array{url: string, alt: string}>,
-     *     kits: list<array{id: string, name: string, image_url: string, slug: null}>
-     * }
-     */
-    public function present(): array
+    public function normalizeBackgroundKey(?int $key): int
     {
-        $assets = config('landing.assets', []);
-        $categories = [];
-        $kits = [];
-        $phones = [];
-        $hero = null;
-
-        foreach ($assets as $key => $meta) {
-            $url = $this->urlForKey((string) $key);
-
-            if ($url === null) {
-                continue;
-            }
-
-            $payload = [
-                'url' => $url,
-                'alt' => (string) ($meta['alt'] ?? 'Mad Fan'),
-            ];
-
-            $role = (string) ($meta['role'] ?? '');
-
-            if ($role === 'hero') {
-                $hero = $payload;
-            } elseif ($role === 'hero_phone') {
-                $phones[] = [
-                    ...$payload,
-                    'key' => (string) $key,
-                    'stack' => (string) ($meta['stack'] ?? 'center'),
-                ];
-            } elseif ($role === 'category') {
-                $categories[(string) $key] = $payload;
-            } elseif ($role === 'kit') {
-                $kits[] = [
-                    'id' => (string) $key,
-                    'name' => (string) ($meta['label'] ?? $key),
-                    'image_url' => $url,
-                    'slug' => null,
-                ];
-            }
+        if ($key === null || $key < 1 || $key > self::BACKGROUND_COUNT) {
+            return 1;
         }
 
-        $stackOrder = ['left' => 0, 'center' => 1, 'right' => 2];
-        usort($phones, function (array $a, array $b) use ($stackOrder): int {
-            return ($stackOrder[$a['stack']] ?? 99) <=> ($stackOrder[$b['stack']] ?? 99);
-        });
-
-        return [
-            'hero' => $hero,
-            'phones' => $phones,
-            'categories' => $categories,
-            'kits' => $kits,
-        ];
+        return $key;
     }
 
-    public function urlForKey(string $key): ?string
+    public function defaultBackgroundKey(): int
     {
-        $meta = config("landing.assets.{$key}");
+        return random_int(1, self::BACKGROUND_COUNT);
+    }
+
+    /**
+     * Absolute path to the committed source PNG for a background key.
+     */
+    public function sourcePath(int $key): string
+    {
+        $file = (string) config("stage.backgrounds.{$key}.file");
+
+        return resource_path('images/stage/'.$file);
+    }
+
+    public function urlForKey(int $key): ?string
+    {
+        $key = $this->normalizeBackgroundKey($key);
+        $meta = config("stage.backgrounds.{$key}");
 
         if (! is_array($meta)) {
             return null;
@@ -99,7 +56,7 @@ class LandingMediaService
 
         $publicId = (string) ($meta['public_id'] ?? '');
         $filename = (string) ($meta['file'] ?? '');
-        $localPublicRelative = 'landing-media/'.$filename;
+        $localPublicRelative = 'stage-media/'.$filename;
         $localPublicAbsolute = public_path($localPublicRelative);
 
         if (filled($publicId)) {
@@ -131,11 +88,37 @@ class LandingMediaService
         return null;
     }
 
+    public function urlForStage(?Stage $stage): string
+    {
+        $key = $this->normalizeBackgroundKey($stage?->background_key);
+
+        return $this->urlForKey($key) ?? '/stage-media/stage-bg-'.$key.'.png';
+    }
+
     /**
-     * Push every landing PNG to Cloudinary (stable public_ids) or public/landing-media.
-     *
-     * By default uploads only missing assets or when committed source bytes changed.
-     * Pass $overwrite=true (or --fresh on the artisan command) to force re-upload.
+     * @return list<array{key: int, url: string, label: string, alt: string}>
+     */
+    public function presentBackgroundOptions(): array
+    {
+        $options = [];
+
+        foreach ($this->backgroundKeys() as $key) {
+            $meta = config("stage.backgrounds.{$key}", []);
+            $url = $this->urlForKey($key) ?? '/stage-media/stage-bg-'.$key.'.png';
+
+            $options[] = [
+                'key' => $key,
+                'url' => $url,
+                'label' => (string) ($meta['label'] ?? 'Background '.$key),
+                'alt' => (string) ($meta['alt'] ?? 'Stage background'),
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Push every stage PNG to Cloudinary (stable public_ids) or public/stage-media.
      *
      * @return list<array{key: string, storage: string, url: string, public_id: ?string, action: string}>
      */
@@ -143,8 +126,8 @@ class LandingMediaService
     {
         $results = [];
 
-        foreach (array_keys(config('landing.assets', [])) as $key) {
-            $results[] = $this->syncOne((string) $key, $overwrite);
+        foreach ($this->backgroundKeys() as $key) {
+            $results[] = $this->syncOne($key, $overwrite);
         }
 
         return $results;
@@ -153,24 +136,25 @@ class LandingMediaService
     /**
      * @return array{key: string, storage: string, url: string, public_id: ?string, action: string}
      */
-    public function syncOne(string $key, bool $overwrite = false): array
+    public function syncOne(int $key, bool $overwrite = false): array
     {
-        $meta = config("landing.assets.{$key}");
+        $meta = config("stage.backgrounds.{$key}");
 
         if (! is_array($meta)) {
-            throw new RuntimeException("Unknown landing asset [{$key}].");
+            throw new RuntimeException("Unknown stage background [{$key}].");
         }
 
         $source = $this->sourcePath($key);
 
         if (! is_file($source)) {
-            throw new RuntimeException("Missing landing source image: {$source}");
+            throw new RuntimeException("Missing stage source image: {$source}");
         }
 
         $publicId = (string) $meta['public_id'];
-        $title = 'Landing · '.$key;
+        $title = 'Stage · background '.$key;
         $sourceBytes = filesize($source) ?: null;
         $existing = MediaAsset::query()->where('cloudinary_public_id', $publicId)->first();
+        $stringKey = (string) $key;
 
         if (CloudinaryImageStorage::configured()) {
             $existsRemotely = CloudinaryImageStorage::publicIdExists($publicId);
@@ -194,14 +178,14 @@ class LandingMediaService
                         'alt_text' => (string) ($meta['alt'] ?? ''),
                         'path' => $url,
                         'source' => MediaAssetSource::Generated,
-                        'prompt' => 'Mad Fan landing media · '.$key,
+                        'prompt' => 'Mad Fan stage background · '.$key,
                         'mime_type' => 'image/png',
                         'bytes' => $sourceBytes,
                     ],
                 );
 
                 return [
-                    'key' => $key,
+                    'key' => $stringKey,
                     'storage' => 'cloudinary',
                     'url' => $asset->path,
                     'public_id' => $publicId,
@@ -218,14 +202,14 @@ class LandingMediaService
                     'alt_text' => (string) ($meta['alt'] ?? ''),
                     'path' => $uploaded['secure_url'],
                     'source' => MediaAssetSource::Generated,
-                    'prompt' => 'Mad Fan landing media · '.$key,
+                    'prompt' => 'Mad Fan stage background · '.$key,
                     'mime_type' => 'image/png',
                     'bytes' => $sourceBytes,
                 ],
             );
 
             return [
-                'key' => $key,
+                'key' => $stringKey,
                 'storage' => 'cloudinary',
                 'url' => $asset->path,
                 'public_id' => $uploaded['public_id'],
@@ -233,7 +217,7 @@ class LandingMediaService
             ];
         }
 
-        $destDir = public_path('landing-media');
+        $destDir = public_path('stage-media');
         File::ensureDirectoryExists($destDir);
         $filename = (string) $meta['file'];
         $destination = $destDir.DIRECTORY_SEPARATOR.$filename;
@@ -245,9 +229,9 @@ class LandingMediaService
 
         if (! $overwrite && $localUnchanged) {
             return [
-                'key' => $key,
+                'key' => $stringKey,
                 'storage' => 'local',
-                'url' => '/landing-media/'.$filename,
+                'url' => '/stage-media/'.$filename,
                 'public_id' => null,
                 'action' => 'skipped',
             ];
@@ -260,18 +244,18 @@ class LandingMediaService
             [
                 'title' => $title,
                 'alt_text' => (string) ($meta['alt'] ?? ''),
-                'path' => 'landing-media/'.$filename,
+                'path' => 'stage-media/'.$filename,
                 'source' => MediaAssetSource::Upload,
-                'prompt' => 'Mad Fan landing media · '.$key.' (local publish; configure Cloudinary for CDN)',
+                'prompt' => 'Mad Fan stage background · '.$key.' (local publish; configure Cloudinary for CDN)',
                 'mime_type' => 'image/png',
                 'bytes' => $sourceBytes,
             ],
         );
 
         return [
-            'key' => $key,
+            'key' => $stringKey,
             'storage' => 'local',
-            'url' => '/landing-media/'.$filename,
+            'url' => '/stage-media/'.$filename,
             'public_id' => null,
             'action' => $localExists ? 'updated' : 'uploaded',
         ];
@@ -280,7 +264,7 @@ class LandingMediaService
     private function resolveCloudinaryUrl(string $publicId, ?MediaAsset $existing): string
     {
         if ($existing !== null && CloudinaryImageStorage::isRemoteUrl($existing->path)) {
-            return $existing->path;
+            return (string) $existing->path;
         }
 
         $deliveryUrl = CloudinaryImageStorage::deliveryUrl($publicId);

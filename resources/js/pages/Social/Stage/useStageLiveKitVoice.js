@@ -4,7 +4,11 @@
  * App events (promote / messages / room): Reverb — no mesh signaling needed.
  */
 import { Room, RoomEvent, Track } from 'livekit-client';
-import { describeMicError, requestStageMicrophone } from './stageMicPermission';
+import {
+    describeMicError,
+    requestStageMicrophone,
+    STAGE_AUDIO_CONSTRAINTS,
+} from './stageMicPermission';
 
 function csrfHeaders() {
     const headers = {
@@ -33,6 +37,7 @@ export function createStageLiveKitVoiceSession({
     let room = null;
     let stopped = false;
     let connecting = false;
+    let reconnectTimer = null;
     let playbackUnlocked = false;
     let unlockAudioContext = null;
     let lastCanPublish = null;
@@ -66,6 +71,11 @@ export function createStageLiveKitVoiceSession({
             audio.style.pointerEvents = 'none';
             document.body.appendChild(audio);
         }
+        const mediaTrack = track.mediaStreamTrack;
+        const existingTracks = audio.srcObject?.getAudioTracks?.() || [];
+        if (mediaTrack && existingTracks.some((t) => t.id === mediaTrack.id) && !audio.paused) {
+            return;
+        }
         track.attach(audio);
         audio.muted = false;
         audio.volume = 1;
@@ -90,6 +100,10 @@ export function createStageLiveKitVoiceSession({
         }
         audio.muted = false;
         audio.volume = 1;
+        if (!audio.paused && audio.srcObject) {
+            playbackUnlocked = true;
+            return Promise.resolve(true);
+        }
         const attempt = audio.play();
         if (attempt && typeof attempt.then === 'function') {
             return attempt
@@ -133,7 +147,10 @@ export function createStageLiveKitVoiceSession({
             const buffer = ctx.createBuffer(1, 1, 22050);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
-            source.connect(ctx.destination);
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            source.connect(gain);
+            gain.connect(ctx.destination);
             source.start(0);
         } catch (err) {
             console.warn('stage livekit audio unlock', err);
@@ -231,6 +248,23 @@ export function createStageLiveKitVoiceSession({
         }
     }
 
+    function clearReconnectTimer() {
+        if (reconnectTimer) {
+            window.clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+    }
+
+    function scheduleReconnect(delayMs = 2500) {
+        if (stopped || !voiceEnabled || reconnectTimer || connecting) {
+            return;
+        }
+        reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            void connect();
+        }, delayMs);
+    }
+
     async function disconnectRoom() {
         if (room) {
             try {
@@ -268,10 +302,7 @@ export function createStageLiveKitVoiceSession({
                 room = new Room({
                     adaptiveStream: true,
                     dynacast: true,
-                    audioCaptureDefaults: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                    },
+                    audioCaptureDefaults: STAGE_AUDIO_CONSTRAINTS,
                 });
                 wireRoom(room);
                 await room.connect(payload.url, payload.token);
@@ -286,11 +317,7 @@ export function createStageLiveKitVoiceSession({
             console.warn('livekit connect', err);
             setStatus('Voice connect failed — retrying…');
             await disconnectRoom();
-            if (!stopped && voiceEnabled) {
-                window.setTimeout(() => {
-                    void connect();
-                }, 2500);
-            }
+            scheduleReconnect();
         } finally {
             connecting = false;
         }
@@ -310,6 +337,7 @@ export function createStageLiveKitVoiceSession({
     function stop() {
         stopped = true;
         playbackUnlocked = false;
+        clearReconnectTimer();
         void disconnectRoom();
         if (unlockAudioContext) {
             try {
@@ -341,7 +369,7 @@ export function createStageLiveKitVoiceSession({
         }
 
         if (prevOnStage !== iAmOnStage && room) {
-            // Publish grant lives in the JWT — reconnect for promote/demote.
+            clearReconnectTimer();
             void disconnectRoom().then(() => connect());
             return;
         }

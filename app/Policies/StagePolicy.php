@@ -67,6 +67,7 @@ class StagePolicy
     {
         return $this->canAccessStageNetwork($user)
             && $stage->status === StageStatus::Live
+            && $stage->allow_chat
             && $this->activeParticipant($stage, $user) !== null;
     }
 
@@ -121,7 +122,7 @@ class StagePolicy
 
     public function share(User $user, Stage $stage): bool
     {
-        return $this->sendMessage($user, $stage);
+        return $this->sendMessage($user, $stage) && $stage->allow_invite;
     }
 
     private function activeParticipant(Stage $stage, User $user): ?StageParticipant

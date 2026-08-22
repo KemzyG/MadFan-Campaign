@@ -35,6 +35,7 @@ class SecurityHeaders
         $connectSrc = ["'self'", 'https:', 'wss:'];
         $fontSrc = ["'self'", 'data:', 'https://fonts.gstatic.com'];
         $imgSrc = ["'self'", 'data:', 'blob:', 'https:'];
+        $mediaSrc = ["'self'", 'blob:', 'https:'];
         // Vite HMR / React Refresh create blob: workers; without worker-src they
         // fall back to script-src and browsers block blob: construction.
         $workerSrc = ["'self'", 'blob:'];
@@ -51,6 +52,7 @@ class SecurityHeaders
             $connectSrc = array_merge($connectSrc, $viteOrigins, $wsOrigins);
             $fontSrc = array_merge($fontSrc, $viteOrigins);
             $imgSrc = array_merge($imgSrc, $viteOrigins);
+            $mediaSrc = array_merge($mediaSrc, $viteOrigins);
             $workerSrc = array_merge($workerSrc, $viteOrigins);
         }
 
@@ -62,6 +64,7 @@ class SecurityHeaders
             "form-action 'self'",
             "frame-ancestors 'self'",
             'img-src '.implode(' ', array_unique($imgSrc)),
+            'media-src '.implode(' ', array_unique($mediaSrc)),
             'font-src '.implode(' ', array_unique($fontSrc)),
             'style-src '.implode(' ', array_unique($styleSrc)),
             'script-src '.implode(' ', array_unique($scriptSrc)),

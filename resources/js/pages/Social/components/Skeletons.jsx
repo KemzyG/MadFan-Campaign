@@ -431,6 +431,9 @@ export function resolveSocialSkeletonKind(pathname) {
     if (path === '/social/chat' || path.startsWith('/social/chat/')) {
         return 'chat';
     }
+    if (path === '/social/videos' || path.startsWith('/social/videos/')) {
+        return 'reels';
+    }
     if (path === '/social/fixtures' || path.startsWith('/social/fixtures/')) {
         return 'fixtures';
     }
@@ -462,10 +465,28 @@ export function resolveSocialSkeletonKind(pathname) {
     return 'generic';
 }
 
+function ReelsSkeleton() {
+    return (
+        <div className="mf-page mf-reels-page" aria-busy="true" aria-label="Loading reels">
+            <div className="mf-skel-block mf-skel-block--title" style={{ width: '8rem', height: '1.35rem' }} />
+            <div
+                className="mf-reels-scroller"
+                style={{ background: 'color-mix(in srgb, var(--mf-panel) 70%, transparent)' }}
+            >
+                <div className="mf-reel-slide-wrap">
+                    <div className="mf-skel-block" style={{ width: '100%', height: '100%', minHeight: 'min(72dvh, 640px)' }} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function SocialPageSkeleton({ kind = 'generic' }) {
     switch (kind) {
         case 'feed':
             return <FeedSkeleton />;
+        case 'reels':
+            return <ReelsSkeleton />;
         case 'chat':
             return <ChatSkeleton />;
         case 'tickets':

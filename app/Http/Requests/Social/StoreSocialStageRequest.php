@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Social;
 
 use App\Models\Stage;
+use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSocialStageRequest extends FormRequest
 {
@@ -20,6 +22,12 @@ class StoreSocialStageRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'min:3', 'max:'.StageService::MAX_TITLE_LENGTH],
+            'description' => ['nullable', 'string', 'max:'.StageService::MAX_DESCRIPTION_LENGTH],
+            'is_public' => ['sometimes', 'boolean'],
+            'allow_invite' => ['sometimes', 'boolean'],
+            'allow_chat' => ['sometimes', 'boolean'],
+            'allow_speak_requests' => ['sometimes', 'boolean'],
+            'background_key' => ['sometimes', 'integer', Rule::in(app(StageMediaService::class)->backgroundKeys())],
         ];
     }
 
@@ -31,6 +39,7 @@ class StoreSocialStageRequest extends FormRequest
         return [
             'title.required' => 'Give your Stage a title.',
             'title.min' => 'Title needs at least 3 characters.',
+            'background_key.in' => 'Pick one of the stage backgrounds.',
         ];
     }
 }

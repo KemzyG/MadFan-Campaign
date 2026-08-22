@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             LeagueStandingSeeder::class,
             JerseySeeder::class,
             LandingMediaSeeder::class,
+            VideoHighlightSeeder::class,
             TestDataSeeder::class,
             SettingSeeder::class,
         ]);

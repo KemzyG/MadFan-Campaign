@@ -10,12 +10,12 @@ class LandingMediaSeeder extends Seeder
 {
     /**
      * Publish landing images to Cloudinary (preferred) or public/landing-media.
-     * Safe to re-run — overwrites the same public_ids so CDN URLs stay stable.
+     * Safe to re-run — uploads only missing or changed assets unless forced.
      */
     public function run(LandingMediaService $landingMedia): void
     {
         try {
-            $results = $landingMedia->sync(overwrite: true);
+            $results = $landingMedia->sync(overwrite: false);
         } catch (Throwable $exception) {
             $this->command?->error('Landing media sync failed: '.$exception->getMessage());
 

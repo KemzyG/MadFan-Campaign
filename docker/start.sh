@@ -29,6 +29,9 @@ fi
 if [[ -n "${DB_URL:-}${DATABASE_URL:-}${DB_HOST:-}" ]]; then
   echo "Running migrations..."
   php artisan migrate --force --no-interaction
+
+  echo "Syncing static media to Cloudinary..."
+  php artisan madfan:sync-media || echo "Warning: static media sync failed (continuing startup)"
 fi
 
 if [[ "${RUN_SEEDERS:-}" == "true" ]]; then

@@ -35,7 +35,15 @@ function StageFab({ stage, voiceStatus, onOpen }) {
     );
 }
 
-function StageModal({ stageTitle, onMinimize, chatOpen, onCloseChat, children }) {
+function stageBackgroundStyle(url) {
+    if (!url) {
+        return undefined;
+    }
+
+    return { '--mf-stage-bg-image': `url('${url}')` };
+}
+
+function StageModal({ stageTitle, backgroundUrl, onMinimize, chatOpen, onCloseChat, children }) {
     useEffect(() => {
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
@@ -60,7 +68,13 @@ function StageModal({ stageTitle, onMinimize, chatOpen, onCloseChat, children })
     }, [onMinimize, chatOpen, onCloseChat]);
 
     return (
-        <div className="mf-stage-modal" role="dialog" aria-modal="true" aria-label={stageTitle || 'Stage'}>
+        <div
+            className="mf-stage-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={stageTitle || 'Stage'}
+            style={stageBackgroundStyle(backgroundUrl)}
+        >
             <button
                 type="button"
                 className="mf-stage-modal__backdrop"
@@ -103,6 +117,7 @@ export default function StageChrome() {
             {modalOpen ? (
                 <StageModal
                     stageTitle={stage?.title}
+                    backgroundUrl={stage?.background_url}
                     onMinimize={minimize}
                     chatOpen={chatOpen}
                     onCloseChat={closeChat}

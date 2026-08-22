@@ -3,13 +3,45 @@ import { useEffect, useId } from 'react';
 import { IconClose, IconLive } from './StageIcons';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
 
-export default function CreateStageModal({ open, onClose, maxTitleLength }) {
+function ToggleRow({ id, label, hint, checked, onChange, disabled }) {
+    return (
+        <label className="mf-stage-create-toggle" htmlFor={id}>
+            <span className="mf-stage-create-toggle__copy">
+                <span className="mf-stage-create-toggle__label">{label}</span>
+                {hint ? <span className="mf-text-meta text-[var(--mf-muted)]">{hint}</span> : null}
+            </span>
+            <input
+                id={id}
+                type="checkbox"
+                className="mf-stage-create-toggle__input"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                disabled={disabled}
+            />
+        </label>
+    );
+}
+
+export default function CreateStageModal({
+    open,
+    onClose,
+    maxTitleLength,
+    maxDescriptionLength = 280,
+    stageBackgrounds = [],
+}) {
     const titleId = useId();
     const page = usePage();
     const authUser = page.props?.auth?.user;
     const { reportError } = useSocialFlash();
+    const defaultBackground = stageBackgrounds[0]?.key ?? 1;
     const { data, setData, post, processing, errors, reset, optimistic } = useForm({
         title: '',
+        description: '',
+        is_public: true,
+        allow_invite: true,
+        allow_chat: true,
+        allow_speak_requests: true,
+        background_key: defaultBackground,
     });
 
     useEffect(() => {
@@ -45,13 +77,22 @@ export default function CreateStageModal({ open, onClose, maxTitleLength }) {
 
         const tempId = `tmp-${Date.now()}`;
         const title = data.title.trim();
+        const selectedBackground =
+            stageBackgrounds.find((bg) => bg.key === data.background_key) ?? stageBackgrounds[0];
 
         optimistic((props) => ({
             stages: [
                 {
                     id: tempId,
                     title,
+                    description: data.description.trim() || null,
                     status: 'live',
+                    is_public: data.is_public,
+                    allow_invite: data.allow_invite,
+                    allow_chat: data.allow_chat,
+                    allow_speak_requests: data.allow_speak_requests,
+                    background_key: data.background_key,
+                    background_url: selectedBackground?.url,
                     voice_enabled: false,
                     started_at: new Date().toISOString(),
                     host: {
@@ -73,7 +114,7 @@ export default function CreateStageModal({ open, onClose, maxTitleLength }) {
             '/social/stage',
             withRollbackFlash(reportError, {
                 onSuccess: () => {
-                    reset('title');
+                    reset();
                     onClose();
                 },
             }),
@@ -81,6 +122,7 @@ export default function CreateStageModal({ open, onClose, maxTitleLength }) {
     }
 
     const remaining = maxTitleLength - data.title.length;
+    const descriptionRemaining = maxDescriptionLength - data.description.length;
     const canGoLive = data.title.trim().length >= 3 && !processing;
 
     return (
@@ -96,7 +138,7 @@ export default function CreateStageModal({ open, onClose, maxTitleLength }) {
                                 Go live
                             </p>
                             <p className="mf-text-meta text-[var(--mf-muted)]">
-                                Open a voice room — fans drop in as listeners.
+                                Name your room, set permissions, pick a stadium backdrop.
                             </p>
                         </div>
                     </div>
@@ -120,12 +162,99 @@ export default function CreateStageModal({ open, onClose, maxTitleLength }) {
                         autoComplete="off"
                         autoFocus
                     />
+
+                    <label className="sr-only" htmlFor="stage-description-modal">
+                        Stage description
+                    </label>
+                    <textarea
+                        id="stage-description-modal"
+                        className="mf-stage-create__textarea"
+                        maxLength={maxDescriptionLength}
+                        rows={3}
+                        placeholder="Optional — what’s the vibe? Derby prep, transfer rumours, post-match…"
+                        value={data.description}
+                        onChange={(e) => setData('description', e.target.value)}
+                        disabled={processing}
+                    />
+
+                    <fieldset className="mf-stage-create-fieldset">
+                        <legend className="mf-text-caption text-[var(--mf-muted)]">Room settings</legend>
+                        <ToggleRow
+                            id="stage-public-modal"
+                            label="Public stage"
+                            hint="Shows in the live lobby for any fan to discover."
+                            checked={data.is_public}
+                            onChange={(value) => setData('is_public', value)}
+                            disabled={processing}
+                        />
+                        <ToggleRow
+                            id="stage-invite-modal"
+                            label="Fans can invite"
+                            hint="Allow sharing the stage link to the terrace feed."
+                            checked={data.allow_invite}
+                            onChange={(value) => setData('allow_invite', value)}
+                            disabled={processing}
+                        />
+                        <ToggleRow
+                            id="stage-chat-modal"
+                            label="Room chat"
+                            hint="Listeners and speakers can post messages."
+                            checked={data.allow_chat}
+                            onChange={(value) => setData('allow_chat', value)}
+                            disabled={processing}
+                        />
+                        <ToggleRow
+                            id="stage-speak-modal"
+                            label="Speak requests"
+                            hint="Listeners can raise a hand to request the mic."
+                            checked={data.allow_speak_requests}
+                            onChange={(value) => setData('allow_speak_requests', value)}
+                            disabled={processing}
+                        />
+                    </fieldset>
+
+                    {stageBackgrounds.length > 0 ? (
+                        <fieldset className="mf-stage-create-fieldset">
+                            <legend className="mf-text-caption text-[var(--mf-muted)]">Stadium backdrop</legend>
+                            <div className="mf-stage-bg-picker" role="radiogroup" aria-label="Stage background">
+                                {stageBackgrounds.map((bg) => {
+                                    const selected = data.background_key === bg.key;
+
+                                    return (
+                                        <label
+                                            key={bg.key}
+                                            className={`mf-stage-bg-picker__option ${selected ? 'is-selected' : ''}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="stage-background"
+                                                className="sr-only"
+                                                value={bg.key}
+                                                checked={selected}
+                                                onChange={() => setData('background_key', bg.key)}
+                                                disabled={processing}
+                                            />
+                                            <span
+                                                className="mf-stage-bg-picker__thumb"
+                                                style={{ backgroundImage: `url('${bg.url}')` }}
+                                                aria-hidden
+                                            />
+                                            <span className="mf-stage-bg-picker__label">{bg.label}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </fieldset>
+                    ) : null}
+
                     <div className="mf-stage-create-modal__foot">
                         {errors.title ? (
                             <p className="mf-field-error">{errors.title}</p>
+                        ) : errors.description ? (
+                            <p className="mf-field-error">{errors.description}</p>
                         ) : (
                             <p className="mf-mono mf-text-micro text-[var(--mf-muted)]">
-                                {remaining} chars · min 3
+                                {remaining} title · {descriptionRemaining} desc · min 3 chars
                             </p>
                         )}
                         <button type="submit" className="mf-btn mf-btn--pitch" disabled={!canGoLive}>

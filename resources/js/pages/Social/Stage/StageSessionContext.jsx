@@ -84,6 +84,24 @@ export function StageSessionProvider({ children }) {
         echoConnectedRef.current = echoConnected;
     }, [echoConnected]);
 
+    useEffect(() => {
+        const shell = document.querySelector('.mf-stage');
+        if (!shell) {
+            return undefined;
+        }
+
+        const url = room?.stage?.background_url;
+        if (url) {
+            shell.style.setProperty('--mf-stage-bg-image', `url('${url}')`);
+        } else {
+            shell.style.removeProperty('--mf-stage-bg-image');
+        }
+
+        return () => {
+            shell.style.removeProperty('--mf-stage-bg-image');
+        };
+    }, [room?.stage?.background_url]);
+
     // Track Reverb socket health so HTTP room/signal poll only runs when WS is down.
     useEffect(() => {
         if (room?.realtime?.mode !== 'reverb') {

@@ -83,6 +83,15 @@ WORKDIR /var/www/html
 COPY --from=vendor /app /var/www/html
 COPY --from=assets /app/public/build /var/www/html/public/build
 
+# public/landing-media is gitignored; seed from committed sources so /landing-media/*
+# (including CSS --mf-stadium-image for shop) works before runtime sync / Cloudinary upload.
+RUN mkdir -p public/landing-media \
+    && cp resources/images/landing/*.png public/landing-media/
+
+# public/stage-media is gitignored; seed stage room backgrounds for modal/lobby backdrops.
+RUN mkdir -p public/stage-media \
+    && cp resources/images/stage/*.png public/stage-media/
+
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache

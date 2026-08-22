@@ -40,13 +40,25 @@ test('onboarded fans can list and create a live stage', function () {
             ->where('max_speakers', 8));
 
     $this->actingAs($user)
-        ->post('/social/stage', ['title' => 'Derby warm-up chat'])
+        ->post('/social/stage', [
+            'title' => 'Derby warm-up chat',
+            'description' => 'Pre-match terrace vibes',
+            'is_public' => true,
+            'allow_invite' => true,
+            'allow_chat' => true,
+            'allow_speak_requests' => true,
+            'background_key' => 2,
+        ])
         ->assertRedirect();
 
     $stage = Stage::query()->first();
 
     expect($stage)->not->toBeNull()
         ->and($stage->title)->toBe('Derby warm-up chat')
+        ->and($stage->description)->toBe('Pre-match terrace vibes')
+        ->and($stage->is_public)->toBeTrue()
+        ->and($stage->allow_chat)->toBeTrue()
+        ->and($stage->background_key)->toBe(2)
         ->and($stage->status)->toBe(StageStatus::Live)
         ->and($stage->host_id)->toBe($user->id)
         ->and($stage->club_id)->toBe($club->id);
@@ -64,6 +76,9 @@ test('onboarded fans can list and create a live stage', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Social/Stage/Show')
             ->where('stage.title', 'Derby warm-up chat')
+            ->where('stage.description', 'Pre-match terrace vibes')
+            ->where('stage.background_key', 2)
+            ->has('stage.background_url')
             ->where('me.role', 'host')
             ->where('voice.mode', 'webrtc_mesh_poll')
             ->where('voice.driver', 'mesh'));
@@ -753,4 +768,121 @@ test('host can ban transfer host mute speakers and share a live stage', function
         ->assertRedirect();
 
     expect(Post::query()->where('author_id', $guest->id)->exists())->toBeTrue();
+});
+
+test('private stages are hidden from the public lobby', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $visitor = socialReadyUser($club);
+
+    $public = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Public terrace',
+        'is_public' => true,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $public->id,
+        'user_id' => $host->id,
+    ]);
+
+    $private = Stage::factory()->live()->private()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Private huddle',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $private->id,
+        'user_id' => $host->id,
+    ]);
+
+    $this->actingAs($visitor)
+        ->get('/social/stage')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('stages', 1)
+            ->where('stages.0.id', $public->id)
+            ->where('stages.0.title', 'Public terrace'));
+
+    $this->actingAs($visitor)
+        ->get("/social/stage/{$private->id}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('stage.title', 'Private huddle')
+            ->where('stage.is_public', false));
+});
+
+test('stage chat is blocked when allow chat is disabled', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->withoutChat()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'title' => 'Voice only room',
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $guest->id,
+    ]);
+
+    $this->actingAs($guest)
+        ->post("/social/stage/{$stage->id}/messages", ['body' => 'Should not land'])
+        ->assertForbidden();
+
+    expect(StageMessage::query()->where('stage_id', $stage->id)->exists())->toBeFalse();
+});
+
+test('stage speak requests are blocked when disabled', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'allow_speak_requests' => false,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $guest->id,
+    ]);
+
+    $this->actingAs($guest)
+        ->post("/social/stage/{$stage->id}/speak-request")
+        ->assertSessionHasErrors('speak');
+});
+
+test('stage share is blocked when invites are disabled', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->withoutInvites()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    $this->actingAs($host)
+        ->post("/social/stage/{$stage->id}/share")
+        ->assertForbidden();
 });

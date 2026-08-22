@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Social\StoreSocialStageRequest;
 use App\Models\Stage;
 use App\Models\User;
+use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
 use App\Support\StageVoice;
 use Illuminate\Http\JsonResponse;
@@ -16,14 +17,16 @@ use Inertia\Response;
 
 class SocialStageController extends Controller
 {
-    public function index(Request $request, StageService $stages): Response
+    public function index(Request $request, StageService $stages, StageMediaService $stageMedia): Response
     {
         $this->authorize('viewAny', Stage::class);
 
         return Inertia::render('Social/Stage/Index', [
             'stages' => $stages->presentLiveStages(),
             'max_title_length' => StageService::MAX_TITLE_LENGTH,
+            'max_description_length' => StageService::MAX_DESCRIPTION_LENGTH,
             'max_speakers' => StageService::MAX_SPEAKERS,
+            'stage_backgrounds' => $stageMedia->presentBackgroundOptions(),
             'voice_note' => StageVoice::usesLiveKit()
                 ? 'LiveKit Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb for room events'
                 : 'Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb signaling with mesh fallback',
@@ -36,7 +39,7 @@ class SocialStageController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $stage = $stages->create($user, $request->validated('title'));
+        $stage = $stages->create($user, $request->validated());
 
         return redirect()
             ->route('social.stage.show', $stage)

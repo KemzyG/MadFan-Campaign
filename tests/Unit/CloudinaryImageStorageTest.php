@@ -153,3 +153,13 @@ test('public storage url keeps existing local files and defaults missing ones', 
         ->and(PublicStorageUrl::path('clubs/missing.png'))
         ->toBe('https://res.cloudinary.com/demo-cloud/image/upload/madfan/defaults/thumbnail');
 });
+
+test('fake public id exists tracks uploads and explicit marks', function () {
+    CloudinaryImageStorage::fake();
+
+    expect(CloudinaryImageStorage::publicIdExists('madfan/landing/hero'))->toBeFalse();
+
+    CloudinaryImageStorage::fakeMarkExists('madfan/landing/hero');
+
+    expect(CloudinaryImageStorage::publicIdExists('madfan/landing/hero'))->toBeTrue();
+});

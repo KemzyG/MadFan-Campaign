@@ -215,7 +215,13 @@ export function createStageMeshVoiceSession({
         }
         audio.muted = false;
         audio.volume = 1;
-        audio.srcObject = stream;
+        const sameStream = audio.srcObject === stream;
+        if (!sameStream) {
+            audio.srcObject = stream;
+        }
+        if (sameStream && !audio.paused) {
+            return;
+        }
         playRemoteAudio(audio);
     }
 
@@ -229,6 +235,10 @@ export function createStageMeshVoiceSession({
         }
         audio.muted = false;
         audio.volume = 1;
+        if (!audio.paused && audio.srcObject) {
+            playbackUnlocked = true;
+            return Promise.resolve(true);
+        }
         const attempt = audio.play();
         if (attempt && typeof attempt.then === 'function') {
             return attempt
@@ -276,7 +286,10 @@ export function createStageMeshVoiceSession({
             const buffer = ctx.createBuffer(1, 1, 22050);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
-            source.connect(ctx.destination);
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            source.connect(gain);
+            gain.connect(ctx.destination);
             source.start(0);
         } catch (err) {
             console.warn('stage audio unlock context', err);
@@ -376,7 +389,7 @@ export function createStageMeshVoiceSession({
             return peers.get(peerUserId);
         }
         const pc = new RTCPeerConnection({ iceServers });
-        const entry = { pc, initiator, recvOnly, iceFailed: false };
+        const entry = { pc, initiator, recvOnly, iceFailed: false, attachedTrackIds: new Set() };
         peers.set(peerUserId, entry);
 
         pc.onicecandidate = (event) => {
@@ -385,6 +398,13 @@ export function createStageMeshVoiceSession({
             }
         };
         pc.ontrack = (event) => {
+            const trackId = event.track?.id;
+            if (trackId && entry.attachedTrackIds.has(trackId)) {
+                return;
+            }
+            if (trackId) {
+                entry.attachedTrackIds.add(trackId);
+            }
             const stream = event.streams[0] || new MediaStream([event.track]);
             attachRemoteAudio(peerUserId, stream);
         };
@@ -463,6 +483,12 @@ export function createStageMeshVoiceSession({
         });
         if (!remoteDescription) {
             console.warn('signal ingest skipped offer: invalid SDP', fromUserId);
+            return;
+        }
+        if (
+            entry.pc.signalingState === 'stable' &&
+            entry.pc.remoteDescription?.sdp === remoteDescription.sdp
+        ) {
             return;
         }
         try {
