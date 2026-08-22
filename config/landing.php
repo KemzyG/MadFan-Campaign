@@ -20,8 +20,29 @@ return [
         'hero' => [
             'file' => 'hero.png',
             'public_id' => 'madfan/landing/hero',
-            'alt' => 'Mad Fan player shooting — striped kit with MF crest',
+            'alt' => 'Mad Fan Fan Passport — obsidian loyalty identity card with gold MF mark',
             'role' => 'hero',
+        ],
+        'hero_phone_feed' => [
+            'file' => 'hero-phone-feed.png',
+            'public_id' => 'madfan/landing/hero-phone-feed',
+            'alt' => 'Mad Fan Social — Terrace feed on mobile',
+            'role' => 'hero_phone',
+            'stack' => 'center',
+        ],
+        'hero_phone_passport' => [
+            'file' => 'hero-phone-passport.png',
+            'public_id' => 'madfan/landing/hero-phone-passport',
+            'alt' => 'Mad Fan Social — Fan Passport on mobile',
+            'role' => 'hero_phone',
+            'stack' => 'left',
+        ],
+        'hero_phone_chat' => [
+            'file' => 'hero-phone-chat.png',
+            'public_id' => 'madfan/landing/hero-phone-chat',
+            'alt' => 'Mad Fan Social — matchday chat on mobile',
+            'role' => 'hero_phone',
+            'stack' => 'right',
         ],
         'campaign' => [
             'file' => 'campaign.png',

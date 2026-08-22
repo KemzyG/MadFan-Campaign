@@ -40,6 +40,7 @@ class LandingPageController extends Controller
         return Inertia::render('Fan/Landing', [
             'images' => [
                 'hero' => $media['hero'],
+                'phones' => $media['phones'],
                 'categories' => $media['categories'],
             ],
             'featured' => $featured,

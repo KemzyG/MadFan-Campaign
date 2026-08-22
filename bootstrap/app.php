@@ -65,6 +65,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: [
             (string) env('REGISTRATION_LOCK_COOKIE', 'mf_reg_lock'),
         ]);
+
+        // WebRTC SDP must keep trailing CRLF; TrimStrings would strip it and break setRemoteDescription.
+        $middleware->trimStrings(except: [
+            'payload.sdp',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

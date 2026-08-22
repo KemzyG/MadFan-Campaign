@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { teamPhotoUrl } from '../../Components/Fan/teamPhotos';
 import {
     LandingFooter,
     LandingNav,
@@ -71,8 +70,8 @@ export default function Landing({
     stats = {},
     story = EMPTY_STORY,
 }) {
-    const hero = images?.hero;
     const categoryImages = images?.categories || {};
+    const heroPhones = Array.isArray(images?.phones) ? images.phones : [];
     const products = featured.length > 0 ? featured.slice(0, 6) : [];
     const thesis = story.thesis || EMPTY_STORY.thesis;
     const waitlist = Number(stats.waitlist_count || 0).toLocaleString();
@@ -92,12 +91,23 @@ export default function Landing({
             <LandingNav />
 
             <section className="mf-land__hero" aria-label="Hero">
-                {hero?.url ? (
-                    <img className="mf-land__hero-photo" src={hero.url} alt={hero.alt || 'Mad Fan'} />
-                ) : (
-                    <div className="mf-land__hero-fallback" aria-hidden />
-                )}
+                <div className="mf-land__hero-fallback" aria-hidden />
                 <div className="mf-land__hero-scrim" aria-hidden />
+                {heroPhones.length > 0 ? (
+                    <div className="mf-land__hero-phones" aria-label="Mad Fan Social on mobile">
+                        {heroPhones.map((phone) => (
+                            <img
+                                key={phone.key || phone.stack}
+                                className={`mf-land__hero-phone mf-land__hero-phone--${phone.stack || 'center'}`}
+                                src={phone.url}
+                                alt={phone.alt || 'Mad Fan Social on mobile'}
+                                width={360}
+                                height={720}
+                                decoding="async"
+                            />
+                        ))}
+                    </div>
+                ) : null}
                 <div className="mf-land__hero-copy">
                     <p className="mf-land__hero-brand">Mad Fan</p>
                     <h1 className="mf-land__hero-title">Loyalty that counts</h1>
@@ -264,42 +274,6 @@ export default function Landing({
                                 <p>{item.body}</p>
                             </article>
                         ))}
-                    </div>
-                ) : null}
-            </section>
-
-            <section className="mf-land__band" aria-label="Team">
-                <SectionHead
-                    eyebrow="Team"
-                    title="Built by fans"
-                    body="A lean crew with a long horizon — shipping loyalty infrastructure meant to endure longer than any single season."
-                    action={
-                        <Link href="/team" className="mf-land__text-link">
-                            Meet the team
-                        </Link>
-                    }
-                />
-                {story.team?.length > 0 ? (
-                    <div className="mf-land__team-grid">
-                        {story.team.map((member) => {
-                            const photo = teamPhotoUrl(member.photo);
-
-                            return (
-                                <article key={member.name} className="mf-land__team-card">
-                                    <div className="mf-land__team-photo">
-                                        {photo ? (
-                                            <img src={photo} alt="" loading="lazy" />
-                                        ) : (
-                                            <span aria-hidden>{member.name.slice(0, 1)}</span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h3>{member.name}</h3>
-                                        <p>{member.role}</p>
-                                    </div>
-                                </article>
-                            );
-                        })}
                     </div>
                 ) : null}
             </section>

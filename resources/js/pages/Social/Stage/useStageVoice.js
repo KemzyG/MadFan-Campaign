@@ -14,6 +14,7 @@ import {
     mediaDevicesAvailable,
     requestStageMicrophone,
 } from './stageMicPermission';
+import { normalizeRemoteDescription } from './stageSdp';
 
 export function createStageMeshVoiceSession({
     stageId,
@@ -229,13 +230,13 @@ export function createStageMeshVoiceSession({
             return attempt
                 .then(() => {
                     if (!iAmOnStage) {
-                        setStatus('Hearing stage…');
+                        setStatus('Hearing stage...');
                     }
                     return true;
                 })
                 .catch(() => {
                     if (!playbackUnlocked) {
-                        setStatus('Tap “Tap to hear” to unlock audio');
+                        setStatus('Tap "Tap to hear" to unlock audio');
                     }
                     return false;
                 });
@@ -279,17 +280,17 @@ export function createStageMeshVoiceSession({
 
     /**
      * Call from a trusted user gesture so browsers unlock WebRTC remote audio.
-     * Safe before remote tracks exist — marks unlocked so later attachRemoteAudio can play.
+     * Safe before remote tracks exist - marks unlocked so later attachRemoteAudio can play.
      * Important: do not await before audio.play(); that would drop the gesture token.
      */
     function unlockPlayback() {
         playbackUnlocked = true;
-        setStatus('Unlocking audio…');
+        setStatus('Unlocking audio...');
         warmUnlockGestureSync();
 
         const audios = listRemoteAudios();
         if (!audios.length) {
-            setStatus('Audio unlocked — waiting for speakers…');
+            setStatus('Audio unlocked - waiting for speakers...');
             return Promise.resolve({ played: 0, failed: 0, pending: true });
         }
 
@@ -300,11 +301,11 @@ export function createStageMeshVoiceSession({
             const failed = results.length - played;
 
             if (played > 0) {
-                setStatus(iAmOnStage ? 'Hearing peers…' : 'Hearing stage…');
+                setStatus(iAmOnStage ? 'Hearing peers...' : 'Hearing stage...');
             } else if (failed > 0) {
-                setStatus('Browser blocked audio — tap Tap to hear again');
+                setStatus('Browser blocked audio - tap Tap to hear again');
             } else {
-                setStatus('Audio unlocked — waiting for speakers…');
+                setStatus('Audio unlocked - waiting for speakers...');
             }
 
             return { played, failed, pending: false };
@@ -389,7 +390,7 @@ export function createStageMeshVoiceSession({
                 if (!iAmOnStage) {
                     // Do not claim "Hearing" until <audio>.play() succeeds (autoplay may still block).
                     if (!playbackUnlocked) {
-                        setStatus('Connected — tap Tap to hear');
+                        setStatus('Connected - tap Tap to hear');
                     }
                 } else if (isMuted) {
                     setStatus('Mic muted');
@@ -398,7 +399,7 @@ export function createStageMeshVoiceSession({
                 }
             } else if (state === 'failed') {
                 entry.iceFailed = true;
-                setStatus('Voice blocked by network — try same Wi‑Fi or configure TURN');
+                setStatus('Voice blocked by network - try same Wi-Fi or configure TURN');
                 closePeer(peerUserId);
             }
         };
@@ -436,7 +437,7 @@ export function createStageMeshVoiceSession({
         const recvOnly = !iAmOnStage && Boolean(remote?.on_stage);
         let entry = peers.get(fromUserId);
 
-        // Role changed (listener ↔ speaker): rebuild so tracks/directions match.
+        // Role changed (listener ? speaker): rebuild so tracks/directions match.
         if (entry && entry.recvOnly !== recvOnly) {
             closePeer(fromUserId);
             entry = null;
@@ -447,7 +448,20 @@ export function createStageMeshVoiceSession({
         }
 
         await ensureAudioSenders(entry);
-        await entry.pc.setRemoteDescription({ type: payload.type || 'offer', sdp: payload.sdp });
+        const remoteDescription = normalizeRemoteDescription({
+            type: payload.type || 'offer',
+            sdp: payload.sdp,
+        });
+        if (!remoteDescription) {
+            console.warn('signal ingest skipped offer: invalid SDP', fromUserId);
+            return;
+        }
+        try {
+            await entry.pc.setRemoteDescription(remoteDescription);
+        } catch (err) {
+            console.warn('signal ingest setRemoteDescription(offer)', err);
+            return;
+        }
         await flushPendingRemoteIce(fromUserId);
         const answer = await entry.pc.createAnswer();
         await entry.pc.setLocalDescription(answer);
@@ -460,7 +474,20 @@ export function createStageMeshVoiceSession({
     async function handleAnswer(fromUserId, payload) {
         const entry = peers.get(fromUserId);
         if (!entry) return;
-        await entry.pc.setRemoteDescription({ type: payload.type || 'answer', sdp: payload.sdp });
+        const remoteDescription = normalizeRemoteDescription({
+            type: payload.type || 'answer',
+            sdp: payload.sdp,
+        });
+        if (!remoteDescription) {
+            console.warn('signal ingest skipped answer: invalid SDP', fromUserId);
+            return;
+        }
+        try {
+            await entry.pc.setRemoteDescription(remoteDescription);
+        } catch (err) {
+            console.warn('signal ingest setRemoteDescription(answer)', err);
+            return;
+        }
         await flushPendingRemoteIce(fromUserId);
     }
 
@@ -501,13 +528,15 @@ export function createStageMeshVoiceSession({
     }
 
     async function ingestSignals(signals) {
-        signalChain = signalChain
-            .then(async () => {
-                for (const signal of signals || []) {
+        signalChain = signalChain.then(async () => {
+            for (const signal of signals || []) {
+                try {
                     await applySignal(signal);
+                } catch (err) {
+                    console.warn('signal ingest', err);
                 }
-            })
-            .catch((err) => console.warn('signal ingest', err));
+            }
+        });
         await signalChain;
     }
 
@@ -523,7 +552,7 @@ export function createStageMeshVoiceSession({
     async function pollSignals() {
         if (stopped || !voiceEnabled) return;
         if (!allowHttpSignals) {
-            // Reverb is healthy — do not hammer /signals; keep timer dormant until fallback flips on.
+            // Reverb is healthy - do not hammer /signals; keep timer dormant until fallback flips on.
             return;
         }
         try {
@@ -533,7 +562,7 @@ export function createStageMeshVoiceSession({
             });
             if (res.status === 429) {
                 currentPollMs = Math.min(Math.max(currentPollMs, signalPollMs) * 2, 30000);
-                setStatus('Signaling slowed (rate limit)…');
+                setStatus('Signaling slowed (rate limit)...');
                 schedulePoll(currentPollMs);
                 return;
             }
@@ -612,7 +641,7 @@ export function createStageMeshVoiceSession({
         if (stopped || !voiceEnabled || !iAmOnStage) {
             return { ok: false };
         }
-        setStatus('Requesting microphone…');
+        setStatus('Requesting microphone...');
         micBlocked = false;
         if (localStream) {
             localStream.getTracks().forEach((t) => t.stop());
@@ -633,7 +662,7 @@ export function createStageMeshVoiceSession({
             setStatus('Waiting for host to start voice');
             return;
         }
-        setStatus(iAmOnStage ? 'Connecting stage…' : 'Connecting as listener…');
+        setStatus(iAmOnStage ? 'Connecting stage...' : 'Connecting as listener...');
         currentPollMs = signalPollMs;
         syncPeers();
         if (allowHttpSignals) {
@@ -704,7 +733,7 @@ export function createStageMeshVoiceSession({
             }
         }
 
-        // Promote/demote must renegotiate send/recv — stale recvonly peers cannot transmit.
+        // Promote/demote must renegotiate send/recv - stale recvonly peers cannot transmit.
         if (prevOnStage !== iAmOnStage && voiceEnabled) {
             resetAllPeers();
             syncPeers();

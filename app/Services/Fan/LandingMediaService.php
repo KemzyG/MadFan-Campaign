@@ -29,6 +29,7 @@ class LandingMediaService
      *
      * @return array{
      *     hero: array{url: string, alt: string}|null,
+     *     phones: list<array{key: string, url: string, alt: string, stack: string}>,
      *     categories: array<string, array{url: string, alt: string}>,
      *     kits: list<array{id: string, name: string, image_url: string, slug: null}>
      * }
@@ -38,6 +39,7 @@ class LandingMediaService
         $assets = config('landing.assets', []);
         $categories = [];
         $kits = [];
+        $phones = [];
         $hero = null;
 
         foreach ($assets as $key => $meta) {
@@ -56,6 +58,12 @@ class LandingMediaService
 
             if ($role === 'hero') {
                 $hero = $payload;
+            } elseif ($role === 'hero_phone') {
+                $phones[] = [
+                    ...$payload,
+                    'key' => (string) $key,
+                    'stack' => (string) ($meta['stack'] ?? 'center'),
+                ];
             } elseif ($role === 'category') {
                 $categories[(string) $key] = $payload;
             } elseif ($role === 'kit') {
@@ -68,8 +76,14 @@ class LandingMediaService
             }
         }
 
+        $stackOrder = ['left' => 0, 'center' => 1, 'right' => 2];
+        usort($phones, function (array $a, array $b) use ($stackOrder): int {
+            return ($stackOrder[$a['stack']] ?? 99) <=> ($stackOrder[$b['stack']] ?? 99);
+        });
+
         return [
             'hero' => $hero,
+            'phones' => $phones,
             'categories' => $categories,
             'kits' => $kits,
         ];

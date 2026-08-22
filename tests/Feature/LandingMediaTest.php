@@ -26,13 +26,22 @@ test('landing media sync publishes images locally when cloudinary is absent', fu
         ->assertSuccessful();
 
     expect(is_file(public_path('landing-media/hero.png')))->toBeTrue()
-        ->and(MediaAsset::query()->where('cloudinary_public_id', 'madfan/landing/hero')->exists())->toBeTrue();
+        ->and(is_file(public_path('landing-media/hero-phone-feed.png')))->toBeTrue()
+        ->and(is_file(public_path('landing-media/hero-phone-passport.png')))->toBeTrue()
+        ->and(is_file(public_path('landing-media/hero-phone-chat.png')))->toBeTrue()
+        ->and(MediaAsset::query()->where('cloudinary_public_id', 'madfan/landing/hero')->exists())->toBeTrue()
+        ->and(MediaAsset::query()->where('cloudinary_public_id', 'madfan/landing/hero-phone-feed')->exists())->toBeTrue();
 
     $this->get('/')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Landing')
             ->where('images.hero.url', '/landing-media/hero.png')
+            ->has('images.phones', 3)
+            ->where('images.phones.0.stack', 'left')
+            ->where('images.phones.1.stack', 'center')
+            ->where('images.phones.2.stack', 'right')
+            ->where('images.phones.1.url', '/landing-media/hero-phone-feed.png')
             ->has('images.categories.campaign')
             ->has('images.categories.social')
             ->has('images.categories.shop')

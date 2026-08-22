@@ -271,6 +271,54 @@ test('webrtc signal store and drain requires voice enabled participant', functio
         ->assertJsonPath('signals', []);
 });
 
+test('webrtc signal payload preserves trailing sdp crlf for setRemoteDescription', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->withVoice()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $guest->id,
+    ]);
+
+    // Last line mirrors the Chrome console failure: a=ssrc… msid:stream track
+    $sdp = "v=0\r\n"
+        ."o=- 0 0 IN IP4 127.0.0.1\r\n"
+        ."s=-\r\n"
+        ."t=0 0\r\n"
+        .'a=ssrc:2575601734 msid:bca6c5ea-54c5-4fee-9ee1-17d5fd50214f 7b7902ef-dda8-4226-b1c0-eb09cb7db746'
+        ."\r\n";
+
+    $this->actingAs($host)
+        ->postJson("/social/stage/{$stage->id}/signals", [
+            'to_user_id' => $guest->id,
+            'type' => StageSignalType::Offer->value,
+            'payload' => ['sdp' => $sdp, 'type' => 'offer'],
+        ])
+        ->assertCreated();
+
+    $stored = StageSignal::query()->where('stage_id', $stage->id)->first();
+
+    expect($stored)->not->toBeNull()
+        ->and($stored->payload['sdp'])->toBe($sdp)
+        ->and(str_ends_with($stored->payload['sdp'], "\r\n"))->toBeTrue();
+
+    $this->actingAs($guest)
+        ->getJson("/social/stage/{$stage->id}/signals")
+        ->assertSuccessful()
+        ->assertJsonPath('signals.0.payload.sdp', $sdp);
+});
+
 test('speaker promotion respects the eight speaker mesh cap', function () {
     $club = Club::factory()->create();
     $host = socialReadyUser($club);

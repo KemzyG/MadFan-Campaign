@@ -228,43 +228,163 @@
     color: var(--color-paper-white);
 }
 
-.mf-land__hero-photo,
 .mf-land__hero-fallback {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center 42%;
-    animation: mf-land-fade 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.mf-land__hero-photo {
-    filter: brightness(0.94);
-}
-
-.mf-land__hero-fallback {
     background:
-        radial-gradient(ellipse 55% 50% at 62% 40%, #2c2c2c 0%, transparent 65%),
+        radial-gradient(ellipse 55% 50% at 72% 38%, #2c2c2c 0%, transparent 65%),
         linear-gradient(165deg, #0a0a0a 0%, #111111 55%, #1c1c1c 100%);
 }
 
 .mf-land__hero-scrim {
     position: absolute;
     inset: 0;
+    z-index: 1;
     background:
-        linear-gradient(0deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.26) 42%, rgba(0, 0, 0, 0.12) 100%),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, transparent 55%);
+        linear-gradient(0deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.28) 46%, rgba(0, 0, 0, 0.1) 100%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.28) 42%, transparent 68%);
     pointer-events: none;
+}
+
+.mf-land__hero-phones {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.mf-land__hero-phone {
+    position: absolute;
+    width: min(42vw, 220px);
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.55));
+    animation: mf-land-phone-float 6.4s ease-in-out infinite;
+    will-change: transform;
+}
+
+.mf-land__hero-phone--left {
+    left: 52%;
+    bottom: 14%;
+    z-index: 1;
+    transform: translateX(-58%) rotate(-11deg);
+    animation-delay: 0s;
+}
+
+.mf-land__hero-phone--center {
+    left: 68%;
+    bottom: 10%;
+    z-index: 3;
+    width: min(46vw, 248px);
+    transform: translateX(-50%) rotate(0deg);
+    animation-delay: 0.45s;
+}
+
+.mf-land__hero-phone--right {
+    left: 84%;
+    bottom: 15%;
+    z-index: 2;
+    transform: translateX(-42%) rotate(10deg);
+    animation-delay: 0.9s;
+}
+
+@keyframes mf-land-phone-float {
+    0%,
+    100% {
+        translate: 0 0;
+    }
+    50% {
+        translate: 0 -10px;
+    }
 }
 
 .mf-land__hero-copy {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     width: min(100%, var(--page-max-width));
     margin-inline: auto;
     padding: 48px 24px 64px;
     animation: mf-land-rise 720ms 60ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-width: 900px) {
+    .mf-land__hero-phone {
+        width: min(28vw, 280px);
+    }
+
+    .mf-land__hero-phone--left {
+        left: 58%;
+        bottom: 12%;
+        transform: translateX(-72%) rotate(-12deg);
+    }
+
+    .mf-land__hero-phone--center {
+        left: 74%;
+        bottom: 8%;
+        width: min(30vw, 310px);
+        transform: translateX(-50%) rotate(0.5deg);
+    }
+
+    .mf-land__hero-phone--right {
+        left: 90%;
+        bottom: 13%;
+        transform: translateX(-38%) rotate(11deg);
+    }
+
+    .mf-land__hero-copy {
+        max-width: 42%;
+        margin-inline: 0 auto 0 max(24px, calc((100% - var(--page-max-width)) / 2 + 24px));
+        padding-right: 12px;
+    }
+}
+
+@media (max-width: 899px) {
+    .mf-land__hero {
+        align-items: stretch;
+        min-height: min(100dvh, 920px);
+    }
+
+    .mf-land__hero-phones {
+        top: 4.5rem;
+        bottom: auto;
+        height: 52%;
+    }
+
+    .mf-land__hero-phone {
+        width: min(38vw, 168px);
+    }
+
+    .mf-land__hero-phone--left {
+        left: 28%;
+        bottom: 8%;
+        transform: translateX(-55%) rotate(-9deg);
+    }
+
+    .mf-land__hero-phone--center {
+        left: 50%;
+        bottom: 2%;
+        width: min(42vw, 188px);
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    .mf-land__hero-phone--right {
+        left: 72%;
+        bottom: 8%;
+        transform: translateX(-45%) rotate(9deg);
+    }
+
+    .mf-land__hero-copy {
+        margin-top: auto;
+        padding-top: 24px;
+    }
+
+    .mf-land__hero-scrim {
+        background:
+            linear-gradient(0deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.55) 38%, rgba(0, 0, 0, 0.18) 62%, transparent 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 28%);
+    }
 }
 
 .mf-land__hero-brand {
@@ -591,26 +711,26 @@
     }
 }
 
-@keyframes mf-land-fade {
-    from {
-        opacity: 0;
-        transform: scale(1.04);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .mf-land__hero-photo,
-    .mf-land__hero-fallback,
     .mf-land__hero-copy,
+    .mf-land__hero-phone,
     .mf-land__cat-body,
     .mf-land__cat-photo,
     .mf-land__cat-fallback {
         animation: none !important;
         transition: none !important;
+    }
+
+    .mf-land__hero-phone--left {
+        transform: translateX(-58%) rotate(-11deg);
+    }
+
+    .mf-land__hero-phone--center {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    .mf-land__hero-phone--right {
+        transform: translateX(-42%) rotate(10deg);
     }
 }
 

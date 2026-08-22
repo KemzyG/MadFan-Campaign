@@ -6,6 +6,7 @@ test('site landing page is public at root', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Fan/Landing')
             ->has('featured')
+            ->has('images.phones')
             ->has('stats.waitlist_count')
             ->has('story.thesis')
             ->has('story.primitives')
