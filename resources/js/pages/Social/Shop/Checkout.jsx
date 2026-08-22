@@ -24,10 +24,6 @@ export default function Checkout({ cart, defaults }) {
                 <div className="mf-tickets-hero mf-tickets-hero--compact">
                     <p className="mf-tickets-kicker mf-text-caption">Confirm order</p>
                     <p className="mf-empty-title mf-tickets-title">Shipping details</p>
-                    <p className="mf-tickets-lead">
-                        Confirm places the order and reserves stock. Payment provider integration can
-                        follow later.
-                    </p>
                 </div>
 
                 <div className="mf-shop-checkout">

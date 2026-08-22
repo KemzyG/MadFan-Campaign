@@ -94,6 +94,7 @@ export function createStageLiveKitVoiceSession({
         if (attempt && typeof attempt.then === 'function') {
             return attempt
                 .then(() => {
+                    playbackUnlocked = true;
                     if (!iAmOnStage) {
                         setStatus('Hearing stage…');
                     }
@@ -101,7 +102,7 @@ export function createStageLiveKitVoiceSession({
                 })
                 .catch(() => {
                     if (!playbackUnlocked) {
-                        setStatus('Tap “Tap to hear” to unlock audio');
+                        setStatus('Audio paused — tap anywhere to hear');
                     }
                     return false;
                 });
@@ -141,12 +142,13 @@ export function createStageLiveKitVoiceSession({
 
     function unlockPlayback() {
         playbackUnlocked = true;
-        setStatus('Unlocking audio…');
         warmUnlockGestureSync();
 
         const audios = listRemoteAudios();
         if (!audios.length) {
-            setStatus('Audio unlocked — waiting for speakers…');
+            if (!iAmOnStage) {
+                setStatus('Connecting as listener…');
+            }
             return Promise.resolve({ played: 0, failed: 0, pending: true });
         }
 
@@ -156,9 +158,9 @@ export function createStageLiveKitVoiceSession({
             if (played > 0) {
                 setStatus(iAmOnStage ? 'Hearing peers…' : 'Hearing stage…');
             } else if (failed > 0) {
-                setStatus('Browser blocked audio — tap Tap to hear again');
-            } else {
-                setStatus('Audio unlocked — waiting for speakers…');
+                setStatus('Audio paused — tap anywhere to hear');
+            } else if (!iAmOnStage) {
+                setStatus('Connecting as listener…');
             }
             return { played, failed, pending: false };
         });
@@ -277,8 +279,8 @@ export function createStageLiveKitVoiceSession({
             }
 
             await applyPublishState();
-            if (!iAmOnStage && !playbackUnlocked) {
-                setStatus('Connected — tap Tap to hear');
+            if (!iAmOnStage) {
+                listRemoteAudios().forEach((audio) => playRemoteAudio(audio));
             }
         } catch (err) {
             console.warn('livekit connect', err);

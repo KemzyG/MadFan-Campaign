@@ -54,3 +54,33 @@ export function normalizeRemoteDescription(payload) {
 
     return { type, sdp };
 }
+
+/**
+ * Remote answers are only valid while waiting for the peer's reply to our offer.
+ * Duplicate or stale answers (after stable) must be ignored to avoid InvalidStateError.
+ *
+ * @param {RTCSignalingState|string} signalingState
+ * @returns {boolean}
+ */
+export function canApplyRemoteAnswer(signalingState) {
+    return signalingState === 'have-local-offer';
+}
+
+/**
+ * Ignore glare offers when we already sent the local offer as initiator.
+ *
+ * @param {RTCSignalingState|string} signalingState
+ * @param {{ initiator?: boolean }} options
+ * @returns {boolean}
+ */
+export function canApplyRemoteOffer(signalingState, { initiator = false } = {}) {
+    if (signalingState === 'stable') {
+        return true;
+    }
+
+    if (signalingState === 'have-local-offer') {
+        return !initiator;
+    }
+
+    return false;
+}

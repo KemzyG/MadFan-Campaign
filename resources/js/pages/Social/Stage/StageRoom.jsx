@@ -170,8 +170,8 @@ export default function StageRoom() {
     const voiceChipOff = !voiceEnabled || !isLive;
     const statusLower = String(voiceStatus || '').toLowerCase();
     const isHearing = statusLower.includes('hearing');
-    const needsHearUnlock = voiceEnabled && isLive && !isHearing;
-    const hearLabel = isHearing ? 'Hearing ✓' : 'Tap to hear';
+    const audioBlocked =
+        voiceEnabled && isLive && !isHearing && statusLower.includes('tap anywhere');
     const micNeedsRecovery = onStage && voiceEnabled && isLive && isMicBlockedStatus(voiceStatus);
 
     function flashVisit(options = {}) {
@@ -356,34 +356,10 @@ export default function StageRoom() {
                     </button>
                 ) : null}
 
-                {isLive && voiceEnabled ? (
-                    <button
-                        type="button"
-                        className={`mf-btn mf-stage-hear-btn ${
-                            needsHearUnlock ? 'mf-btn--pitch' : ''
-                        }`}
-                        data-stage-hear-unlock="1"
-                        aria-pressed={!needsHearUnlock}
-                        aria-describedby="mf-stage-voice-status"
-                        onPointerDown={(event) => {
-                            // Prefer pointerdown so WebKit keeps the user-gesture token for play().
-                            if (event.pointerType === 'mouse' && event.button !== 0) {
-                                return;
-                            }
-                            event.stopPropagation();
-                            unlockVoicePlayback?.();
-                        }}
-                        onClick={(event) => {
-                            // Keyboard activation (Enter/Space): detail === 0; mouse/touch already unlocked on pointerdown.
-                            event.preventDefault();
-                            event.stopPropagation();
-                            if (event.detail === 0) {
-                                unlockVoicePlayback?.();
-                            }
-                        }}
-                    >
-                        {hearLabel}
-                    </button>
+                {audioBlocked ? (
+                    <p className="mf-stage-audio-hint mf-text-meta" role="status" aria-live="polite">
+                        Audio paused — tap anywhere to hear
+                    </p>
                 ) : null}
 
                 {me?.role === 'listener' && isLive ? (

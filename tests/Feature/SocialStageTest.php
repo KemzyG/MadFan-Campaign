@@ -319,6 +319,50 @@ test('webrtc signal payload preserves trailing sdp crlf for setRemoteDescription
         ->assertJsonPath('signals.0.payload.sdp', $sdp);
 });
 
+test('webrtc answer signal payload round-trips for mesh signaling', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->withVoice()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+    ]);
+
+    StageParticipant::factory()->host()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $host->id,
+    ]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $guest->id,
+    ]);
+
+    $sdp = "v=0\r\n"
+        ."o=- 0 0 IN IP4 127.0.0.1\r\n"
+        ."s=-\r\n"
+        ."t=0 0\r\n"
+        ."m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+        ."a=rtpmap:111 opus/48000/2\r\n"
+        ."\r\n";
+
+    $this->actingAs($guest)
+        ->postJson("/social/stage/{$stage->id}/signals", [
+            'to_user_id' => $host->id,
+            'type' => StageSignalType::Answer->value,
+            'payload' => ['sdp' => $sdp, 'type' => 'answer'],
+        ])
+        ->assertCreated();
+
+    $this->actingAs($host)
+        ->getJson("/social/stage/{$stage->id}/signals")
+        ->assertSuccessful()
+        ->assertJsonPath('signals.0.type', 'answer')
+        ->assertJsonPath('signals.0.from_user_id', $guest->id)
+        ->assertJsonPath('signals.0.payload.sdp', $sdp);
+});
+
 test('speaker promotion respects the eight speaker mesh cap', function () {
     $club = Club::factory()->create();
     $host = socialReadyUser($club);

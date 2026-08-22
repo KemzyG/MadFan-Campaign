@@ -22,22 +22,37 @@ class SocialShopController extends Controller
 
         $validated = $request->validate([
             'club_id' => ['nullable', 'integer', 'exists:clubs,id'],
+            'club' => ['nullable', 'integer', 'exists:clubs,id'],
+            'league_id' => ['nullable', 'integer', 'exists:leagues,id'],
+            'league' => ['nullable', 'integer', 'exists:leagues,id'],
+            'category' => ['nullable', 'string', Rule::in(['home', 'away', 'third', 'training', 'terrace'])],
             'sort' => ['nullable', 'string', Rule::in(['name', 'price_asc', 'price_desc', 'newest'])],
             'in_stock' => ['nullable', 'boolean'],
         ]);
 
-        $clubId = isset($validated['club_id']) ? (int) $validated['club_id'] : null;
+        $clubId = isset($validated['club_id']) || isset($validated['club'])
+            ? (int) ($validated['club_id'] ?? $validated['club'])
+            : null;
+        $leagueId = isset($validated['league_id']) || isset($validated['league'])
+            ? (int) ($validated['league_id'] ?? $validated['league'])
+            : null;
+        $category = $validated['category'] ?? null;
         $sort = $validated['sort'] ?? 'name';
         $inStockOnly = array_key_exists('in_stock', $validated)
             ? (bool) $validated['in_stock']
             : null;
 
         return Inertia::render('Social/Shop/Index', [
-            'jerseys' => $catalog->presentCatalog($clubId, $sort, $inStockOnly),
+            'jerseys' => $catalog->presentCatalog($clubId, $sort, $inStockOnly, $category, $leagueId),
+            'featured' => $catalog->presentFeaturedJerseys(),
             'clubs' => $catalog->presentClubsWithStock(),
+            'leagues' => $catalog->presentLeaguesWithStock(),
+            'categories' => $catalog->presentCategories(),
             'cart_count' => $catalog->presentCart()['count'],
             'filters' => [
                 'club_id' => $clubId,
+                'league_id' => $leagueId,
+                'category' => $category,
                 'sort' => $sort,
                 'in_stock' => $inStockOnly,
             ],

@@ -148,7 +148,6 @@ export function TicketListSkeleton({ count = 3 }) {
             <div className="mf-skel-tickets__hero">
                 <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-line mf-skel-line--display" />
-                <Bone className="mf-skel-line mf-skel-line--body" />
                 <Bone className="mf-skel-line mf-skel-line--body-short" />
             </div>
             <div className="mf-skel-ticket-list">
@@ -190,12 +189,18 @@ export function ShopMallSkeleton({ count = 6 }) {
             <div className="mf-skel-shop__hero">
                 <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-line mf-skel-line--display" />
-                <Bone className="mf-skel-line mf-skel-line--body" />
                 <Bone className="mf-skel-line mf-skel-line--body-short" />
             </div>
             <div className="mf-skel-shop__toolbar">
                 <Bone className="mf-skel-shop__filter" />
-                <Bone className="mf-skel-shop__filter" />
+                <Bone className="mf-skel-chip mf-skel-chip--wide" />
+            </div>
+            <div className="mf-skel-shop__browse">
+                <Bone className="mf-skel-line mf-skel-line--caption" />
+                <Bone className="mf-skel-chip mf-skel-chip--wide" />
+            </div>
+            <div className="mf-skel-shop__browse">
+                <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-chip mf-skel-chip--wide" />
             </div>
             <div className="mf-skel-shop__grid">
@@ -225,7 +230,6 @@ export function StageLobbySkeleton({ count = 3 }) {
             <div className="mf-skel-stage-hero">
                 <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-line mf-skel-line--display" />
-                <Bone className="mf-skel-line mf-skel-line--body" />
                 <Bone className="mf-skel-chip" />
             </div>
             <div className="mf-skel-stage-create mf-skel-stage-create--panel">

@@ -4,6 +4,7 @@ import {
     LandingNav,
     LandingUtil,
 } from '../../Components/Fan/LandingChrome';
+import { LandingReveal } from '../../Components/Fan/useLandingReveal';
 
 const CATEGORIES = [
     {
@@ -127,7 +128,7 @@ export default function Landing({
             </section>
 
             <section className="mf-land__stats" aria-label="Season pulse">
-                <div className="mf-land__stats-inner">
+                <LandingReveal className="mf-land__stats-inner" stagger>
                     <div>
                         <strong>{waitlist}</strong>
                         <span>Fans on waitlist</span>
@@ -140,7 +141,7 @@ export default function Landing({
                         <strong>{stats.points_pool ?? '500K'}</strong>
                         <span>Points up for grabs</span>
                     </div>
-                </div>
+                </LandingReveal>
             </section>
 
             <section className="mf-land__categories" aria-label="Explore Mad Fan">
@@ -148,7 +149,7 @@ export default function Landing({
                     const image = categoryImages[item.key];
 
                     return (
-                        <article key={item.key} className="mf-land__cat">
+                        <LandingReveal key={item.key} as="article" className="mf-land__cat">
                             {image?.url ? (
                                 <img
                                     className="mf-land__cat-photo"
@@ -166,24 +167,26 @@ export default function Landing({
                                     {item.cta}
                                 </Link>
                             </div>
-                        </article>
+                        </LandingReveal>
                     );
                 })}
             </section>
 
             <section className="mf-land__band" aria-label="Why Mad Fan">
-                <SectionHead
-                    eyebrow={thesis.eyebrow}
-                    title={thesis.title}
-                    body={thesis.body}
-                    action={
-                        <Link href="/about" className="mf-land__text-link">
-                            Read about us
-                        </Link>
-                    }
-                />
+                <LandingReveal>
+                    <SectionHead
+                        eyebrow={thesis.eyebrow}
+                        title={thesis.title}
+                        body={thesis.body}
+                        action={
+                            <Link href="/about" className="mf-land__text-link">
+                                Read about us
+                            </Link>
+                        }
+                    />
+                </LandingReveal>
                 {story.primitives?.length > 0 ? (
-                    <div className="mf-land__card-grid mf-land__card-grid--5">
+                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--5" stagger>
                         {story.primitives.map((item) => (
                             <article key={item.title} className="mf-land__info-card">
                                 <p className="mf-land__info-label">{item.label}</p>
@@ -191,23 +194,25 @@ export default function Landing({
                                 <p>{item.body}</p>
                             </article>
                         ))}
-                    </div>
+                    </LandingReveal>
                 ) : null}
             </section>
 
             <section className="mf-land__band mf-land__band--mist" aria-label="Season 01">
-                <SectionHead
-                    eyebrow="Season 01"
-                    title="8 weeks. Earn your standing."
-                    body="Daily claims, referrals, tasks, and streaks feed one passport ledger. Climb THE BOARD for early access and founding status."
-                    action={
-                        <Link href="/campaign" className="mf-land__pill mf-land__pill--dark">
-                            Open campaign
-                        </Link>
-                    }
-                />
+                <LandingReveal>
+                    <SectionHead
+                        eyebrow="Season 01"
+                        title="8 weeks. Earn your standing."
+                        body="Daily claims, referrals, tasks, and streaks feed one passport ledger. Climb THE BOARD for early access and founding status."
+                        action={
+                            <Link href="/campaign" className="mf-land__pill mf-land__pill--dark">
+                                Open campaign
+                            </Link>
+                        }
+                    />
+                </LandingReveal>
                 {story.earn?.length > 0 ? (
-                    <div className="mf-land__card-grid mf-land__card-grid--4">
+                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--4" stagger>
                         {story.earn.map((item) => (
                             <article key={item.name} className="mf-land__info-card">
                                 <p className="mf-land__info-label">{item.pts}</p>
@@ -215,10 +220,10 @@ export default function Landing({
                                 <p>{item.desc}</p>
                             </article>
                         ))}
-                    </div>
+                    </LandingReveal>
                 ) : null}
                 {story.weeks?.length > 0 ? (
-                    <div className="mf-land__week-grid" aria-label="Season chapters">
+                    <LandingReveal className="mf-land__week-grid" stagger aria-label="Season chapters">
                         {story.weeks.map((week) => (
                             <article key={week.num} className="mf-land__week">
                                 <p className="mf-land__info-label">{week.num}</p>
@@ -226,23 +231,25 @@ export default function Landing({
                                 <p>{week.desc}</p>
                             </article>
                         ))}
-                    </div>
+                    </LandingReveal>
                 ) : null}
             </section>
 
             <section className="mf-land__band" aria-label="Roadmap">
-                <SectionHead
-                    eyebrow="Roadmap"
-                    title="Proof before scale"
-                    body="Ship trust with live fans first, harden identity next, then unlock markets that compound for years."
-                    action={
-                        <Link href="/roadmap" className="mf-land__text-link">
-                            Full roadmap
-                        </Link>
-                    }
-                />
+                <LandingReveal>
+                    <SectionHead
+                        eyebrow="Roadmap"
+                        title="Proof before scale"
+                        body="Ship trust with live fans first, harden identity next, then unlock markets that compound for years."
+                        action={
+                            <Link href="/roadmap" className="mf-land__text-link">
+                                Full roadmap
+                            </Link>
+                        }
+                    />
+                </LandingReveal>
                 {story.roadmap?.length > 0 ? (
-                    <div className="mf-land__card-grid mf-land__card-grid--3">
+                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--3" stagger>
                         {story.roadmap.map((item) => (
                             <article key={item.title} className="mf-land__info-card">
                                 <p className="mf-land__info-label">{item.label}</p>
@@ -250,23 +257,25 @@ export default function Landing({
                                 <p>{item.body}</p>
                             </article>
                         ))}
-                    </div>
+                    </LandingReveal>
                 ) : null}
             </section>
 
             <section className="mf-land__band mf-land__band--mist" aria-label="Region">
-                <SectionHead
-                    eyebrow="Region"
-                    title="Football first, global next"
-                    body="Root where passion is lifelong, then grow hubs that feed one portable Loyalty Layer."
-                    action={
-                        <Link href="/region" className="mf-land__text-link">
-                            Explore regions
-                        </Link>
-                    }
-                />
+                <LandingReveal>
+                    <SectionHead
+                        eyebrow="Region"
+                        title="Football first, global next"
+                        body="Root where passion is lifelong, then grow hubs that feed one portable Loyalty Layer."
+                        action={
+                            <Link href="/region" className="mf-land__text-link">
+                                Explore regions
+                            </Link>
+                        }
+                    />
+                </LandingReveal>
                 {story.regions?.length > 0 ? (
-                    <div className="mf-land__card-grid mf-land__card-grid--3">
+                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--3" stagger>
                         {story.regions.map((item) => (
                             <article key={item.title} className="mf-land__info-card">
                                 <p className="mf-land__info-label">{item.label}</p>
@@ -274,18 +283,20 @@ export default function Landing({
                                 <p>{item.body}</p>
                             </article>
                         ))}
-                    </div>
+                    </LandingReveal>
                 ) : null}
             </section>
 
             {story.pages?.length > 0 ? (
                 <section className="mf-land__band mf-land__band--mist" aria-label="Company pages">
-                    <SectionHead
-                        eyebrow="Company"
-                        title="Go deeper"
-                        body="Full narrative pages for vision, roadmap, regions, and the people building Mad Fan."
-                    />
-                    <div className="mf-land__page-grid">
+                    <LandingReveal>
+                        <SectionHead
+                            eyebrow="Company"
+                            title="Go deeper"
+                            body="Full narrative pages for vision, roadmap, regions, and the people building Mad Fan."
+                        />
+                    </LandingReveal>
+                    <LandingReveal className="mf-land__page-grid" stagger>
                         {story.pages.map((page) => (
                             <Link key={page.href} href={page.href} className="mf-land__page-card">
                                 <p className="mf-land__info-label">{page.label}</p>
@@ -294,19 +305,21 @@ export default function Landing({
                                 <span>Open</span>
                             </Link>
                         ))}
-                    </div>
+                    </LandingReveal>
                 </section>
             ) : null}
 
             <section className="mf-land__shelf" aria-label="Featured kits">
-                <div className="mf-land__shelf-head">
+                <LandingReveal className="mf-land__shelf-head">
                     <h2>Featured kits</h2>
                     <Link href="/social/shop">Shop all</Link>
-                </div>
+                </LandingReveal>
                 {products.length === 0 ? (
-                    <p className="mf-land__shelf-empty">Kit drops land here once the shop is stocked.</p>
+                    <LandingReveal as="p" className="mf-land__shelf-empty">
+                        Kit drops land here once the shop is stocked.
+                    </LandingReveal>
                 ) : (
-                    <div className="mf-land__products">
+                    <LandingReveal className="mf-land__products" stagger>
                         {products.map((item) => {
                             const href = item.slug ? `/social/shop/${item.slug}` : '/social/shop';
 
@@ -323,12 +336,12 @@ export default function Landing({
                                 </Link>
                             );
                         })}
-                    </div>
+                    </LandingReveal>
                 )}
             </section>
 
             <section className="mf-land__cta" aria-label="Join">
-                <div className="mf-land__cta-inner">
+                <LandingReveal className="mf-land__cta-inner">
                     <p className="mf-land__eyebrow">Season 01 is live</p>
                     <h2>Claim your spot. Build your passport.</h2>
                     <p>
@@ -342,7 +355,7 @@ export default function Landing({
                             Create account
                         </Link>
                     </div>
-                </div>
+                </LandingReveal>
             </section>
 
             <LandingFooter />

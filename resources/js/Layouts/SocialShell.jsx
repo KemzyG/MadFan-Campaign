@@ -136,6 +136,19 @@ function IconFixtures({ active }) {
     );
 }
 
+function IconStandings({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M4 19h16M7 16V9m5 7V5m5 11v-4"
+            />
+        </svg>
+    );
+}
+
 function IconTickets({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -582,6 +595,12 @@ export default function SocialShell({ children, title, showTabs = true, backHref
             label: 'Fixtures',
             icon: IconFixtures,
             active: pathMatches(current, '/social/fixtures'),
+        },
+        {
+            href: '/social/clubs',
+            label: 'Table',
+            icon: IconStandings,
+            active: pathMatches(current, '/social/clubs'),
         },
         {
             href: '/social/shop',

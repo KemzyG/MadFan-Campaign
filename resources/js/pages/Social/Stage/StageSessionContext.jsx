@@ -153,7 +153,9 @@ export function StageSessionProvider({ children }) {
             if (!next) {
                 return;
             }
+            pendingUnlockRef.current = true;
             applyRoom(next, { openModal: true });
+            unlockVoicePlaybackRef.current?.();
         },
         [applyRoom],
     );
@@ -181,12 +183,11 @@ export function StageSessionProvider({ children }) {
     const unlockVoicePlayback = useCallback(() => {
         if (voiceRef.current?.unlockPlayback) {
             pendingUnlockRef.current = false;
-            // Fire from the click/pointer handler so media.play() stays in the user gesture.
             void voiceRef.current.unlockPlayback();
             return;
         }
         pendingUnlockRef.current = true;
-        setVoiceStatus('Preparing audio… tap again if needed');
+        setVoiceStatus('Connecting audio…');
     }, []);
 
     const retryMicAccess = useCallback(async () => {
@@ -446,10 +447,8 @@ export function StageSessionProvider({ children }) {
             session.stageId = stage.id;
             voiceRef.current = session;
             session.start();
-            if (pendingUnlockRef.current) {
-                pendingUnlockRef.current = false;
-                void session.unlockPlayback();
-            }
+            pendingUnlockRef.current = false;
+            void session.unlockPlayback?.();
         } else {
             voiceRef.current.update({
                 voiceEnabled,
@@ -477,6 +476,30 @@ export function StageSessionProvider({ children }) {
         echoConnected,
         stopVoice,
     ]);
+
+    // If autoplay is blocked, retry on the next page interaction (not a dedicated button).
+    useEffect(() => {
+        if (!activeStageId || !room?.stage?.voice_enabled) {
+            return undefined;
+        }
+
+        const blocked = String(voiceStatus || '').toLowerCase().includes('tap anywhere');
+        if (!blocked) {
+            return undefined;
+        }
+
+        function retryFromInteraction() {
+            unlockVoicePlaybackRef.current?.();
+        }
+
+        document.addEventListener('pointerdown', retryFromInteraction, { once: true, passive: true });
+        document.addEventListener('keydown', retryFromInteraction, { once: true });
+
+        return () => {
+            document.removeEventListener('pointerdown', retryFromInteraction);
+            document.removeEventListener('keydown', retryFromInteraction);
+        };
+    }, [activeStageId, room?.stage?.voice_enabled, voiceStatus]);
 
     // Minimize when navigating away from the Stage show route (keep listening).
     useEffect(() => {

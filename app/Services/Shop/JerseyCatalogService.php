@@ -6,29 +6,106 @@ use App\Enums\JerseySize;
 use App\Models\Club;
 use App\Models\Jersey;
 use App\Models\JerseyOrder;
+use App\Models\League;
 use App\Models\MediaAsset;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 class JerseyCatalogService
 {
+    /**
+     * @var list<array{slug: string, label: string, pattern: string}>
+     */
+    private const KIT_CATEGORIES = [
+        ['slug' => 'home', 'label' => 'Home', 'pattern' => '%Home%'],
+        ['slug' => 'away', 'label' => 'Away', 'pattern' => '%Away%'],
+        ['slug' => 'third', 'label' => 'Third', 'pattern' => '%Third%'],
+        ['slug' => 'training', 'label' => 'Training', 'pattern' => '%Training%'],
+        ['slug' => 'terrace', 'label' => 'Terrace tee', 'pattern' => '%Terrace%'],
+    ];
+
     public function __construct(private JerseyCart $cart) {}
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function presentCatalog(?int $clubId = null, string $sort = 'name', ?bool $inStockOnly = null): array
-    {
+    public function presentCatalog(
+        ?int $clubId = null,
+        string $sort = 'name',
+        ?bool $inStockOnly = null,
+        ?string $category = null,
+        ?int $leagueId = null,
+    ): array {
         return Jersey::query()
             ->active()
-            ->with(['club:id,name,short,logo', 'variants', 'mediaAssets'])
+            ->with(['club:id,name,short,logo,league_id', 'variants', 'mediaAssets'])
             ->when($clubId, fn ($query) => $query->where('club_id', $clubId))
+            ->when($leagueId, function (Builder $query) use ($leagueId): void {
+                $query->whereHas('club', fn (Builder $clubs) => $clubs->where('league_id', $leagueId));
+            })
+            ->when(filled($category), fn (Builder $query) => $this->applyCategoryFilter($query, $category))
             ->when($inStockOnly === true, function (Builder $query): void {
                 $query->whereHas('variants', fn (Builder $variants) => $variants->where('stock', '>', 0));
             })
             ->tap(fn (Builder $query) => $this->applySort($query, $sort))
             ->get()
             ->map(fn (Jersey $jersey): array => $this->presentJerseyCard($jersey))
+            ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function presentFeaturedJerseys(int $limit = 8): array
+    {
+        return Jersey::query()
+            ->active()
+            ->with(['club:id,name,short,logo', 'variants', 'mediaAssets'])
+            ->whereHas('variants', fn (Builder $variants) => $variants->where('stock', '>', 0))
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Jersey $jersey): array => $this->presentJerseyCard($jersey))
+            ->all();
+    }
+
+    /**
+     * @return list<array{slug: string, label: string, count: int}>
+     */
+    public function presentCategories(): array
+    {
+        return collect(self::KIT_CATEGORIES)
+            ->map(function (array $category): array {
+                $count = Jersey::query()
+                    ->active()
+                    ->where('name', 'like', $category['pattern'])
+                    ->count();
+
+                return [
+                    'slug' => $category['slug'],
+                    'label' => $category['label'],
+                    'count' => $count,
+                ];
+            })
+            ->filter(fn (array $category): bool => $category['count'] > 0)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, name: string, short: string|null}>
+     */
+    public function presentLeaguesWithStock(): array
+    {
+        return League::query()
+            ->whereHas('clubs.jerseys', fn (Builder $query) => $query->active())
+            ->orderBy('name')
+            ->get(['id', 'name', 'short'])
+            ->map(fn (League $league): array => [
+                'id' => $league->id,
+                'name' => $league->name,
+                'short' => $league->short,
+            ])
             ->all();
     }
 
@@ -40,11 +117,12 @@ class JerseyCatalogService
         return Club::query()
             ->whereHas('jerseys', fn (Builder $query) => $query->active())
             ->orderBy('name')
-            ->get(['id', 'name', 'short'])
+            ->get(['id', 'name', 'short', 'logo'])
             ->map(fn (Club $club): array => [
                 'id' => $club->id,
                 'name' => $club->name,
                 'short' => $club->short,
+                'logo_url' => $club->logo_url,
             ])
             ->all();
     }
@@ -189,11 +267,25 @@ class JerseyCatalogService
 
     private function detectKitKind(string $name): ?string
     {
+        if (preg_match('/\b(Terrace Tee|Terrace)\b/i', $name) === 1) {
+            return 'Terrace';
+        }
+
         if (preg_match('/\b(Home|Away|Third|Training)\b/i', $name, $matches) !== 1) {
             return null;
         }
 
         return ucfirst(strtolower($matches[1]));
+    }
+
+    private function applyCategoryFilter(Builder $query, string $category): void
+    {
+        $pattern = collect(self::KIT_CATEGORIES)
+            ->firstWhere('slug', strtolower($category))['pattern'] ?? null;
+
+        if ($pattern !== null) {
+            $query->where('name', 'like', $pattern);
+        }
     }
 
     /**

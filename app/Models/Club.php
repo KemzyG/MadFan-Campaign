@@ -44,6 +44,11 @@ class Club extends Model
         return $this->hasMany(Jersey::class);
     }
 
+    public function standing(): HasOne
+    {
+        return $this->hasOne(LeagueStanding::class);
+    }
+
     public function getLogoUrlAttribute(): string
     {
         return PublicStorageUrl::path($this->logo);

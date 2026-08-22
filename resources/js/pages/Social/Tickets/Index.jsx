@@ -155,10 +155,6 @@ export default function Index({ matches, ticket_count = 0 }) {
                     <div className="mf-tickets-hero">
                         <p className="mf-tickets-kicker mf-text-caption">Box office</p>
                         <p className="mf-empty-title mf-tickets-title">Upcoming fixtures</p>
-                        <p className="mf-tickets-lead">
-                            Confirm purchase to print a GA stadium ticket to your wallet — monochrome stock
-                            face, perforated stub, turnstile QR. No card rails on this pass.
-                        </p>
                         <div className="mf-fixtures-hero__links">
                             <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
                                 Full fixture board

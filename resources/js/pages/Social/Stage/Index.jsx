@@ -139,6 +139,8 @@ function StageCard({ stage, index = 0 }) {
         }
 
         // Deep-link join: Show seeds session + opens modal overlay.
+        // Capture the join click as a user gesture so stage audio can autoplay.
+        session?.unlockVoicePlayback?.();
         e.preventDefault();
         router.visit(`/social/stage/${stage.id}`);
     }
@@ -228,10 +230,6 @@ export default function Index({ stages, max_title_length = 80, max_speakers = 8,
                     <header className="mf-stage-hero">
                         <p className="mf-stage-hero__kicker mf-text-caption">Live terrace</p>
                         <p className="mf-empty-title mf-stage-hero__title">Join stage</p>
-                        <p className="mf-stage-hero__lead">
-                            Drop into a live fan conversation — text in-room, voice on stage (≤{max_speakers}{' '}
-                            speakers). Floodlit rooms, X-dense copy.
-                        </p>
                         <div className="mf-stage-hero__meta">
                             <span className="mf-stage-hero__count mf-mono">
                                 {stageList.length} live

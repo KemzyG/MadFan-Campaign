@@ -14,7 +14,11 @@ import {
     mediaDevicesAvailable,
     requestStageMicrophone,
 } from './stageMicPermission';
-import { normalizeRemoteDescription } from './stageSdp';
+import {
+    canApplyRemoteAnswer,
+    canApplyRemoteOffer,
+    normalizeRemoteDescription,
+} from './stageSdp';
 
 export function createStageMeshVoiceSession({
     stageId,
@@ -41,7 +45,7 @@ export function createStageMeshVoiceSession({
     let currentPollMs = signalPollMs;
     let signalChain = Promise.resolve();
     let iceServers = normalizeIceServers(iceServersOption);
-    /** Set by a trusted user gesture (Tap to hear) so later remote tracks can autoplay. */
+    /** Set when playback succeeds or the user interacts with the page. */
     let playbackUnlocked = false;
     let unlockAudioContext = null;
     /** After a hard mic deny, pause auto getUserMedia until Enable microphone. */
@@ -229,6 +233,7 @@ export function createStageMeshVoiceSession({
         if (attempt && typeof attempt.then === 'function') {
             return attempt
                 .then(() => {
+                    playbackUnlocked = true;
                     if (!iAmOnStage) {
                         setStatus('Hearing stage...');
                     }
@@ -236,7 +241,7 @@ export function createStageMeshVoiceSession({
                 })
                 .catch(() => {
                     if (!playbackUnlocked) {
-                        setStatus('Tap "Tap to hear" to unlock audio');
+                        setStatus('Audio paused — tap anywhere to hear');
                     }
                     return false;
                 });
@@ -279,18 +284,18 @@ export function createStageMeshVoiceSession({
     }
 
     /**
-     * Call from a trusted user gesture so browsers unlock WebRTC remote audio.
-     * Safe before remote tracks exist - marks unlocked so later attachRemoteAudio can play.
-     * Important: do not await before audio.play(); that would drop the gesture token.
+     * Unlock playback — call on join (user gesture) or page interaction retry.
+     * Safe before remote tracks exist; later attachRemoteAudio will play automatically.
      */
     function unlockPlayback() {
         playbackUnlocked = true;
-        setStatus('Unlocking audio...');
         warmUnlockGestureSync();
 
         const audios = listRemoteAudios();
         if (!audios.length) {
-            setStatus('Audio unlocked - waiting for speakers...');
+            if (!iAmOnStage) {
+                setStatus('Connecting as listener...');
+            }
             return Promise.resolve({ played: 0, failed: 0, pending: true });
         }
 
@@ -303,9 +308,9 @@ export function createStageMeshVoiceSession({
             if (played > 0) {
                 setStatus(iAmOnStage ? 'Hearing peers...' : 'Hearing stage...');
             } else if (failed > 0) {
-                setStatus('Browser blocked audio - tap Tap to hear again');
-            } else {
-                setStatus('Audio unlocked - waiting for speakers...');
+                setStatus('Audio paused — tap anywhere to hear');
+            } else if (!iAmOnStage) {
+                setStatus('Connecting as listener...');
             }
 
             return { played, failed, pending: false };
@@ -388,10 +393,7 @@ export function createStageMeshVoiceSession({
             if (state === 'connected' || state === 'completed') {
                 entry.iceFailed = false;
                 if (!iAmOnStage) {
-                    // Do not claim "Hearing" until <audio>.play() succeeds (autoplay may still block).
-                    if (!playbackUnlocked) {
-                        setStatus('Connected - tap Tap to hear');
-                    }
+                    listRemoteAudios().forEach((audio) => playRemoteAudio(audio));
                 } else if (isMuted) {
                     setStatus('Mic muted');
                 } else {
@@ -448,6 +450,13 @@ export function createStageMeshVoiceSession({
         }
 
         await ensureAudioSenders(entry);
+        const offerState = entry.pc.signalingState;
+        if (!canApplyRemoteOffer(offerState, { initiator: entry.initiator })) {
+            if (offerState !== 'stable') {
+                console.warn('signal ingest skipped offer: wrong signalingState', fromUserId, offerState);
+            }
+            return;
+        }
         const remoteDescription = normalizeRemoteDescription({
             type: payload.type || 'offer',
             sdp: payload.sdp,
@@ -474,6 +483,14 @@ export function createStageMeshVoiceSession({
     async function handleAnswer(fromUserId, payload) {
         const entry = peers.get(fromUserId);
         if (!entry) return;
+        const answerState = entry.pc.signalingState;
+        if (!canApplyRemoteAnswer(answerState)) {
+            // stable = duplicate/stale answer after peer reset or dual delivery — ignore quietly.
+            if (answerState !== 'stable') {
+                console.warn('signal ingest skipped answer: wrong signalingState', fromUserId, answerState);
+            }
+            return;
+        }
         const remoteDescription = normalizeRemoteDescription({
             type: payload.type || 'answer',
             sdp: payload.sdp,

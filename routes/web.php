@@ -79,6 +79,7 @@ use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
 use App\Http\Controllers\Inertia\Social\SocialStageParticipantController;
 use App\Http\Controllers\Inertia\Social\SocialStageSignalController;
+use App\Http\Controllers\Inertia\Social\SocialStandingsController;
 use App\Http\Controllers\Inertia\Social\SocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
 use App\Http\Controllers\Inertia\StaffPageController;
@@ -263,6 +264,7 @@ Route::middleware('app.maintenance')->group(function () {
                     ->name('stage.livekit-token');
 
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
+                Route::get('/clubs', SocialStandingsController::class)->name('clubs');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
                 Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');
                 Route::get('/tickets/{ticket}', [SocialTicketController::class, 'show'])->name('tickets.show');

@@ -269,11 +269,10 @@ export default function Fixtures({
                     <header className="mf-fixtures-hero">
                         <p className="mf-tickets-kicker mf-text-caption">Match centre</p>
                         <p className="mf-empty-title mf-tickets-title">Fixtures</p>
-                        <p className="mf-tickets-lead">
-                            Live boards, today&apos;s kickoffs, the days ahead, and results that have already
-                            gone full time.
-                        </p>
                         <div className="mf-fixtures-hero__links">
+                            <Link href="/social/clubs" className="mf-tickets-mine-link" prefetch>
+                                League table
+                            </Link>
                             <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
                                 Box office
                             </Link>

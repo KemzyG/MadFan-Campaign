@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\Jersey;
 use App\Models\JerseyOrder;
 use App\Models\JerseyVariant;
+use App\Models\League;
 use App\Support\ApplicationSettings;
 
 test('jersey shop requires authentication', function () {
@@ -49,11 +50,67 @@ test('onboarded fans can browse active jerseys', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Social/Shop/Index')
             ->has('jerseys', 1)
+            ->has('featured')
+            ->has('categories')
+            ->has('leagues')
             ->where('jerseys.0.name', 'Home Kit 25/26')
             ->where('jerseys.0.price', '69.99')
             ->where('jerseys.0.purchasable', true)
             ->where('jerseys.0.kit_kind', 'Home')
             ->where('jerseys.0.sizes_available', ['M']));
+});
+
+test('fans can filter the jersey shop by category, league, and club', function () {
+    $league = League::factory()->create(['name' => 'Premier League', 'short' => 'EPL']);
+    $otherLeague = League::factory()->create(['name' => 'La Liga', 'short' => 'LLG']);
+
+    $club = Club::factory()->create(['name' => 'North End', 'league_id' => $league->id]);
+    $rival = Club::factory()->create(['name' => 'South City', 'league_id' => $otherLeague->id]);
+    $user = socialReadyUser($club);
+
+    $home = Jersey::factory()->create([
+        'club_id' => $club->id,
+        'name' => 'North End Home 25/26',
+        'is_active' => true,
+    ]);
+    $away = Jersey::factory()->create([
+        'club_id' => $club->id,
+        'name' => 'North End Away 25/26',
+        'is_active' => true,
+    ]);
+    $rivalKit = Jersey::factory()->create([
+        'club_id' => $rival->id,
+        'name' => 'South City Home 25/26',
+        'is_active' => true,
+    ]);
+
+    foreach ([$home, $away, $rivalKit] as $jersey) {
+        JerseyVariant::factory()->size(JerseySize::M)->create([
+            'jersey_id' => $jersey->id,
+            'stock' => 5,
+        ]);
+    }
+
+    $this->actingAs($user)
+        ->get(route('social.shop.index', ['category' => 'home']))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('jerseys', 2)
+            ->where('filters.category', 'home'));
+
+    $this->actingAs($user)
+        ->get(route('social.shop.index', ['league' => $league->id]))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('jerseys', 2)
+            ->where('filters.league_id', $league->id));
+
+    $this->actingAs($user)
+        ->get(route('social.shop.index', ['club' => $club->id]))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('jerseys', 2)
+            ->where('filters.club_id', $club->id));
 });
 
 test('fans can add a jersey to the bag and confirm an order', function () {

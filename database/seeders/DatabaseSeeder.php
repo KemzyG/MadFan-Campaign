@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ClubSeeder::class,
             ClubChatSeeder::class,
             MatchSeeder::class,
+            LeagueStandingSeeder::class,
             JerseySeeder::class,
             LandingMediaSeeder::class,
             TestDataSeeder::class,

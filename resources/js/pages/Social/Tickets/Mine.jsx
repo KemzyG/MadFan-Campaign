@@ -52,10 +52,6 @@ export default function Mine({ tickets }) {
                     <div className="mf-tickets-hero mf-tickets-hero--compact">
                         <p className="mf-tickets-kicker mf-text-caption">Ticket wallet</p>
                         <p className="mf-empty-title mf-tickets-title">Your matchday stock</p>
-                        <p className="mf-tickets-lead">
-                            Paper-style stadium passes ready for the turnstile. Tap a stub to open the gate
-                            QR in place — no page hop.
-                        </p>
                         <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
                             Browse fixtures
                         </Link>

@@ -1,8 +1,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useMemo } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
-function ClubCrest({ club }) {
+function ClubCrest({ club, className = '' }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
 
@@ -11,14 +12,14 @@ function ClubCrest({ club }) {
             <img
                 src={club.logo_url}
                 alt=""
-                className="mf-shop-crest__img"
+                className={['mf-shop-crest__img', className].filter(Boolean).join(' ')}
                 onError={(event) => onImageError(event, fallbackUrl)}
             />
         );
     }
 
     return (
-        <span className="mf-shop-crest__mark mf-display" aria-hidden>
+        <span className={['mf-shop-crest__mark mf-display', className].filter(Boolean).join(' ')} aria-hidden>
             {(club?.short || club?.name || 'MF').slice(0, 3)}
         </span>
     );
@@ -34,15 +35,15 @@ function stockChipClass(purchasable) {
         .join(' ');
 }
 
-function JerseyCard({ jersey, index = 0 }) {
+function JerseyCard({ jersey, index = 0, compact = false }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
-    const sizesPreview = (jersey.sizes_available || []).slice(0, 4);
+    const sizesPreview = (jersey.sizes_available || []).slice(0, compact ? 2 : 4);
 
     return (
         <Link
             href={`/social/shop/${jersey.slug}`}
-            className="mf-shop-card"
+            className={['mf-shop-card', compact ? 'mf-shop-card--compact' : ''].filter(Boolean).join(' ')}
             prefetch
             style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
         >
@@ -64,7 +65,7 @@ function JerseyCard({ jersey, index = 0 }) {
                     {jersey.kit_kind ? (
                         <span className="mf-shop-card__kind mf-mono">{jersey.kit_kind}</span>
                     ) : null}
-                    {jersey.gallery_count > 1 ? (
+                    {!compact && jersey.gallery_count > 1 ? (
                         <span className="mf-shop-card__shots mf-mono">{jersey.gallery_count} shots</span>
                     ) : null}
                 </div>
@@ -98,9 +99,107 @@ function JerseyCard({ jersey, index = 0 }) {
     );
 }
 
+function FeaturedCard({ jersey }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
+
+    return (
+        <Link href={`/social/shop/${jersey.slug}`} className="mf-shop-featured-card" prefetch>
+            <div className="mf-shop-featured-card__media">
+                {jersey.image_url ? (
+                    <img
+                        src={jersey.image_url}
+                        alt=""
+                        className="mf-shop-featured-card__img"
+                        loading="lazy"
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
+                ) : (
+                    <div className="mf-shop-featured-card__placeholder">
+                        <ClubCrest club={jersey.club} />
+                    </div>
+                )}
+                {jersey.kit_kind ? (
+                    <span className="mf-shop-featured-card__kind mf-mono">{jersey.kit_kind}</span>
+                ) : null}
+            </div>
+            <div className="mf-shop-featured-card__body">
+                <p className="mf-text-caption text-[var(--mf-muted)]">
+                    {jersey.club?.name || 'Mad Fan kit'}
+                </p>
+                <p className="mf-shop-featured-card__title mf-display">{jersey.name}</p>
+                <p className="mf-shop-featured-card__price mf-mono">£{jersey.price}</p>
+            </div>
+        </Link>
+    );
+}
+
+function FeaturedSwiper({ jerseys = [] }) {
+    const loop = useMemo(() => {
+        if (jerseys.length === 0) {
+            return [];
+        }
+
+        const base = jerseys.length < 4 ? [...jerseys, ...jerseys] : jerseys;
+
+        return [...base, ...base];
+    }, [jerseys]);
+
+    if (loop.length === 0) {
+        return null;
+    }
+
+    return (
+        <section className="mf-shop-featured" aria-label="Featured kits">
+            <div className="mf-shop-featured__head">
+                <p className="mf-tickets-kicker mf-text-caption">Fresh on the rail</p>
+                <h2 className="mf-shop-featured__title mf-display">Featured drops</h2>
+            </div>
+            <div className="mf-shop-swiper">
+                <div
+                    className="mf-shop-swiper__track"
+                    style={{ '--mf-shop-swiper-count': loop.length }}
+                >
+                    {loop.map((jersey, index) => (
+                        <FeaturedCard key={`${jersey.id}-${index}`} jersey={jersey} />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function BrowseChips({ label, children }) {
+    return (
+        <div className="mf-shop-browse">
+            <p className="mf-shop-browse__label mf-text-caption text-[var(--mf-muted)]">{label}</p>
+            <div className="mf-shop-browse__rail" role="list">
+                {children}
+            </div>
+        </div>
+    );
+}
+
+function BrowseChip({ active, onClick, children, ariaLabel }) {
+    return (
+        <button
+            type="button"
+            role="listitem"
+            className={['mf-shop-browse__chip', active ? 'is-active' : ''].filter(Boolean).join(' ')}
+            aria-pressed={active}
+            aria-label={ariaLabel}
+            onClick={onClick}
+        >
+            {children}
+        </button>
+    );
+}
+
 function updateFilters(filters, patch) {
     const next = {
         club_id: filters.club_id || undefined,
+        league_id: filters.league_id || undefined,
+        category: filters.category || undefined,
         sort: filters.sort && filters.sort !== 'name' ? filters.sort : undefined,
         in_stock: filters.in_stock ? 1 : undefined,
         ...patch,
@@ -119,24 +218,45 @@ function updateFilters(filters, patch) {
     });
 }
 
+function toggleFilter(filters, key, value) {
+    updateFilters(filters, {
+        [key]: String(filters[key] ?? '') === String(value) ? undefined : value,
+    });
+}
+
 function hasActiveFilters(filters) {
-    return Boolean(filters.club_id || filters.in_stock || (filters.sort && filters.sort !== 'name'));
+    return Boolean(
+        filters.club_id ||
+            filters.league_id ||
+            filters.category ||
+            filters.in_stock ||
+            (filters.sort && filters.sort !== 'name'),
+    );
 }
 
 export default function Index({
     jerseys = [],
+    featured = [],
     clubs = [],
+    leagues = [],
+    categories = [],
     cart_count = 0,
     filters = {},
     favourite_club_id = null,
 }) {
     const activeFilters = {
         club_id: filters.club_id ?? '',
+        league_id: filters.league_id ?? '',
+        category: filters.category ?? '',
         sort: filters.sort ?? 'name',
         in_stock: Boolean(filters.in_stock),
     };
     const filtersOn = hasActiveFilters(activeFilters);
     const selectedClub = clubs.find((club) => String(club.id) === String(activeFilters.club_id));
+    const selectedLeague = leagues.find((league) => String(league.id) === String(activeFilters.league_id));
+    const selectedCategory = categories.find(
+        (category) => category.slug === activeFilters.category,
+    );
 
     return (
         <SocialShell title="Shop">
@@ -144,13 +264,9 @@ export default function Index({
 
             <div className="mf-shop mf-shop--mall">
                 <header className="mf-shop-mall-hero">
-                    <div className="mf-shop-mall-hero__copy">
+                    <div>
                         <p className="mf-tickets-kicker mf-text-caption">Mad Fan mall</p>
                         <h1 className="mf-empty-title mf-tickets-title">Jersey floor</h1>
-                        <p className="mf-tickets-lead">
-                            Club kits on one rail — filter by side, sort the aisle, bag a size.
-                            Checkout stays shipping-only on this pass.
-                        </p>
                         <div className="mf-shop-hero-links">
                             <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
                                 Bag
@@ -169,30 +285,105 @@ export default function Index({
                     </div>
                 </header>
 
-                <div className="mf-shop-toolbar" role="search" aria-label="Filter kits">
-                    <label className="mf-shop-filter">
-                        <span className="mf-text-caption text-[var(--mf-muted)]">Club</span>
-                        <select
-                            className="mf-shop-filter__control"
-                            value={activeFilters.club_id}
-                            onChange={(e) =>
-                                updateFilters(activeFilters, {
-                                    club_id: e.target.value || undefined,
-                                })
-                            }
-                        >
-                            <option value="">All clubs</option>
+                <FeaturedSwiper jerseys={featured} />
+
+                <div className="mf-shop-browse-stack">
+                    {categories.length > 0 ? (
+                        <BrowseChips label="By category">
+                            <BrowseChip
+                                active={!activeFilters.category}
+                                onClick={() => updateFilters(activeFilters, { category: undefined })}
+                                ariaLabel="All categories"
+                            >
+                                All kits
+                            </BrowseChip>
+                            {categories.map((category) => (
+                                <BrowseChip
+                                    key={category.slug}
+                                    active={activeFilters.category === category.slug}
+                                    onClick={() =>
+                                        toggleFilter(activeFilters, 'category', category.slug)
+                                    }
+                                    ariaLabel={`${category.label}, ${category.count} kits`}
+                                >
+                                    {category.label}
+                                    <span className="mf-shop-browse__count mf-mono">{category.count}</span>
+                                </BrowseChip>
+                            ))}
+                        </BrowseChips>
+                    ) : null}
+
+                    {leagues.length > 0 ? (
+                        <BrowseChips label="By league">
+                            <BrowseChip
+                                active={!activeFilters.league_id}
+                                onClick={() => updateFilters(activeFilters, { league_id: undefined })}
+                                ariaLabel="All leagues"
+                            >
+                                All leagues
+                            </BrowseChip>
+                            {leagues.map((league) => (
+                                <BrowseChip
+                                    key={league.id}
+                                    active={String(activeFilters.league_id) === String(league.id)}
+                                    onClick={() =>
+                                        toggleFilter(activeFilters, 'league_id', league.id)
+                                    }
+                                    ariaLabel={league.name}
+                                >
+                                    <span className="mf-shop-browse__short mf-mono">{league.short}</span>
+                                    <span className="mf-shop-browse__name">{league.name}</span>
+                                </BrowseChip>
+                            ))}
+                        </BrowseChips>
+                    ) : null}
+
+                    {clubs.length > 0 ? (
+                        <BrowseChips label="By club">
+                            <BrowseChip
+                                active={!activeFilters.club_id}
+                                onClick={() => updateFilters(activeFilters, { club_id: undefined })}
+                                ariaLabel="All clubs"
+                            >
+                                All clubs
+                            </BrowseChip>
                             {favourite_club_id ? (
-                                <option value={favourite_club_id}>My club</option>
+                                <BrowseChip
+                                    active={String(activeFilters.club_id) === String(favourite_club_id)}
+                                    onClick={() =>
+                                        toggleFilter(activeFilters, 'club_id', favourite_club_id)
+                                    }
+                                    ariaLabel="My club"
+                                >
+                                    <span className="mf-shop-browse__crest">
+                                        <ClubCrest
+                                            club={clubs.find(
+                                                (club) => String(club.id) === String(favourite_club_id),
+                                            )}
+                                        />
+                                    </span>
+                                    My club
+                                </BrowseChip>
                             ) : null}
                             {clubs.map((club) => (
-                                <option key={club.id} value={club.id}>
-                                    {club.name}
-                                </option>
+                                <BrowseChip
+                                    key={club.id}
+                                    active={String(activeFilters.club_id) === String(club.id)}
+                                    onClick={() => toggleFilter(activeFilters, 'club_id', club.id)}
+                                    ariaLabel={club.name}
+                                >
+                                    <span className="mf-shop-browse__crest">
+                                        <ClubCrest club={club} />
+                                    </span>
+                                    <span className="mf-shop-browse__short mf-mono">{club.short}</span>
+                                    <span className="mf-shop-browse__name">{club.name}</span>
+                                </BrowseChip>
                             ))}
-                        </select>
-                    </label>
+                        </BrowseChips>
+                    ) : null}
+                </div>
 
+                <div className="mf-shop-toolbar" role="search" aria-label="Sort and stock filters">
                     <label className="mf-shop-filter">
                         <span className="mf-text-caption text-[var(--mf-muted)]">Sort</span>
                         <select
@@ -226,6 +417,8 @@ export default function Index({
 
                     <p className="mf-shop-toolbar__count mf-mono">
                         {jerseys.length} {jerseys.length === 1 ? 'kit' : 'kits'}
+                        {selectedCategory ? ` · ${selectedCategory.label}` : ''}
+                        {selectedLeague ? ` · ${selectedLeague.short || selectedLeague.name}` : ''}
                         {selectedClub ? ` · ${selectedClub.short || selectedClub.name}` : ''}
                     </p>
                 </div>
@@ -235,7 +428,7 @@ export default function Index({
                         <p className="mf-empty-title">No kits on this rail</p>
                         <p className="mf-empty-copy">
                             {filtersOn
-                                ? 'Nothing matches these filters — clear them or pick another club.'
+                                ? 'Nothing matches these filters — clear them or pick another aisle.'
                                 : 'The jersey floor is empty right now. Check back after the next drop.'}
                         </p>
                         {filtersOn ? (
@@ -251,7 +444,7 @@ export default function Index({
                 ) : (
                     <div className="mf-shop-grid mf-shop-grid--mall">
                         {jerseys.map((jersey, index) => (
-                            <JerseyCard key={jersey.id} jersey={jersey} index={index} />
+                            <JerseyCard key={jersey.id} jersey={jersey} index={index} compact />
                         ))}
                     </div>
                 )}
