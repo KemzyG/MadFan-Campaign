@@ -13,6 +13,7 @@ use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PasetoAuthenticate;
 use App\Http\Middleware\PreventFanRoutesOnAdminDomain;
+use App\Http\Middleware\RedirectApexToCampaign;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\AdminRouting;
 use Illuminate\Foundation\Application;
@@ -34,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Runs before route `auth` so guest redirects cannot steal /dashboard on ADMIN_DOMAIN.
         $middleware->prepend(PreventFanRoutesOnAdminDomain::class);
+
+        // Apex/www never carry campaign routes once CAMPAIGN_DOMAIN is domain-scoped; bounce first.
+        $middleware->prepend(RedirectApexToCampaign::class);
 
         $middleware->web(append: [
             HandleInertiaRequests::class,

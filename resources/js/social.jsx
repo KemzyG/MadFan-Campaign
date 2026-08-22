@@ -10,8 +10,10 @@ import { StageSessionProvider } from './pages/Social/Stage/StageSessionContext';
 
 const socialPages = {
     ...import.meta.glob('./pages/Social/**/*.jsx'),
-    // Auth redirects from /social must resolve under the Social entry, not only user.jsx.
+    // Auth + connect-accounts onboarding redirects from /social must resolve
+    // under the Social entry, not only user.jsx.
     ...import.meta.glob('./pages/Fan/Auth/**/*.jsx'),
+    ...import.meta.glob('./pages/Fan/ConnectAccounts.jsx'),
 };
 
 // Warm Echo when Reverb is configured (no-op when VITE_REVERB_* missing).

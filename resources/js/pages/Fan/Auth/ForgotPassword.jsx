@@ -1,5 +1,5 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import FanLayout from '../../../Layouts/FanLayout';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
 
 export default function ForgotPassword() {
     const { flash } = usePage().props;
@@ -13,41 +13,56 @@ export default function ForgotPassword() {
     }
 
     return (
-        <FanLayout withSidebar={false}>
-            <Head title="Forgot password" />
-            <div className="wrap">
-                <div className="signup-block" style={{ marginTop: '48px' }}>
-                    <h2>RESET PASSWORD</h2>
-                    <p>Enter your email and we will send reset instructions if an account exists.</p>
-                    {(flash?.status || flash?.success) && (
-                        <div className="reg-error-banner" role="status" style={{ marginBottom: '16px' }}>
-                            {flash.status || flash.success}
-                        </div>
-                    )}
-                    <form onSubmit={submit}>
-                        <div className="input-row" style={{ flexDirection: 'column', maxWidth: '100%' }}>
-                            <input
-                                type="email"
-                                placeholder="your@email.com"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                required
-                            />
-                            {errors.email && (
-                                <p style={{ color: 'var(--ember)', fontSize: '13px', textAlign: 'left' }}>{errors.email}</p>
-                            )}
-                            <button type="submit" className="btn-join" disabled={processing}>
-                                {processing ? 'SENDING…' : 'SEND RESET LINK'}
-                            </button>
-                        </div>
-                    </form>
-                    <p style={{ marginTop: '16px' }}>
-                        <a href="/login" style={{ color: 'var(--flame)', fontSize: '13px' }}>
-                            Back to enter campaign →
-                        </a>
-                    </p>
+        <div className="mf-stage">
+            <div className="mf-onboard">
+                <Head title="Forgot password" />
+
+                <Link href="/" className="mf-auth-brand">
+                    <FanBrandLogo asLink={false} size={28} className="mf-auth-brand-mark" />
+                    <span>Mad Fan</span>
+                </Link>
+
+                <p className="mf-text-caption text-[var(--mf-pitch)]">Account recovery</p>
+                <p className="mf-display mf-text-display mt-2 text-[var(--mf-text)]">Reset your password</p>
+                <p className="mf-auth-lead">
+                    Enter your email and we&apos;ll send reset instructions if an account exists.
+                </p>
+
+                {(flash?.status || flash?.success) && (
+                    <div className="mf-auth-banner" role="status">
+                        {flash.status || flash.success}
+                    </div>
+                )}
+
+                <form onSubmit={submit} className="mf-auth-form">
+                    <div className="mf-auth-field">
+                        <label className="mf-auth-label" htmlFor="forgot-email">
+                            Email
+                        </label>
+                        <input
+                            id="forgot-email"
+                            type="email"
+                            className={`mf-auth-input${errors.email ? ' has-error' : ''}`}
+                            placeholder="your@email.com"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            autoComplete="email"
+                            required
+                        />
+                        {errors.email && <p className="mf-field-error">{errors.email}</p>}
+                    </div>
+
+                    <button type="submit" className="mf-btn mf-btn--pitch w-full" disabled={processing}>
+                        {processing ? 'Sending…' : 'Send reset link'}
+                    </button>
+                </form>
+
+                <div className="mf-auth-actions">
+                    <Link href="/login" className="mf-auth-link">
+                        Back to enter campaign →
+                    </Link>
                 </div>
             </div>
-        </FanLayout>
+        </div>
     );
 }

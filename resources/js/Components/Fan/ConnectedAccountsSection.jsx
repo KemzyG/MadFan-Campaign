@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import SocialAccountCard from './SocialAccountCard';
 
 export default function ConnectedAccountsSection({
@@ -47,9 +46,11 @@ export default function ConnectedAccountsSection({
 
             {showManageLink && (
                 <div className="connect-footer">
-                    <Link href="/connect-accounts?manage=1" className="btn-action btn-go">
+                    {/* Plain anchor: /connect-accounts renders in the dark Social shell,
+                        which needs a full navigation to load its bundle/styles. */}
+                    <a href="/connect-accounts?manage=1" className="btn-action btn-go">
                         FULL CONNECT PAGE
-                    </Link>
+                    </a>
                 </div>
             )}
         </div>

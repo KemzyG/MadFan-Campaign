@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { resolveSocialHref as resolveHref, socialPath } from '../../lib/socialPath';
 import FanBrandLogo from './FanBrandLogo';
 
 export const LANDING_NAV = [
@@ -90,9 +91,11 @@ export function LandingUtil() {
             {user ? (
                 <Link href="/dashboard">Dashboard</Link>
             ) : (
-                <Link href="/login">Sign in</Link>
+                // Plain anchor: /login renders in the dark Social shell, which
+                // needs a full navigation to load its bundle/styles.
+                <a href="/login">Sign in</a>
             )}
-            <Link href="/register">Join</Link>
+            <a href="/register">Join</a>
         </div>
     );
 }
@@ -101,6 +104,8 @@ export function LandingUtil() {
  * @param {{ activeHref?: string }} props
  */
 export function LandingNav({ activeHref }) {
+    const page = usePage();
+
     return (
         <header className="mf-land__nav">
             <Link href="/" className="mf-land__brand" aria-label="Mad Fan home">
@@ -112,7 +117,7 @@ export function LandingNav({ activeHref }) {
                 {LANDING_NAV.map((link) => (
                     <Link
                         key={link.href}
-                        href={link.href}
+                        href={resolveHref(link.href, page.props)}
                         className={activeHref === link.href ? 'is-active' : undefined}
                         aria-current={activeHref === link.href ? 'page' : undefined}
                     >
@@ -126,10 +131,10 @@ export function LandingNav({ activeHref }) {
                     <SearchIcon />
                     Search
                 </span>
-                <Link href="/social" className="mf-land__icon" aria-label="Social">
+                <Link href={socialPath(page.props)} className="mf-land__icon" aria-label="Social">
                     <HeartIcon />
                 </Link>
-                <Link href="/social/shop" className="mf-land__icon" aria-label="Store">
+                <Link href={socialPath(page.props, '/shop')} className="mf-land__icon" aria-label="Store">
                     <BagIcon />
                 </Link>
             </div>
@@ -138,6 +143,8 @@ export function LandingNav({ activeHref }) {
 }
 
 export function LandingFooter() {
+    const page = usePage();
+
     return (
         <footer className="mf-land__footer">
             <div className="mf-land__footer-inner">
@@ -152,7 +159,7 @@ export function LandingFooter() {
                             <ul>
                                 {column.links.map((link) => (
                                     <li key={link.href + link.label}>
-                                        <Link href={link.href}>{link.label}</Link>
+                                        <Link href={resolveHref(link.href, page.props)}>{link.label}</Link>
                                     </li>
                                 ))}
                             </ul>

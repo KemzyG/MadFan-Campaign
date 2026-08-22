@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import { socialPlatformIcon } from './socialPlatformIcons';
 
 export default function CompleteRegistrationModal({
@@ -107,14 +106,16 @@ export default function CompleteRegistrationModal({
                 </div>
 
                 <div className="mf-modal-actions">
+                    {/* Plain anchors: both destinations render in the dark Social shell,
+                        which needs a full navigation to load its bundle/styles. */}
                     {isAuthenticated ? (
-                        <Link href="/connect-accounts?onboarding=1" className="btn-join mf-modal-cta">
+                        <a href="/connect-accounts?onboarding=1" className="btn-join mf-modal-cta">
                             CONNECT ACCOUNTS
-                        </Link>
+                        </a>
                     ) : (
-                        <Link href={registerUrl} className="btn-join mf-modal-cta">
+                        <a href={registerUrl} className="btn-join mf-modal-cta">
                             START REGISTRATION
-                        </Link>
+                        </a>
                     )}
                     <button type="button" className="mf-modal-secondary" onClick={onClose}>
                         I&apos;ll do this later

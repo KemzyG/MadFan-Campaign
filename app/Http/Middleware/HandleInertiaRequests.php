@@ -11,6 +11,7 @@ use App\Services\Staff\StaffAssignmentService;
 use App\Support\AdminRouting;
 use App\Support\AdminWorkspace;
 use App\Support\ApplicationSettings;
+use App\Support\CampaignRouting;
 use App\Support\PublicStorageUrl;
 use App\Support\SocialRouting;
 use Illuminate\Http\Request;
@@ -24,11 +25,31 @@ class HandleInertiaRequests extends Middleware
             return 'admin';
         }
 
-        if (SocialRouting::isSocialRequest($request)) {
+        if (SocialRouting::isSocialRequest($request) || $this->usesSocialAuthShell($request)) {
             return 'social';
         }
 
         return 'user';
+    }
+
+    /**
+     * Fan auth + connect-accounts onboarding pages use the dark, mf-* Social
+     * visual shell (see resources/js/social.jsx, which already loads these
+     * pages so an in-SPA session-expiry redirect from /social can render
+     * them without a bundle switch).
+     */
+    private function usesSocialAuthShell(Request $request): bool
+    {
+        return in_array($request->route()?->getName(), [
+            'login',
+            'register',
+            'password.request',
+            'password.email',
+            'password.reset',
+            'password.store',
+            'verification.notice',
+            'fan.connect-accounts',
+        ], true);
     }
 
     public function version(Request $request): ?string
@@ -61,6 +82,8 @@ class HandleInertiaRequests extends Middleware
                     ? asset('favicon.jpg')
                     : null,
                 'default_image_url' => PublicStorageUrl::defaultImageUrl(),
+                'campaign' => CampaignRouting::frontendConfig(),
+                'social_domain' => SocialRouting::frontendConfig(),
             ],
             'auth' => [
                 'user' => $user ? [

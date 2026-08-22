@@ -1,10 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     LandingFooter,
     LandingNav,
     LandingUtil,
 } from '../../Components/Fan/LandingChrome';
 import { LandingReveal } from '../../Components/Fan/useLandingReveal';
+import { resolveSocialHref, socialPath } from '../../lib/socialPath';
 
 const CATEGORIES = [
     {
@@ -71,6 +72,7 @@ export default function Landing({
     stats = {},
     story = EMPTY_STORY,
 }) {
+    const { props: pageProps } = usePage();
     const categoryImages = images?.categories || {};
     const heroPhones = Array.isArray(images?.phones) ? images.phones : [];
     const products = featured.length > 0 ? featured.slice(0, 6) : [];
@@ -163,7 +165,10 @@ export default function Landing({
                             <div className="mf-land__cat-body">
                                 <p className="mf-land__cat-label">{item.label}</p>
                                 <h2 className="mf-land__cat-title">{item.title}</h2>
-                                <Link href={item.href} className="mf-land__pill mf-land__pill--light">
+                                <Link
+                                    href={resolveSocialHref(item.href, pageProps)}
+                                    className="mf-land__pill mf-land__pill--light"
+                                >
                                     {item.cta}
                                 </Link>
                             </div>
@@ -312,7 +317,7 @@ export default function Landing({
             <section className="mf-land__shelf" aria-label="Featured kits">
                 <LandingReveal className="mf-land__shelf-head">
                     <h2>Featured kits</h2>
-                    <Link href="/social/shop">Store all</Link>
+                    <Link href={socialPath(pageProps, '/shop')}>Store all</Link>
                 </LandingReveal>
                 {products.length === 0 ? (
                     <LandingReveal as="p" className="mf-land__shelf-empty">
@@ -321,7 +326,7 @@ export default function Landing({
                 ) : (
                     <LandingReveal className="mf-land__products" stagger>
                         {products.map((item) => {
-                            const href = item.slug ? `/social/shop/${item.slug}` : '/social/shop';
+                            const href = socialPath(pageProps, item.slug ? `/shop/${item.slug}` : '/shop');
 
                             return (
                                 <Link key={item.id} href={href} className="mf-land__product">
@@ -351,9 +356,11 @@ export default function Landing({
                         <Link href="/campaign" className="mf-land__pill mf-land__pill--light">
                             Enter campaign
                         </Link>
-                        <Link href="/register" className="mf-land__pill mf-land__pill--ghost">
+                        {/* Plain anchor: /register renders in the dark Social shell,
+                            which needs a full navigation to load its bundle/styles. */}
+                        <a href="/register" className="mf-land__pill mf-land__pill--ghost">
                             Create account
-                        </Link>
+                        </a>
                     </div>
                 </LandingReveal>
             </section>

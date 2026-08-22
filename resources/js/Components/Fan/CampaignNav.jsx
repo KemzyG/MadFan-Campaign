@@ -17,20 +17,22 @@ export default function CampaignNav({
 
     const guestLinks = isGuest ? (
         <>
-            <Link
+            {/* Plain anchors: /login renders in the dark Social shell, which
+                needs a full navigation to load its bundle/styles. */}
+            <a
                 href="/login"
                 className={`campaign-nav-drawer-link${isLoginPage ? ' active' : ''}`}
                 onClick={onClose}
             >
                 Enter Campaign
-            </Link>
-            <Link
+            </a>
+            <a
                 href={registerUrl}
                 className={`campaign-nav-drawer-link primary${isRegisterPage ? ' active' : ''}`}
                 onClick={onClose}
             >
                 Join Waitlist
-            </Link>
+            </a>
         </>
     ) : null;
 
@@ -81,15 +83,15 @@ export default function CampaignNav({
                     )}
                     {isGuest && (
                         <>
-                            <Link href="/login" className={`campaign-nav-link${isLoginPage ? ' active' : ''}`}>
+                            <a href="/login" className={`campaign-nav-link${isLoginPage ? ' active' : ''}`}>
                                 Enter Campaign
-                            </Link>
-                            <Link
+                            </a>
+                            <a
                                 href={registerUrl}
                                 className={`campaign-nav-link campaign-nav-link--cta${isRegisterPage ? ' active' : ''}`}
                             >
                                 Join
-                            </Link>
+                            </a>
                         </>
                     )}
                 </nav>

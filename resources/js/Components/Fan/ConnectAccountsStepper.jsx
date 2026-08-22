@@ -28,20 +28,20 @@ export default function ConnectAccountsStepper({ accounts = [], currentStep }) {
     const step = currentStep ?? activeConnectStep(accounts);
 
     return (
-        <div className="reg-stepper-track connect-stepper-track" aria-label="Connect accounts progress">
+        <div className="mf-auth-stepper" aria-label="Connect accounts progress">
             {CONNECT_STEPS.map((item, index) => {
                 const account = accounts.find((entry) => entry.platform === item.platform);
                 const done = account?.connected ?? step > item.id;
                 const active = step === item.id;
 
                 return (
-                    <div key={item.id} className="reg-stepper-item-wrap">
-                        <div className={`reg-stepper-item${active ? ' active' : ''}${done ? ' done' : ''}`}>
-                            <span className="reg-stepper-num">{done ? '✓' : item.id}</span>
-                            <span className="reg-stepper-label">{item.label}</span>
+                    <div key={item.id} className="mf-auth-stepper-item-wrap">
+                        <div className={`mf-auth-stepper-item${active ? ' active' : ''}${done ? ' done' : ''}`}>
+                            <span className="mf-auth-stepper-num">{done ? '✓' : item.id}</span>
+                            <span className="mf-auth-stepper-label">{item.label}</span>
                         </div>
                         {index < CONNECT_STEPS.length - 1 && (
-                            <div className={`reg-stepper-line${done ? ' done' : ''}`} />
+                            <div className={`mf-auth-stepper-line${done ? ' done' : ''}`} />
                         )}
                     </div>
                 );

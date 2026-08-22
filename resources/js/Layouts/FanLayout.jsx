@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import CampaignNav from '../Components/Fan/CampaignNav';
 import { isWelcomeAreaPath } from '../Components/Fan/campaignNavLinks';
@@ -95,9 +95,11 @@ export default function FanLayout({
                         {!user &&
                             !isAuthPage &&
                             !isWelcomeArea && (
-                                <Link href="/login" className="pts-pill header-sign-in" style={{ textDecoration: 'none' }}>
+                                // Plain anchor: /login renders in the dark Social shell,
+                                // which needs a full navigation to load its bundle/styles.
+                                <a href="/login" className="pts-pill header-sign-in" style={{ textDecoration: 'none' }}>
                                     ENTER CAMPAIGN
-                                </Link>
+                                </a>
                             )}
                         {isCampaignPage && <div className="badge">SEASON 01 · LIVE</div>}
                         {isWelcomeArea && (

@@ -66,9 +66,11 @@ export default function FanSidebar({
                             <Link href="/tasks" className={linkClass('/tasks')} onClick={onClose}>
                                 Tasks
                             </Link>
-                            <Link href="/connect-accounts?manage=1" className={linkClass('/connect-accounts')} onClick={onClose}>
+                            {/* Plain anchor: /connect-accounts renders in the dark Social shell,
+                                which needs a full navigation to load its bundle/styles. */}
+                            <a href="/connect-accounts?manage=1" className={linkClass('/connect-accounts')} onClick={onClose}>
                                 Connected Accounts
-                            </Link>
+                            </a>
                             <Link href="/passport" className={linkClass('/passport')} onClick={onClose}>
                                 Fan Passport
                             </Link>
@@ -98,12 +100,14 @@ export default function FanSidebar({
                                     </Link>
                                 </>
                             )}
-                            <Link href={registerUrl} className={linkClass('/register')} onClick={onClose}>
+                            {/* Plain anchors: /register and /login render in the dark Social
+                                shell, which needs a full navigation to load its bundle/styles. */}
+                            <a href={registerUrl} className={linkClass('/register')} onClick={onClose}>
                                 Create Fan Account
-                            </Link>
-                            <Link href="/login" className={linkClass('/login')} onClick={onClose}>
+                            </a>
+                            <a href="/login" className={linkClass('/login')} onClick={onClose}>
                                 Enter Campaign
-                            </Link>
+                            </a>
                         </>
                     )}
                 </nav>

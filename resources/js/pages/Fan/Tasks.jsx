@@ -240,9 +240,11 @@ export default function Tasks({ tasks = [] }) {
                                                             {(rules.social_platform ?? 'social').toUpperCase()} account
                                                             to verify this task automatically.
                                                         </p>
-                                                        <Link href="/connect-accounts?manage=1" className="btn-action btn-go">
+                                                        {/* Plain anchor: /connect-accounts renders in the dark Social
+                                                            shell, needing a full navigation to load its bundle/styles. */}
+                                                        <a href="/connect-accounts?manage=1" className="btn-action btn-go">
                                                             CONNECT ACCOUNT
-                                                        </Link>
+                                                        </a>
                                                     </div>
                                                 )}
                                                 {rules.social_connected && rules.connected_username && (

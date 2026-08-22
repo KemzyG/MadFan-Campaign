@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import FanBrandLogo from './FanBrandLogo';
 import FanNav from './FanNav';
 
@@ -23,7 +23,9 @@ export default function FanHeader({ showStreak = false }) {
                         </div>
                     )}
                     {!user && (
-                        <Link href="/login" className="pts-pill" style={{ textDecoration: 'none' }}>
+                        // Plain anchor: /login renders in the dark Social shell, which
+                        // needs a full navigation to load its bundle/styles.
+                        <a href="/login" className="pts-pill" style={{ textDecoration: 'none' }}>
                             <span
                                 style={{
                                     fontFamily: "'JetBrains Mono', monospace",
@@ -34,7 +36,7 @@ export default function FanHeader({ showStreak = false }) {
                             >
                                 ENTER CAMPAIGN
                             </span>
-                        </Link>
+                        </a>
                     )}
                 </div>
             </div>

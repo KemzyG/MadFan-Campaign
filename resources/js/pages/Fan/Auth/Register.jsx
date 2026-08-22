@@ -1,7 +1,6 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
-import FanLayout from '../../../Layouts/FanLayout';
 import RegistrationStepper from '../../../Components/Fan/RegistrationStepper';
 import { DEFAULT_AVATAR_SRC } from '../../../constants/avatars';
 import { getDeviceFingerprint } from '../../../lib/deviceFingerprint';
@@ -91,6 +90,7 @@ export default function FanRegister({
 }) {
     const { errors, flash } = usePage().props;
     const [step, setStep] = useState(() => stepForErrors(errors ?? {}));
+    const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, clearErrors, transform } = useForm({
         club: '',
@@ -180,88 +180,105 @@ export default function FanRegister({
     }
 
     return (
-        <FanLayout withSidebar={false}>
-            <Head title="Join" />
-            <div className="wrap">
-                <div className="signup-block reg-stepper-block">
-                    <div className="reg-stepper-head">
-                        <div className="reg-stepper-eye">
-                            Step {step} of {TOTAL_STEPS}
-                        </div>
-                        <h2>CLAIM YOUR SPOT</h2>
-                        <p>
-                            Create your passport first. You&apos;ll connect X and Discord on the next screen, no
-                            handle typing required here.
-                        </p>
+        <div className="mf-stage">
+            <div className="mf-onboard">
+                <Head title="Join" />
+
+                <Link href="/" className="mf-auth-brand">
+                    <FanBrandLogo asLink={false} size={28} className="mf-auth-brand-mark" />
+                    <span>Mad Fan</span>
+                </Link>
+
+                <p className="mf-text-caption text-[var(--mf-pitch)]">
+                    Step {step} of {TOTAL_STEPS}
+                </p>
+                <p className="mf-display mf-text-display mt-2 text-[var(--mf-text)]">Claim your spot</p>
+                <p className="mf-auth-lead">
+                    Create your passport first. You&apos;ll connect X and Discord on the next screen, no
+                    handle typing required here.
+                </p>
+
+                <RegistrationStepper currentStep={step} />
+
+                {showErrorBanner && (
+                    <div className="mf-auth-banner mf-auth-banner--error" role="alert">
+                        {blockedMessage || errorMessages[0]}
                     </div>
+                )}
 
-                    <RegistrationStepper currentStep={step} />
-
-                    {showErrorBanner && (
-                        <div className="reg-error-banner" role="alert">
-                            {blockedMessage || errorMessages[0]}
-                        </div>
-                    )}
-
-                    {registration_blocked ? (
-                        <div className="reg-stepper-actions">
-                            <a href="/login" className="btn-join reg-btn-next" style={{ textDecoration: 'none' }}>
-                                ENTER CAMPAIGN TO CONTINUE →
-                            </a>
-                        </div>
-                    ) : (
-                    <form onSubmit={submit} className="reg-stepper-form">
+                {registration_blocked ? (
+                    <div className="mf-auth-actions" style={{ marginTop: '1.5rem' }}>
+                        <Link href="/login" className="mf-btn mf-btn--pitch w-full">
+                            Enter campaign to continue →
+                        </Link>
+                    </div>
+                ) : (
+                    <form onSubmit={submit} className="mf-auth-form">
                         {step === 1 && (
-                            <div className="reg-step-panel">
-                                <div className="reg-step-title">Choose Your Club</div>
-                                <p className="reg-step-desc">
-                                    Pick the club you support. Your passport and leaderboard rank by club community.
+                            <div>
+                                <p className="mf-text-section font-semibold text-[var(--mf-text)]">
+                                    Choose your club
+                                </p>
+                                <p className="mf-auth-lead">
+                                    Pick the club you support. Your passport and leaderboard rank by club
+                                    community.
                                 </p>
 
-                                <div className="reg-club-grid">
+                                <div className="mt-4 grid max-h-[min(52vh,28rem)] gap-2 overflow-y-auto pe-1 sm:max-h-none sm:grid-cols-2">
                                     {clubs.map((club) => (
                                         <button
                                             key={club.id}
                                             type="button"
-                                            className={`reg-club-option${data.club === club.name ? ' selected' : ''}`}
+                                            className={`mf-club-opt${data.club === club.name ? ' is-selected' : ''}`}
                                             onClick={() => setData('club', club.name)}
                                         >
                                             {club.logo_url ? (
-                                                <img
-                                                    src={club.logo_url}
-                                                    alt=""
-                                                    className="reg-club-logo"
-                                                />
+                                                <img src={club.logo_url} alt="" className="mf-avatar h-10 w-10" />
                                             ) : (
-                                                <span className="reg-club-icon">{club.short || '⚽'}</span>
+                                                <span className="mf-avatar mf-text-meta h-10 w-10">
+                                                    {club.short || '⚽'}
+                                                </span>
                                             )}
-                                            <span className="reg-club-name">{club.name}</span>
-                                            {club.league?.short && (
-                                                <span className="reg-club-league">{club.league.short}</span>
-                                            )}
+                                            <span className="min-w-0">
+                                                <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
+                                                    {club.name}
+                                                </span>
+                                                <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
+                                                    {club.league?.short || 'Football'}
+                                                </span>
+                                            </span>
                                         </button>
                                     ))}
                                     <button
                                         type="button"
-                                        className={`reg-club-option${data.club === OTHER_CLUB ? ' selected' : ''}`}
+                                        className={`mf-club-opt${data.club === OTHER_CLUB ? ' is-selected' : ''}`}
                                         onClick={() => setData('club', OTHER_CLUB)}
                                     >
-                                        <span className="reg-club-icon">⚽</span>
-                                        <span className="reg-club-name">Other</span>
-                                        <span className="reg-club-league">Not listed</span>
+                                        <span className="mf-avatar h-10 w-10">⚽</span>
+                                        <span className="min-w-0">
+                                            <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
+                                                Other
+                                            </span>
+                                            <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
+                                                Not listed
+                                            </span>
+                                        </span>
                                     </button>
                                 </div>
-                                <p className="reg-step-hint">
-                                    Can’t find your club? Pick “Other” now and switch to it later from your passport.
+                                <p className="mf-auth-lead mt-3">
+                                    Can’t find your club? Pick “Other” now and switch to it later from your
+                                    passport.
                                 </p>
-                                {errors.club && <p className="reg-field-error">{errors.club}</p>}
+                                {errors.club && <p className="mf-field-error">{errors.club}</p>}
                             </div>
                         )}
 
                         {step === 2 && (
-                            <div className="reg-step-panel">
-                                <div className="reg-step-title">Complete Your Passport</div>
-                                <p className="reg-step-desc">
+                            <div>
+                                <p className="mf-text-section font-semibold text-[var(--mf-text)]">
+                                    Complete your passport
+                                </p>
+                                <p className="mf-auth-lead">
                                     Set your account details. Next you&apos;ll connect your social accounts for
                                     verification.
                                 </p>
@@ -272,60 +289,69 @@ export default function FanRegister({
                                     clubLogoUrl={selectedClub?.logo_url ?? null}
                                 />
 
-                                <div className="reg-fields-grid">
-                                    <div className="reg-field">
-                                        <label className="edit-label" htmlFor="reg-name">
-                                            DISPLAY NAME
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="mf-auth-field">
+                                        <label className="mf-auth-label" htmlFor="reg-name">
+                                            Display name
                                         </label>
                                         <input
                                             id="reg-name"
-                                            className={`edit-input${errors.name ? ' has-error' : ''}`}
+                                            className={`mf-auth-input${errors.name ? ' has-error' : ''}`}
                                             type="text"
                                             placeholder="Your name"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
                                             required
                                         />
-                                        {errors.name && <p className="reg-field-error">{errors.name}</p>}
+                                        {errors.name && <p className="mf-field-error">{errors.name}</p>}
                                     </div>
-                                    <div className="reg-field">
-                                        <label className="edit-label" htmlFor="reg-email">
-                                            EMAIL
+                                    <div className="mf-auth-field">
+                                        <label className="mf-auth-label" htmlFor="reg-email">
+                                            Email
                                         </label>
                                         <input
                                             id="reg-email"
-                                            className={`edit-input${errors.email ? ' has-error' : ''}`}
+                                            className={`mf-auth-input${errors.email ? ' has-error' : ''}`}
                                             type="email"
                                             placeholder="your@email.com"
                                             value={data.email}
                                             onChange={(e) => setData('email', e.target.value)}
                                             required
                                         />
-                                        {errors.email && <p className="reg-field-error">{errors.email}</p>}
+                                        {errors.email && <p className="mf-field-error">{errors.email}</p>}
                                     </div>
-                                    <div className="reg-field">
-                                        <label className="edit-label" htmlFor="reg-password">
-                                            PASSWORD
+                                    <div className="mf-auth-field">
+                                        <label className="mf-auth-label" htmlFor="reg-password">
+                                            Password
                                         </label>
-                                        <input
-                                            id="reg-password"
-                                            className={`edit-input${errors.password ? ' has-error' : ''}`}
-                                            type="password"
-                                            placeholder="Min. 8 characters"
-                                            value={data.password}
-                                            onChange={(e) => setData('password', e.target.value)}
-                                            required
-                                        />
-                                        {errors.password && <p className="reg-field-error">{errors.password}</p>}
+                                        <div className="mf-auth-input-wrap">
+                                            <input
+                                                id="reg-password"
+                                                className={`mf-auth-input mf-auth-input--password${errors.password ? ' has-error' : ''}`}
+                                                type={showPassword ? 'text' : 'password'}
+                                                placeholder="Min. 8 characters"
+                                                value={data.password}
+                                                onChange={(e) => setData('password', e.target.value)}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                className="mf-auth-toggle"
+                                                onClick={() => setShowPassword((current) => !current)}
+                                            >
+                                                {showPassword ? 'Hide' : 'Show'}
+                                            </button>
+                                        </div>
+                                        {errors.password && <p className="mf-field-error">{errors.password}</p>}
                                     </div>
-                                    <div className="reg-field">
-                                        <label className="edit-label" htmlFor="reg-password-confirm">
-                                            CONFIRM PASSWORD
+                                    <div className="mf-auth-field">
+                                        <label className="mf-auth-label" htmlFor="reg-password-confirm">
+                                            Confirm password
                                         </label>
                                         <input
                                             id="reg-password-confirm"
-                                            className={`edit-input${errors.password ? ' has-error' : ''}`}
-                                            type="password"
+                                            className={`mf-auth-input${errors.password ? ' has-error' : ''}`}
+                                            type={showPassword ? 'text' : 'password'}
                                             placeholder="Repeat password"
                                             value={data.password_confirmation}
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
@@ -336,36 +362,40 @@ export default function FanRegister({
                             </div>
                         )}
 
-                        <div className="reg-stepper-actions">
+                        <div className="mt-2 flex items-center gap-3">
                             {step > 1 && (
-                                <button type="button" className="reg-btn-back" onClick={goBack} disabled={processing}>
+                                <button
+                                    type="button"
+                                    className="mf-btn mf-btn--ghost"
+                                    onClick={goBack}
+                                    disabled={processing}
+                                >
                                     ← Back
                                 </button>
                             )}
                             <button
                                 type="submit"
-                                className="btn-join reg-btn-next"
+                                className="mf-btn mf-btn--pitch flex-1"
                                 disabled={processing || !canContinue()}
                             >
                                 {processing
-                                    ? 'CREATING…'
+                                    ? 'Creating…'
                                     : step === TOTAL_STEPS
-                                      ? 'CREATE PASSPORT →'
+                                      ? 'Create passport →'
                                       : 'Continue →'}
                             </button>
                         </div>
                     </form>
-                    )}
+                )}
 
-                    {!registration_blocked && (
-                    <p style={{ marginTop: '20px' }}>
-                        <a href="/login" style={{ color: 'var(--flame)', fontSize: '13px' }}>
-                            Already have an account? Enter Campaign →
-                        </a>
-                    </p>
-                    )}
-                </div>
+                {!registration_blocked && (
+                    <div className="mf-auth-actions">
+                        <Link href="/login" className="mf-auth-link">
+                            Already have an account? Enter campaign →
+                        </Link>
+                    </div>
+                )}
             </div>
-        </FanLayout>
+        </div>
     );
 }

@@ -295,9 +295,11 @@ export default function Campaign({
                                     )}
                                 </>
                             ) : (
-                                <Link href={registerUrl} className="btn-join" style={{ textDecoration: 'none' }}>
+                                // Plain anchor: /register renders in the dark Social shell,
+                                // which needs a full navigation to load its bundle/styles.
+                                <a href={registerUrl} className="btn-join" style={{ textDecoration: 'none' }}>
                                     CREATE YOUR PASSPORT
-                                </Link>
+                                </a>
                             )}
                         </div>
                     </div>
