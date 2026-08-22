@@ -97,18 +97,19 @@ class VideoHighlightSeeder extends Seeder
 
     private function resolveAuthor(): User
     {
-        $existing = User::query()->where('email', 'highlights@madfan.test')->first();
-
-        if ($existing !== null) {
-            return $existing;
-        }
-
-        return User::query()->create([
-            'name' => 'Mad Fan Highlights',
-            'handle' => 'highlights',
-            'email' => 'highlights@madfan.test',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
+        return User::query()->updateOrCreate(
+            ['email' => 'highlights@madfan.test'],
+            [
+                'name' => 'Mad Fan Highlights',
+                'username' => 'highlights',
+                'handle' => 'highlights',
+                'password_hash' => Hash::make('HighlightSeed123!'),
+                'auth_provider' => 'password',
+                'fan_id' => 'MF-HLITE',
+                'bio' => 'Official match highlights and tactical clips.',
+                'email_verified_at' => now(),
+                'social_onboarded_at' => now(),
+            ],
+        );
     }
 }
