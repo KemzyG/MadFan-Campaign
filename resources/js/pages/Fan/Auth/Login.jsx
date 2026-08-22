@@ -1,15 +1,39 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
+import PasswordVisibilityToggle from '../../../Components/Fan/PasswordVisibilityToggle';
+import ToastStack from '../../../Components/Fan/ToastStack';
+import { LockIcon, MailIcon } from '../../../Components/Fan/AuthFieldIcons';
+import { useToasts } from '../../../lib/useToasts';
 
 export default function FanLogin() {
-    const { flash } = usePage().props;
-    const { data, setData, post, processing, errors } = useForm({
+    const { flash, errors } = usePage().props;
+    const { data, setData, post, processing } = useForm({
         email: '',
         password: '',
         remember: false,
     });
     const [showPassword, setShowPassword] = useState(false);
+    const { toasts, pushToast, dismissToast } = useToasts();
+
+    useEffect(() => {
+        if (flash?.error) {
+            pushToast('err', flash.error);
+        }
+    }, [flash?.error, pushToast]);
+
+    useEffect(() => {
+        if (flash?.success) {
+            pushToast('ok', flash.success);
+        }
+    }, [flash?.success, pushToast]);
+
+    useEffect(() => {
+        Object.values(errors ?? {})
+            .filter(Boolean)
+            .forEach((message) => pushToast('err', message));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [errors]);
 
     function submit(e) {
         e.preventDefault();
@@ -17,46 +41,39 @@ export default function FanLogin() {
     }
 
     return (
-        <div className="mf-stage">
-            <div className="mf-onboard">
-                <Head title="Enter Campaign" />
+        <div className="mf-auth-stage">
+            <Head title="Login" />
+            <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
-                <Link href="/" className="mf-auth-brand">
-                    <FanBrandLogo asLink={false} size={28} className="mf-auth-brand-mark" />
-                    <span>Mad Fan</span>
-                </Link>
-
-                <p className="mf-text-caption text-[var(--mf-pitch)]">Welcome back</p>
-                <p className="mf-display mf-text-display mt-2 text-[var(--mf-text)]">Enter the campaign</p>
-                <p className="mf-auth-lead">Access your daily claim, tasks, and fan passport.</p>
-
-                {flash?.error && (
-                    <div className="mf-auth-banner mf-auth-banner--error" role="alert">
-                        {flash.error}
-                    </div>
-                )}
-                {flash?.success && (
-                    <div className="mf-auth-banner" role="status">
-                        {flash.success}
-                    </div>
-                )}
+            <div className="mf-onboard-panel">
+                <div className="mf-auth-header">
+                    <Link href="/" className="mf-auth-brand">
+                        <FanBrandLogo asLink={false} size={30} className="mf-auth-brand-mark" />
+                        <span>Mad Fan</span>
+                    </Link>
+                    <h1 className="mf-auth-title">Login</h1>
+                </div>
 
                 <form onSubmit={submit} className="mf-auth-form">
                     <div className="mf-auth-field">
                         <label className="mf-auth-label" htmlFor="login-email">
                             Email
                         </label>
-                        <input
-                            id="login-email"
-                            type="email"
-                            className={`mf-auth-input${errors.email ? ' has-error' : ''}`}
-                            placeholder="your@email.com"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            autoComplete="email"
-                            required
-                        />
-                        {errors.email && <p className="mf-field-error">{errors.email}</p>}
+                        <div className="mf-auth-input-wrap">
+                            <span className="mf-auth-input-icon">
+                                <MailIcon />
+                            </span>
+                            <input
+                                id="login-email"
+                                type="email"
+                                className={`mf-auth-input mf-auth-input--icon${errors.email ? ' has-error' : ''}`}
+                                placeholder="your@email.com"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                autoComplete="email"
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="mf-auth-field">
@@ -64,23 +81,23 @@ export default function FanLogin() {
                             Password
                         </label>
                         <div className="mf-auth-input-wrap">
+                            <span className="mf-auth-input-icon">
+                                <LockIcon />
+                            </span>
                             <input
                                 id="login-password"
                                 type={showPassword ? 'text' : 'password'}
-                                className="mf-auth-input mf-auth-input--password"
+                                className="mf-auth-input mf-auth-input--icon mf-auth-input--password"
                                 placeholder="Password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                                 autoComplete="current-password"
                                 required
                             />
-                            <button
-                                type="button"
-                                className="mf-auth-toggle"
-                                onClick={() => setShowPassword((current) => !current)}
-                            >
-                                {showPassword ? 'Hide' : 'Show'}
-                            </button>
+                            <PasswordVisibilityToggle
+                                visible={showPassword}
+                                onToggle={() => setShowPassword((current) => !current)}
+                            />
                         </div>
                     </div>
 
@@ -93,8 +110,12 @@ export default function FanLogin() {
                         Remember me
                     </label>
 
-                    <button type="submit" className="mf-btn mf-btn--pitch w-full" disabled={processing}>
-                        {processing ? 'Entering…' : 'Enter campaign'}
+                    <button
+                        type="submit"
+                        className="mf-btn mf-btn--pitch mf-auth-submit"
+                        disabled={processing}
+                    >
+                        {processing ? 'Logging in…' : 'Log in'}
                     </button>
                 </form>
 

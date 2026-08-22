@@ -1,8 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import FanLayout from '../../Layouts/FanLayout';
 import FanBrandLogo from '../../Components/Fan/FanBrandLogo';
 import ConnectedAccountsSection from '../../Components/Fan/ConnectedAccountsSection';
 import ConnectAccountsStepper, { activeConnectStep, PLATFORM_BY_STEP } from '../../Components/Fan/ConnectAccountsStepper';
+import ToastStack from '../../Components/Fan/ToastStack';
+import { useToasts } from '../../lib/useToasts';
 
 export default function ConnectAccounts({
     accounts = [],
@@ -20,33 +23,31 @@ export default function ConnectAccounts({
     const currentPlatform = PLATFORM_BY_STEP[currentStep];
     const currentAccount = isOnboarding ? accounts.find((account) => account.platform === currentPlatform) : null;
     const wizardAccounts = isOnboarding && currentAccount ? [currentAccount] : accounts;
+    const { toasts, pushToast, dismissToast } = useToasts();
+
+    useEffect(() => {
+        if (isOnboarding && flash?.success) {
+            pushToast('ok', flash.success);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOnboarding, flash?.success]);
 
     if (isOnboarding) {
         return (
-            <div className="mf-stage">
-                <div className="mf-onboard">
-                    <Head title="Connect Accounts" />
+            <div className="mf-auth-stage">
+                <Head title="Connect Accounts" />
+                <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
-                    <div className="mf-auth-brand">
-                        <FanBrandLogo asLink={false} size={28} className="mf-auth-brand-mark" />
-                        <span>Mad Fan</span>
+                <div className="mf-onboard-panel">
+                    <div className="mf-auth-header">
+                        <div className="mf-auth-brand">
+                            <FanBrandLogo asLink={false} size={30} className="mf-auth-brand-mark" />
+                            <span>Mad Fan</span>
+                        </div>
+                        <h1 className="mf-auth-title">Connect your accounts</h1>
                     </div>
 
-                    <p className="mf-text-caption text-[var(--mf-pitch)]">Connect step {currentStep} of 3</p>
-                    <p className="mf-display mf-text-display mt-2 text-[var(--mf-text)]">Connect your accounts</p>
-                    <p className="mf-auth-lead">
-                        Link <strong className="text-[var(--mf-pitch)]">X</strong> and{' '}
-                        <strong className="text-[var(--mf-pitch)]">Discord</strong> to verify tasks. Telegram is
-                        optional.
-                    </p>
-
                     <ConnectAccountsStepper accounts={accounts} currentStep={currentStep} />
-
-                    {flash?.success && (
-                        <div className="mf-auth-banner" role="status">
-                            {flash.success}
-                        </div>
-                    )}
 
                     {!requiredComplete && (
                         <div className="mf-auth-banner mf-auth-banner--error">
@@ -70,7 +71,7 @@ export default function ConnectAccounts({
 
                     {requiredComplete && (
                         <div className="mf-auth-actions">
-                            <Link href="/daily-claim" className="mf-btn mf-btn--pitch w-full">
+                            <Link href="/daily-claim" className="mf-btn mf-btn--pitch mf-auth-submit">
                                 Enter the app →
                             </Link>
                         </div>

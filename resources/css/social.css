@@ -2150,6 +2150,121 @@ body,
 }
 
 /* -- Auth (login / register / password reset / verify email) -- */
+
+/* Full-bleed stadium hero backdrop, elevated above the plain .mf-stage noise
+   treatment for a more premium/editorial feel on login + register. */
+.mf-auth-stage {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    overflow: hidden;
+}
+
+.mf-auth-stage::before {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-void) 80%, transparent) 0%,
+            color-mix(in srgb, var(--mf-void) 55%, transparent) 45%,
+            color-mix(in srgb, var(--mf-void) 92%, transparent) 100%
+        ),
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 214, 140, 0.14), transparent 60%),
+        radial-gradient(ellipse 45% 35% at 8% 8%, rgba(255, 255, 255, 0.07), transparent 60%),
+        radial-gradient(ellipse 45% 35% at 92% 8%, rgba(255, 255, 255, 0.07), transparent 60%),
+        var(--mf-stage-bg-image) center 38% / cover no-repeat;
+}
+
+.mf-auth-stage::after {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    mix-blend-mode: soft-light;
+}
+
+/* Glass panel the auth form sits in, floating over the stadium backdrop. */
+.mf-onboard-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 26rem;
+    padding: 2.25rem 1.75rem 2rem;
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+    background: color-mix(in srgb, var(--mf-void) 60%, transparent);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 32px 64px rgba(0, 0, 0, 0.5),
+        0 1px 0 rgba(255, 255, 255, 0.07) inset;
+    animation: mf-rise 380ms var(--mf-ease) both;
+}
+
+@media (min-width: 480px) {
+    .mf-onboard-panel {
+        padding: 2.75rem 2.25rem 2.25rem;
+    }
+}
+
+/* Leading icon inside a text input (email / lock glyphs). */
+.mf-auth-input-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    display: flex;
+    color: var(--mf-muted);
+    pointer-events: none;
+}
+
+.mf-auth-input-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    fill: none;
+}
+
+.mf-auth-input.mf-auth-input--icon {
+    padding-left: 44px;
+}
+
+/* Centered logo + title block (login / register only — other auth pages
+   keep the left-aligned .mf-auth-brand on its own). */
+.mf-auth-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.mf-auth-header .mf-auth-brand {
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.mf-auth-header .mf-auth-title {
+    margin: 0;
+}
+
+.mf-auth-title {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-display);
+    font-size: 1.75rem;
+    color: var(--mf-text);
+}
+
 .mf-auth-brand {
     display: inline-flex;
     align-items: center;
@@ -2255,7 +2370,7 @@ body,
     border-color: color-mix(in srgb, var(--mf-rival) 55%, var(--mf-line));
 }
 
-.mf-auth-input--password {
+.mf-auth-input.mf-auth-input--password {
     padding-right: 3.25rem;
 }
 
@@ -2299,7 +2414,22 @@ body,
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem 1.1rem;
+    text-align: center;
+}
+
+.mf-auth-submit {
+    width: 100%;
+    transition:
+        transform 140ms var(--mf-ease),
+        box-shadow 200ms var(--mf-ease),
+        opacity 140ms var(--mf-ease);
+}
+
+.mf-auth-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--mf-pitch) 22%, transparent);
 }
 
 .mf-auth-link {
