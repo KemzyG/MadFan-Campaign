@@ -17,7 +17,7 @@ class VideoHighlightService
     {
         return VideoHighlight::query()
             ->published()
-            ->with(['author:id,name,handle,avatar', 'club:id,name,short,logo_url'])
+            ->with(['author:id,name,handle,avatar_path,updated_at', 'club:id,name,short,logo'])
             ->orderByDesc('is_featured')
             ->orderByDesc('published_at')
             ->orderByDesc('id')

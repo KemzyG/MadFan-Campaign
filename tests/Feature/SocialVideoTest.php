@@ -8,6 +8,19 @@ test('social videos requires authentication', function () {
     $this->get('/social/videos')->assertRedirect(route('login'));
 });
 
+test('onboarded fans see an empty feed when no highlights exist', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->get('/social/videos')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Videos/Index')
+            ->has('reels.items', 0)
+            ->where('reels.meta.total', 0));
+});
+
 test('onboarded fans can browse video reels', function () {
     $club = Club::factory()->create();
     $user = socialReadyUser($club);
