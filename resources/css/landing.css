@@ -166,23 +166,32 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 16px;
-    min-height: 36px;
+    gap: 6px;
+    padding: 10px 18px;
+    min-height: 44px;
+    max-width: 100%;
+    border: 0;
     border-radius: var(--radius-buttons);
     font-size: var(--text-body);
     font-weight: 500;
     line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
     transition: opacity 160ms ease;
     width: fit-content;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mf-land__pill:hover {
     opacity: 0.78;
 }
 
+/* Beat `.mf-land a { color: inherit }` so dark pills stay white-on-obsidian */
 .mf-land__pill--dark {
     background: var(--color-obsidian);
-    color: var(--color-paper-white);
+    color: var(--color-paper-white) !important;
 }
 
 .mf-land__pill--light {
@@ -203,7 +212,9 @@
 .mf-land__hero-actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
+    max-width: 100%;
 }
 
 /* —— Editorial hero —— */
@@ -228,6 +239,10 @@
     animation: mf-land-fade 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.mf-land__hero-photo {
+    filter: brightness(0.94);
+}
+
 .mf-land__hero-fallback {
     background:
         radial-gradient(ellipse 55% 50% at 62% 40%, #2c2c2c 0%, transparent 65%),
@@ -238,8 +253,8 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.2) 42%, rgba(0, 0, 0, 0.08) 100%),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, transparent 55%);
+        linear-gradient(0deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.26) 42%, rgba(0, 0, 0, 0.12) 100%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, transparent 55%);
     pointer-events: none;
 }
 
@@ -315,6 +330,10 @@
     transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.mf-land__cat-photo {
+    filter: brightness(0.94);
+}
+
 .mf-land__cat-fallback {
     background: linear-gradient(160deg, #141414, #262626 50%, #0e0e0e);
 }
@@ -327,7 +346,7 @@
 .mf-land__cat-scrim {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.72) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, transparent 40%, rgba(0, 0, 0, 0.78) 100%);
     pointer-events: none;
 }
 
@@ -457,6 +476,7 @@
     object-position: center;
     display: block;
     padding: 12px;
+    filter: brightness(0.97);
 }
 
 .mf-land__product-frame--empty {
@@ -666,7 +686,16 @@
     margin: 0 auto 28px;
 }
 
+.mf-land__section-head > .mf-land__pill,
+.mf-land__section-head > .mf-land__hero-actions {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+}
+
 .mf-land__section-copy {
+    flex: 1 1 16rem;
+    min-width: 0;
     max-width: 40rem;
 }
 
@@ -887,7 +916,7 @@
 
 .mf-land__pill--outline {
     background: transparent;
-    color: var(--color-obsidian);
+    color: var(--color-obsidian) !important;
     box-shadow: inset 0 0 0 1px var(--color-obsidian);
 }
 
@@ -1003,7 +1032,9 @@
 }
 
 .mf-land__story-ctas {
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .mf-land__member-grid {

@@ -51,7 +51,9 @@ test('onboarded fans can browse active jerseys', function () {
             ->has('jerseys', 1)
             ->where('jerseys.0.name', 'Home Kit 25/26')
             ->where('jerseys.0.price', '69.99')
-            ->where('jerseys.0.purchasable', true));
+            ->where('jerseys.0.purchasable', true)
+            ->where('jerseys.0.kit_kind', 'Home')
+            ->where('jerseys.0.sizes_available', ['M']));
 });
 
 test('fans can add a jersey to the bag and confirm an order', function () {

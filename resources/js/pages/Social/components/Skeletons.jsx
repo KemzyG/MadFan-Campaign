@@ -184,6 +184,41 @@ export function TicketWalletSkeleton({ count = 2 }) {
     );
 }
 
+export function ShopMallSkeleton({ count = 6 }) {
+    return (
+        <div className="mf-skel-page mf-skel-shop" aria-busy="true" aria-label="Loading shop">
+            <div className="mf-skel-shop__hero">
+                <Bone className="mf-skel-line mf-skel-line--caption" />
+                <Bone className="mf-skel-line mf-skel-line--display" />
+                <Bone className="mf-skel-line mf-skel-line--body" />
+                <Bone className="mf-skel-line mf-skel-line--body-short" />
+            </div>
+            <div className="mf-skel-shop__toolbar">
+                <Bone className="mf-skel-shop__filter" />
+                <Bone className="mf-skel-shop__filter" />
+                <Bone className="mf-skel-chip mf-skel-chip--wide" />
+            </div>
+            <div className="mf-skel-shop__grid">
+                {Array.from({ length: count }, (_, index) => (
+                    <article
+                        key={index}
+                        className="mf-skel-shop-card"
+                        style={{ '--mf-skel-stagger': `${index * 45}ms` }}
+                        aria-hidden
+                    >
+                        <Bone className="mf-skel-shop-card__media" />
+                        <div className="mf-skel-shop-card__body">
+                            <Bone className="mf-skel-line mf-skel-line--caption" />
+                            <Bone className="mf-skel-line mf-skel-line--title" />
+                            <Bone className="mf-skel-line mf-skel-line--body-short" />
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function StageLobbySkeleton({ count = 3 }) {
     return (
         <div className="mf-skel-page mf-skel-stage-lobby" aria-busy="true" aria-label="Loading stage">
@@ -386,7 +421,7 @@ export function resolveSocialSkeletonKind(pathname) {
         return 'tickets';
     }
     if (path === '/social/shop' || path.startsWith('/social/shop/')) {
-        return 'tickets';
+        return 'shop';
     }
     if (/^\/social\/stage\/[^/]+/.test(path)) {
         return 'stage-room';
@@ -413,6 +448,8 @@ export function SocialPageSkeleton({ kind = 'generic' }) {
         case 'tickets':
         case 'fixtures':
             return <TicketListSkeleton />;
+        case 'shop':
+            return <ShopMallSkeleton />;
         case 'wallet':
         case 'ticket':
             return <TicketWalletSkeleton />;

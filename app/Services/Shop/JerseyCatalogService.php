@@ -160,6 +160,12 @@ class JerseyCatalogService
     private function presentJerseyCard(Jersey $jersey): array
     {
         $images = $this->presentImages($jersey);
+        $inStockSizes = $jersey->variants
+            ->filter(fn ($variant): bool => $variant->stock > 0)
+            ->sortBy(fn ($variant) => array_search($variant->size->value, JerseySize::values(), true))
+            ->values()
+            ->map(fn ($variant): string => $variant->size->value)
+            ->all();
 
         return [
             'id' => $jersey->id,
@@ -169,6 +175,8 @@ class JerseyCatalogService
             'image_url' => $images[0]['url'] ?? $jersey->image_url,
             'purchasable' => $jersey->isPurchasable(),
             'stock_total' => $jersey->totalStock(),
+            'sizes_available' => $inStockSizes,
+            'kit_kind' => $this->detectKitKind($jersey->name),
             'gallery_count' => count($images),
             'club' => $jersey->club ? [
                 'id' => $jersey->club->id,
@@ -177,6 +185,15 @@ class JerseyCatalogService
                 'logo_url' => $jersey->club->logo_url,
             ] : null,
         ];
+    }
+
+    private function detectKitKind(string $name): ?string
+    {
+        if (preg_match('/\b(Home|Away|Third|Training)\b/i', $name, $matches) !== 1) {
+            return null;
+        }
+
+        return ucfirst(strtolower($matches[1]));
     }
 
     /**
