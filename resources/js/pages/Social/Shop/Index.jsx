@@ -294,10 +294,6 @@ function FeaturedSwiper({ jerseys = [] }) {
 
     return (
         <section className="mf-shop-featured" aria-label="Featured kits">
-            <div className="mf-shop-featured__head">
-                <p className="mf-tickets-kicker mf-text-caption">Fresh on the rail</p>
-                <h2 className="mf-shop-featured__title mf-display">Featured drops</h2>
-            </div>
             <div className="mf-shop-swiper">
                 <div
                     className="mf-shop-swiper__track"
@@ -478,19 +474,16 @@ export default function Index({
                     <div className="mf-shop-mall-hero__bg" aria-hidden />
                     <div className="mf-shop-mall-hero__scrim" aria-hidden />
                     <div className="mf-shop-mall-hero__inner">
-                        <div className="mf-shop-mall-hero__head">
-                            <p className="mf-tickets-kicker mf-text-caption">Mad Fan mall</p>
-                            <div className="mf-shop-hero-links">
-                                <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
-                                    Bag
-                                    {cart_count > 0 ? (
-                                        <span className="mf-mono mf-tickets-count">{cart_count}</span>
-                                    ) : null}
-                                </Link>
-                                <Link href="/social/shop/orders" className="mf-tickets-mine-link" prefetch>
-                                    My orders
-                                </Link>
-                            </div>
+                        <div className="mf-page-links mf-page-links--end">
+                            <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
+                                Bag
+                                {cart_count > 0 ? (
+                                    <span className="mf-mono mf-tickets-count">{cart_count}</span>
+                                ) : null}
+                            </Link>
+                            <Link href="/social/shop/orders" className="mf-tickets-mine-link" prefetch>
+                                My orders
+                            </Link>
                         </div>
                         <HeroKitCarousel jerseys={heroKits} />
                     </div>

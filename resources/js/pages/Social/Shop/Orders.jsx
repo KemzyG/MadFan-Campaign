@@ -1,23 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
 
-export default function Orders({ orders = [], cart_count = 0 }) {
+export default function Orders({ orders = [] }) {
     return (
         <SocialShell title="Orders" backHref="/social/shop">
             <Head title="My jersey orders — Mad Fan Store" />
 
             <div className="mf-shop">
-                <div className="mf-tickets-hero mf-tickets-hero--compact">
-                    <p className="mf-tickets-kicker mf-text-caption">Order history</p>
-                    <p className="mf-empty-title mf-tickets-title">My orders</p>
-                    <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
-                        Bag
-                        {cart_count > 0 ? (
-                            <span className="mf-mono mf-tickets-count">{cart_count}</span>
-                        ) : null}
-                    </Link>
-                </div>
-
                 {orders.length === 0 ? (
                     <p className="mf-empty-copy">No jersey orders yet.</p>
                 ) : (

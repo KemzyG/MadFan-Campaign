@@ -152,20 +152,16 @@ export default function Index({ matches, ticket_count = 0 }) {
                 <TicketListSkeleton />
             ) : (
                 <div className="mf-tickets">
-                    <div className="mf-tickets-hero">
-                        <p className="mf-tickets-kicker mf-text-caption">Box office</p>
-                        <p className="mf-empty-title mf-tickets-title">Upcoming fixtures</p>
-                        <div className="mf-fixtures-hero__links">
-                            <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
-                                Full fixture board
-                            </Link>
-                            <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                                My tickets
-                                {ticket_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                                ) : null}
-                            </Link>
-                        </div>
+                    <div className="mf-page-links">
+                        <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
+                            Full fixture board
+                        </Link>
+                        <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
+                            My tickets
+                            {ticket_count > 0 ? (
+                                <span className="mf-mono mf-tickets-count">{ticket_count}</span>
+                            ) : null}
+                        </Link>
                     </div>
 
                     {matches.length === 0 ? (

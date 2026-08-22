@@ -145,10 +145,9 @@ export function TicketStubSkeleton() {
 export function TicketListSkeleton({ count = 3 }) {
     return (
         <div className="mf-skel-page mf-skel-tickets" aria-busy="true" aria-label="Loading tickets">
-            <div className="mf-skel-tickets__hero">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--display" />
-                <Bone className="mf-skel-line mf-skel-line--body-short" />
+            <div className="mf-skel-page-links">
+                <Bone className="mf-skel-chip" />
+                <Bone className="mf-skel-chip" />
             </div>
             <div className="mf-skel-ticket-list">
                 {Array.from({ length: count }, (_, index) => (
@@ -164,10 +163,6 @@ export function TicketListSkeleton({ count = 3 }) {
 export function TicketWalletSkeleton({ count = 2 }) {
     return (
         <div className="mf-skel-page mf-skel-tickets" aria-busy="true" aria-label="Loading wallet">
-            <div className="mf-skel-tickets__hero mf-skel-tickets__hero--compact">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--display" />
-            </div>
             <div className="mf-skel-wallet">
                 {Array.from({ length: count }, (_, index) => (
                     <div
@@ -189,18 +184,10 @@ export function ShopMallSkeleton({ count = 9 }) {
             <div className="mf-skel-shop__hero">
                 <Bone className="mf-skel-shop__hero-bg" />
                 <div className="mf-skel-shop__hero-inner">
-                    <div className="mf-skel-shop__hero-head">
-                        <Bone className="mf-skel-line mf-skel-line--caption" />
-                        <Bone className="mf-skel-line mf-skel-line--body-short" />
-                    </div>
                     <Bone className="mf-skel-shop__hero-carousel" />
                 </div>
             </div>
             <div className="mf-skel-shop__featured">
-                <div className="mf-skel-shop__featured-head">
-                    <Bone className="mf-skel-line mf-skel-line--caption" />
-                    <Bone className="mf-skel-line mf-skel-line--title" />
-                </div>
                 <div className="mf-skel-shop__featured-rail">
                     {Array.from({ length: 4 }, (_, index) => (
                         <Bone
@@ -246,10 +233,9 @@ export function ShopMallSkeleton({ count = 9 }) {
 export function StageLobbySkeleton({ count = 3 }) {
     return (
         <div className="mf-skel-page mf-skel-stage-lobby" aria-busy="true" aria-label="Loading stage">
-            <div className="mf-skel-stage-hero">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--display" />
+            <div className="mf-skel-stage-actions">
                 <Bone className="mf-skel-chip" />
+                <Bone className="mf-skel-chip mf-skel-chip--btn" />
             </div>
             <div className="mf-skel-stage-create mf-skel-stage-create--panel">
                 <Bone className="mf-skel-line mf-skel-line--caption" />
@@ -337,10 +323,6 @@ export function StageRoomSkeleton() {
 export function PassportSkeleton() {
     return (
         <div className="mf-skel-page mf-skel-passport" aria-busy="true" aria-label="Loading passport">
-            <div className="mf-skel-passport__intro">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--handle" />
-            </div>
             <div className="mf-skel-passport__card">
                 <Bone className="mf-skel-passport__face" />
             </div>
@@ -468,7 +450,6 @@ export function resolveSocialSkeletonKind(pathname) {
 function ReelsSkeleton() {
     return (
         <div className="mf-page mf-reels-page" aria-busy="true" aria-label="Loading reels">
-            <div className="mf-skel-block mf-skel-block--title" style={{ width: '8rem', height: '1.35rem' }} />
             <div
                 className="mf-reels-scroller"
                 style={{ background: 'color-mix(in srgb, var(--mf-panel) 70%, transparent)' }}

@@ -93,10 +93,6 @@ export default function Show({ jersey, cart_count = 0 }) {
                     </div>
 
                     <div className="mf-shop-detail__info">
-                        <p className="mf-tickets-kicker mf-text-caption">
-                            {jersey.club?.name || 'Mad Fan kit'}
-                        </p>
-                        <h1 className="mf-empty-title mf-shop-detail__title">{jersey.name}</h1>
                         <div className="mf-shop-detail__price-row">
                             <p className="mf-mono mf-shop-detail__price">£{jersey.price}</p>
                             <span

@@ -2154,14 +2154,6 @@ body,
     padding: 0.75rem 0 0.25rem;
 }
 
-.mf-passport-intro {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0 1rem;
-}
-
 .mf-passport-deck {
     perspective: 1600px;
     padding: 0.65rem 1rem 0;
@@ -3716,23 +3708,15 @@ body,
     animation: mf-ticket-rise 420ms var(--mf-ease) both;
 }
 
-.mf-fixtures-hero {
-    position: relative;
-    margin-bottom: 0.6rem;
-    padding: 1.1rem 1rem 1.15rem;
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
-    border-radius: calc(var(--mf-radius) + 0.15rem);
-    background:
-        radial-gradient(120% 80% at 90% -10%, color-mix(in srgb, var(--mf-pitch) 14%, transparent), transparent 55%),
-        linear-gradient(165deg, color-mix(in srgb, var(--mf-elevated) 88%, #0a0a0a), var(--mf-panel));
-    overflow: hidden;
-}
-
-.mf-fixtures-hero__links {
+.mf-page-links {
     display: flex;
     flex-wrap: wrap;
     gap: 0.65rem 1rem;
-    margin-top: 0.85rem;
+    margin-bottom: 0.65rem;
+}
+
+.mf-page-links--end {
+    justify-content: flex-end;
 }
 
 .mf-fixtures-tabs {
@@ -3972,25 +3956,6 @@ body,
     animation: mf-ticket-rise 420ms var(--mf-ease) both;
 }
 
-.mf-standings-hero {
-    position: relative;
-    margin-bottom: 0.6rem;
-    padding: 1.1rem 1rem 1.15rem;
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
-    border-radius: calc(var(--mf-radius) + 0.15rem);
-    background:
-        radial-gradient(120% 80% at 90% -10%, color-mix(in srgb, var(--mf-pitch) 14%, transparent), transparent 55%),
-        linear-gradient(165deg, color-mix(in srgb, var(--mf-elevated) 88%, #0a0a0a), var(--mf-panel));
-    overflow: hidden;
-}
-
-.mf-standings-hero__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem 1rem;
-    margin-top: 0.85rem;
-}
-
 .mf-standings-tabs {
     display: flex;
     gap: 0.35rem;
@@ -4207,39 +4172,10 @@ body,
     margin-inline: auto;
 }
 
-.mf-tickets-hero {
-    position: relative;
-    margin-bottom: 0.75rem;
-    padding: 1.1rem 1rem 1.15rem;
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
-    border-radius: calc(var(--mf-radius) + 0.15rem);
-    background:
-        radial-gradient(120% 80% at 10% -20%, color-mix(in srgb, var(--mf-pitch) 18%, transparent), transparent 55%),
-        linear-gradient(165deg, color-mix(in srgb, var(--mf-elevated) 88%, #0a0a0a), var(--mf-panel));
-    overflow: hidden;
-}
-
-.mf-tickets-hero::after {
-    content: "";
-    position: absolute;
-    inset: auto -10% -40% 40%;
-    height: 8rem;
-    background: radial-gradient(circle, color-mix(in srgb, var(--mf-amber) 16%, transparent), transparent 70%);
-    pointer-events: none;
-}
-
-.mf-tickets-hero--compact {
-    padding-block: 0.85rem;
-}
-
 .mf-tickets-kicker {
     margin: 0 0 0.35rem;
     color: var(--mf-pitch);
     text-transform: uppercase;
-}
-
-.mf-tickets-title {
-    margin: 0;
 }
 
 .mf-tickets-lead {
@@ -5326,48 +5262,11 @@ body,
     animation: mf-stage-rise 420ms var(--mf-ease) both;
 }
 
-.mf-stage-hero {
-    position: relative;
-    padding: 1.05rem 1rem 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--mf-rival) 28%, var(--mf-line));
-    border-radius: calc(var(--mf-radius) + 0.15rem);
-    background:
-        radial-gradient(90% 70% at 8% -30%, color-mix(in srgb, var(--mf-rival) 22%, transparent), transparent 55%),
-        radial-gradient(70% 60% at 95% 110%, color-mix(in srgb, var(--mf-pitch) 14%, transparent), transparent 60%),
-        linear-gradient(165deg, color-mix(in srgb, var(--mf-elevated) 90%, #0f0f0f), var(--mf-panel));
-    overflow: hidden;
-}
-
-.mf-stage-hero::after {
-    content: "";
-    position: absolute;
-    inset: auto -15% -45% 35%;
-    height: 9rem;
-    background: radial-gradient(circle, color-mix(in srgb, var(--mf-amber) 14%, transparent), transparent 70%);
-    pointer-events: none;
-}
-
-.mf-stage-hero__kicker {
-    margin: 0 0 0.3rem;
-    color: var(--mf-pitch);
-    text-transform: uppercase;
-    position: relative;
-    z-index: 1;
-}
-
-.mf-stage-hero__title {
-    margin: 0;
-    position: relative;
-    z-index: 1;
-}
-
-.mf-stage-hero__meta {
+.mf-stage-actions {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 0.55rem 0.85rem;
-    position: relative;
-    z-index: 1;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
 .mf-stage-hero__count {
@@ -6034,11 +5933,6 @@ body,
     background: var(--mf-rival);
     color: #fff;
     box-shadow: 0 0 0 2px var(--mf-void);
-}
-
-.mf-stage-hero__cta {
-    margin-top: 0.85rem;
-    width: 100%;
 }
 
 .mf-stage-card--compact .mf-stage-card__stats {
@@ -7318,15 +7212,19 @@ body,
     padding-bottom: var(--mf-page-pad-bottom);
 }
 
-.mf-skel-tickets__hero {
-    padding: 0.85rem 1rem 0.35rem;
+.mf-skel-page-links {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.45rem;
+    padding: 0.85rem 1rem 0.35rem;
 }
 
-.mf-skel-tickets__hero--compact {
-    padding-bottom: 0.25rem;
+.mf-skel-stage-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.25rem 1rem 0;
 }
 
 .mf-skel-ticket-list {
@@ -7448,13 +7346,6 @@ body,
     padding: 1rem 1rem 1.1rem;
 }
 
-.mf-skel-shop__hero-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
 .mf-skel-shop__hero-carousel {
     height: 7.5rem;
     border-radius: calc(var(--mf-radius) + 0.05rem);
@@ -7467,12 +7358,6 @@ body,
     gap: 0.4rem;
     margin-block: -0.25rem;
     padding-block: 0;
-}
-
-.mf-skel-shop__featured-head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.08rem;
 }
 
 .mf-skel-shop__featured-rail {
@@ -7554,7 +7439,6 @@ body,
     gap: var(--mf-section-gap);
 }
 
-.mf-skel-stage-hero,
 .mf-skel-stage-room__head {
     display: flex;
     flex-direction: column;
@@ -7635,12 +7519,6 @@ body,
     display: flex;
     flex-direction: column;
     gap: var(--mf-section-gap);
-}
-
-.mf-skel-passport__intro {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
 }
 
 .mf-skel-passport__card {
@@ -7800,22 +7678,6 @@ body,
     flex-direction: column;
     gap: 0.85rem;
     padding: 1rem 1rem 1.15rem;
-}
-
-.mf-shop-mall-hero__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.65rem 1rem;
-}
-
-.mf-shop-mall-hero__head .mf-tickets-kicker {
-    margin: 0;
-}
-
-.mf-shop-mall-hero__head .mf-shop-hero-links {
-    margin-top: 0;
 }
 
 .mf-shop-mall-hero__carousel {
@@ -8035,13 +7897,6 @@ body,
     letter-spacing: 0.04em;
 }
 
-.mf-shop-hero-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
-    margin-top: 0.85rem;
-}
-
 .mf-shop-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(10.75rem, 1fr));
@@ -8069,23 +7924,6 @@ body,
     gap: 0.4rem;
     margin-block: -0.25rem;
     padding-block: 0;
-}
-
-.mf-shop-featured__head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.08rem;
-}
-
-.mf-shop-featured__head .mf-tickets-kicker {
-    margin-bottom: 0.15rem;
-}
-
-.mf-shop-featured__title {
-    margin: 0;
-    font-size: clamp(1.35rem, 3vw, 1.75rem);
-    line-height: 1.05;
-    letter-spacing: 0.04em;
 }
 
 .mf-shop-swiper {
@@ -8673,15 +8511,23 @@ body,
     left: 0.65rem;
 }
 
-.mf-shop-detail__title {
-    margin: 0.15rem 0 0;
-}
-
 .mf-shop-detail__price-row {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin: 0.55rem 0 0.35rem;
+    margin: 0 0 0.35rem;
+}
+
+.mf-shop-order-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.mf-shop-order-meta p {
+    margin: 0;
 }
 
 .mf-shop-detail__price {
@@ -8952,19 +8798,7 @@ body,
 .mf-reels-page {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
     min-height: calc(100dvh - 5.5rem);
-}
-
-.mf-reels-page__head {
-    padding-inline: 0.15rem 0;
-}
-
-.mf-reels-page__title {
-    margin: 0;
-    font-family: var(--mf-display);
-    font-size: 1.35rem;
-    letter-spacing: -0.02em;
 }
 
 .mf-reels-scroller {

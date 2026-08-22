@@ -266,24 +266,20 @@ export default function Fixtures({
                 <TicketListSkeleton />
             ) : (
                 <div className="mf-fixtures">
-                    <header className="mf-fixtures-hero">
-                        <p className="mf-tickets-kicker mf-text-caption">Match centre</p>
-                        <p className="mf-empty-title mf-tickets-title">Fixtures</p>
-                        <div className="mf-fixtures-hero__links">
-                            <Link href="/social/clubs" className="mf-tickets-mine-link" prefetch>
-                                League table
-                            </Link>
-                            <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
-                                Box office
-                            </Link>
-                            <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                                My tickets
-                                {ticket_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                                ) : null}
-                            </Link>
-                        </div>
-                    </header>
+                    <div className="mf-page-links">
+                        <Link href="/social/clubs" className="mf-tickets-mine-link" prefetch>
+                            League table
+                        </Link>
+                        <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
+                            Box office
+                        </Link>
+                        <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
+                            My tickets
+                            {ticket_count > 0 ? (
+                                <span className="mf-mono mf-tickets-count">{ticket_count}</span>
+                            ) : null}
+                        </Link>
+                    </div>
 
                     <div className="mf-fixtures-tabs" role="tablist" aria-label="Fixture filters">
                         {TABS.map((item) => {

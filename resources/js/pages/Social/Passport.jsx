@@ -155,13 +155,6 @@ export default function Passport({
 
             <div className="mf-page">
                 <div className="mf-passport-stage">
-                    <div className="mf-passport-intro">
-                        <p className="mf-text-caption text-[var(--mf-pitch)]">Fan passport</p>
-                        <p className="mf-text-meta text-[var(--mf-muted)]">
-                            {flipped ? 'Tap to return to cover' : 'Tap to flip for records'}
-                        </p>
-                    </div>
-
                     <div className="mf-passport-deck">
                         <div
                             className={`mf-passport-card ${flipped ? 'is-flipped' : ''}`}

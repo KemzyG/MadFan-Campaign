@@ -142,18 +142,14 @@ export default function Clubs({
             <Head title="League table — Mad Fan Social" />
 
             <div className="mf-standings">
-                <header className="mf-standings-hero">
-                    <p className="mf-tickets-kicker mf-text-caption">Match centre</p>
-                    <p className="mf-empty-title mf-tickets-title">League table</p>
-                    <div className="mf-standings-hero__links">
-                        <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
-                            Fixtures
-                        </Link>
-                        <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
-                            Box office
-                        </Link>
-                    </div>
-                </header>
+                <div className="mf-page-links">
+                    <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
+                        Fixtures
+                    </Link>
+                    <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
+                        Box office
+                    </Link>
+                </div>
 
                 {leagues.length > 0 ? (
                     <div className="mf-standings-tabs" role="tablist" aria-label="League filters">

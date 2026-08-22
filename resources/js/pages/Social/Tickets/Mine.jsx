@@ -49,9 +49,7 @@ export default function Mine({ tickets }) {
                 <TicketWalletSkeleton />
             ) : (
                 <div className="mf-tickets">
-                    <div className="mf-tickets-hero mf-tickets-hero--compact">
-                        <p className="mf-tickets-kicker mf-text-caption">Ticket wallet</p>
-                        <p className="mf-empty-title mf-tickets-title">Your matchday stock</p>
+                    <div className="mf-page-links">
                         <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
                             Browse fixtures
                         </Link>

@@ -7,9 +7,8 @@ export default function OrderShow({ order }) {
             <Head title={`Order ${order.code} — Mad Fan Store`} />
 
             <div className="mf-shop">
-                <div className="mf-tickets-hero mf-tickets-hero--compact">
-                    <p className="mf-tickets-kicker mf-text-caption">Order {order.code}</p>
-                    <p className="mf-empty-title mf-tickets-title">{order.status_label}</p>
+                <div className="mf-shop-order-meta">
+                    <p className="mf-mono">{order.status_label}</p>
                     <p className="mf-mono mf-shop-detail__price">£{order.total}</p>
                 </div>
 

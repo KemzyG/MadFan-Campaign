@@ -199,15 +199,10 @@ export default function VideosIndex({ reels }) {
     }, [items.length]);
 
     return (
-        <SocialShell>
+        <SocialShell title="Reels">
             <Head title="Reels" />
 
             <div className="mf-page mf-reels-page">
-                <header className="mf-reels-page__head">
-                    <h1 className="mf-reels-page__title">Highlights</h1>
-                    <p className="mf-text-meta text-[var(--mf-muted)]">Swipe up for the next clip</p>
-                </header>
-
                 {items.length === 0 ? (
                     <div className="mf-empty mf-empty--feed">
                         <p className="mf-empty-title">No reels yet</p>

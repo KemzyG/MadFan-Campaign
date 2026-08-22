@@ -21,11 +21,6 @@ export default function Checkout({ cart, defaults }) {
             <Head title="Checkout — Mad Fan Store" />
 
             <div className="mf-shop">
-                <div className="mf-tickets-hero mf-tickets-hero--compact">
-                    <p className="mf-tickets-kicker mf-text-caption">Confirm order</p>
-                    <p className="mf-empty-title mf-tickets-title">Shipping details</p>
-                </div>
-
                 <div className="mf-shop-checkout">
                     <form onSubmit={submit} className="mf-shop-form">
                         {[

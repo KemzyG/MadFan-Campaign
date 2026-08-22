@@ -116,7 +116,6 @@ export default function Index({
     max_description_length = 280,
     max_speakers = 8,
     stage_backgrounds = [],
-    voice_note,
 }) {
     const stageList = stages ?? [];
     const [createOpen, setCreateOpen] = useState(false);
@@ -129,25 +128,18 @@ export default function Index({
                 <StageLobbySkeleton />
             ) : (
                 <div className="mf-stage-lobby">
-                    <header className="mf-stage-hero">
-                        <p className="mf-stage-hero__kicker mf-text-caption">Live terrace</p>
-                        <p className="mf-empty-title mf-stage-hero__title">Join stage</p>
-                        <div className="mf-stage-hero__meta">
-                            <span className="mf-stage-hero__count mf-mono">
-                                {stageList.length} live
-                            </span>
-                            {voice_note ? (
-                                <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">{voice_note}</span>
-                            ) : null}
-                        </div>
+                    <div className="mf-stage-actions">
+                        <span className="mf-stage-hero__count mf-mono">
+                            {stageList.length} live
+                        </span>
                         <button
                             type="button"
-                            className="mf-btn mf-btn--pitch mf-stage-hero__cta"
+                            className="mf-btn mf-btn--pitch"
                             onClick={() => setCreateOpen(true)}
                         >
                             Go live
                         </button>
-                    </header>
+                    </div>
 
                     <section className="mf-stage-board" aria-label="Live stages">
                         <div className="mf-stage-board__head">

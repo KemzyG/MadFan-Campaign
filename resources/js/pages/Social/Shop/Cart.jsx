@@ -55,11 +55,6 @@ export default function Cart({ cart }) {
             <Head title="Bag — Mad Fan Store" />
 
             <div className="mf-shop">
-                <div className="mf-tickets-hero mf-tickets-hero--compact">
-                    <p className="mf-tickets-kicker mf-text-caption">Checkout prep</p>
-                    <p className="mf-empty-title mf-tickets-title">Your bag</p>
-                </div>
-
                 {empty ? (
                     <div className="mf-shop-empty">
                         <p className="mf-empty-copy">Bag is empty.</p>
