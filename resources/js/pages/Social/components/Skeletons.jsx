@@ -234,22 +234,10 @@ export function StageLobbySkeleton({ count = 3 }) {
     return (
         <div className="mf-skel-page mf-skel-stage-lobby" aria-busy="true" aria-label="Loading stage">
             <div className="mf-skel-stage-actions">
-                <Bone className="mf-skel-chip" />
+                <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-chip mf-skel-chip--btn" />
             </div>
-            <div className="mf-skel-stage-create mf-skel-stage-create--panel">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-line mf-skel-line--title" />
-                <div className="mf-skel-stage-create__row">
-                    <Bone className="mf-skel-composer-input" />
-                    <Bone className="mf-skel-chip mf-skel-chip--btn" />
-                </div>
-            </div>
             <div className="mf-skel-stage-list">
-                <div className="mf-skel-stage-board-head">
-                    <Bone className="mf-skel-line mf-skel-line--caption" />
-                    <Bone className="mf-skel-chip" />
-                </div>
                 {Array.from({ length: count }, (_, index) => (
                     <div
                         key={index}

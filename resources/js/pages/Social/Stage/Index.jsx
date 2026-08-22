@@ -129,12 +129,12 @@ export default function Index({
             ) : (
                 <div className="mf-stage-lobby">
                     <div className="mf-stage-actions">
-                        <span className="mf-stage-hero__count mf-mono">
-                            {stageList.length} live
-                        </span>
+                        <p className="mf-stage-actions__count mf-mono">
+                            {stageList.length} {stageList.length === 1 ? 'stage' : 'stages'} live
+                        </p>
                         <button
                             type="button"
-                            className="mf-btn mf-btn--pitch"
+                            className="mf-btn mf-btn--pitch mf-stage-actions__cta"
                             onClick={() => setCreateOpen(true)}
                         >
                             Go live
@@ -142,11 +142,6 @@ export default function Index({
                     </div>
 
                     <section className="mf-stage-board" aria-label="Live stages">
-                        <div className="mf-stage-board__head">
-                            <p className="mf-text-caption text-[var(--mf-muted)]">Live now</p>
-                            <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">{stageList.length}</span>
-                        </div>
-
                         {stageList.length === 0 ? (
                             <div className="mf-stage-empty mf-empty mf-empty--compact">
                                 <div className="mf-stage-empty__mark" aria-hidden>
