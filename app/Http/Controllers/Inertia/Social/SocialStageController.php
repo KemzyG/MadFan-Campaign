@@ -71,6 +71,7 @@ class SocialStageController extends Controller
         if ($stage->isLive()) {
             $stages->join($stage, $user);
             $stages->heartbeat($stage, $user);
+            $stages->pruneStaleParticipants($stage);
         }
 
         $payload = $stages->presentRoom($stage->fresh(), $user);
@@ -85,11 +86,37 @@ class SocialStageController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if ($stage->isLive() && $stages->activeParticipant($stage, $user) !== null) {
-            $stages->heartbeat($stage, $user);
+        if ($stage->isLive()) {
+            if ($stages->activeParticipant($stage, $user) !== null) {
+                $stages->heartbeat($stage, $user);
+            }
+            $stages->pruneStaleParticipants($stage);
         }
 
         return response()->json($stages->presentRoom($stage->fresh(), $user));
+    }
+
+    /**
+     * Foreground presence ping. Refreshes the caller's last-seen stamp and sweeps
+     * participants who have gone silent (closed app / killed tab), ending the
+     * Stage if the host is the one who vanished. Kept deliberately light — the
+     * client polls `room` for the resulting state.
+     */
+    public function heartbeat(Request $request, Stage $stage, StageService $stages): JsonResponse
+    {
+        $this->authorize('view', $stage);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($stage->isLive()) {
+            if ($stages->activeParticipant($stage, $user) !== null) {
+                $stages->heartbeat($stage, $user);
+            }
+            $stages->pruneStaleParticipants($stage);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     public function join(Request $request, Stage $stage, StageService $stages): RedirectResponse

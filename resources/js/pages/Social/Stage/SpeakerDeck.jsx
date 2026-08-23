@@ -7,7 +7,7 @@ import { useStageSession } from './StageSessionContext';
  * the mic. Active-speaker rings come from the session's `activeSpeakers` set.
  */
 export default function SpeakerDeck({ onSelectSpeaker }) {
-    const { room, activeSpeakers } = useStageSession();
+    const { room, activeSpeakers, peerStates } = useStageSession();
 
     const participants = room?.participants || [];
     const me = room?.me;
@@ -47,6 +47,7 @@ export default function SpeakerDeck({ onSelectSpeaker }) {
                                 participant={participant}
                                 speaking={activeSpeakers.has(Number(participant.user_id))}
                                 me={mine}
+                                peerState={mine ? null : peerStates.get(Number(participant.user_id)) || null}
                                 onSelect={canManage && !mine ? onSelectSpeaker : undefined}
                             />
                         );

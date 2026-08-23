@@ -18,6 +18,7 @@ import {
     toggleDeafened as toggleOutputDeafened,
 } from './stageAudioOutput';
 import { createStageVoiceSession } from './useStageVoice';
+import { reduceVoiceConnection } from './stageVoiceConnection';
 
 const StageSessionContext = createContext(null);
 
@@ -77,6 +78,7 @@ export function StageSessionProvider({ children }) {
     const [loading, setLoading] = useState(false);
     const [reactions, setReactions] = useState([]);
     const [activeSpeakers, setActiveSpeakers] = useState(() => new Set());
+    const [peerStates, setPeerStates] = useState(() => new Map());
     const [audioOutputState, setAudioOutputState] = useState(getAudioOutput);
     const [currentPath, setCurrentPath] = useState(() =>
         typeof window !== 'undefined' ? window.location.pathname : '',
@@ -86,6 +88,8 @@ export function StageSessionProvider({ children }) {
     const voiceRef = useRef(null);
     const pollTimerRef = useRef(null);
     const activeStageIdRef = useRef(null);
+    const heartbeatTimerRef = useRef(null);
+    const hiddenLeaveTimerRef = useRef(null);
     const chatOpenRef = useRef(false);
     const seenMessageCountRef = useRef(0);
     const roomPollBackoffRef = useRef(null);
@@ -202,16 +206,47 @@ export function StageSessionProvider({ children }) {
         voiceRef.current = null;
         setVoiceStatus('Idle');
         setActiveSpeakers(new Set());
+        setPeerStates(new Map());
     }, []);
 
     const handleActiveSpeakers = useCallback((ids) => {
         setActiveSpeakers(new Set((ids || []).map((id) => Number(id))));
     }, []);
 
+    // Per-peer voice connection state from the active driver (LiveKit or mesh).
+    // state === null removes the peer (left / connection closed).
+    const handlePeerStates = useCallback((userId, state) => {
+        const id = Number(userId);
+        if (!Number.isFinite(id)) {
+            return;
+        }
+        setPeerStates((prev) => {
+            if (state == null) {
+                if (!prev.has(id)) {
+                    return prev;
+                }
+                const next = new Map(prev);
+                next.delete(id);
+                return next;
+            }
+            const next = new Map(prev);
+            next.set(id, state);
+            return next;
+        });
+    }, []);
+
     const clearSession = useCallback(() => {
         if (pollTimerRef.current) {
             window.clearTimeout(pollTimerRef.current);
             pollTimerRef.current = null;
+        }
+        if (heartbeatTimerRef.current) {
+            window.clearInterval(heartbeatTimerRef.current);
+            heartbeatTimerRef.current = null;
+        }
+        if (hiddenLeaveTimerRef.current) {
+            window.clearTimeout(hiddenLeaveTimerRef.current);
+            hiddenLeaveTimerRef.current = null;
         }
         roomPollBackoffRef.current = null;
         pendingUnlockRef.current = false;
@@ -548,9 +583,14 @@ export function StageSessionProvider({ children }) {
         const voiceEnabled = Boolean(stage.voice_enabled);
         const onStage = Boolean(me.on_stage);
         const voiceDriver = room?.voice?.driver === 'livekit' ? 'livekit' : 'mesh';
-        const allowHttpSignals =
-            voiceDriver === 'mesh' &&
-            !(room?.realtime?.mode === 'reverb' && echoConnected);
+        // Mesh keeps the HTTP /signals drain running even under reverb-primary — a
+        // slow safety net (the server sends signal_poll_ms >= 8s in that mode) that
+        // re-catches any SDP/ICE the socket dropped. This mirrors the room-state
+        // safety poll above; without it, a single missed .signal.created event
+        // silently kills voice with no fallback. drainSignals marks each signal
+        // consumed exactly once and the WS handlers are idempotent for dual
+        // delivery, so running WS + poll together is harmless.
+        const allowHttpSignals = voiceDriver === 'mesh';
         const boundStageId = voiceRef.current?.stageId;
         const boundDriver = voiceRef.current?.driver;
 
@@ -572,6 +612,7 @@ export function StageSessionProvider({ children }) {
                 allowHttpSignals,
                 onStatus: setVoiceStatus,
                 onActiveSpeakers: handleActiveSpeakers,
+                onPeerState: handlePeerStates,
             });
             session.stageId = stage.id;
             voiceRef.current = session;
@@ -605,6 +646,7 @@ export function StageSessionProvider({ children }) {
         echoConnected,
         stopVoice,
         handleActiveSpeakers,
+        handlePeerStates,
     ]);
 
     // If autoplay is blocked, retry on the next page interaction (not a dedicated button).
@@ -673,6 +715,16 @@ export function StageSessionProvider({ children }) {
 
     const isOnStageRoute = Boolean(activeStageId) && isStageRoomPath(currentPath, activeStageId);
 
+    // Roll up per-peer voice states over the current on-stage speakers (excluding
+    // me) into the aggregate that drives the header pill + connection panel.
+    const voiceConnection = useMemo(() => {
+        const myId = room?.me?.user_id;
+        const speakerIds = (room?.participants || [])
+            .filter((p) => p.on_stage && Number(p.user_id) !== Number(myId))
+            .map((p) => Number(p.user_id));
+        return reduceVoiceConnection(peerStates, speakerIds);
+    }, [room?.participants, room?.me?.user_id, peerStates]);
+
     const api = useMemo(
         () => ({
             activeStageId,
@@ -682,6 +734,8 @@ export function StageSessionProvider({ children }) {
             room,
             reactions,
             activeSpeakers,
+            peerStates,
+            voiceConnection,
             audioOutput,
             voiceStatus,
             loading,
@@ -704,6 +758,8 @@ export function StageSessionProvider({ children }) {
             room,
             reactions,
             activeSpeakers,
+            peerStates,
+            voiceConnection,
             audioOutput,
             voiceStatus,
             loading,

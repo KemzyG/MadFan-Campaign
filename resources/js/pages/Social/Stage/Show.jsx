@@ -10,8 +10,9 @@ import RoomHeader from './RoomHeader';
 import ShareStageSheet from './ShareStageSheet';
 import SpeakerDeck from './SpeakerDeck';
 import StageControlBar from './StageControlBar';
-import StageRail from './StageRail';
+import StageReactionFab from './StageReactionFab';
 import StageSettingsSheet from './StageSettingsSheet';
+import { ChatPanel, PeopleInfoPanel } from './StageSidePanels';
 import { useStageActions } from './useStageActions';
 import { useStageShortcuts } from './useStageShortcuts';
 import { useStageSession } from './StageSessionContext';
@@ -19,8 +20,8 @@ import { useStageSession } from './StageSessionContext';
 const REACTION_FALLBACK = '🔥';
 
 /** Mobile-only segmented control: Stage (deck) / Chat / People. */
-function MobileSegmented({ view, chatAllowed, chatUnread, handCount, onStage, onRail }) {
-    const Seg = ({ id, label, active, onClick, badge }) => (
+function MobileSegmented({ view, chatAllowed, chatUnread, handCount, onStage, onChat, onPeople }) {
+    const Seg = ({ label, active, onClick, badge }) => (
         <button
             type="button"
             role="tab"
@@ -35,21 +36,19 @@ function MobileSegmented({ view, chatAllowed, chatUnread, handCount, onStage, on
 
     return (
         <div className="mf-stageroom__segmented" role="tablist" aria-label="Room view">
-            <Seg id="stage" label="Stage" active={view === 'stage'} onClick={onStage} />
+            <Seg label="Stage" active={view === 'stage'} onClick={onStage} />
             {chatAllowed ? (
                 <Seg
-                    id="chat"
                     label="Chat"
                     active={view === 'chat'}
-                    onClick={() => onRail('chat')}
+                    onClick={onChat}
                     badge={chatUnread > 0 ? (chatUnread > 99 ? '99+' : chatUnread) : null}
                 />
             ) : null}
             <Seg
-                id="people"
                 label="People"
                 active={view === 'people'}
-                onClick={() => onRail('people')}
+                onClick={() => onPeople('people')}
                 badge={handCount > 0 ? handCount : null}
             />
         </div>
@@ -57,17 +56,21 @@ function MobileSegmented({ view, chatAllowed, chatUnread, handCount, onStage, on
 }
 
 /**
- * The Stage room as a real route. Desktop is a two-pane split (deck + tabbed
- * rail); mobile is a single full-screen column switched by a segmented control,
- * with the control bar fixed above the safe area. No modal at any breakpoint.
+ * The Stage room as a real route. The room reads as up to four panels — the
+ * shell nav sidebar, the main room (header + deck + controls), a Chat column and
+ * a People+Info column. On phones a segmented control swaps a single full-screen
+ * panel; at ≥1024px Chat is its own column; at ≥1280px People+Info joins as a
+ * permanent fourth panel (below that it's an overlay). No modal at any breakpoint.
  */
 export default function Show(props) {
     const { stage } = props;
     const { enterFromPage, syncFromPage, activeStageId, room, loading, chatUnread } = useStageSession();
     const actions = useStageActions();
 
-    const [railTab, setRailTab] = useState('chat'); // chat | people | info
-    const [mobileStage, setMobileStage] = useState(true); // mobile: deck vs. rail pane
+    // mobileView drives the phone segmented control + the responsive show/hide.
+    const [mobileView, setMobileView] = useState('stage'); // stage | chat | people
+    const [peopleTab, setPeopleTab] = useState('people'); // people | info
+    const [peopleOpen, setPeopleOpen] = useState(false); // laptop overlay reveal
     const [focusUserId, setFocusUserId] = useState(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
@@ -97,17 +100,36 @@ export default function Show(props) {
         activeStageId,
     ]);
 
-    const goRail = useCallback((tab) => {
-        setRailTab(tab);
-        setMobileStage(false);
+    const goStage = useCallback(() => setMobileView('stage'), []);
+    const goChat = useCallback(() => setMobileView('chat'), []);
+    const openPeople = useCallback((subTab = 'people') => {
+        setPeopleTab(subTab === 'info' ? 'info' : 'people');
+        setMobileView('people');
+        setPeopleOpen(true);
     }, []);
+    const closePeople = useCallback(() => {
+        setPeopleOpen(false);
+        setMobileView((view) => (view === 'people' ? 'stage' : view));
+    }, []);
+
+    // Shortcuts + affordances route through one entry point (1=chat, 2=people, 3/?=info).
+    const goRail = useCallback(
+        (tab) => {
+            if (tab === 'chat') {
+                goChat();
+            } else {
+                openPeople(tab === 'info' ? 'info' : 'people');
+            }
+        },
+        [goChat, openPeople],
+    );
 
     const selectSpeaker = useCallback(
         (participant) => {
             setFocusUserId(participant?.user_id ?? null);
-            goRail('people');
+            openPeople('people');
         },
-        [goRail],
+        [openPeople],
     );
 
     const quickReact = useCallback(() => {
@@ -120,7 +142,7 @@ export default function Show(props) {
         actions,
         onRailTab: goRail,
         onReact: quickReact,
-        onToggleHelp: () => goRail('info'),
+        onToggleHelp: () => openPeople('info'),
     });
 
     const roomStage = room?.stage;
@@ -131,7 +153,15 @@ export default function Show(props) {
     );
 
     const ready = Boolean(roomStage) && !loading;
-    const mobileView = mobileStage ? 'stage' : railTab === 'people' ? 'people' : 'chat';
+
+    const roomClass = [
+        'mf-stageroom',
+        `mf-stageroom--view-${mobileView}`,
+        peopleOpen ? 'is-people-open' : '',
+        chatAllowed ? '' : 'is-no-chat',
+    ]
+        .filter(Boolean)
+        .join(' ');
 
     return (
         <SocialShell title="Stage" wide mobileBare>
@@ -140,37 +170,48 @@ export default function Show(props) {
             {!ready ? (
                 <StageRoomSkeleton />
             ) : (
-                <div className={`mf-stageroom ${mobileStage ? 'is-mobile-stage' : 'is-mobile-pane'}`}>
+                <div className={roomClass}>
                     <MobileSegmented
                         view={mobileView}
                         chatAllowed={chatAllowed}
                         chatUnread={chatUnread}
                         handCount={handRaised.length}
-                        onStage={() => setMobileStage(true)}
-                        onRail={goRail}
+                        onStage={goStage}
+                        onChat={goChat}
+                        onPeople={openPeople}
                     />
 
                     <section className="mf-stageroom__main">
-                        <RoomHeader
-                            onOpenSettings={() => setSettingsOpen(true)}
-                            onOpenShare={() => setShareOpen(true)}
-                        />
+                        <RoomHeader onOpenSettings={() => setSettingsOpen(true)} onOpenShare={() => setShareOpen(true)} />
 
                         <div className="mf-stageroom__deck">
                             <ReactionLayer />
                             <PinnedMessage compact />
                             <SpeakerDeck onSelectSpeaker={selectSpeaker} />
-                            <ListenerStrip onSeeAll={() => goRail('people')} />
+                            <ListenerStrip onSeeAll={() => openPeople('people')} />
                         </div>
 
-                        <StageControlBar
-                            onOpenSettings={() => setSettingsOpen(true)}
-                            onOpenShare={() => setShareOpen(true)}
-                            onChat={() => goRail('chat')}
-                        />
+                        <StageReactionFab />
+
+                        <StageControlBar />
                     </section>
 
-                    <StageRail tab={railTab} onTab={goRail} focusUserId={focusUserId} />
+                    {chatAllowed ? <ChatPanel onOpenPeople={() => openPeople('people')} /> : null}
+
+                    <PeopleInfoPanel
+                        tab={peopleTab}
+                        onTab={setPeopleTab}
+                        focusUserId={focusUserId}
+                        onClose={closePeople}
+                    />
+
+                    <button
+                        type="button"
+                        className="mf-stage-panel__scrim"
+                        aria-label="Close panel"
+                        tabIndex={-1}
+                        onClick={closePeople}
+                    />
                 </div>
             )}
 

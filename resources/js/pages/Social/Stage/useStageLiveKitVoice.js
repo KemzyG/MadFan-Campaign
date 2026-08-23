@@ -3,7 +3,7 @@
  * Media: livekit-client (publish mic when on stage; subscribe for everyone).
  * App events (promote / messages / room): Reverb — no mesh signaling needed.
  */
-import { Room, RoomEvent, Track } from 'livekit-client';
+import { ConnectionQuality, Room, RoomEvent, Track } from 'livekit-client';
 import {
     describeMicError,
     requestStageMicrophone,
@@ -35,8 +35,11 @@ export function createStageLiveKitVoiceSession({
     isMuted,
     onStatus,
     onActiveSpeakers,
+    onPeerState,
 }) {
     let room = null;
+    /** Per remote speaker: last emitted connection state, keyed by numeric identity (user_id). */
+    const peers = new Map();
     let stopped = false;
     let connecting = false;
     let reconnectTimer = null;
@@ -63,6 +66,95 @@ export function createStageLiveKitVoiceSession({
         onActiveSpeakers(ids);
     }
 
+    // --- Per-peer connection state (drives the header pill + connection panel) ----
+    // On an SFU every remote is receive-only from my side (I subscribe to them);
+    // "they hear me" is the server accepting my published track, tracked at the
+    // room level rather than per remote peer, so `tx` stays null here.
+
+    function mapQuality(quality) {
+        switch (quality) {
+            case ConnectionQuality.Excellent:
+            case ConnectionQuality.Good:
+                return 'good';
+            case ConnectionQuality.Poor:
+                return 'poor';
+            case ConnectionQuality.Lost:
+                return 'lost';
+            default:
+                return null;
+        }
+    }
+
+    /** LiveKit identity == user_id for every participant, including me. */
+    function isMe(identity) {
+        return Number(identity) === Number(myUserId);
+    }
+
+    function peerSig(state) {
+        return `${state.phase}|${state.rx ? 1 : 0}|${state.muted ? 1 : 0}|${state.quality || ''}`;
+    }
+
+    /** Merge a patch into a peer's state and emit only when something changed. */
+    function pushPeer(identity, patch) {
+        if (typeof onPeerState !== 'function') {
+            return;
+        }
+        const id = Number(identity);
+        if (!Number.isFinite(id)) {
+            return;
+        }
+        const prev = peers.get(id) || {
+            phase: 'connecting',
+            role: 'recv',
+            rx: false,
+            tx: null,
+            muted: false,
+            quality: null,
+        };
+        // Never regress out of `failed` on a stray late event; a fresh connect resets the map.
+        const next = { ...prev, ...patch };
+        if (peers.has(id) && peerSig(prev) === peerSig(next)) {
+            peers.set(id, next);
+            return;
+        }
+        peers.set(id, next);
+        onPeerState(id, {
+            phase: next.phase,
+            role: next.role,
+            rx: next.rx,
+            tx: next.tx,
+            muted: next.muted,
+            quality: next.quality,
+        });
+    }
+
+    function removePeer(identity) {
+        const id = Number(identity);
+        if (!Number.isFinite(id) || !peers.has(id)) {
+            return;
+        }
+        peers.delete(id);
+        if (typeof onPeerState === 'function') {
+            onPeerState(id, null);
+        }
+    }
+
+    function resetPeers() {
+        if (typeof onPeerState === 'function') {
+            for (const id of peers.keys()) {
+                onPeerState(id, null);
+            }
+        }
+        peers.clear();
+    }
+
+    /** Seed connection state from participants already in the room at connect time. */
+    function seedPeersFromRoom(nextRoom) {
+        nextRoom?.remoteParticipants?.forEach((participant) => {
+            pushPeer(participant.identity, { phase: 'connecting' });
+        });
+    }
+
     function audioElId(identity) {
         return `stage-remote-audio-${identity}`;
     }
@@ -87,12 +179,12 @@ export function createStageLiveKitVoiceSession({
         const mediaTrack = track.mediaStreamTrack;
         const existingTracks = audio.srcObject?.getAudioTracks?.() || [];
         if (mediaTrack && existingTracks.some((t) => t.id === mediaTrack.id) && !audio.paused) {
-            return;
+            return Promise.resolve(true);
         }
         track.attach(audio);
         audio.muted = false;
         audio.volume = effectiveVolume();
-        playRemoteAudio(audio);
+        return playRemoteAudio(audio);
     }
 
     function detachRemote(identity) {
@@ -218,26 +310,79 @@ export function createStageLiveKitVoiceSession({
 
     function wireRoom(nextRoom) {
         nextRoom
-            .on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
+            .on(RoomEvent.ParticipantConnected, (participant) => {
+                if (!isMe(participant.identity)) {
+                    pushPeer(participant.identity, { phase: 'connecting' });
+                }
+            })
+            .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                 if (track.kind !== Track.Kind.Audio) {
                     return;
                 }
-                attachRemoteTrack(participant.identity, track);
+                const id = Number(participant.identity);
+                const playing = attachRemoteTrack(participant.identity, track);
+                if (publication?.isMuted) {
+                    // Subscribed but muted at source = intentional silence, transport is up.
+                    pushPeer(id, { phase: 'verified', rx: false, muted: true });
+                    return;
+                }
+                pushPeer(id, { phase: 'connected', muted: false });
+                playing.then((ok) => {
+                    if (ok) {
+                        // Audio element is actually playing their live track → end-to-end verified.
+                        pushPeer(id, { phase: 'verified', rx: true });
+                    }
+                });
             })
             .on(RoomEvent.TrackUnsubscribed, (track, _publication, participant) => {
                 track.detach();
                 if (track.kind === Track.Kind.Audio) {
                     detachRemote(participant.identity);
+                    pushPeer(participant.identity, { phase: 'connected', rx: false });
+                }
+            })
+            .on(RoomEvent.TrackMuted, (_publication, participant) => {
+                if (isMe(participant.identity)) {
+                    return;
+                }
+                const id = Number(participant.identity);
+                const cur = peers.get(id);
+                const upgraded = cur && (cur.phase === 'connected' || cur.phase === 'verified');
+                pushPeer(id, { muted: true, rx: false, phase: upgraded ? 'verified' : cur?.phase || 'connecting' });
+            })
+            .on(RoomEvent.TrackUnmuted, (_publication, participant) => {
+                if (!isMe(participant.identity)) {
+                    pushPeer(participant.identity, { muted: false });
                 }
             })
             .on(RoomEvent.ParticipantDisconnected, (participant) => {
                 detachRemote(participant.identity);
+                removePeer(participant.identity);
             })
             .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
                 emitActiveSpeakers(speakers);
+                // A remote counted as an active speaker is provably sending audio the SFU
+                // forwards to me — the strongest end-to-end proof available on an SFU.
+                for (const participant of speakers || []) {
+                    if (!isMe(participant?.identity)) {
+                        pushPeer(participant.identity, { phase: 'verified', rx: true, muted: false });
+                    }
+                }
+            })
+            .on(RoomEvent.ConnectionQualityChanged, (quality, participant) => {
+                if (isMe(participant?.identity) || !peers.has(Number(participant?.identity))) {
+                    return;
+                }
+                const mapped = mapQuality(quality);
+                if (mapped === 'lost') {
+                    pushPeer(participant.identity, { phase: 'failed', quality: 'lost' });
+                } else {
+                    pushPeer(participant.identity, { quality: mapped });
+                }
             })
             .on(RoomEvent.Disconnected, () => {
                 emitActiveSpeakers([]);
+                resetPeers();
                 if (!stopped && voiceEnabled) {
                     setStatus('Voice reconnecting…');
                 }
@@ -304,6 +449,7 @@ export function createStageLiveKitVoiceSession({
             audio.remove();
         });
         emitActiveSpeakers([]);
+        resetPeers();
         lastCanPublish = null;
     }
 
@@ -333,6 +479,7 @@ export function createStageLiveKitVoiceSession({
                 wireRoom(room);
                 await room.connect(payload.url, payload.token);
                 lastCanPublish = payload.can_publish;
+                seedPeersFromRoom(room);
             }
 
             await applyPublishState();

@@ -39,6 +39,7 @@ export function createStageMeshVoiceSession({
     allowHttpSignals = true,
     onStatus,
     onActiveSpeakers,
+    onPeerState,
 }) {
     const peers = new Map();
     const seenSignalIds = new Set();
@@ -77,6 +78,38 @@ export function createStageMeshVoiceSession({
     function setStatus(msg) {
         if (typeof onStatus === 'function') {
             onStatus(msg);
+        }
+    }
+
+    // --- Per-peer connection state (drives the header pill + connection panel) ----
+    // Mesh reports transport phase only (connecting → connected); packet-level
+    // "verified" is a LiveKit-path feature. Emitted on change to bound re-renders.
+    const peerStateSig = new Map();
+
+    function emitPeerState(peerUserId, phase, role) {
+        if (typeof onPeerState !== 'function') {
+            return;
+        }
+        const id = Number(peerUserId);
+        if (!Number.isFinite(id)) {
+            return;
+        }
+        const sig = `${phase}|${role || ''}`;
+        if (peerStateSig.get(id) === sig) {
+            return;
+        }
+        peerStateSig.set(id, sig);
+        onPeerState(id, { phase, role, rx: null, tx: null, quality: null });
+    }
+
+    function clearPeerState(peerUserId) {
+        const id = Number(peerUserId);
+        if (!Number.isFinite(id) || !peerStateSig.has(id)) {
+            return;
+        }
+        peerStateSig.delete(id);
+        if (typeof onPeerState === 'function') {
+            onPeerState(id, null);
         }
     }
 
@@ -510,6 +543,7 @@ export function createStageMeshVoiceSession({
         pendingRemoteIce.delete(peerUserId);
         removeRemoteAudio(peerUserId);
         untrackAnalyser(peerUserId);
+        clearPeerState(peerUserId);
     }
 
     function resetAllPeers() {
@@ -554,6 +588,7 @@ export function createStageMeshVoiceSession({
         const pc = new RTCPeerConnection({ iceServers });
         const entry = { pc, initiator, recvOnly, iceFailed: false, attachedTrackIds: new Set() };
         peers.set(peerUserId, entry);
+        emitPeerState(peerUserId, 'connecting', recvOnly ? 'recv' : 'duplex');
 
         pc.onicecandidate = (event) => {
             if (event.candidate) {
@@ -575,6 +610,7 @@ export function createStageMeshVoiceSession({
             const state = pc.iceConnectionState;
             if (state === 'connected' || state === 'completed') {
                 entry.iceFailed = false;
+                emitPeerState(peerUserId, 'connected', entry.recvOnly ? 'recv' : 'duplex');
                 if (!iAmOnStage) {
                     listRemoteAudios().forEach((audio) => playRemoteAudio(audio));
                 } else if (isMuted) {
