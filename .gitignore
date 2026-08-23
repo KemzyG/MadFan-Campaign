@@ -91,3 +91,6 @@ package-lock.json.bak
 !/docs/social/
 !/docs/social/**/*.md
 !/docs/social/**/
+
+# Scratch / working files — never commit (screenshots, one-off scripts).
+/tmp_*
