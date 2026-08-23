@@ -3638,7 +3638,6 @@ header {
 }
 
 section {
-    padding: 64px 0;
     border-top: 1px solid var(--border);
 }
 

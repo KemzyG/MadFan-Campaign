@@ -1,8 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { formatLiveDuration, StageAvatar } from './helpers';
-import { IconBack, IconSettings, IconShare } from './StageIcons';
+import StageConnectionPanel from './StageConnectionPanel';
+import { IconBack, IconEnd, IconLeave, IconSettings, IconShare, IconVoice, StageIconButton } from './StageIcons';
+import { useStageActions } from './useStageActions';
 import { useStageSession } from './StageSessionContext';
+import { voiceConnectionLabel } from './stageVoiceConnection';
 
 /** Re-render once a second while `active` so the on-air timer ticks. */
 function useNowTick(active) {
@@ -24,12 +27,14 @@ function useNowTick(active) {
  * chip, title, host/club, size stats, and (desktop) settings/share buttons.
  */
 export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/social/stage' }) {
-    const { room, voiceStatus } = useStageSession();
+    const { room, voiceStatus, voiceConnection } = useStageSession();
+    const actions = useStageActions();
 
     const stage = room?.stage;
     const me = room?.me;
     const isLive = stage?.status === 'live';
     const now = useNowTick(isLive && Boolean(stage?.started_at));
+    const [connOpen, setConnOpen] = useState(false);
 
     if (!stage) {
         return null;
@@ -48,6 +53,23 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
         : voiceStatus && voiceStatus !== 'Idle'
           ? voiceStatus
           : 'Voice on';
+
+    const connHeadline = voiceConnection?.headline || 'idle';
+    const connState =
+        connHeadline === 'verified'
+            ? 'verified'
+            : connHeadline === 'degraded'
+              ? 'degraded'
+              : connHeadline === 'idle'
+                ? 'idle'
+                : 'connecting';
+    const showConnPill = voiceEnabled && isLive;
+
+    const confirmEnd = () => {
+        if (window.confirm('End this Stage for everyone? This cannot be undone.')) {
+            actions.endStage();
+        }
+    };
 
     return (
         <header className="mf-stageroom__header">
@@ -77,11 +99,29 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
                             </span>
                         ) : null}
                         <span
-                            className={`mf-stage-conn-chip mf-mono ${usingReverb ? 'is-live' : 'is-poll'}`}
+                            className={`mf-stage-conn-chip mf-stageroom__net-chip mf-mono ${usingReverb ? 'is-live' : 'is-poll'}`}
                             title={usingReverb ? 'Realtime updates' : 'Polling updates'}
                         >
                             {usingReverb ? 'Realtime' : 'Polling'}
                         </span>
+                        {showConnPill ? (
+                            <span className="mf-stage-conn-pill-wrap">
+                                <button
+                                    type="button"
+                                    className={`mf-stage-conn-chip mf-stage-conn-pill mf-mono is-${connState}`}
+                                    aria-expanded={connOpen}
+                                    aria-haspopup="dialog"
+                                    title="Voice connection details"
+                                    onClick={() => setConnOpen((open) => !open)}
+                                >
+                                    <IconVoice />
+                                    {voiceConnectionLabel(voiceConnection)}
+                                </button>
+                                {connOpen ? (
+                                    <StageConnectionPanel onClose={() => setConnOpen(false)} />
+                                ) : null}
+                            </span>
+                        ) : null}
                     </div>
 
                     <h1 className="mf-stageroom__title" title={stage.title}>
@@ -95,8 +135,7 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
                             {stage.host?.name || 'Fan'}
                             {stage.club?.name ? (
                                 <span className="mf-stageroom__club"> · {stage.club.name}</span>
-                            ) : null}
-                        </p>
+                            ) : null}                        </p>
                     </div>
                 </div>
             </div>
@@ -114,7 +153,7 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
                 </div>
 
                 <span
-                    className={`mf-stage-voice-chip mf-mono ${!voiceEnabled || !isLive ? 'mf-stage-voice-chip--off' : ''}`.trim()}
+                    className={`mf-stage-voice-chip mf-stageroom__side-voice mf-mono ${!voiceEnabled || !isLive ? 'mf-stage-voice-chip--off' : ''}`.trim()}
                 >
                     {voiceChip}
                 </span>
@@ -134,13 +173,22 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
                     {isLive && me && inviteAllowed ? (
                         <button
                             type="button"
-                            className="mf-stage-icon-btn"
+                            className="mf-stage-icon-btn mf-stageroom__share-btn"
                             aria-label="Share stage"
                             title="Share stage"
                             onClick={onOpenShare}
                         >
                             <IconShare />
                         </button>
+                    ) : null}
+                    {actions.canEnd ? (
+                        <StageIconButton label="End stage for everyone" danger onClick={confirmEnd}>
+                            <IconEnd />
+                        </StageIconButton>
+                    ) : actions.canLeave ? (
+                        <StageIconButton label="Leave stage" onClick={actions.leave}>
+                            <IconLeave />
+                        </StageIconButton>
                     ) : null}
                 </div>
             </div>

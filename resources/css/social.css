@@ -38,6 +38,15 @@
     --mf-rival: #e8e8e8;
 
     /*
+     * Semantic status tokens â€” the only intentional color in the monochrome
+     * system, reserved for live connection health (voice reach / verification).
+     * Tuned for the near-black surfaces above.
+     */
+    --mf-ok: #37d67a;
+    --mf-warn: #f0a728;
+    --mf-bad: #ef5350;
+
+    /*
      * Type roles â€” premium sports / fan broadcast (X density).
      * Display: Saira Condensed â€” scoreboard / kit-name authority
      * UI/Body: IBM Plex Sans â€” readable terrace copy at ~15px
@@ -76,6 +85,8 @@
     --mf-sidebar-w: 17.25rem; /* ~276px label rail */
     --mf-sidebar-icon-w: 4.75rem; /* icon-only rail */
     --mf-chat-rail-w: 21.875rem; /* ~350px chat panel */
+    --mf-people-rail-w: 20rem; /* ~320px people + info panel */
+    --mf-stage-footer-h: 3.9rem; /* slim single-row control bar */
     /*
      * md keeps the two-panel shell capped to its own tracks and centred; from lg
      * up the shell spans the whole viewport — sidebar pinned left, chat rail
@@ -319,6 +330,57 @@ body,
 
 .mf-shell--mobile-bare .mf-main {
     padding-bottom: 0;
+}
+
+/*
+ * Phone: lock the two full-screen "app" surfaces (chat thread + Stage room, the
+ * only mobile-bare pages) to the *visible* viewport so the document itself never
+ * rubber-band scrolls. `100dvh` is the toolbar-retracted height; while the page
+ * can't scroll the URL bar stays up, so a 100dvh chain is taller than what is
+ * visible and the whole page slides by the toolbar's height. `:has()` scopes the
+ * lock to these pages only — every other page keeps normal document scrolling.
+ * The pane flex-fills (`height:100%` resolves to the real visible height) and its
+ * own inner region (deck / chat stream / people list) stays the sole scroller.
+ */
+@media (max-width: 767.98px) {
+    html:has(.mf-shell--mobile-bare),
+    body:has(.mf-shell--mobile-bare) {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #app:has(.mf-shell--mobile-bare),
+    .mf-social:has(.mf-shell--mobile-bare),
+    .mf-stage:has(.mf-shell--mobile-bare) {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .mf-shell--mobile-bare {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .mf-shell--mobile-bare .mf-app {
+        min-height: 0;
+        height: 100%;
+    }
+
+    /* `.mf-main` is only `flex:1`; make it a column so the pane flex-fills
+       instead of needing a second 100dvh (which reintroduces the toolbar gap). */
+    .mf-shell--mobile-bare .mf-main {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .mf-shell--mobile-bare .mf-stageroom,
+    .mf-shell--mobile-bare .mf-chat-shell.is-thread {
+        height: auto;
+        flex: 1;
+        min-height: 0;
+    }
 }
 
 .mf-app {
@@ -6915,6 +6977,241 @@ body,
     color: var(--mf-muted);
 }
 
+/* Tappable voice-reach pill (opens the connection panel) + semantic states. */
+.mf-stage-conn-pill-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.mf-stage-conn-pill {
+    gap: 0.3rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        border-color 0.15s var(--mf-ease),
+        color 0.15s var(--mf-ease),
+        background 0.15s var(--mf-ease);
+}
+
+.mf-stage-conn-pill svg {
+    width: 0.72rem;
+    height: 0.72rem;
+    flex-shrink: 0;
+}
+
+.mf-stage-conn-pill:hover {
+    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+}
+
+.mf-stage-conn-pill[aria-expanded='true'] {
+    border-color: color-mix(in srgb, var(--mf-pitch) 34%, var(--mf-line));
+    background: var(--mf-elevated);
+}
+
+.mf-stage-conn-chip.is-verified {
+    border-color: color-mix(in srgb, var(--mf-ok) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-ok) 12%, var(--mf-panel));
+    color: color-mix(in srgb, var(--mf-ok) 85%, var(--mf-text));
+}
+
+.mf-stage-conn-chip.is-connecting {
+    border-color: color-mix(in srgb, var(--mf-warn) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-warn) 12%, var(--mf-panel));
+    color: color-mix(in srgb, var(--mf-warn) 85%, var(--mf-text));
+}
+
+.mf-stage-conn-chip.is-degraded {
+    border-color: color-mix(in srgb, var(--mf-bad) 50%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-bad) 14%, var(--mf-panel));
+    color: color-mix(in srgb, var(--mf-bad) 88%, var(--mf-text));
+}
+
+.mf-stage-conn-chip.is-connecting svg {
+    animation: mf-stage-pulse-dim 1.6s var(--mf-ease) infinite;
+    border-radius: 9999px;
+}
+
+@keyframes mf-stage-pulse-dim {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* Voice connection panel — opens from the header pill. */
+.mf-stage-conn-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 201;
+    width: min(20rem, calc(100vw - 2rem));
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.85rem;
+    border-radius: 0.85rem;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+    text-transform: none;
+    letter-spacing: normal;
+    animation: mf-stage-rise 0.16s var(--mf-ease);
+}
+
+.mf-stage-conn-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-stage-conn-panel__title {
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-stage-conn-panel__close {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.mf-stage-conn-panel__summary {
+    color: var(--mf-text);
+}
+
+.mf-stage-conn-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.65rem 0;
+    list-style: none;
+    border-top: 1px solid var(--mf-line);
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-stage-conn-step {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-stage-conn-step__dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 9999px;
+    background: var(--mf-line);
+    flex-shrink: 0;
+}
+
+.mf-stage-conn-step.is-done {
+    color: var(--mf-text);
+}
+
+.mf-stage-conn-step.is-done .mf-stage-conn-step__dot {
+    background: var(--mf-ok);
+}
+
+.mf-stage-conn-step.is-active {
+    color: var(--mf-text);
+}
+
+.mf-stage-conn-step.is-active .mf-stage-conn-step__dot {
+    background: var(--mf-warn);
+    animation: mf-stage-pulse-dim 1.6s var(--mf-ease) infinite;
+}
+
+.mf-stage-conn-step.is-error {
+    color: color-mix(in srgb, var(--mf-bad) 80%, var(--mf-text));
+}
+
+.mf-stage-conn-step.is-error .mf-stage-conn-step__dot {
+    background: var(--mf-bad);
+}
+
+.mf-stage-conn-step__note {
+    margin-left: auto;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+.mf-stage-conn-panel__broadcast {
+    color: var(--mf-muted);
+}
+
+.mf-stage-conn-peers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-stage-conn-peer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mf-stage-conn-peer__name {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-text);
+}
+
+.mf-stage-conn-peer__role {
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-stage-conn-peer__chip {
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 0.1rem 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-stage-conn-peer__chip.is-connecting {
+    border-color: color-mix(in srgb, var(--mf-warn) 45%, var(--mf-line));
+    color: color-mix(in srgb, var(--mf-warn) 85%, var(--mf-text));
+}
+
+.mf-stage-conn-peer__chip.is-connected {
+    color: var(--mf-pitch-dim);
+}
+
+.mf-stage-conn-peer__chip.is-verified {
+    border-color: color-mix(in srgb, var(--mf-ok) 45%, var(--mf-line));
+    color: color-mix(in srgb, var(--mf-ok) 85%, var(--mf-text));
+}
+
+.mf-stage-conn-peer__chip.is-failed {
+    border-color: color-mix(in srgb, var(--mf-bad) 50%, var(--mf-line));
+    color: color-mix(in srgb, var(--mf-bad) 88%, var(--mf-text));
+}
+
+.mf-stage-conn-panel__foot {
+    color: var(--mf-muted);
+    padding-top: 0.15rem;
+}
+
 /* Voice status chip. */
 .mf-stage-voice-chip {
     display: inline-flex;
@@ -7484,6 +7781,7 @@ body,
 
 /* —— 4. Room shell ——————————————————————————————————————————————————— */
 .mf-stageroom {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100dvh;
@@ -7554,6 +7852,7 @@ body,
 
 /* Main column: header + scrolling deck + control bar. */
 .mf-stageroom__main {
+    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -7855,6 +8154,39 @@ body,
     height: 0.85rem;
 }
 
+/* Live connection dot (top-left corner, opposite the crown/mic badges). */
+.mf-stage-tile__conn {
+    position: absolute;
+    top: -0.15rem;
+    left: -0.15rem;
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 9999px;
+    border: 2px solid var(--mf-void);
+    background: var(--mf-muted);
+    box-shadow: 0 0 0 1px var(--mf-line);
+}
+
+.mf-stage-tile__conn.is-connecting {
+    background: var(--mf-warn);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-warn) 40%, transparent);
+    animation: mf-stage-pulse-dim 1.6s var(--mf-ease) infinite;
+}
+
+.mf-stage-tile__conn.is-connected {
+    background: var(--mf-pitch-dim);
+}
+
+.mf-stage-tile__conn.is-verified {
+    background: var(--mf-ok);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-ok) 45%, transparent);
+}
+
+.mf-stage-tile__conn.is-failed {
+    background: var(--mf-bad);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-bad) 45%, transparent);
+}
+
 .mf-stage-tile__name {
     max-width: 100%;
     font-size: var(--mf-text-meta);
@@ -8048,9 +8380,9 @@ body,
     align-items: center;
     justify-content: center;
     gap: 0.9rem;
-    flex-wrap: wrap;
     flex-shrink: 0;
-    padding: 0.6rem 0.85rem calc(0.6rem + var(--mf-safe-bottom));
+    min-height: var(--mf-stage-footer-h);
+    padding: 0.5rem 0.85rem calc(0.5rem + var(--mf-safe-bottom));
     border-top: 1px solid var(--mf-line);
     background: color-mix(in srgb, var(--mf-panel) 88%, transparent);
     backdrop-filter: var(--mf-glass);
@@ -9082,15 +9414,295 @@ body,
     }
 }
 
-/* —— 16. Responsive ————————————————————————————————————————————————— */
+/* —— 15b. Side panels (Chat · People+Info) ————————————————————————— */
+/* Chat and People+Info are their own columns (≥1024px) rather than rail tabs.
+   Base styles cover the mobile full-screen panel; the responsive block below
+   turns them into grid columns / a laptop overlay. */
+.mf-stage-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--mf-panel);
+}
 
-/* Mobile: show exactly one of deck / rail, driven by the room state class. */
-.mf-stageroom.is-mobile-stage .mf-stage-rail {
+.mf-stage-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-stage-panel__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--mf-text);
+}
+
+.mf-stage-panel__title-badge,
+.mf-stage-panel__subtab-badge {
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    font-size: var(--mf-text-micro);
+    line-height: 1;
+}
+
+.mf-stage-panel__subtabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.2rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.6rem;
+    background: color-mix(in srgb, var(--mf-void) 45%, var(--mf-panel));
+}
+
+.mf-stage-panel__subtab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    border-radius: 0.45rem;
+    background: transparent;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-stage-panel__subtab:hover {
+    color: var(--mf-text);
+}
+
+.mf-stage-panel__subtab.is-active {
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+}
+
+.mf-stage-panel__subtab-glyph {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-stage-panel__subtab-badge {
+    background: var(--mf-pitch);
+}
+
+.mf-stage-panel__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Close (overlay/mobile) + People toggle (laptop) — visibility set responsively. */
+.mf-stage-panel__close {
+    flex-shrink: 0;
+}
+
+.mf-stage-panel__people-toggle {
+    flex-shrink: 0;
     display: none;
 }
 
-.mf-stageroom.is-mobile-pane .mf-stageroom__main {
+/* Backdrop behind the laptop People+Info overlay. Hidden except when opened in
+   the 1024–1279px range (see responsive block). */
+.mf-stage-panel__scrim {
     display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    padding: 0;
+    background: color-mix(in srgb, var(--mf-void) 55%, transparent);
+    animation: mf-page-in var(--mf-dur-fast) var(--mf-ease) both;
+    cursor: pointer;
+}
+
+/* —— 15c. Reaction FAB ————————————————————————————————————————————— */
+.mf-stage-react-fab {
+    position: absolute;
+    right: 1rem;
+    bottom: calc(var(--mf-stage-footer-h) + 0.7rem + var(--mf-safe-bottom));
+    z-index: 25;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.mf-stage-react-fab__btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 9999px;
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-shadow-3);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+    transition:
+        transform var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-stage-react-fab__btn:hover {
+    border-color: var(--mf-pitch-dim);
+}
+
+.mf-stage-react-fab__btn:active {
+    transform: scale(0.92);
+}
+
+.mf-stage-react-fab__emoji {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.mf-stage-react-fab__glyph {
+    position: absolute;
+    right: -0.15rem;
+    bottom: -0.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 9999px;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    box-shadow: 0 0 0 2px var(--mf-panel);
+}
+
+.mf-stage-react-fab__glyph svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.mf-stage-react-fab__combo {
+    position: absolute;
+    top: -0.35rem;
+    left: -0.55rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 9999px;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    box-shadow: 0 0 0 2px var(--mf-panel);
+    animation: mf-stage-rise var(--mf-dur-fast) var(--mf-ease) both;
+}
+
+.mf-stage-react-fab__picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.2rem;
+    padding: 0.4rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.85rem;
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-shadow-3);
+    animation: mf-stage-rise var(--mf-dur-fast) var(--mf-ease) both;
+}
+
+.mf-stage-react-fab__opt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    background: transparent;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        transform var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-stage-react-fab__opt:hover {
+    background: color-mix(in srgb, var(--mf-void) 30%, var(--mf-panel));
+    transform: scale(1.08);
+}
+
+.mf-stage-react-fab__opt.is-active {
+    border-color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated));
+}
+
+/* —— 16. Responsive ————————————————————————————————————————————————— */
+
+/* Panel visibility — below 1024px the room is a single full-screen panel chosen
+   by the segmented control; `mf-stageroom--view-*` says which one shows. */
+@media (max-width: 1023.98px) {
+    .mf-stageroom__main,
+    .mf-stage-panel {
+        display: none;
+    }
+
+    .mf-stageroom--view-stage .mf-stageroom__main,
+    .mf-stageroom--view-chat .mf-stage-panel--chat,
+    .mf-stageroom--view-people .mf-stage-panel--people {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+    }
+}
+
+/* Phone: the app header (which owns the top safe-area inset) is hidden here, so
+   the room pads its own top to clear the notch / status bar. Scoped to phones,
+   so it resets automatically at md+ where the header returns and would otherwise
+   double-count the inset. Also slim the header to roughly the segmented
+   control's height by dropping secondary chips and metadata. */
+@media (max-width: 767.98px) {
+    .mf-stageroom {
+        padding-top: var(--mf-safe-top);
+    }
+
+    .mf-stageroom__header {
+        padding: 0.5rem 0.6rem;
+    }
+
+    .mf-stageroom__net-chip,
+    .mf-stageroom__timer,
+    .mf-stageroom__side-voice,
+    .mf-stageroom__club {
+        display: none;
+    }
+
+    .mf-stageroom__title {
+        font-size: var(--mf-text-title);
+    }
 }
 
 /* Show the room-size stats once there's room in the header. */
@@ -9111,39 +9723,84 @@ body,
     }
 }
 
-/* lg+: the room becomes a real two-pane split (deck + rail), no segmented. */
+/* lg+: the room becomes a grid — main + Chat column, no segmented. People+Info
+   rides above as a slide-over overlay until xl promotes it to its own column. */
 @media (min-width: 1024px) {
     .mf-stageroom {
         display: grid;
         grid-template-columns: minmax(0, 1fr) var(--mf-chat-rail-w);
     }
 
+    .mf-stageroom.is-no-chat {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .mf-stageroom__segmented {
         display: none;
     }
 
-    .mf-stageroom.is-mobile-stage .mf-stageroom__main,
-    .mf-stageroom.is-mobile-pane .mf-stageroom__main {
-        display: flex;
-    }
-
-    .mf-stageroom.is-mobile-stage .mf-stage-rail,
-    .mf-stageroom.is-mobile-pane .mf-stage-rail {
-        display: flex;
-    }
-
-    .mf-stage-rail {
+    .mf-stage-panel--chat {
         border-left: 1px solid var(--mf-line);
-    }
-
-    /* The control bar hosts extras on mobile; on desktop those live in the
-     * header and rail, so hide the mobile-only group. */
-    .mf-stage-control-bar__group--mobile {
-        display: none;
     }
 
     .mf-stageroom__deck {
         padding: 1rem 1.1rem;
+    }
+}
+
+/* Laptop (lg only): People+Info is an absolute slide-over with a scrim; the Chat
+   head's people-toggle opens it and the panel's own close button dismisses it. */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+    .mf-stage-panel--people {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(var(--mf-people-rail-w), 88vw);
+        z-index: 40;
+        border-left: 1px solid var(--mf-line);
+        box-shadow: var(--mf-shadow-3);
+        transform: translateX(100%);
+        transition: transform var(--mf-dur) var(--mf-ease);
+    }
+
+    .mf-stageroom.is-people-open .mf-stage-panel--people {
+        transform: translateX(0);
+    }
+
+    .mf-stageroom.is-people-open .mf-stage-panel__scrim {
+        display: block;
+    }
+
+    .mf-stage-panel__people-toggle {
+        display: inline-flex;
+    }
+}
+
+/* xl+: People+Info becomes a permanent third column; the overlay affordances
+   (scrim, close, people-toggle) retire. */
+@media (min-width: 1280px) {
+    .mf-stageroom {
+        grid-template-columns: minmax(0, 1fr) var(--mf-chat-rail-w) var(--mf-people-rail-w);
+    }
+
+    .mf-stageroom.is-no-chat {
+        grid-template-columns: minmax(0, 1fr) var(--mf-people-rail-w);
+    }
+
+    .mf-stage-panel--people {
+        position: static;
+        transform: none;
+        border-left: 1px solid var(--mf-line);
+    }
+
+    .mf-stage-panel__close,
+    .mf-stage-panel__people-toggle {
+        display: none;
+    }
+
+    .mf-stage-panel__scrim {
+        display: none !important;
     }
 }
 

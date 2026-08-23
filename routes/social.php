@@ -132,6 +132,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/stage/{stage}/room', [SocialStageController::class, 'room'])
                     ->middleware('throttle:stage-room')
                     ->name('stage.room');
+                Route::post('/stage/{stage}/heartbeat', [SocialStageController::class, 'heartbeat'])
+                    ->middleware('throttle:stage-heartbeat')
+                    ->name('stage.heartbeat');
                 Route::post('/stage/{stage}/join', [SocialStageController::class, 'join'])
                     ->middleware('throttle:30,1')
                     ->name('stage.join');

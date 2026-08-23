@@ -54,6 +54,14 @@ class StageService
     public const REACTIONS_LIMIT = 30;
 
     /**
+     * Presence window. A participant whose last heartbeat is older than this is
+     * swept out on the next read (see pruneStaleParticipants). Foreground clients
+     * ping every few seconds, so a brief network blip never reaches this bound —
+     * only a closed app / killed tab / dropped device does.
+     */
+    public const PRESENCE_TIMEOUT_SECONDS = 45;
+
+    /**
      * Network-wide live Stage lobby — every live room is visible to Social fans.
      * Intentionally not scoped by the viewer's favourite club (club_id is host metadata).
      *
@@ -601,6 +609,60 @@ class StageService
             ->where('user_id', $user->id)
             ->whereNull('left_at')
             ->update(['last_seen_at' => now()]);
+    }
+
+    /**
+     * Evict participants who have gone silent past the presence window — a closed
+     * app, a killed tab, or a device that fell off the network without a clean
+     * leave. Foreground clients heartbeat every few seconds, so a genuine network
+     * blip never reaches the threshold; only a sustained silence does. If the
+     * host is the one who vanished, the Stage ends for everyone.
+     *
+     * Lazy-on-read: called from the room poll / heartbeat endpoints, since this
+     * repo has no run loop for a scheduled sweep. Returns whether anything moved.
+     */
+    public function pruneStaleParticipants(Stage $stage): bool
+    {
+        if (! $stage->isLive()) {
+            return false;
+        }
+
+        $cutoff = now()->subSeconds(self::PRESENCE_TIMEOUT_SECONDS);
+
+        $stale = StageParticipant::query()
+            ->where('stage_id', $stage->id)
+            ->whereNull('left_at')
+            ->whereNotNull('last_seen_at')
+            ->where('last_seen_at', '<', $cutoff)
+            ->get();
+
+        if ($stale->isEmpty()) {
+            return false;
+        }
+
+        // Host gone → end the Stage (which marks everyone left) rather than leave
+        // an orphaned room live.
+        $hostGone = $stale->contains(
+            fn (StageParticipant $participant): bool => $participant->role === StageParticipantRole::Host,
+        );
+
+        if ($hostGone) {
+            $hostUser = $stage->host ?? User::query()->find($stage->host_id);
+
+            if ($hostUser !== null) {
+                $this->end($stage, $hostUser);
+
+                return true;
+            }
+        }
+
+        StageParticipant::query()
+            ->whereIn('id', $stale->pluck('id')->all())
+            ->update(['left_at' => now(), 'speak_requested_at' => null]);
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'left'));
+
+        return true;
     }
 
     public function storeMessage(Stage $stage, User $user, string $body): StageMessage

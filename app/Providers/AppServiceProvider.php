@@ -103,6 +103,12 @@ class AppServiceProvider extends ServiceProvider
             'stage-reaction|'.($request->user()?->id ?: $request->ip()),
         ));
 
+        // Foreground presence ping (~every 7s per open tab). Its own bucket so it
+        // never competes with the room poll; generous enough for a couple of tabs.
+        RateLimiter::for('stage-heartbeat', fn ($request) => Limit::perMinute(240)->by(
+            'stage-heartbeat|'.($request->user()?->id ?: $request->ip()),
+        ));
+
         Event::listen(Failed::class, LogFailedAuthentication::class);
     }
 }

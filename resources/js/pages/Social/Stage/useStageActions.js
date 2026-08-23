@@ -80,6 +80,22 @@ export function useStageActions() {
         router.post(`/social/stage/${stageId}/speak-request`, {}, flashVisit());
     }, [me, isLive, speakRequestsAllowed, handRaised, stageId, patchRoom, flashVisit]);
 
+    // Network-only reaction send (no local animation). The FAB drives the local
+    // burst itself per tap and throttles this, so combos don't spam the endpoint.
+    const sendReaction = useCallback(
+        (emoji) => {
+            if (!emoji || !isLive || !me) {
+                return;
+            }
+            router.post(
+                `/social/stage/${stageId}/reactions`,
+                { emoji },
+                withRollbackFlash(reportError, { preserveState: true }),
+            );
+        },
+        [isLive, me, stageId, reportError],
+    );
+
     const react = useCallback(
         (emoji) => {
             if (!emoji || !isLive || !me) {
@@ -87,13 +103,9 @@ export function useStageActions() {
             }
             // Animate locally at once; the server echo is de-duped by seen-id in the session.
             pushReaction(emoji);
-            router.post(
-                `/social/stage/${stageId}/reactions`,
-                { emoji },
-                withRollbackFlash(reportError, { preserveState: true }),
-            );
+            sendReaction(emoji);
         },
-        [isLive, me, stageId, pushReaction, reportError],
+        [isLive, me, pushReaction, sendReaction],
     );
 
     const startVoice = useCallback(() => {
@@ -172,6 +184,7 @@ export function useStageActions() {
             toggleMute,
             raiseHand,
             react,
+            sendReaction,
             startVoice,
             enableMic,
             leave,
@@ -191,6 +204,7 @@ export function useStageActions() {
             toggleMute,
             raiseHand,
             react,
+            sendReaction,
             startVoice,
             enableMic,
             leave,

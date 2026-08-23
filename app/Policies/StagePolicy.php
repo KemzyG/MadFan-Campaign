@@ -97,13 +97,17 @@ class StagePolicy
             && $this->activeParticipant($stage, $user) !== null;
     }
 
+    /**
+     * WebRTC signaling gate: live + active participant + voice on. Deliberately
+     * NOT coupled to `allow_chat` — turning off room text chat must not silence
+     * voice (mesh SDP/ICE relay and the LiveKit token share this gate).
+     */
     public function signal(User $user, Stage $stage): bool
     {
-        if (! $this->sendMessage($user, $stage)) {
-            return false;
-        }
-
-        return $stage->voice_enabled;
+        return $this->canAccessStageNetwork($user)
+            && $stage->status === StageStatus::Live
+            && $this->activeParticipant($stage, $user) !== null
+            && $stage->voice_enabled;
     }
 
     /**

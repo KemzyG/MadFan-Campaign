@@ -1,16 +1,28 @@
 import { StageAvatar, roleLabel } from './helpers';
 import { IconCrown, IconMicOff } from './StageIcons';
 
+/** Hover/title copy for the per-speaker connection dot. */
+const CONN_LABEL = {
+    connecting: 'Connecting…',
+    connected: 'Connected — verifying audio',
+    verified: 'Voice verified',
+    failed: 'Connection blocked',
+};
+
 /**
  * One speaker on the deck: avatar with an active-speaker ring, host crown, and a
  * mute glyph. When `onSelect` is provided (host viewing someone else) the tile
  * becomes a button that opens that participant's moderation actions.
+ *
+ * `peerState` (from the active voice driver) adds a small corner dot showing the
+ * live connection phase to this speaker — omitted for my own tile.
  */
-export default function SpeakerTile({ participant, speaking = false, me = false, onSelect }) {
+export default function SpeakerTile({ participant, speaking = false, me = false, peerState = null, onSelect }) {
     const user = participant.user;
     const isHost = participant.role === 'host';
     const muted = Boolean(participant.is_muted);
     const clickable = typeof onSelect === 'function';
+    const connPhase = peerState?.phase || null;
 
     const className = [
         'mf-stage-tile',
@@ -37,6 +49,13 @@ export default function SpeakerTile({ participant, speaking = false, me = false,
                     <span className="mf-stage-tile__mic is-muted" aria-hidden>
                         <IconMicOff />
                     </span>
+                ) : null}
+                {connPhase ? (
+                    <span
+                        className={`mf-stage-tile__conn is-${connPhase}`}
+                        title={CONN_LABEL[connPhase] || ''}
+                        aria-hidden
+                    />
                 ) : null}
             </span>
             <span className="mf-stage-tile__name" title={user?.name || 'Fan'}>
