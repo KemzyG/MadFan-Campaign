@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Fan\FanPageDataService;
 use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
+use App\Support\SocialRouting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,7 +19,7 @@ class ConnectAccountsPageController extends Controller
         $user = $request->user();
 
         if (! ApplicationSettings::socialVerificationRequired()) {
-            return redirect()->route('fan.dashboard');
+            return redirect()->to(SocialRouting::url('/'));
         }
 
         $onboarding = $request->boolean('onboarding') || $request->session()->get('onboarding_required', false);
@@ -27,13 +28,13 @@ class ConnectAccountsPageController extends Controller
         $requiredComplete = $connected['required_accounts_complete'];
 
         if ($requiredComplete && ! $manage && ! $onboarding) {
-            return redirect()->route('fan.dashboard');
+            return redirect()->to(SocialRouting::url('/'));
         }
 
         if ($requiredComplete && $onboarding) {
             $request->session()->forget('onboarding_required');
 
-            return redirect()->intended(route('fan.dashboard'))
+            return redirect()->intended(SocialRouting::url('/'))
                 ->with('success', 'You\'re all set! Welcome to Mad Fan.');
         }
 

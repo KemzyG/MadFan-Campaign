@@ -75,7 +75,23 @@
     --mf-feed-width: 37.5rem; /* ~600px X-like feed */
     --mf-sidebar-w: 17.25rem; /* ~276px label rail */
     --mf-sidebar-icon-w: 4.75rem; /* icon-only rail */
-    --mf-shell-max: 78rem;
+    --mf-chat-rail-w: 21.875rem; /* ~350px chat panel */
+    /*
+     * md keeps the two-panel shell capped to its own tracks and centred; from lg
+     * up the shell spans the whole viewport — sidebar pinned left, chat rail
+     * pinned right, the page column flexing between — so wide monitors have no
+     * dead gutters. Only the md cap needs a token; lg/xl set their width inline.
+     */
+    --mf-shell-md: calc(var(--mf-sidebar-icon-w) + var(--mf-feed-width));
+    /*
+     * How wide the shell is at this breakpoint, and how much dead space is left
+     * either side of it. At md that space is the centring margin; from lg up the
+     * shell is full-width so it resolves to 0. Anything that floats above the
+     * panels — toasts, the live-stage pill — offsets by --mf-shell-inset so it
+     * tracks a panel edge instead of drifting out to the corner of a wide monitor.
+     */
+    --mf-shell-w: 100vw;
+    --mf-shell-inset: max(0px, calc((100vw - var(--mf-shell-w)) / 2));
     --mf-header-h: 2.75rem;
     --mf-tab-h: 3.5rem;
     --mf-radius: 0.625rem;
@@ -83,6 +99,19 @@
     --mf-section-gap: 0.75rem;
     --mf-section-gap-tight: 0.55rem;
     --mf-page-pad-bottom: 1.15rem;
+
+    /*
+     * Elevation, glass and motion. With a zero-chroma palette, depth has to come
+     * from layering: a top sheen, three shadow steps, one desaturating blur.
+     */
+    --mf-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    --mf-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.55);
+    --mf-shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.8);
+    --mf-shadow-3: 0 20px 60px -12px rgba(0, 0, 0, 0.9);
+    --mf-glass: saturate(0) blur(18px);
+    --mf-dur-fast: 140ms;
+    --mf-dur: 220ms;
+    --mf-dur-slow: 340ms;
 
     /* Night stadium page backdrop (landing hero for shop; stage uses --mf-stage-bg-image) */
     --mf-stadium-image: url('/landing-media/hero.png');
@@ -279,6 +308,19 @@ body,
     display: none;
 }
 
+/*
+ * Full-height surfaces that supply their own chrome (a chat thread) drop the
+ * mobile header and tab bar, but keep the desktop sidebar.
+ */
+.mf-shell--mobile-bare .mf-header,
+.mf-shell--mobile-bare .mf-tabbar {
+    display: none;
+}
+
+.mf-shell--mobile-bare .mf-main {
+    padding-bottom: 0;
+}
+
 .mf-app {
     position: relative;
     z-index: 1;
@@ -289,7 +331,7 @@ body,
     display: flex;
     flex-direction: column;
     background: color-mix(in srgb, var(--mf-void) 74%, transparent);
-    border-x: 1px solid transparent;
+    border-inline: 1px solid transparent;
 }
 
 @media (min-width: 480px) and (max-width: 767.98px) {
@@ -316,11 +358,24 @@ body,
     background: color-mix(in srgb, var(--mf-void) 70%, transparent);
 }
 
+/*
+ * Ten links plus the CTA want roughly 700px, which a 1366×768 laptop doesn't
+ * have. Scroll the nav inside the rail rather than let it spill over the page
+ * column. The scrollbar is hidden because the rail is chrome, not content.
+ */
 .mf-sidebar__top {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
+    flex: 1 1 auto;
     min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+}
+
+.mf-sidebar__top::-webkit-scrollbar {
+    display: none;
 }
 
 .mf-sidebar__brand {
@@ -479,6 +534,8 @@ body,
     display: flex;
     align-items: center;
     gap: 0.65rem;
+    /* Never squeezed by a scrolling nav above it. */
+    flex-shrink: 0;
     width: 100%;
     margin-top: auto;
     padding: 0.55rem;
@@ -548,23 +605,48 @@ body,
     line-height: 1.1;
 }
 
+/*
+ * Inert stand-in for the third panel: it holds the chat track open on pages that
+ * own that width themselves, so the grid never has to re-solve. The track sets
+ * the width — nothing here should.
+ */
 .mf-gutter {
-    flex: 1 1 0;
-    max-width: 21.875rem;
     min-width: 0;
 }
 
-/* md+: icon rail + hide mobile tabbar (X desktop chrome) */
+/* md+: icon rail + page column (X desktop chrome), no mobile tabbar */
 @media (min-width: 768px) {
+    :root {
+        --mf-shell-w: var(--mf-shell-md);
+    }
+
+    /*
+     * Explicit tracks, not flex: the panels are a fixed set of columns, so their
+     * widths must not depend on what the page happens to put inside them.
+     */
     .mf-shell--nav {
+        display: grid;
+        grid-template-columns: var(--mf-sidebar-icon-w) minmax(0, var(--mf-feed-width));
         justify-content: center;
-        max-width: var(--mf-shell-max);
+        max-width: var(--mf-shell-md);
         margin-inline: auto;
         gap: 0;
     }
 
     .mf-sidebar {
         display: flex;
+        /*
+         * Open on the same band as the page header and the chat rail head. The
+         * base padding pushed the brand 12px below the header's centre line,
+         * which reads as a misalignment when the eye scans across three panels.
+         */
+        padding-top: var(--mf-safe-top);
+    }
+
+    .mf-sidebar__brand {
+        width: var(--mf-header-h);
+        height: var(--mf-header-h);
+        margin: 0 0 0.5rem;
     }
 
     .mf-sidebar__top {
@@ -588,17 +670,21 @@ body,
     .mf-app {
         flex: 1 1 auto;
         max-width: min(100%, var(--mf-feed-width));
-        border-color: var(--mf-line);
+        /*
+         * Interior hairlines only — no outer frame on desktop. At md the page
+         * column is the right-most panel, so its right edge is an outer edge and
+         * stays unlined; the left edge divides it from the sidebar. lg restores
+         * the right edge once the chat panel sits beyond it.
+         */
+        border-inline: 1px solid var(--mf-line);
+        border-inline-end-color: transparent;
         box-shadow: none;
         background: color-mix(in srgb, var(--mf-void) 74%, transparent);
     }
 
-    .mf-tabbar {
-        display: none;
-    }
-
-    .mf-main {
-        padding-bottom: max(1rem, var(--mf-safe-bottom));
+    /* The mobile-bare escape hatch is mobile-only — desktop keeps its header. */
+    .mf-shell--mobile-bare .mf-header {
+        display: flex;
     }
 
     .mf-header__brand {
@@ -621,11 +707,6 @@ body,
         display: none;
     }
 
-    .mf-chat {
-        min-height: calc(100dvh - var(--mf-header-h) - var(--mf-safe-top));
-        max-height: calc(100dvh - var(--mf-header-h) - var(--mf-safe-top));
-    }
-
     .mf-sheet__panel {
         width: min(100%, var(--mf-feed-width));
         border-radius: 1rem;
@@ -639,8 +720,88 @@ body,
     }
 }
 
-/* lg+: labels, full Post CTA, right gutter balance */
+/* lg+: the third panel arrives; the sidebar stays icon-only to pay for it. */
 @media (min-width: 1024px) {
+    :root {
+        /*
+         * The shell now spans the whole viewport, so there is no dead gutter for
+         * floating chrome to sit in — inset resolves to 0 and toasts / the live
+         * pill track the true screen edge, which is also the panel edge.
+         */
+        --mf-shell-w: 100vw;
+    }
+
+    .mf-shell--nav {
+        /*
+         * Sidebar pinned to the left edge, chat rail to the right edge, the page
+         * column flexing between them. Dropping the max-width means wide monitors
+         * no longer box the app in the centre with empty margins — the leftover
+         * width lands as breathing room beside the centred feed instead.
+         */
+        grid-template-columns:
+            var(--mf-sidebar-icon-w)
+            minmax(0, 1fr)
+            var(--mf-chat-rail-w);
+        max-width: none;
+    }
+
+    /*
+     * The middle track is wider than the feed now, so centre the page column in
+     * it and frame both edges — the hairlines read as the feed's own rules, not
+     * dividers floating away from the panels.
+     */
+    .mf-app {
+        margin-inline: auto;
+        border-inline-end-color: var(--mf-line);
+    }
+
+    /* Chat has no chat panel beside it, so it spans the flexible track next to
+     * the sidebar — the same left boundary as every other page. */
+    .mf-shell--nav.mf-shell--wide {
+        grid-template-columns: var(--mf-sidebar-icon-w) minmax(0, 1fr);
+    }
+
+    .mf-shell--wide .mf-app {
+        /*
+         * Chat's two panes want the whole width, so it fills the track flush to
+         * the sidebar instead of centring like the feed. Its right edge is the
+         * viewport edge, so that boundary stays unlined.
+         */
+        max-width: none;
+        margin-inline: 0;
+        border-inline-end-color: transparent;
+    }
+
+    /* Third track: the chat rail, or an inert spacer when a page owns the width. */
+    .mf-gutter {
+        display: block;
+    }
+
+    .mf-shell--wide .mf-gutter {
+        display: none;
+    }
+}
+
+/* xl+: labels and the full Post CTA, without taking width off the other panels. */
+@media (min-width: 1280px) {
+    :root {
+        --mf-shell-w: 100vw;
+    }
+
+    .mf-shell--nav {
+        /* Label rail widens; the page column still flexes between the pinned
+         * sidebar and chat rail, so the edges stay filled. */
+        grid-template-columns:
+            var(--mf-sidebar-w)
+            minmax(0, 1fr)
+            var(--mf-chat-rail-w);
+        max-width: none;
+    }
+
+    .mf-shell--nav.mf-shell--wide {
+        grid-template-columns: var(--mf-sidebar-w) minmax(0, 1fr);
+    }
+
     .mf-sidebar {
         width: var(--mf-sidebar-w);
         padding-inline: 0.75rem;
@@ -698,10 +859,6 @@ body,
 
     .mf-sidebar__user-stats {
         display: flex;
-    }
-
-    .mf-gutter {
-        display: block;
     }
 }
 
@@ -932,6 +1089,21 @@ body,
     -webkit-backdrop-filter: blur(18px) saturate(1.25);
     display: flex;
     /* Primary mobile nav: Home · Ticket · Chat */
+}
+
+/*
+ * Desktop has the sidebar, so the bottom tab bar is phone-only. This block has
+ * to sit *after* the base rule above — same specificity, and a media query adds
+ * none, so an earlier md+ block would lose on source order.
+ */
+@media (min-width: 768px) {
+    .mf-tabbar {
+        display: none;
+    }
+
+    .mf-main {
+        padding-bottom: max(1rem, var(--mf-safe-bottom));
+    }
 }
 
 .mf-tab {
@@ -2409,6 +2581,20 @@ body,
     accent-color: var(--mf-pitch);
 }
 
+.mf-auth-league-group + .mf-auth-league-group {
+    margin-top: 1rem;
+}
+
+.mf-auth-league-label {
+    margin: 0 0 0.5rem;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
 .mf-auth-actions {
     margin-top: 0.5rem;
     display: flex;
@@ -3364,37 +3550,553 @@ body,
     animation: mf-page-in 220ms var(--mf-ease) both;
 }
 
-/* —— Club chat (Discord-dense terrace) —— */
-.mf-chat {
+/* —— Chat (list ↔ thread, app-native) —— */
+/*
+ * Two panes: a conversation list and a thread. A phone shows exactly one of
+ * them (`.is-list` / `.is-thread`, driven by the `view` prop); md+ shows both
+ * side by side. Heights are explicit so the stream is the only scroller.
+ */
+.mf-chat-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    overflow: hidden;
+    animation: mf-page-in var(--mf-dur) var(--mf-ease) both;
+}
+
+.mf-chat-shell.is-list {
+    height: calc(
+        100dvh - var(--mf-header-h) - var(--mf-tab-h) - var(--mf-safe-top) - var(--mf-safe-bottom) - 0.5rem
+    );
+}
+
+/* The thread is rendered mobile-bare: no app header, no tab bar. */
+.mf-chat-shell.is-thread {
+    height: 100dvh;
+}
+
+.mf-chat-shell__aside,
+.mf-chat-shell__main {
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - var(--mf-header-h) - var(--mf-tab-h) - var(--mf-safe-top) - var(--mf-safe-bottom));
-    max-height: calc(100dvh - var(--mf-header-h) - var(--mf-tab-h) - var(--mf-safe-top) - var(--mf-safe-bottom));
-    animation: mf-page-in 220ms var(--mf-ease) both;
-}
-
-.mf-chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--mf-line);
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 5%, var(--mf-panel)) 0%, transparent 70%),
-        color-mix(in srgb, var(--mf-panel) 78%, transparent);
-}
-
-.mf-chat-header__main {
     min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mf-chat-shell.is-list .mf-chat-shell__main,
+.mf-chat-shell.is-thread .mf-chat-shell__aside {
+    display: none;
+}
+
+/* —— Conversation list —— */
+.mf-convo {
+    display: flex;
+    flex-direction: column;
     flex: 1;
+    min-height: 0;
 }
 
-.mf-chat-header__club {
+.mf-convo__head {
+    display: grid;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.6rem 0.8rem 0.55rem;
+    border-bottom: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 82%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+}
+
+/* Segmented inbox control — the active pill inverts to carry emphasis. */
+.mf-chat-segment {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.15rem;
+    padding: 0.2rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--mf-void) 55%, var(--mf-panel));
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-chat-segment a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.42rem 0.35rem;
+    border-radius: 0.5rem;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-segment a:hover {
+    color: var(--mf-text);
+    background: color-mix(in srgb, var(--mf-elevated) 80%, transparent);
+}
+
+.mf-chat-segment a.is-active {
+    color: var(--mf-void);
+    background: var(--mf-pitch);
+    box-shadow: var(--mf-shadow-1);
+}
+
+.mf-chat-search {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    padding: 0.42rem 0.65rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.7rem;
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-sheen);
+    transition: border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-search:focus-within {
+    border-color: var(--mf-pitch-dim);
+}
+
+.mf-chat-search svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex-shrink: 0;
+    color: var(--mf-muted);
+}
+
+.mf-chat-search input {
+    width: 100%;
     min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    outline: none;
+}
+
+.mf-chat-search input::placeholder {
+    color: var(--mf-muted);
+}
+
+.mf-convo__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.35rem 0.5rem 1.1rem;
+}
+
+.mf-convo__empty {
+    padding: 1.75rem 0.85rem;
+    text-align: center;
+    color: var(--mf-muted);
+}
+
+.mf-convo-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: 0.9rem;
+    color: var(--mf-text);
+    text-decoration: none;
+    transition:
+        background var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-convo-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 2px;
+    height: 0;
+    translate: 0 -50%;
+    border-radius: 2px;
+    background: var(--mf-pitch);
+    transition: height var(--mf-dur) var(--mf-ease);
+}
+
+.mf-convo-row:hover {
+    background: color-mix(in srgb, var(--mf-elevated) 65%, transparent);
+}
+
+.mf-convo-row.is-active {
+    background: var(--mf-elevated);
+    border-color: var(--mf-line);
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-convo-row.is-active::before {
+    height: 1.6rem;
+}
+
+.mf-convo-row__avatar {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.mf-convo-row__hash {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--mf-elevated) 85%, var(--mf-void));
+    box-shadow: var(--mf-sheen);
+    color: var(--mf-pitch-dim);
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.mf-convo-row__body {
+    display: grid;
+    gap: 0.1rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mf-convo-row__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.mf-convo-row__name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+}
+
+.mf-convo-row__stamp {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-convo-row__topmeta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.mf-convo-row__online {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    color: var(--mf-pitch-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-convo-row__preview {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-convo-row.is-active .mf-convo-row__preview {
+    color: var(--mf-pitch-dim);
+}
+
+/* —— New conversation (collapsed) —— */
+.mf-convo-new__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    border: 1px dashed color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--mf-elevated) 60%, transparent);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    transition:
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-convo-new__toggle:hover {
+    border-color: var(--mf-pitch-dim);
+    background: var(--mf-elevated);
+}
+
+.mf-convo-new__plus {
+    font-family: var(--mf-font-mono);
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--mf-pitch);
+}
+
+.mf-convo-new__panel {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    animation: mf-rise var(--mf-dur) var(--mf-ease) both;
+}
+
+.mf-convo-new__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 11rem;
+    overflow-y: auto;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.7rem;
+    background: var(--mf-elevated);
+}
+
+.mf-convo-new__list li + li {
+    border-top: 1px solid var(--mf-line);
+}
+
+.mf-convo-new__list button {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    color: var(--mf-text);
+    background: transparent;
+}
+
+.mf-convo-new__list button:hover,
+.mf-convo-new__list button.is-selected {
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+}
+
+.mf-convo-new__name {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+}
+
+.mf-convo-new__check {
+    margin-left: auto;
+    color: var(--mf-pitch);
+    font-weight: 700;
+}
+
+.mf-convo-new__form {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.mf-convo-new__form input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.7rem;
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    outline: none;
+}
+
+.mf-convo-new__form input:focus {
+    border-color: var(--mf-pitch-dim);
+}
+
+.mf-convo-new__submit {
+    padding: 0.55rem 0.75rem;
+    border: 0;
+    border-radius: 0.7rem;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    box-shadow: var(--mf-shadow-1);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+}
+
+.mf-convo-new__submit:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.mf-convo-new__hint {
+    margin: 0;
+    color: var(--mf-muted);
+}
+
+/* —— Thread —— */
+.mf-thread {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.mf-thread--blank {
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.mf-thread-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    padding: 0.5rem 0.85rem;
+    padding-top: calc(0.5rem + var(--mf-safe-top));
+    border-bottom: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 84%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+    box-shadow: var(--mf-shadow-1);
+}
+
+.mf-thread-head__back {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    margin-left: -0.4rem;
+    border-radius: 0.7rem;
+    color: var(--mf-pitch);
+    transition: background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-thread-head__back:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-thread-head__back svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+.mf-thread-head__mark {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.mf-thread-head__meta {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mf-thread-head__title {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-text);
+    font-size: var(--mf-text-title);
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+
+.mf-thread-head__sub {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+/* Tappable presence line under the thread title → opens the members modal. */
+.mf-thread-presence {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    font: inherit;
+    font-size: var(--mf-text-meta);
+    line-height: 1.2;
+    cursor: pointer;
+    transition: color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-thread-presence > span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mf-thread-presence:hover {
+    color: var(--mf-text);
+}
+
+.mf-thread-presence__sep {
+    color: color-mix(in srgb, var(--mf-muted) 60%, transparent);
+}
+
+/* Monochrome presence indicator: solid dot = online, hollow ring = offline. */
+.mf-presence-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1.5px solid var(--mf-muted);
+    background: transparent;
+    vertical-align: middle;
+    transition:
+        background var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-presence-dot[data-online='true'] {
+    border-color: var(--mf-pitch);
+    background: var(--mf-pitch);
+    box-shadow: 0 0 0.4rem color-mix(in srgb, var(--mf-pitch) 45%, transparent);
+}
+
+/* Pinned to an avatar's corner; a panel-coloured ring lifts it off the photo. */
+.mf-presence-dot--pin {
+    position: absolute;
+    right: -0.1rem;
+    bottom: -0.1rem;
+    width: 0.72rem;
+    height: 0.72rem;
+    border-width: 2px;
+    box-shadow: 0 0 0 2px var(--mf-panel);
+}
+
+.mf-presence-dot--pin[data-online='true'] {
+    box-shadow: 0 0 0 2px var(--mf-panel);
 }
 
 .mf-chat-live {
@@ -3402,9 +4104,9 @@ body,
     align-items: center;
     gap: 0.35rem;
     flex-shrink: 0;
-    padding: 0.28rem 0.55rem;
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 35%, var(--mf-line));
-    border-radius: 0.35rem;
+    padding: 0.24rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 32%, var(--mf-line));
+    border-radius: 9999px;
     color: var(--mf-pitch);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -3431,251 +4133,281 @@ body,
     }
 }
 
-.mf-chat-rail {
-    border-bottom: 1px solid var(--mf-line);
-    background: color-mix(in srgb, var(--mf-panel) 55%, transparent);
-}
-
-.mf-chat-inboxes {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-    padding: 0.55rem 1rem 0.15rem;
-    border-bottom: 1px solid var(--mf-line);
-    background: color-mix(in srgb, var(--mf-elevated) 70%, transparent);
-}
-
-.mf-chat-inboxes a {
-    display: inline-flex;
-    align-items: center;
+/* —— Members modal (full-height roster) —— */
+.mf-members-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    display: flex;
+    align-items: stretch;
     justify-content: center;
-    padding: 0.55rem 0.4rem;
-    border-radius: 0.45rem;
-    border: 1px solid transparent;
-    color: var(--mf-muted);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-decoration: none;
-    transition: color 120ms var(--mf-ease), background 120ms var(--mf-ease), border-color 120ms var(--mf-ease);
 }
 
-.mf-chat-inboxes a:hover {
-    color: var(--mf-text);
-    background: var(--mf-elevated);
-}
-
-.mf-chat-inboxes a.is-active {
-    color: var(--mf-pitch);
-    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
-    border-color: color-mix(in srgb, var(--mf-pitch) 28%, transparent);
-}
-
-.mf-chat-start {
-    padding: 0 1rem 0.45rem;
-}
-
-.mf-chat-start__toggle {
-    width: 100%;
-    padding: 0.45rem 0.7rem;
-    border: 1px dashed color-mix(in srgb, var(--mf-pitch) 35%, var(--mf-line));
-    border-radius: var(--mf-radius);
-    background: color-mix(in srgb, var(--mf-pitch) 6%, var(--mf-elevated));
-    color: var(--mf-pitch);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    font-weight: 600;
-}
-
-.mf-chat-start__list {
-    list-style: none;
-    margin: 0.45rem 0 0;
+.mf-members-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
     padding: 0;
-    max-height: 9.5rem;
-    overflow-y: auto;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
-    background: var(--mf-elevated);
-}
-
-.mf-chat-start__list li + li {
-    border-top: 1px solid var(--mf-line);
-}
-
-.mf-chat-start__list button {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    width: 100%;
-    padding: 0.55rem 0.7rem;
-    text-align: left;
-    color: var(--mf-text);
-    background: transparent;
-}
-
-.mf-chat-start__list button:hover,
-.mf-chat-start__list button.is-selected {
-    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
-}
-
-.mf-chat-start__name {
-    display: block;
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    font-weight: 600;
-}
-
-.mf-chat-start__check {
-    margin-left: auto;
-    color: var(--mf-pitch);
-    font-weight: 700;
-}
-
-.mf-chat-group-form {
-    display: grid;
-    gap: 0.45rem;
-    margin-top: 0.45rem;
-}
-
-.mf-chat-group-form input {
-    width: 100%;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
-    background: var(--mf-elevated);
-    color: var(--mf-text);
-    padding: 0.55rem 0.7rem;
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    outline: none;
-}
-
-.mf-chat-group-form input:focus {
-    border-color: var(--mf-pitch-dim);
-}
-
-.mf-chat-group-form__submit {
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--mf-radius);
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
-    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated));
-    color: var(--mf-pitch);
-    font-family: var(--mf-font-ui);
-    font-weight: 600;
-}
-
-.mf-chat-group-form__submit:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.mf-chat-search {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin: 0.55rem 1rem 0.35rem;
-    padding: 0.45rem 0.7rem;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
-    background: var(--mf-elevated);
-}
-
-.mf-chat-search svg {
-    width: 0.95rem;
-    height: 0.95rem;
-    flex-shrink: 0;
-    color: var(--mf-muted);
-}
-
-.mf-chat-search input {
-    width: 100%;
-    min-width: 0;
     border: 0;
-    background: transparent;
-    color: var(--mf-text);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    outline: none;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: pointer;
+    animation: mf-fade-in 160ms var(--mf-ease);
 }
 
-.mf-chat-search input::placeholder {
-    color: var(--mf-muted);
-}
-
-.mf-chat-channels {
+.mf-members-modal__panel {
+    position: relative;
+    z-index: 1;
     display: flex;
-    gap: 0.35rem;
-    padding: 0.35rem 1rem 0.65rem;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-direction: column;
+    width: min(100%, 30rem);
+    height: 100dvh;
+    border-inline: 1px solid var(--mf-line);
+    background:
+        radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--mf-pitch) 6%, transparent), transparent 60%),
+        var(--mf-panel);
+    box-shadow: var(--mf-shadow-3);
+    animation: mf-members-in var(--mf-dur) var(--mf-ease) both;
 }
 
-.mf-chat-channels::-webkit-scrollbar {
-    display: none;
+@keyframes mf-members-in {
+    from {
+        opacity: 0.4;
+        transform: translateX(1.25rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
-.mf-chat-channels__empty {
-    margin: 0.15rem 0;
-}
-
-.mf-chat-channels a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.15rem;
+.mf-members-modal__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
     flex-shrink: 0;
-    padding: 0.4rem 0.75rem;
-    border-radius: 0.45rem;
-    border: 1px solid transparent;
+    padding: calc(0.9rem + var(--mf-safe-top)) 1rem 0.75rem;
+    border-bottom: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 84%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+}
+
+.mf-members-modal__heading {
+    min-width: 0;
+}
+
+.mf-members-modal__title {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-text);
+    font-size: var(--mf-text-title);
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+
+.mf-members-modal__count {
+    margin: 0.15rem 0 0;
     color: var(--mf-muted);
-    font-family: var(--mf-font-mono);
-    font-size: var(--mf-text-meta);
-    font-weight: 500;
-    text-decoration: none;
-    transition: color 120ms var(--mf-ease), background 120ms var(--mf-ease), border-color 120ms var(--mf-ease);
+    font-variant-numeric: tabular-nums;
 }
 
-.mf-chat-channels__hash {
-    opacity: 0.55;
+.mf-members-modal__close {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    margin: -0.25rem -0.35rem 0 0;
+    border: 0;
+    border-radius: 0.7rem;
+    background: transparent;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
 }
 
-.mf-chat-channels a:hover {
+.mf-members-modal__close:hover {
     color: var(--mf-text);
     background: var(--mf-elevated);
 }
 
-.mf-chat-channels a.is-active {
-    color: var(--mf-pitch);
-    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
-    border-color: color-mix(in srgb, var(--mf-pitch) 28%, transparent);
+.mf-members-modal__close svg {
+    width: 1.15rem;
+    height: 1.15rem;
 }
 
-.mf-chat-stream {
+.mf-members-modal__search {
+    flex-shrink: 0;
+    margin: 0.7rem 1rem 0;
+}
+
+.mf-members-modal__scroll {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 0.55rem 0.75rem 0.85rem;
+    padding: 0.5rem 0.75rem calc(1rem + var(--mf-safe-bottom));
+}
+
+.mf-members-modal__section {
+    margin-top: 0.5rem;
+}
+
+.mf-members-modal__section-label {
+    padding: 0.55rem 0.5rem 0.3rem;
+    color: var(--mf-muted);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-members-modal__list {
+    display: grid;
+    gap: 0.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-members-modal__row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    transition: background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-members-modal__row:hover {
+    background: color-mix(in srgb, var(--mf-elevated) 65%, transparent);
+}
+
+.mf-members-modal__avatar {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.mf-members-modal__rowbody {
+    display: grid;
+    gap: 0.05rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mf-members-modal__name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-text);
+    font-size: var(--mf-text-body);
+    font-weight: 600;
+}
+
+.mf-members-modal__handle {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-mono);
+}
+
+.mf-members-modal__seen {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-members-modal__ghosts {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.75rem 0.5rem;
+}
+
+.mf-members-modal__ghost {
+    display: block;
+    height: 3.1rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(
+        90deg,
+        var(--mf-elevated) 0%,
+        color-mix(in srgb, var(--mf-elevated) 55%, var(--mf-void)) 50%,
+        var(--mf-elevated) 100%
+    );
+    background-size: 220% 100%;
+    animation: mf-chat-rail-shimmer 1.4s var(--mf-ease) infinite;
+}
+
+.mf-members-modal__empty {
+    padding: 1.5rem 0.75rem;
+    color: var(--mf-muted);
+    text-align: center;
+}
+
+.mf-members-modal__note {
+    padding: 0.85rem 0.75rem 0.25rem;
+    color: var(--mf-muted);
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-members-modal__backdrop,
+    .mf-members-modal__panel,
+    .mf-members-modal__ghost {
+        animation: none;
+    }
+}
+
+/* —— Message stream —— */
+.mf-chat-stream {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem 0.6rem 1rem;
     background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--mf-pitch) 5%, transparent), transparent 60%),
-        color-mix(in srgb, var(--mf-panel) 35%, transparent);
+        radial-gradient(
+            ellipse 80% 45% at 50% 0%,
+            color-mix(in srgb, var(--mf-pitch) 4%, transparent),
+            transparent 62%
+        ),
+        color-mix(in srgb, var(--mf-panel) 30%, transparent);
 }
 
 .mf-chat-day {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: center;
-    margin: 0.85rem 1rem 0.55rem;
+    gap: 0.7rem;
+    margin: 1rem 0.5rem 0.7rem;
+}
+
+.mf-chat-day::before,
+.mf-chat-day::after {
+    content: '';
+    height: 1px;
+}
+
+.mf-chat-day::before {
+    background: linear-gradient(90deg, transparent, var(--mf-line));
+}
+
+.mf-chat-day::after {
+    background: linear-gradient(90deg, var(--mf-line), transparent);
 }
 
 .mf-chat-day span {
-    padding: 0.25rem 0.65rem;
-    border: 1px solid var(--mf-line);
-    border-radius: 9999px;
-    background: color-mix(in srgb, var(--mf-elevated) 80%, transparent);
     color: var(--mf-muted);
     font-family: var(--mf-font-mono);
     font-size: var(--mf-text-micro);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
@@ -3703,6 +4435,7 @@ body,
 }
 
 .mf-chat-bubble {
+    position: relative;
     display: flex;
     align-items: flex-end;
     gap: 0.45rem;
@@ -3735,6 +4468,7 @@ body,
 .mf-chat-bubble__time-hover {
     opacity: 0;
     font-variant-numeric: tabular-nums;
+    transition: opacity var(--mf-dur-fast) var(--mf-ease);
 }
 
 .mf-chat-bubble:hover .mf-chat-bubble__time-hover {
@@ -3761,16 +4495,18 @@ body,
     font-family: var(--mf-font-ui);
     font-size: var(--mf-text-micro);
     font-weight: 700;
+    letter-spacing: 0.04em;
     color: var(--mf-muted);
 }
 
 .mf-chat-bubble__pill {
     position: relative;
-    padding: 0.55rem 0.75rem 0.4rem;
+    min-width: 0;
+    padding: 0.5rem 0.7rem 0.35rem;
     border: 1px solid var(--mf-line);
-    border-radius: 1rem;
+    border-radius: 1.05rem;
     background: var(--mf-elevated);
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--mf-text) 4%, transparent);
+    box-shadow: var(--mf-shadow-1), var(--mf-sheen);
 }
 
 .mf-chat-bubble.is-theirs .mf-chat-bubble__pill {
@@ -3780,8 +4516,8 @@ body,
 
 .mf-chat-bubble.is-mine .mf-chat-bubble__pill {
     border-bottom-right-radius: 0.3rem;
-    border-color: color-mix(in srgb, var(--mf-pitch) 28%, var(--mf-line));
-    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated));
+    border-color: color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 13%, var(--mf-elevated));
 }
 
 .mf-chat-bubble.is-optimistic .mf-chat-bubble__pill {
@@ -3801,28 +4537,201 @@ body,
     display: flex;
     justify-content: flex-end;
     gap: 0.4rem;
-    margin-top: 0.2rem;
+    margin-top: 0.15rem;
     color: var(--mf-muted);
     font-family: var(--mf-font-mono);
     font-size: var(--mf-text-micro);
     letter-spacing: 0.02em;
 }
 
-.mf-chat-msg {
-    display: none;
+/* Hover-only reply handle; touch uses the long press. */
+.mf-chat-bubble__reply {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    flex-shrink: 0;
+    align-self: center;
+    border: 1px solid var(--mf-line);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--mf-panel) 85%, transparent);
+    color: var(--mf-muted);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity var(--mf-dur-fast) var(--mf-ease),
+        color var(--mf-dur-fast) var(--mf-ease);
 }
 
+.mf-chat-bubble.is-mine .mf-chat-bubble__reply {
+    order: -1;
+}
+
+.mf-chat-bubble__reply svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.mf-chat-bubble:hover .mf-chat-bubble__reply,
+.mf-chat-bubble__reply:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mf-chat-bubble__reply:hover {
+    color: var(--mf-pitch);
+    border-color: var(--mf-pitch-dim);
+}
+
+@media (hover: none) {
+    .mf-chat-bubble__reply {
+        display: none;
+    }
+}
+
+/*
+ * The hanging quote — chat's signature. A clipped inset with a hairline spine
+ * that reads as hanging off the top of the bubble rather than boxed inside it.
+ */
+.mf-chat-quote {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 0.35rem;
+    padding: 0.28rem 0.45rem 0.28rem 0;
+    border: 0;
+    border-radius: 0.3rem 0.5rem 0.5rem 0.3rem;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--mf-text) 8%, transparent),
+        transparent 92%
+    );
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-quote:hover {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--mf-text) 14%, transparent),
+        transparent 92%
+    );
+}
+
+.mf-chat-quote__spine {
+    width: 2px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mf-pitch) 45%, transparent);
+    transition: background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-quote:hover .mf-chat-quote__spine {
+    background: var(--mf-pitch);
+}
+
+.mf-chat-quote__stack {
+    display: grid;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.mf-chat-quote__who {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-pitch-dim);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.mf-chat-quote__body {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    line-height: 1.3;
+}
+
+.mf-chat-quote.is-composer {
+    align-items: center;
+    margin: 0 0 0.5rem;
+    padding: 0.4rem 0.4rem 0.4rem 0;
+    border-radius: 0.3rem 0.6rem 0.6rem 0.3rem;
+    background: color-mix(in srgb, var(--mf-elevated) 80%, transparent);
+    cursor: default;
+}
+
+.mf-chat-quote__dismiss {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex-shrink: 0;
+    margin-left: auto;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--mf-muted);
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-quote__dismiss:hover {
+    color: var(--mf-text);
+    background: var(--mf-line);
+}
+
+.mf-chat-quote__dismiss svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+/* Jump target acknowledgement — one ring pulse, no colour shift. */
+.mf-chat-bubble.is-flash .mf-chat-bubble__pill {
+    animation: mf-chat-flash 1.1s var(--mf-ease) both;
+}
+
+@keyframes mf-chat-flash {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-pitch) 50%, transparent);
+        border-color: var(--mf-pitch);
+    }
+    45% {
+        box-shadow: 0 0 0 0.4rem transparent;
+    }
+    100% {
+        box-shadow: var(--mf-shadow-1);
+    }
+}
+
+/* —— Composer —— */
 .mf-chat-composer {
     flex-shrink: 0;
-    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.6rem 0.75rem calc(0.6rem + var(--mf-safe-bottom));
     border-top: 1px solid var(--mf-line);
-    background: color-mix(in srgb, var(--mf-panel) 88%, transparent);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+}
+
+.mf-chat-composer__closed {
+    margin: 0;
+    padding: 0.45rem 0.25rem;
+    text-align: center;
+    color: var(--mf-muted);
 }
 
 .mf-chat-composer__shell {
     display: flex;
     align-items: flex-end;
-    gap: 0.55rem;
+    gap: 0.5rem;
 }
 
 .mf-chat-composer__input {
@@ -3831,20 +4740,23 @@ body,
     min-height: 2.65rem;
     max-height: 7rem;
     border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
+    border-radius: 1.35rem;
     background: var(--mf-elevated);
     color: var(--mf-text);
     font-family: var(--mf-font-ui);
     font-size: var(--mf-text-chat);
     line-height: 1.4;
-    padding: 0.7rem 0.9rem;
+    padding: 0.7rem 1rem;
     outline: none;
-    transition: border-color 120ms var(--mf-ease), box-shadow 120ms var(--mf-ease);
+    box-shadow: var(--mf-sheen);
+    transition:
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        box-shadow var(--mf-dur-fast) var(--mf-ease);
 }
 
 .mf-chat-composer__input:focus {
     border-color: var(--mf-pitch-dim);
-    box-shadow: 0 0 0 1px var(--mf-pitch-dim);
+    box-shadow: var(--mf-sheen), 0 0 0 1px var(--mf-pitch-dim);
 }
 
 .mf-chat-composer__input::placeholder {
@@ -3857,11 +4769,14 @@ body,
     width: 2.65rem;
     height: 2.65rem;
     flex-shrink: 0;
-    border-radius: var(--mf-radius);
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
-    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated));
-    color: var(--mf-pitch);
-    transition: background 120ms var(--mf-ease), opacity 120ms var(--mf-ease), transform 120ms var(--mf-ease);
+    border: 0;
+    border-radius: 9999px;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    box-shadow: var(--mf-shadow-1);
+    transition:
+        transform var(--mf-dur-fast) var(--mf-ease),
+        opacity var(--mf-dur-fast) var(--mf-ease);
 }
 
 .mf-chat-composer__send svg {
@@ -3870,12 +4785,11 @@ body,
 }
 
 .mf-chat-composer__send:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-elevated));
     transform: translateY(-1px);
 }
 
 .mf-chat-composer__send:disabled {
-    opacity: 0.4;
+    opacity: 0.3;
     cursor: not-allowed;
 }
 
@@ -3884,7 +4798,218 @@ body,
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-top: 0.45rem;
+    margin-top: 0.4rem;
+}
+
+.mf-chat-composer__hint {
+    color: var(--mf-muted);
+}
+
+/* md+: the app header is back in play and the tab bar is gone. */
+@media (min-width: 768px) {
+    .mf-shell--wide .mf-main {
+        padding-bottom: 0;
+    }
+
+    .mf-chat-shell,
+    .mf-chat-shell.is-list,
+    .mf-chat-shell.is-thread {
+        height: calc(100dvh - var(--mf-header-h) - var(--mf-safe-top));
+    }
+
+    .mf-thread-head {
+        padding-top: 0.5rem;
+    }
+
+    .mf-chat-stream {
+        padding-inline: 1rem;
+    }
+
+    .mf-chat-composer {
+        padding-bottom: 0.6rem;
+    }
+}
+
+/*
+ * lg+ only: two panes need the page + chat tracks together. A tablet keeps the
+ * phone's list-then-thread flow, so the page column — and the sidebar beside
+ * it — stays exactly where it is on every other page.
+ */
+@media (min-width: 1024px) {
+    .mf-chat-shell,
+    .mf-chat-shell.is-list,
+    .mf-chat-shell.is-thread {
+        /*
+         * The list pane holds its 20.5rem floor through the tight lg range, then
+         * grows with the viewport (up to 27rem) so the thread doesn't run away
+         * with all the extra width on a wide monitor.
+         */
+        grid-template-columns: minmax(0, clamp(20.5rem, 26vw, 27rem)) minmax(0, 1fr);
+    }
+
+    .mf-chat-shell.is-list .mf-chat-shell__main,
+    .mf-chat-shell.is-thread .mf-chat-shell__aside {
+        display: flex;
+    }
+
+    .mf-chat-shell__aside {
+        border-right: 1px solid var(--mf-line);
+        background: color-mix(in srgb, var(--mf-void) 35%, transparent);
+    }
+
+    .mf-thread-head__back {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-chat-shell,
+    .mf-chat-bubble,
+    .mf-convo-new__panel {
+        animation: none;
+    }
+
+    .mf-chat-live__dot,
+    .mf-chat-empty__mark span {
+        animation: none;
+    }
+
+    .mf-chat-bubble.is-flash .mf-chat-bubble__pill {
+        animation: mf-chat-flash-flat var(--mf-dur-slow) linear both;
+    }
+
+    @keyframes mf-chat-flash-flat {
+        0% {
+            border-color: var(--mf-pitch);
+        }
+        100% {
+            border-color: var(--mf-line);
+        }
+    }
+
+    .mf-convo-row::before {
+        transition: none;
+    }
+}
+
+/* —— Chat rail (third desktop panel) —— */
+.mf-chat-rail {
+    display: none;
+    min-width: 0;
+}
+
+@media (min-width: 1024px) {
+    .mf-chat-rail {
+        display: flex;
+        flex-direction: column;
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+    }
+}
+
+/*
+ * The head mirrors .mf-header — same height, same safe-area padding, same
+ * hairline — so "Chats" sits on the page title's baseline and the rule under
+ * both runs unbroken across the two panels.
+ */
+.mf-chat-rail__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: calc(var(--mf-header-h) + var(--mf-safe-top));
+    padding: var(--mf-safe-top) 0.9rem 0.75rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-chat-rail__title {
+    margin: 0;
+    font-size: var(--mf-text-title);
+    line-height: var(--mf-leading-tight);
+    letter-spacing: 0.03em;
+    color: var(--mf-text);
+}
+
+.mf-chat-rail__all {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    text-decoration: none;
+    transition: color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-chat-rail__all:hover {
+    color: var(--mf-pitch);
+}
+
+.mf-chat-rail__list {
+    display: grid;
+    align-content: start;
+    gap: 0.1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.5rem 0.5rem 1rem 0.65rem;
+}
+
+.mf-convo-row--rail {
+    gap: 0.6rem;
+    padding: 0.45rem 0.55rem;
+}
+
+.mf-convo-row--rail .mf-convo-row__hash {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
+    font-size: 0.9rem;
+}
+
+.mf-chat-rail__ghosts {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.15rem 0.1rem;
+}
+
+.mf-chat-rail__ghost {
+    display: block;
+    height: 2.75rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(
+        90deg,
+        var(--mf-elevated) 0%,
+        color-mix(in srgb, var(--mf-elevated) 55%, var(--mf-void)) 50%,
+        var(--mf-elevated) 100%
+    );
+    background-size: 220% 100%;
+    animation: mf-chat-rail-shimmer 1.4s var(--mf-ease) infinite;
+}
+
+@keyframes mf-chat-rail-shimmer {
+    0% {
+        background-position: 120% 0;
+    }
+    100% {
+        background-position: -120% 0;
+    }
+}
+
+.mf-chat-rail__empty {
+    padding: 1rem 0.55rem;
+    color: var(--mf-muted);
+}
+
+.mf-chat-rail__empty a {
+    color: var(--mf-pitch);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-chat-rail__ghost {
+        animation: none;
+    }
 }
 
 .mf-field-error {
@@ -4930,6 +6055,26 @@ body,
 
     .mf-toast-stack {
         bottom: 1.25rem;
+        /* Stay on the shell's edge, not the monitor's, so toasts read as part of the app. */
+        right: calc(var(--mf-shell-inset) + max(0.85rem, env(safe-area-inset-right, 0px)));
+    }
+}
+
+/*
+ * lg+: the chat rail now owns the right edge, so lift toasts clear of it exactly
+ * like the live-stage pill — otherwise they'd stack on top of the conversation
+ * list. Chat spans that track itself, so there the offset drops back to the edge.
+ */
+@media (min-width: 1024px) {
+    .mf-toast-stack {
+        right: calc(
+            var(--mf-shell-inset) + var(--mf-chat-rail-w) +
+                max(0.85rem, env(safe-area-inset-right, 0px))
+        );
+    }
+
+    .mf-stage--wide .mf-toast-stack {
+        right: calc(var(--mf-shell-inset) + max(0.85rem, env(safe-area-inset-right, 0px)));
     }
 }
 
@@ -6198,7 +7343,12 @@ body,
     border-radius: var(--mf-radius);
     background: color-mix(in srgb, var(--mf-elevated) 80%, var(--mf-void));
     position: sticky;
-    bottom: calc(var(--mf-tab-h) + var(--mf-safe-bottom) + 0.35rem);
+    /*
+     * The stage overlay is fixed over the whole viewport, tab bar included, so
+     * there is nothing down there to clear — the controls sit on the panel's own
+     * bottom edge plus the safe inset.
+     */
+    bottom: calc(var(--mf-safe-bottom) + 0.35rem);
     z-index: 2;
     backdrop-filter: blur(8px);
 }
@@ -7315,7 +8465,7 @@ body,
     text-align: center;
 }
 
-/* Right-side live FAB — clear of compose FAB + mobile tab bar + desktop Post rail */
+/* Live-stage pill. On a phone it stacks above the compose FAB and the tab bar. */
 .mf-stage-fab {
     position: fixed;
     z-index: 70;
@@ -7446,13 +8596,37 @@ body,
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-pitch) 18%, transparent);
 }
 
-@media (min-width: 960px) {
+@media (min-width: 768px) {
     .mf-stage-fab {
-        /* Sit mid-right of the app column, above gutter — clear of sidebar Post CTA */
-        right: max(1rem, calc((100vw - var(--mf-app-width) - var(--mf-sidebar-w)) / 2 - 0.25rem));
-        bottom: 6.5rem;
+        /*
+         * Bottom-right of the page column. Offsetting by the shell inset keeps it
+         * on that column's edge at any monitor width; the old math used the phone
+         * canvas token and drifted once the third panel arrived.
+         */
+        right: calc(var(--mf-shell-inset) + max(0.9rem, env(safe-area-inset-right, 0px)));
+        bottom: 2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mf-stage-fab {
+        /* The chat panel now owns the right edge, so clear its full width. */
+        right: calc(
+            var(--mf-shell-inset) + var(--mf-chat-rail-w) +
+                max(0.9rem, env(safe-area-inset-right, 0px))
+        );
     }
 
+    /*
+     * …except on chat, which spans that track itself. Without this the pill would
+     * land 350px inside the thread, right on top of the composer.
+     */
+    .mf-stage--wide .mf-stage-fab {
+        right: calc(var(--mf-shell-inset) + max(0.9rem, env(safe-area-inset-right, 0px)));
+    }
+}
+
+@media (min-width: 960px) {
     .mf-stage-modal__panel {
         margin-top: 1.25rem;
         margin-bottom: 1.25rem;
@@ -7709,7 +8883,14 @@ body,
 .mf-skel-chat {
     display: flex;
     flex-direction: column;
+    /* The tab bar only exists on a phone, so only a phone pays for its height. */
     min-height: calc(100dvh - var(--mf-header-h) - var(--mf-tab-h) - 1rem);
+}
+
+@media (min-width: 768px) {
+    .mf-skel-chat {
+        min-height: calc(100dvh - var(--mf-header-h) - 1rem);
+    }
 }
 
 .mf-skel-chat__header {
@@ -8121,8 +9302,12 @@ body,
 
 .mf-skel-stage-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
     gap: 0.75rem;
+}
+
+.mf-skel-stage-grid--deck {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
 }
 
 .mf-skel-stage-person {
@@ -8147,6 +9332,90 @@ body,
     flex-direction: column;
     gap: 0.55rem;
     padding-top: 0.25rem;
+}
+
+/* Redesigned Stage skeletons — lobby card grid + room deck. */
+.mf-skel-stage-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.15rem);
+    background: color-mix(in srgb, var(--mf-panel) 92%, transparent);
+}
+
+.mf-skel-stage-hero__copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-skel-stage-hero__cta {
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.mf-skel-stage-toolbar__search {
+    flex: 1;
+    height: 2.4rem;
+    border-radius: 0.7rem;
+}
+
+.mf-skel-stage-toolbar__chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
+    animation: mf-skel-in 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-stage-card__topline,
+.mf-skel-stage-card__host,
+.mf-skel-stage-card__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mf-skel-stage-card__foot {
+    justify-content: space-between;
+    margin-top: 0.15rem;
+}
+
+.mf-skel-stage-room .mf-skel-stage-controls {
+    justify-content: center;
+    padding-block: 0.25rem;
+}
+
+.mf-skel-stage-control {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-control--wide {
+    width: 6.5rem;
+    border-radius: 999px;
 }
 
 .mf-skel-passport {
@@ -8278,6 +9547,21 @@ body,
     margin-inline: calc(50% - 50vw);
     overflow: hidden;
     border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 55%, transparent);
+}
+
+/*
+ * The 100vw full-bleed above only lands while the page column is the one thing
+ * centred in the viewport — i.e. on a phone. Once the sidebar and chat rail take
+ * their tracks the column sits left of centre, so that trick overshoots into
+ * both of them and forces a horizontal scrollbar. Bleed to the column's own
+ * edges instead: -1rem cancels the page padding on .mf-shop--mall / .mf-skel-shop.
+ */
+@media (min-width: 768px) {
+    .mf-shop-mall-hero,
+    .mf-skel-shop__hero {
+        width: auto;
+        margin-inline: -1rem;
+    }
 }
 
 .mf-shop-mall-hero__bg {

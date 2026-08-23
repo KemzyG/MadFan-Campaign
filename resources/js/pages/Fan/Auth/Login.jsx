@@ -51,7 +51,6 @@ export default function FanLogin() {
                         <FanBrandLogo asLink={false} size={30} className="mf-auth-brand-mark" />
                         <span>Mad Fan</span>
                     </Link>
-                    <h1 className="mf-auth-title">Login</h1>
                 </div>
 
                 <form onSubmit={submit} className="mf-auth-form">

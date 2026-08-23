@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Support\ApplicationSettings;
 use App\Support\MadFanStory;
+use App\Support\SocialRouting;
 use Database\Seeders\SeasonSeeder;
 use Database\Seeders\TaskSeeder;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -313,7 +314,7 @@ test('fan login via web form when onboarding is complete', function () {
         'email' => 'fan-login@madfan.test',
         'password' => validTestPassword(),
         '_token' => csrf_token(),
-    ])->assertRedirect(route('fan.dashboard'));
+    ])->assertRedirect(SocialRouting::url('/'));
 
     $this->assertAuthenticatedAs($user);
 });

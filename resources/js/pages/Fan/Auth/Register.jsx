@@ -1,30 +1,31 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
 import PasswordVisibilityToggle from '../../../Components/Fan/PasswordVisibilityToggle';
 import ToastStack from '../../../Components/Fan/ToastStack';
 import { LockIcon, MailIcon, UserIcon } from '../../../Components/Fan/AuthFieldIcons';
-import { DEFAULT_AVATAR_SRC } from '../../../constants/avatars';
 import { getDeviceFingerprint } from '../../../lib/deviceFingerprint';
+import { groupClubsByLeague } from '../../../lib/groupClubsByLeague';
 import { useToasts } from '../../../lib/useToasts';
 
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 3;
 const OTHER_CLUB = 'Other';
 const REGISTRATION_STEPS = [
-    { id: 1, label: 'Pick Your Club' },
-    { id: 2, label: 'Your Passport' },
+    { id: 1, label: 'Your Details' },
+    { id: 2, label: 'Your Club' },
+    { id: 3, label: 'Your Profile' },
 ];
 
 function stepForErrors(errors) {
-    if (errors.registration || errors.device_fingerprint) {
+    if (errors.username || errors.bio || errors.date_of_birth || errors.avatar || errors.registration || errors.device_fingerprint) {
+        return 3;
+    }
+
+    if (errors.club) {
         return 2;
     }
 
     if (errors.name || errors.email || errors.password) {
-        return 2;
-    }
-
-    if (errors.club) {
         return 1;
     }
 
@@ -54,63 +55,6 @@ function RegistrationStepper({ currentStep }) {
     );
 }
 
-function RegistrationPreview({ name, club, clubLogoUrl = null }) {
-    const displayName = (name || 'YOUR NAME').toUpperCase();
-    const clubWatermarkStyle = clubLogoUrl
-        ? { backgroundImage: `url("${clubLogoUrl}")` }
-        : undefined;
-
-    return (
-        <div className="reg-preview-stage">
-            <div className="passport-card reg-preview-card">
-                <div
-                    className={`card-face card-front${clubLogoUrl ? ' has-club-bg' : ''}`}
-                >
-                    {clubLogoUrl ? (
-                        <div
-                            className="card-club-watermark"
-                            style={clubWatermarkStyle}
-                            aria-hidden="true"
-                        />
-                    ) : null}
-                    <div className="card-top-bar" />
-                    <div className="card-shimmer" />
-                    <div className="card-logo-area">
-                        <FanBrandLogo asLink={false} className="card-logo-img" size={28} />
-                        <div className="card-season-tag">S01</div>
-                    </div>
-                    <div className="card-tier-badge">STARTER FAN</div>
-                    <div className="card-avatar-zone">
-                        <div className="card-avatar">
-                            <img src={DEFAULT_AVATAR_SRC} alt="Default fan avatar" />
-                        </div>
-                        <div>
-                            <div className="card-fan-name">{displayName}</div>
-                            <div className="card-fan-handle">{club || 'Your club'} · Season 01</div>
-                            <div className="card-fan-id">MF XXXXX · CONNECT X NEXT</div>
-                        </div>
-                    </div>
-                    <div className="card-stats-row">
-                        <div className="card-stat">
-                            <div className="card-stat-val">0</div>
-                            <div className="card-stat-label">POINTS</div>
-                        </div>
-                        <div className="card-stat">
-                            <div className="card-stat-val">0</div>
-                            <div className="card-stat-label">DAY STREAK</div>
-                        </div>
-                        <div className="card-stat">
-                            <div className="card-stat-val">0</div>
-                            <div className="card-stat-label">REFERRALS</div>
-                        </div>
-                    </div>
-                    <div className="card-club-strip" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
 export default function FanRegister({
     email = '',
     referrer_fan_id = null,
@@ -121,14 +65,19 @@ export default function FanRegister({
     const { errors, flash } = usePage().props;
     const [step, setStep] = useState(() => stepForErrors(errors ?? {}));
     const [showPassword, setShowPassword] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState(null);
     const { toasts, pushToast, dismissToast } = useToasts();
 
     const { data, setData, post, processing, clearErrors, transform } = useForm({
-        club: '',
         name: '',
         email: email || '',
         password: '',
         password_confirmation: '',
+        club: '',
+        username: '',
+        bio: '',
+        date_of_birth: '',
+        avatar: null,
         referrer_fan_id: referrer_fan_id ?? '',
         device_fingerprint: '',
     });
@@ -170,7 +119,22 @@ export default function FanRegister({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [errors]);
 
-    const selectedClub = clubs.find((club) => club.name === data.club) ?? null;
+    const groupedClubs = useMemo(() => groupClubsByLeague(clubs), [clubs]);
+
+    function handleAvatarChange(e) {
+        const file = e.target.files?.[0] ?? null;
+        setData('avatar', file);
+
+        if (!file) {
+            setAvatarPreview(null);
+
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => setAvatarPreview(reader.result);
+        reader.readAsDataURL(file);
+    }
 
     function canContinue() {
         if (registration_blocked) {
@@ -178,15 +142,19 @@ export default function FanRegister({
         }
 
         if (step === 1) {
+            return (
+                data.name.trim() !== '' &&
+                data.email.trim() !== '' &&
+                data.password.length >= 8 &&
+                data.password === data.password_confirmation
+            );
+        }
+
+        if (step === 2) {
             return data.club !== '';
         }
 
-        return (
-            data.name.trim() !== '' &&
-            data.email.trim() !== '' &&
-            data.password.length >= 8 &&
-            data.password === data.password_confirmation
-        );
+        return data.username.trim().length >= 3;
     }
 
     function goNext() {
@@ -220,7 +188,7 @@ export default function FanRegister({
             device_fingerprint: formData.device_fingerprint || getDeviceFingerprint(),
         }));
 
-        post('/register', { preserveScroll: true });
+        post('/register', { preserveScroll: true, forceFormData: true });
     }
 
     return (
@@ -228,13 +196,12 @@ export default function FanRegister({
             <Head title="Register" />
             <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
-            <div className="mf-onboard-panel" style={{ maxWidth: step === 2 ? '34rem' : '30rem' }}>
+            <div className="mf-onboard-panel" style={{ maxWidth: '32rem' }}>
                 <div className="mf-auth-header">
                     <Link href="/" className="mf-auth-brand">
                         <FanBrandLogo asLink={false} size={30} className="mf-auth-brand-mark" />
                         <span>Mad Fan</span>
                     </Link>
-                    <h1 className="mf-auth-title">Register</h1>
                 </div>
 
                 <RegistrationStepper currentStep={step} />
@@ -248,51 +215,89 @@ export default function FanRegister({
                 ) : (
                     <form onSubmit={submit} className="mf-auth-form">
                         {step === 1 && (
-                            <div>
-                                <p className="mf-text-section font-semibold text-[var(--mf-text)]">
-                                    Choose your club
-                                </p>
-
-                                <div className="mt-3 grid max-h-[min(52vh,28rem)] gap-2 overflow-y-auto pe-1 sm:max-h-none sm:grid-cols-2">
-                                    {clubs.map((club) => (
-                                        <button
-                                            key={club.id}
-                                            type="button"
-                                            className={`mf-club-opt${data.club === club.name ? ' is-selected' : ''}`}
-                                            onClick={() => setData('club', club.name)}
-                                        >
-                                            {club.logo_url ? (
-                                                <img src={club.logo_url} alt="" className="mf-avatar h-10 w-10" />
-                                            ) : (
-                                                <span className="mf-avatar mf-text-meta h-10 w-10">
-                                                    {club.short || '⚽'}
-                                                </span>
-                                            )}
-                                            <span className="min-w-0">
-                                                <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
-                                                    {club.name}
-                                                </span>
-                                                <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
-                                                    {club.league?.short || 'Football'}
-                                                </span>
-                                            </span>
-                                        </button>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        className={`mf-club-opt${data.club === OTHER_CLUB ? ' is-selected' : ''}`}
-                                        onClick={() => setData('club', OTHER_CLUB)}
-                                    >
-                                        <span className="mf-avatar h-10 w-10">⚽</span>
-                                        <span className="min-w-0">
-                                            <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
-                                                Other
-                                            </span>
-                                            <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
-                                                Not listed
-                                            </span>
+                            <div className="mf-auth-form" style={{ marginTop: 0 }}>
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-name">
+                                        Full name
+                                    </label>
+                                    <div className="mf-auth-input-wrap">
+                                        <span className="mf-auth-input-icon">
+                                            <UserIcon />
                                         </span>
-                                    </button>
+                                        <input
+                                            id="reg-name"
+                                            className={`mf-auth-input mf-auth-input--icon${errors.name ? ' has-error' : ''}`}
+                                            type="text"
+                                            placeholder="Your name"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-email">
+                                        Email
+                                    </label>
+                                    <div className="mf-auth-input-wrap">
+                                        <span className="mf-auth-input-icon">
+                                            <MailIcon />
+                                        </span>
+                                        <input
+                                            id="reg-email"
+                                            className={`mf-auth-input mf-auth-input--icon${errors.email ? ' has-error' : ''}`}
+                                            type="email"
+                                            placeholder="your@email.com"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-password">
+                                        Password
+                                    </label>
+                                    <div className="mf-auth-input-wrap">
+                                        <span className="mf-auth-input-icon">
+                                            <LockIcon />
+                                        </span>
+                                        <input
+                                            id="reg-password"
+                                            className={`mf-auth-input mf-auth-input--icon mf-auth-input--password${errors.password ? ' has-error' : ''}`}
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="Min. 8 characters"
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
+                                            required
+                                        />
+                                        <PasswordVisibilityToggle
+                                            visible={showPassword}
+                                            onToggle={() => setShowPassword((current) => !current)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-password-confirm">
+                                        Confirm password
+                                    </label>
+                                    <div className="mf-auth-input-wrap">
+                                        <span className="mf-auth-input-icon">
+                                            <LockIcon />
+                                        </span>
+                                        <input
+                                            id="reg-password-confirm"
+                                            className="mf-auth-input mf-auth-input--icon"
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="Repeat password"
+                                            value={data.password_confirmation}
+                                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -300,96 +305,143 @@ export default function FanRegister({
                         {step === 2 && (
                             <div>
                                 <p className="mf-text-section font-semibold text-[var(--mf-text)]">
-                                    Complete your passport
+                                    Choose your club
                                 </p>
 
-                                <RegistrationPreview
-                                    name={data.name}
-                                    club={selectedClub?.name ?? data.club}
-                                    clubLogoUrl={selectedClub?.logo_url ?? null}
-                                />
+                                <div className="mt-3 max-h-[min(52vh,28rem)] overflow-y-auto pe-1 sm:max-h-none">
+                                    {groupedClubs.map(([league, leagueClubs]) => (
+                                        <div key={league} className="mf-auth-league-group">
+                                            <p className="mf-auth-league-label">{league}</p>
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {leagueClubs.map((club) => (
+                                                    <button
+                                                        key={club.id}
+                                                        type="button"
+                                                        className={`mf-club-opt${data.club === club.name ? ' is-selected' : ''}`}
+                                                        onClick={() => setData('club', club.name)}
+                                                    >
+                                                        {club.logo_url ? (
+                                                            <img
+                                                                src={club.logo_url}
+                                                                alt=""
+                                                                className="mf-avatar h-10 w-10"
+                                                            />
+                                                        ) : (
+                                                            <span className="mf-avatar mf-text-meta h-10 w-10">
+                                                                {club.short || '⚽'}
+                                                            </span>
+                                                        )}
+                                                        <span className="min-w-0">
+                                                            <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
+                                                                {club.name}
+                                                            </span>
+                                                            <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
+                                                                {club.league?.short || 'Football'}
+                                                            </span>
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="mf-auth-league-group">
+                                        <div className="grid gap-2 sm:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                className={`mf-club-opt${data.club === OTHER_CLUB ? ' is-selected' : ''}`}
+                                                onClick={() => setData('club', OTHER_CLUB)}
+                                            >
+                                                <span className="mf-avatar h-10 w-10">⚽</span>
+                                                <span className="min-w-0">
+                                                    <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
+                                                        Other
+                                                    </span>
+                                                    <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
+                                                        Not listed
+                                                    </span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="mf-auth-field">
-                                        <label className="mf-auth-label" htmlFor="reg-name">
-                                            Display name
-                                        </label>
-                                        <div className="mf-auth-input-wrap">
-                                            <span className="mf-auth-input-icon">
-                                                <UserIcon />
-                                            </span>
+                        {step === 3 && (
+                            <div className="mf-auth-form" style={{ marginTop: 0 }}>
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label">Avatar (optional)</label>
+                                    <div className="flex items-center gap-3">
+                                        <span className="mf-avatar h-14 w-14 overflow-hidden text-[var(--mf-muted)]">
+                                            {avatarPreview ? (
+                                                <img
+                                                    src={avatarPreview}
+                                                    alt=""
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                data.name.slice(0, 1).toUpperCase() || '?'
+                                            )}
+                                        </span>
+                                        <label className="mf-btn mf-btn--ghost" style={{ cursor: 'pointer' }}>
+                                            Choose photo
                                             <input
-                                                id="reg-name"
-                                                className={`mf-auth-input mf-auth-input--icon${errors.name ? ' has-error' : ''}`}
-                                                type="text"
-                                                placeholder="Your name"
-                                                value={data.name}
-                                                onChange={(e) => setData('name', e.target.value)}
-                                                required
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                                onChange={handleAvatarChange}
+                                                style={{ display: 'none' }}
                                             />
-                                        </div>
-                                    </div>
-                                    <div className="mf-auth-field">
-                                        <label className="mf-auth-label" htmlFor="reg-email">
-                                            Email
                                         </label>
-                                        <div className="mf-auth-input-wrap">
-                                            <span className="mf-auth-input-icon">
-                                                <MailIcon />
-                                            </span>
-                                            <input
-                                                id="reg-email"
-                                                className={`mf-auth-input mf-auth-input--icon${errors.email ? ' has-error' : ''}`}
-                                                type="email"
-                                                placeholder="your@email.com"
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                required
-                                            />
-                                        </div>
                                     </div>
-                                    <div className="mf-auth-field">
-                                        <label className="mf-auth-label" htmlFor="reg-password">
-                                            Password
-                                        </label>
-                                        <div className="mf-auth-input-wrap">
-                                            <span className="mf-auth-input-icon">
-                                                <LockIcon />
-                                            </span>
-                                            <input
-                                                id="reg-password"
-                                                className={`mf-auth-input mf-auth-input--icon mf-auth-input--password${errors.password ? ' has-error' : ''}`}
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Min. 8 characters"
-                                                value={data.password}
-                                                onChange={(e) => setData('password', e.target.value)}
-                                                required
-                                            />
-                                            <PasswordVisibilityToggle
-                                                visible={showPassword}
-                                                onToggle={() => setShowPassword((current) => !current)}
-                                            />
-                                        </div>
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-username">
+                                        Username
+                                    </label>
+                                    <div className="mf-auth-input-wrap">
+                                        <span className="mf-auth-input-icon">
+                                            <UserIcon />
+                                        </span>
+                                        <input
+                                            id="reg-username"
+                                            className={`mf-auth-input mf-auth-input--icon${errors.username ? ' has-error' : ''}`}
+                                            type="text"
+                                            placeholder="yourusername"
+                                            value={data.username}
+                                            onChange={(e) => setData('username', e.target.value)}
+                                            required
+                                        />
                                     </div>
-                                    <div className="mf-auth-field">
-                                        <label className="mf-auth-label" htmlFor="reg-password-confirm">
-                                            Confirm password
-                                        </label>
-                                        <div className="mf-auth-input-wrap">
-                                            <span className="mf-auth-input-icon">
-                                                <LockIcon />
-                                            </span>
-                                            <input
-                                                id="reg-password-confirm"
-                                                className={`mf-auth-input mf-auth-input--icon${errors.password ? ' has-error' : ''}`}
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Repeat password"
-                                                value={data.password_confirmation}
-                                                onChange={(e) => setData('password_confirmation', e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-dob">
+                                        Date of birth (optional)
+                                    </label>
+                                    <input
+                                        id="reg-dob"
+                                        className={`mf-auth-input${errors.date_of_birth ? ' has-error' : ''}`}
+                                        type="date"
+                                        value={data.date_of_birth}
+                                        onChange={(e) => setData('date_of_birth', e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="mf-auth-field">
+                                    <label className="mf-auth-label" htmlFor="reg-bio">
+                                        Bio (optional)
+                                    </label>
+                                    <textarea
+                                        id="reg-bio"
+                                        className={`mf-auth-input${errors.bio ? ' has-error' : ''}`}
+                                        placeholder="Tell other fans about yourself"
+                                        value={data.bio}
+                                        onChange={(e) => setData('bio', e.target.value)}
+                                        maxLength={280}
+                                        rows={3}
+                                        style={{ height: 'auto', paddingTop: '0.75rem', paddingBottom: '0.75rem', resize: 'vertical' }}
+                                    />
                                 </div>
                             </div>
                         )}

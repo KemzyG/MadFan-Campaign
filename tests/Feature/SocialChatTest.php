@@ -27,7 +27,7 @@ test('onboarded fans can open club chat with default channels', function () {
         ->get('/social/chat')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('club.name', 'Radio FC')
             ->where('channel.slug', 'general')
             ->where('realtime.mode', 'poll')
@@ -47,6 +47,6 @@ test('fans can switch to the matchday channel', function () {
         ->get('/social/chat?channel=matchday')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('channel.slug', 'matchday'));
 });

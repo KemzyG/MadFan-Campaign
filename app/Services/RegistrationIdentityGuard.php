@@ -56,11 +56,27 @@ class RegistrationIdentityGuard
     }
 
     /**
+     * Whether one-account-per-identity enforcement is live for this request.
+     *
+     * Off in local so a developer who already registered on this machine isn't
+     * locked out of the signup flow by their own lock cookie / fingerprint / IP.
+     * The `testing` environment keeps it on, so the hardening suite is unaffected.
+     */
+    public function enforcementActive(): bool
+    {
+        if (app()->environment('local')) {
+            return false;
+        }
+
+        return (bool) config('registration.enforce_one_account', true);
+    }
+
+    /**
      * @throws ValidationException
      */
     public function assertCanRegister(Request $request, string $email): void
     {
-        if (! config('registration.enforce_one_account', true)) {
+        if (! $this->enforcementActive()) {
             return;
         }
 

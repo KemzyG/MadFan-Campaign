@@ -18,6 +18,7 @@ import {
 } from '../pages/Social/components/Skeletons';
 import StageChrome from '../pages/Social/Stage/StageChrome';
 import { SocialFlashContext } from '../pages/Social/optimistic';
+import ChatRail from './ChatRail';
 
 const NAV_SKELETON_DELAY_MS = 120;
 
@@ -236,12 +237,24 @@ function BrandMark({ logoUrl }) {
     return <span className="mf-sidebar__logo-mark mf-display">MF</span>;
 }
 
+/**
+ * Between 768 and 1279 the rail is icon-only and `.mf-sidebar__label` is
+ * `display: none`, which takes the text out of the accessibility tree too. The
+ * explicit label is what names the link there; `title` gives the collapsed rail
+ * the hover tooltip users expect of one.
+ */
 function NavItem({ href, label, icon: Icon, active, onClick }) {
     const className = ['mf-sidebar__link', active ? 'is-active' : ''].filter(Boolean).join(' ');
 
     if (onClick && !href) {
         return (
-            <button type="button" className={className} onClick={onClick}>
+            <button
+                type="button"
+                className={className}
+                onClick={onClick}
+                aria-label={label}
+                title={label}
+            >
                 <span className="mf-sidebar__icon">
                     <Icon active={active} />
                 </span>
@@ -251,7 +264,14 @@ function NavItem({ href, label, icon: Icon, active, onClick }) {
     }
 
     return (
-        <Link href={href} className={className} aria-current={active ? 'page' : undefined} prefetch>
+        <Link
+            href={href}
+            className={className}
+            aria-current={active ? 'page' : undefined}
+            aria-label={label}
+            title={label}
+            prefetch
+        >
             <span className="mf-sidebar__icon">
                 <Icon active={active} />
             </span>
@@ -464,7 +484,20 @@ function SocialHeaderAccountMenu({ user, handle, profileHref }) {
     );
 }
 
-export default function SocialShell({ children, title, showTabs = true, backHref, fillViewport = false }) {
+/**
+ * `mobileBare` keeps the desktop sidebar but drops the mobile header and tab bar,
+ * for full-height surfaces (a chat thread) that own their own chrome.
+ * `wide` widens the app column so two-pane layouts get room on desktop.
+ */
+export default function SocialShell({
+    children,
+    title,
+    showTabs = true,
+    backHref,
+    fillViewport = false,
+    mobileBare = false,
+    wide = false,
+}) {
     const page = usePage();
     const { auth, flash, app } = page.props;
     const user = auth?.user;
@@ -652,15 +685,29 @@ export default function SocialShell({ children, title, showTabs = true, backHref
     const tabs = [...primaryTabs, ...secondaryTabs];
     const mobileTabs = primaryTabs;
 
+    // Third desktop panel: chat lives on the right of every page except Chat
+    // itself and other `wide` two-pane pages (Stage room), which span this
+    // column with their own right pane. `.mf-shell--wide` then collapses the
+    // grid to two tracks and hides the inert gutter.
+    const showChatRail = showTabs && !wide && !pathMatches(current, '/social/chat');
+
     return (
         <SocialFlashContext.Provider value={flashApi}>
             <SocialComposeContext.Provider value={composeApi}>
-                <div className="mf-stage">
+                {/*
+                  * The wide flag is mirrored onto .mf-stage because the floating
+                  * chrome below (StageChrome, the toast stack) are siblings of the
+                  * shell, not descendants — they need an ancestor hook to know the
+                  * page column runs all the way to the shell's right edge.
+                  */}
+                <div className={`mf-stage ${wide ? 'mf-stage--wide' : ''}`.trim()}>
                 <div
                     className={[
                         'mf-shell',
                         showTabs ? 'mf-shell--nav' : 'mf-shell--bare',
                         fillViewport ? 'mf-shell--fill' : '',
+                        mobileBare ? 'mf-shell--mobile-bare' : '',
+                        wide ? 'mf-shell--wide' : '',
                     ]
                         .filter(Boolean)
                         .join(' ')}
@@ -693,6 +740,8 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                                     type="button"
                                     className="mf-sidebar__post"
                                     onClick={openCompose}
+                                    aria-label="Post"
+                                    title="Post"
                                 >
                                     <span className="mf-sidebar__post-icon" aria-hidden>
                                         <IconCompose />
@@ -705,6 +754,8 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                                 <Link
                                     href="/social/passport"
                                     className="mf-sidebar__user"
+                                    aria-label={`Passport — ${user.name || handle || 'you'}`}
+                                    title="Passport"
                                     prefetch
                                 >
                                     {user.avatar_url ? (
@@ -824,7 +875,13 @@ export default function SocialShell({ children, title, showTabs = true, backHref
                         ) : null}
                     </div>
 
-                    {showTabs ? <div className="mf-gutter" aria-hidden="true" /> : null}
+                    {showTabs ? (
+                        showChatRail ? (
+                            <ChatRail />
+                        ) : (
+                            <div className="mf-gutter" aria-hidden="true" />
+                        )
+                    ) : null}
                 </div>
 
                 {showTabs ? (

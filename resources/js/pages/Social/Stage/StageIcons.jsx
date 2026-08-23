@@ -167,6 +167,185 @@ export function IconLive({ className }) {
     );
 }
 
+export function IconPin({ className, active = false }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path
+                d="M12 17v5"
+            />
+            <path
+                d="M9 3h6l-1 6 3 3v1H7v-1l3-3-1-6Z"
+                fill={active ? 'currentColor' : 'none'}
+            />
+        </svg>
+    );
+}
+
+export function IconVolume({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M18.5 6a9 9 0 0 1 0 12" />
+        </svg>
+    );
+}
+
+export function IconDeafen({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+            <path d="m17 9 5 6" />
+            <path d="m22 9-5 6" />
+        </svg>
+    );
+}
+
+export function IconReaction({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8.5 14a4 4 0 0 0 7 0" />
+            <path d="M9 9h.01" />
+            <path d="M15 9h.01" />
+        </svg>
+    );
+}
+
+export function IconSettings({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M4 6h10" />
+            <path d="M18 6h2" />
+            <circle cx="16" cy="6" r="2" />
+            <path d="M4 12h2" />
+            <path d="M10 12h10" />
+            <circle cx="8" cy="12" r="2" />
+            <path d="M4 18h10" />
+            <path d="M18 18h2" />
+            <circle cx="16" cy="18" r="2" />
+        </svg>
+    );
+}
+
+export function IconSort({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M7 4v16" />
+            <path d="m3 8 4-4 4 4" />
+            <path d="M17 20V4" />
+            <path d="m21 16-4 4-4-4" />
+        </svg>
+    );
+}
+
+export function IconSearch({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+        </svg>
+    );
+}
+
+export function IconFilter({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z" />
+        </svg>
+    );
+}
+
+export function IconDismissHand({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M18 11V6a2 2 0 1 0-4 0" />
+            <path d="M14 10V5a2 2 0 1 0-4 0v6" />
+            <path d="M10 10V6a2 2 0 1 0-4 0v8a6 6 0 0 0 6 6h2a4 4 0 0 0 4-4v-3a2 2 0 1 0-4 0" />
+            <path d="m2 2 20 20" />
+        </svg>
+    );
+}
+
+export function IconLink({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
+            <path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
+        </svg>
+    );
+}
+
+export function IconDemote({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M12 5v14" />
+            <path d="m19 12-7 7-7-7" />
+        </svg>
+    );
+}
+
+export function IconPromote({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+        </svg>
+    );
+}
+
+export function IconKeyboard({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <path d="M6 10h.01" />
+            <path d="M10 10h.01" />
+            <path d="M14 10h.01" />
+            <path d="M18 10h.01" />
+            <path d="M7 14h10" />
+        </svg>
+    );
+}
+
+export function IconInfo({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+        </svg>
+    );
+}
+
+export function IconUsers({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    );
+}
+
+export function IconSend({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="m22 2-7 20-4-9-9-4Z" />
+            <path d="M22 2 11 13" />
+        </svg>
+    );
+}
+
+export function IconBack({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M19 12H5" />
+            <path d="m12 19-7-7 7-7" />
+        </svg>
+    );
+}
+
 export function StageIconButton({ label, active = false, danger = false, pitch = false, badge, children, className = '', ...props }) {
     const classes = [
         'mf-stage-icon-btn',

@@ -41,6 +41,7 @@ use Spatie\Permission\Traits\HasRoles;
     'club',
     'favourite_club_id',
     'bio',
+    'date_of_birth',
     'banner_path',
     'avatar_emoji',
     'avatar_path',
@@ -202,10 +203,12 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'social_onboarded_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'staff_position_assigned_at' => 'datetime',
             'shootout_cooldown_until' => 'datetime',
             'shootout_last_awarded_at' => 'datetime',
             'shootout_stats_date' => 'date',
+            'date_of_birth' => 'date',
             'is_staff' => 'boolean',
             'mfa_confirmed_at' => 'datetime',
         ];
@@ -214,6 +217,26 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function hasMfaEnabled(): bool
     {
         return filled($this->mfa_secret) && $this->mfa_confirmed_at !== null;
+    }
+
+    /**
+     * Presence window: a fan is "online" if seen within this many minutes.
+     * The heartbeat (TouchLastSeen) refreshes last_seen_at at most once/60s.
+     */
+    public const ONLINE_WINDOW_MINUTES = 5;
+
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at?->gt(now()->subMinutes(self::ONLINE_WINDOW_MINUTES)) ?? false;
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeOnline(Builder $query): Builder
+    {
+        return $query->where('last_seen_at', '>=', now()->subMinutes(self::ONLINE_WINDOW_MINUTES));
     }
 
     public function staffPositionAssignedBy(): BelongsTo

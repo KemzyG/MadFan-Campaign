@@ -97,6 +97,12 @@ class AppServiceProvider extends ServiceProvider
             'stage-signal-post|'.($request->user()?->id ?: $request->ip()),
         ));
 
+        // Reactions are cheap confetti but spammy — own bucket so a mash doesn't
+        // starve the room-poll or signal buckets above.
+        RateLimiter::for('stage-reaction', fn ($request) => Limit::perMinute(120)->by(
+            'stage-reaction|'.($request->user()?->id ?: $request->ip()),
+        ));
+
         Event::listen(Failed::class, LogFailedAuthentication::class);
     }
 }

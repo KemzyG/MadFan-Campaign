@@ -7,12 +7,14 @@ use App\Enums\StageParticipantRole;
 use App\Enums\StageSignalType;
 use App\Enums\StageStatus;
 use App\Events\Social\StageMessageCreated;
+use App\Events\Social\StageReactionCreated;
 use App\Events\Social\StageRoomUpdated;
 use App\Events\Social\StageSignalCreated;
 use App\Models\Post;
 use App\Models\Stage;
 use App\Models\StageMessage;
 use App\Models\StageParticipant;
+use App\Models\StageReaction;
 use App\Models\StageSignal;
 use App\Models\User;
 use App\Support\SocialBroadcast;
@@ -37,6 +39,19 @@ class StageService
     public const SIGNAL_POLL_MS = 1500;
 
     public const MESSAGES_LIMIT = 80;
+
+    /**
+     * Emoji fans can throw at the deck. Kept server-side so the client never
+     * hardcodes the set — `presentRoom()` ships it as `reaction_options`.
+     *
+     * @var list<string>
+     */
+    public const REACTIONS = ['🔥', '👏', '😂', '😮', '⚽', '💙'];
+
+    /** Reactions are ephemeral confetti: only the last few seconds are replayed. */
+    public const REACTION_WINDOW_SECONDS = 20;
+
+    public const REACTIONS_LIMIT = 30;
 
     /**
      * Network-wide live Stage lobby — every live room is visible to Social fans.
@@ -120,6 +135,142 @@ class StageService
 
             return $stage;
         });
+    }
+
+    /**
+     * Host-only live edit of the room. Only keys present in `$data` change, so the
+     * client can PATCH a single toggle without echoing the whole form back.
+     *
+     * @param  array{
+     *     title?: string,
+     *     description?: string|null,
+     *     is_public?: bool,
+     *     allow_invite?: bool,
+     *     allow_chat?: bool,
+     *     allow_speak_requests?: bool,
+     *     background_key?: int
+     * }  $data
+     */
+    public function updateSettings(Stage $stage, User $host, array $data): Stage
+    {
+        $this->assertHost($stage, $host);
+
+        $attributes = [];
+
+        if (array_key_exists('title', $data)) {
+            $attributes['title'] = trim((string) $data['title']);
+        }
+
+        if (array_key_exists('description', $data)) {
+            $attributes['description'] = filled($data['description']) ? trim((string) $data['description']) : null;
+        }
+
+        foreach (['is_public', 'allow_invite', 'allow_chat', 'allow_speak_requests'] as $flag) {
+            if (array_key_exists($flag, $data)) {
+                $attributes[$flag] = (bool) $data[$flag];
+            }
+        }
+
+        if (array_key_exists('background_key', $data)) {
+            $attributes['background_key'] = app(StageMediaService::class)
+                ->normalizeBackgroundKey((int) $data['background_key']);
+        }
+
+        if ($attributes === []) {
+            return $stage;
+        }
+
+        $stage->fill($attributes);
+        $stage->save();
+
+        $fresh = $stage->fresh();
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($fresh, 'settings'));
+
+        return $fresh;
+    }
+
+    /**
+     * Pin one room message to the top of chat, or pass null to clear the pin.
+     */
+    public function pinMessage(Stage $stage, User $host, ?StageMessage $message): void
+    {
+        $this->assertHost($stage, $host);
+
+        if ($message !== null && (int) $message->stage_id !== (int) $stage->id) {
+            throw ValidationException::withMessages([
+                'message_id' => 'That message is not from this Stage.',
+            ]);
+        }
+
+        $stage->pinned_message_id = $message?->id;
+        $stage->save();
+
+        $fresh = $stage->fresh();
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($fresh, $message ? 'pinned' : 'unpinned'));
+    }
+
+    /**
+     * Clear a listener's raised hand without promoting them.
+     */
+    public function dismissSpeakRequest(Stage $stage, User $host, User $target): void
+    {
+        $this->assertHost($stage, $host);
+
+        $participant = $this->activeParticipant($stage, $target);
+
+        if ($participant === null) {
+            throw ValidationException::withMessages([
+                'stage' => 'That fan is no longer in the Stage.',
+            ]);
+        }
+
+        if ($participant->speak_requested_at === null) {
+            return;
+        }
+
+        $participant->speak_requested_at = null;
+        $participant->save();
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'hand-dismissed'));
+    }
+
+    /**
+     * Throw an emoji at the deck. Deliberately not gated on `allow_chat` — reactions
+     * are the quiet way to react in a text-muted room.
+     */
+    public function react(Stage $stage, User $user, string $emoji): StageReaction
+    {
+        if (! $stage->isLive()) {
+            throw ValidationException::withMessages([
+                'stage' => 'This Stage has ended.',
+            ]);
+        }
+
+        if (! in_array($emoji, self::REACTIONS, true)) {
+            throw ValidationException::withMessages([
+                'emoji' => 'Pick one of the Stage reactions.',
+            ]);
+        }
+
+        $reaction = StageReaction::query()->create([
+            'stage_id' => $stage->id,
+            'user_id' => $user->id,
+            'emoji' => $emoji,
+        ]);
+
+        $reaction->setRelation('user', $user);
+        SocialBroadcast::try(fn () => StageReactionCreated::dispatch($reaction));
+
+        return $reaction;
+    }
+
+    private function assertHost(Stage $stage, User $host): void
+    {
+        if ((int) $stage->host_id !== (int) $host->id) {
+            throw ValidationException::withMessages([
+                'stage' => 'Only the host can do that.',
+            ]);
+        }
     }
 
     public function join(Stage $stage, User $user): StageParticipant
@@ -563,6 +714,7 @@ class StageService
         $stage->loadMissing([
             'host:id,name,handle,fan_id,avatar_path,avatar_emoji',
             'club:id,name,short,logo',
+            'pinnedMessage.user:id,name,handle,fan_id,avatar_path,avatar_emoji',
         ]);
 
         $participants = StageParticipant::query()
@@ -585,19 +737,45 @@ class StageService
         $me = $participants->firstWhere('user_id', $viewer->id);
 
         $stagePayload = $this->presentStage($stage);
-        $stagePayload['speaker_count'] = $participants->filter(fn (StageParticipant $p) => $p->isOnStage())->count();
+        $onStage = $participants->filter(fn (StageParticipant $p) => $p->isOnStage())->count();
+        $stagePayload['speaker_count'] = $onStage;
         $stagePayload['participant_count'] = $participants->count();
+        $stagePayload['listener_count'] = $participants->count() - $onStage;
 
         return [
             'stage' => $stagePayload,
             'participants' => $participants->map(fn (StageParticipant $p): array => $this->presentParticipant($p))->values()->all(),
             'messages' => $messages->map(fn (StageMessage $m): array => $this->presentMessage($m))->all(),
+            'pinned_message' => $stage->pinnedMessage ? $this->presentMessage($stage->pinnedMessage) : null,
+            'reactions' => $this->recentReactions($stage),
+            'reaction_options' => self::REACTIONS,
             'me' => $me ? $this->presentParticipant($me) : null,
             'voice' => $this->presentVoice($stage),
             'realtime' => SocialRealtime::stageMeta(),
             'max_message_length' => self::MAX_MESSAGE_LENGTH,
             'poll_ms' => SocialRealtime::enabled() ? max(self::POLL_INTERVAL_MS * 8, 20000) : self::POLL_INTERVAL_MS,
         ];
+    }
+
+    /**
+     * Reactions thrown in the last few seconds — replayed so the polling fallback
+     * animates the same confetti Reverb clients already saw.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recentReactions(Stage $stage): array
+    {
+        return StageReaction::query()
+            ->where('stage_id', $stage->id)
+            ->where('created_at', '>=', now()->subSeconds(self::REACTION_WINDOW_SECONDS))
+            ->with(['user:id,name,handle,fan_id,avatar_path,avatar_emoji'])
+            ->orderByDesc('id')
+            ->limit(self::REACTIONS_LIMIT)
+            ->get()
+            ->reverse()
+            ->values()
+            ->map(fn (StageReaction $reaction): array => $this->presentReaction($reaction))
+            ->all();
     }
 
     /**
@@ -665,6 +843,7 @@ class StageService
             'allow_speak_requests' => (bool) $stage->allow_speak_requests,
             'background_key' => $media->normalizeBackgroundKey($stage->background_key),
             'background_url' => $media->urlForStage($stage),
+            'pinned_message_id' => $stage->pinned_message_id,
             'voice_enabled' => (bool) $stage->voice_enabled,
             'started_at' => $stage->started_at?->toIso8601String(),
             'ended_at' => $stage->ended_at?->toIso8601String(),
@@ -714,6 +893,19 @@ class StageService
             'body' => $message->body,
             'created_at' => $message->created_at?->toIso8601String(),
             'user' => $this->presentUser($message->user),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function presentReaction(StageReaction $reaction): array
+    {
+        return [
+            'id' => $reaction->id,
+            'emoji' => $reaction->emoji,
+            'created_at' => $reaction->created_at?->toIso8601String(),
+            'user' => $this->presentUser($reaction->user),
         ];
     }
 

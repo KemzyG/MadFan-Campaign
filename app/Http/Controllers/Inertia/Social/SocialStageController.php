@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Inertia\Social;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Social\StoreSocialStageRequest;
+use App\Http\Requests\Social\UpdateSocialStageRequest;
 use App\Models\Stage;
+use App\Models\StageMessage;
 use App\Models\User;
 use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
@@ -12,6 +14,7 @@ use App\Support\StageVoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +47,18 @@ class SocialStageController extends Controller
         return redirect()
             ->route('social.stage.show', $stage)
             ->with('success', 'Stage is live.');
+    }
+
+    /**
+     * Live host edit — rename the room, retune the rules, swap the backdrop.
+     */
+    public function update(UpdateSocialStageRequest $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $stages->updateSettings($stage, $user, $request->validated());
+
+        return back()->with('success', 'Stage updated.');
     }
 
     public function show(Request $request, Stage $stage, StageService $stages): Response
@@ -138,5 +153,45 @@ class SocialStageController extends Controller
         $stages->shareToFeed($stage, $user, $validated['body'] ?? null);
 
         return back()->with('success', 'Shared to the terrace feed.');
+    }
+
+    /**
+     * Pin (or, with a null message_id, unpin) a room message.
+     */
+    public function pin(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('pin', $stage);
+
+        $validated = $request->validate([
+            'message_id' => ['nullable', 'integer', 'exists:stage_messages,id'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $message = isset($validated['message_id'])
+            ? StageMessage::query()->find($validated['message_id'])
+            : null;
+
+        $stages->pinMessage($stage, $user, $message);
+
+        return back()->with('success', $message ? 'Message pinned.' : 'Message unpinned.');
+    }
+
+    /**
+     * Throw a reaction emoji at the deck.
+     */
+    public function react(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('react', $stage);
+
+        $validated = $request->validate([
+            'emoji' => ['required', 'string', Rule::in(StageService::REACTIONS)],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $stages->react($stage, $user, $validated['emoji']);
+
+        return back();
     }
 }

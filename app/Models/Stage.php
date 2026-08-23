@@ -24,6 +24,7 @@ class Stage extends Model
         'allow_chat',
         'allow_speak_requests',
         'background_key',
+        'pinned_message_id',
         'status',
         'voice_enabled',
         'started_at',
@@ -42,6 +43,7 @@ class Stage extends Model
             'allow_chat' => 'boolean',
             'allow_speak_requests' => 'boolean',
             'background_key' => 'integer',
+            'pinned_message_id' => 'integer',
             'voice_enabled' => 'boolean',
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
@@ -66,6 +68,16 @@ class Stage extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(StageMessage::class);
+    }
+
+    public function pinnedMessage(): BelongsTo
+    {
+        return $this->belongsTo(StageMessage::class, 'pinned_message_id');
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(StageReaction::class);
     }
 
     public function signals(): HasMany

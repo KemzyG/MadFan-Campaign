@@ -79,7 +79,11 @@ class SendChatMessage
 
         $this->awardSocialPoints->forChat($author, $message->id, $body);
 
-        $message->load('author');
+        $message->load([
+            'author',
+            'replyTo:id,author_id,body',
+            'replyTo.author:id,name',
+        ]);
 
         SocialBroadcast::try(fn () => ClubChatMessageCreated::dispatch($message));
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
+use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
+use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
 use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
@@ -33,6 +35,7 @@ use App\Http\Controllers\Inertia\Social\SocialStandingsController;
 use App\Http\Controllers\Inertia\Social\SocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
 use App\Http\Controllers\Inertia\Social\SocialVideoController;
+use App\Http\Middleware\TouchLastSeen;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -43,7 +46,7 @@ use Illuminate\Support\Facades\Route;
  * @param  bool  $withNames  Whether to register named routes (only once per app boot).
  */
 return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
-    Route::middleware(['app.maintenance', 'auth'])->group(function () use ($pathPrefix, $apiPrefix, $withNames): void {
+    Route::middleware(['app.maintenance', 'auth', TouchLastSeen::class])->group(function () use ($pathPrefix, $apiPrefix, $withNames): void {
         // Only register once per domain: apiPrefix doesn't vary between the canonical
         // and legacy-path page mounts, so a second pass would just clobber these names.
         if ($withNames) {
@@ -70,6 +73,12 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
                     ->name('chat.messages.store');
+                Route::get('/chat/rail', ApiSocialChatRailController::class)
+                    ->middleware('throttle:120,1')
+                    ->name('chat.rail');
+                Route::get('/chat/channels/{channel}/members', ApiSocialChatMembersController::class)
+                    ->middleware('throttle:120,1')
+                    ->name('chat.channels.members');
 
                 Route::get('/tickets/{ticket}', [ApiSocialTicketController::class, 'show'])
                     ->middleware('throttle:60,1')
@@ -98,7 +107,10 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 $homeTarget = $pathPrefix === '' ? '/' : '/'.trim($pathPrefix, '/');
                 Route::redirect('/home', $homeTarget);
                 Route::get('/passport', SocialPassportController::class)->name('passport');
-                Route::get('/chat', SocialChatController::class)->name('chat');
+                Route::get('/chat', [SocialChatController::class, 'index'])->name('chat');
+                Route::get('/chat/thread/{channelKey}', [SocialChatController::class, 'show'])
+                    ->where('channelKey', '[A-Za-z0-9_\-]+')
+                    ->name('chat.thread');
                 Route::post('/chat/direct', [SocialDirectChatController::class, 'store'])
                     ->middleware('throttle:30,1')
                     ->name('chat.direct.store');
@@ -113,6 +125,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/stage', [SocialStageController::class, 'store'])
                     ->middleware('throttle:10,1')
                     ->name('stage.store');
+                Route::patch('/stage/{stage}', [SocialStageController::class, 'update'])
+                    ->middleware('throttle:20,1')
+                    ->name('stage.update');
                 Route::get('/stage/{stage}', [SocialStageController::class, 'show'])->name('stage.show');
                 Route::get('/stage/{stage}/room', [SocialStageController::class, 'room'])
                     ->middleware('throttle:stage-room')
@@ -141,6 +156,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/stage/{stage}/participants/{user}/demote', [SocialStageParticipantController::class, 'demote'])
                     ->middleware('throttle:30,1')
                     ->name('stage.participants.demote');
+                Route::post('/stage/{stage}/participants/{user}/dismiss-hand', [SocialStageParticipantController::class, 'dismissHand'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.participants.dismiss-hand');
                 Route::post('/stage/{stage}/mute', [SocialStageParticipantController::class, 'mute'])
                     ->middleware('throttle:60,1')
                     ->name('stage.mute');
@@ -156,6 +174,12 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/stage/{stage}/share', [SocialStageController::class, 'share'])
                     ->middleware('throttle:10,1')
                     ->name('stage.share');
+                Route::post('/stage/{stage}/pin', [SocialStageController::class, 'pin'])
+                    ->middleware('throttle:30,1')
+                    ->name('stage.pin');
+                Route::post('/stage/{stage}/reactions', [SocialStageController::class, 'react'])
+                    ->middleware('throttle:stage-reaction')
+                    ->name('stage.reactions.store');
                 Route::get('/stage/{stage}/signals', [SocialStageSignalController::class, 'index'])
                     ->middleware('throttle:stage-signal-poll')
                     ->name('stage.signals.index');

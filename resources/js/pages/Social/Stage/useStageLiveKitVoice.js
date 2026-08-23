@@ -9,6 +9,7 @@ import {
     requestStageMicrophone,
     STAGE_AUDIO_CONSTRAINTS,
 } from './stageMicPermission';
+import { effectiveVolume, subscribeAudioOutput } from './stageAudioOutput';
 
 function csrfHeaders() {
     const headers = {
@@ -33,6 +34,7 @@ export function createStageLiveKitVoiceSession({
     iAmOnStage,
     isMuted,
     onStatus,
+    onActiveSpeakers,
 }) {
     let room = null;
     let stopped = false;
@@ -41,6 +43,7 @@ export function createStageLiveKitVoiceSession({
     let playbackUnlocked = false;
     let unlockAudioContext = null;
     let lastCanPublish = null;
+    let unsubscribeAudioOutput = null;
     /** After a hard mic deny, pause auto-retries until the user taps Enable microphone. */
     let micBlocked = false;
 
@@ -48,6 +51,16 @@ export function createStageLiveKitVoiceSession({
         if (typeof onStatus === 'function') {
             onStatus(msg);
         }
+    }
+
+    function emitActiveSpeakers(list) {
+        if (typeof onActiveSpeakers !== 'function') {
+            return;
+        }
+        const ids = (list || [])
+            .map((participant) => Number(participant?.identity))
+            .filter((id) => Number.isFinite(id));
+        onActiveSpeakers(ids);
     }
 
     function audioElId(identity) {
@@ -78,7 +91,7 @@ export function createStageLiveKitVoiceSession({
         }
         track.attach(audio);
         audio.muted = false;
-        audio.volume = 1;
+        audio.volume = effectiveVolume();
         playRemoteAudio(audio);
     }
 
@@ -94,12 +107,20 @@ export function createStageLiveKitVoiceSession({
         return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
     }
 
+    /** Re-apply the listener's chosen output volume (0 when deafened) to every remote element. */
+    function applyOutputVolume() {
+        const volume = effectiveVolume();
+        listRemoteAudios().forEach((audio) => {
+            audio.volume = volume;
+        });
+    }
+
     function playRemoteAudio(audio) {
         if (!audio) {
             return Promise.resolve(false);
         }
         audio.muted = false;
-        audio.volume = 1;
+        audio.volume = effectiveVolume();
         if (!audio.paused && audio.srcObject) {
             playbackUnlocked = true;
             return Promise.resolve(true);
@@ -212,7 +233,11 @@ export function createStageLiveKitVoiceSession({
             .on(RoomEvent.ParticipantDisconnected, (participant) => {
                 detachRemote(participant.identity);
             })
+            .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                emitActiveSpeakers(speakers);
+            })
             .on(RoomEvent.Disconnected, () => {
+                emitActiveSpeakers([]);
                 if (!stopped && voiceEnabled) {
                     setStatus('Voice reconnecting…');
                 }
@@ -278,6 +303,7 @@ export function createStageLiveKitVoiceSession({
             audio.srcObject = null;
             audio.remove();
         });
+        emitActiveSpeakers([]);
         lastCanPublish = null;
     }
 
@@ -327,6 +353,9 @@ export function createStageLiveKitVoiceSession({
         if (stopped) {
             return;
         }
+        if (!unsubscribeAudioOutput) {
+            unsubscribeAudioOutput = subscribeAudioOutput(() => applyOutputVolume());
+        }
         if (!voiceEnabled) {
             setStatus('Waiting for host to start voice');
             return;
@@ -338,6 +367,11 @@ export function createStageLiveKitVoiceSession({
         stopped = true;
         playbackUnlocked = false;
         clearReconnectTimer();
+        if (unsubscribeAudioOutput) {
+            unsubscribeAudioOutput();
+            unsubscribeAudioOutput = null;
+        }
+        emitActiveSpeakers([]);
         void disconnectRoom();
         if (unlockAudioContext) {
             try {

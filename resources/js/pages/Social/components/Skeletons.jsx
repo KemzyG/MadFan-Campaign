@@ -230,35 +230,48 @@ export function ShopMallSkeleton({ count = 9 }) {
     );
 }
 
-export function StageLobbySkeleton({ count = 3 }) {
+export function StageLobbySkeleton({ count = 6 }) {
     return (
         <div className="mf-skel-page mf-skel-stage-lobby" aria-busy="true" aria-label="Loading stage">
-            <div className="mf-skel-stage-actions">
-                <Bone className="mf-skel-line mf-skel-line--caption" />
-                <Bone className="mf-skel-chip mf-skel-chip--btn" />
+            <div className="mf-skel-stage-hero">
+                <div className="mf-skel-stage-hero__copy">
+                    <Bone className="mf-skel-line mf-skel-line--caption" />
+                    <Bone className="mf-skel-line mf-skel-line--display" />
+                    <Bone className="mf-skel-line mf-skel-line--body-short" />
+                </div>
+                <Bone className="mf-skel-chip mf-skel-chip--btn mf-skel-stage-hero__cta" />
             </div>
-            <div className="mf-skel-stage-list">
+            <div className="mf-skel-stage-toolbar">
+                <Bone className="mf-skel-stage-toolbar__search" />
+                <div className="mf-skel-stage-toolbar__chips">
+                    <Bone className="mf-skel-pill" />
+                    <Bone className="mf-skel-pill" />
+                    <Bone className="mf-skel-pill" />
+                </div>
+            </div>
+            <div className="mf-skel-stage-grid">
                 {Array.from({ length: count }, (_, index) => (
-                    <div
+                    <article
                         key={index}
-                        className="mf-skel-stage-row"
-                        style={{ '--mf-skel-stagger': `${index * 50}ms` }}
+                        className="mf-skel-stage-card"
+                        style={{ '--mf-skel-stagger': `${Math.min(index, 8) * 50}ms` }}
+                        aria-hidden
                     >
-                        <Bone className="mf-skel-stage-row__dot" />
-                        <div className="mf-skel-stage-row__body">
-                            <div className="mf-skel-stage-row__chips">
-                                <Bone className="mf-skel-chip" />
-                                <Bone className="mf-skel-chip" />
-                            </div>
-                            <Bone className="mf-skel-line mf-skel-line--title" />
-                            <div className="mf-skel-stage-row__host">
-                                <Bone className="mf-skel-chat-row__avatar" />
-                                <Bone className="mf-skel-line mf-skel-line--caption" />
-                            </div>
-                            <Bone className="mf-skel-line mf-skel-line--body-short" />
+                        <div className="mf-skel-stage-card__topline">
+                            <Bone className="mf-skel-chip" />
+                            <Bone className="mf-skel-chip" />
                         </div>
-                        <Bone className="mf-skel-chip" />
-                    </div>
+                        <Bone className="mf-skel-line mf-skel-line--title" />
+                        <Bone className="mf-skel-line mf-skel-line--body-short" />
+                        <div className="mf-skel-stage-card__host">
+                            <Bone className="mf-skel-chat-row__avatar" />
+                            <Bone className="mf-skel-line mf-skel-line--caption" />
+                        </div>
+                        <div className="mf-skel-stage-card__foot">
+                            <Bone className="mf-skel-chip" />
+                            <Bone className="mf-skel-chip mf-skel-chip--btn" />
+                        </div>
+                    </article>
                 ))}
             </div>
         </div>
@@ -272,6 +285,7 @@ export function StageRoomSkeleton() {
                 <div className="mf-skel-stage-room__status">
                     <Bone className="mf-skel-line mf-skel-line--caption" />
                     <Bone className="mf-skel-chip" />
+                    <Bone className="mf-skel-chip" />
                 </div>
                 <Bone className="mf-skel-line mf-skel-line--display" />
                 <div className="mf-skel-stage-row__host">
@@ -279,8 +293,8 @@ export function StageRoomSkeleton() {
                     <Bone className="mf-skel-line mf-skel-line--body-short" />
                 </div>
             </div>
-            <div className="mf-skel-stage-grid">
-                {Array.from({ length: 4 }, (_, index) => (
+            <div className="mf-skel-stage-grid mf-skel-stage-grid--deck">
+                {Array.from({ length: 6 }, (_, index) => (
                     <div key={index} className="mf-skel-stage-person">
                         <Bone className="mf-skel-stage-person__avatar" />
                         <Bone className="mf-skel-line mf-skel-line--name" />
@@ -289,10 +303,11 @@ export function StageRoomSkeleton() {
                 ))}
             </div>
             <div className="mf-skel-stage-controls">
-                <Bone className="mf-skel-chip mf-skel-chip--btn" />
-                <Bone className="mf-skel-chip mf-skel-chip--btn" />
-                <Bone className="mf-skel-chip mf-skel-chip--btn" />
-                <Bone className="mf-skel-chip mf-skel-chip--btn" />
+                <Bone className="mf-skel-stage-control" />
+                <Bone className="mf-skel-stage-control" />
+                <Bone className="mf-skel-stage-control mf-skel-stage-control--wide" />
+                <Bone className="mf-skel-stage-control" />
+                <Bone className="mf-skel-stage-control" />
             </div>
             <div className="mf-skel-stage-chat">
                 {Array.from({ length: 4 }, (_, index) => (

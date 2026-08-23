@@ -12,6 +12,7 @@ use App\Models\Follow;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ChatService
 {
@@ -93,6 +94,47 @@ class ChatService
         return $channel;
     }
 
+    /**
+     * Resolve a channel for the dedicated thread route, where the inbox is derived
+     * from the channel itself rather than passed in the URL.
+     */
+    public function resolveThreadChannel(User $user, ClubServer $server, string $key): ?Channel
+    {
+        $channel = Channel::query()
+            ->when(
+                ctype_digit($key),
+                fn ($q) => $q->whereKey((int) $key),
+                fn ($q) => $q->where('slug', $key)->where('club_server_id', $server->id),
+            )
+            ->first();
+
+        if ($channel === null) {
+            return null;
+        }
+
+        if ($channel->isClub()) {
+            return (int) $channel->club_server_id === (int) $server->id ? $channel : null;
+        }
+
+        return $channel->hasMember($user) ? $channel : null;
+    }
+
+    public function inboxForChannel(Channel $channel): string
+    {
+        return match (true) {
+            $channel->isDirect() => self::INBOX_FRIENDS,
+            $channel->isGroup() => self::INBOX_GROUPS,
+            default => self::INBOX_CLUB,
+        };
+    }
+
+    public function threadHref(Channel $channel): string
+    {
+        $key = $channel->isClub() ? (string) $channel->slug : (string) $channel->id;
+
+        return '/social/chat/thread/'.urlencode($key);
+    }
+
     private function defaultMemberChannel(User $user, string $inbox): ?Channel
     {
         $scope = $inbox === self::INBOX_FRIENDS ? ChannelScope::Direct : ChannelScope::Group;
@@ -121,7 +163,11 @@ class ChatService
         /** @var list<Message> $newestFirst */
         $newestFirst = Message::query()
             ->where('channel_id', $channel->id)
-            ->with(['author:id,name,handle,fan_id,avatar_path,avatar_emoji'])
+            ->with([
+                'author:id,name,handle,fan_id,avatar_path,avatar_emoji',
+                'replyTo:id,author_id,body',
+                'replyTo.author:id,name',
+            ])
             ->orderByDesc('id')
             ->limit($limit)
             ->get()
@@ -148,6 +194,7 @@ class ChatService
     public function presentMessage(Message $message, ?User $viewer = null): array
     {
         $author = $message->author;
+        $replyTo = $message->replyTo;
 
         return [
             'id' => $message->id,
@@ -164,24 +211,48 @@ class ChatService
                 'avatar_url' => $author->avatar_url,
                 'avatar_emoji' => $author->avatar_emoji,
             ] : null,
+            'reply_to' => $replyTo ? [
+                'id' => $replyTo->id,
+                'body' => Str::limit((string) $replyTo->body, 120),
+                'author_name' => $replyTo->author?->name,
+            ] : null,
         ];
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function presentChannels(ClubServer $server, Channel $active): array
+    public function presentChannels(ClubServer $server, ?Channel $active, ?User $viewer = null): array
     {
-        return $server->channels->map(fn (Channel $channel): array => [
-            'id' => $channel->id,
-            'slug' => $channel->slug,
-            'name' => $channel->name,
-            'topic' => $channel->topic,
-            'scope' => ChannelScope::Club->value,
-            'is_read_only' => $channel->is_read_only,
-            'is_active' => $channel->id === $active->id,
-            'href' => '/social/chat?inbox=club&channel='.urlencode($channel->slug),
-        ])->values()->all();
+        $server->channels->loadMissing(['messages' => fn ($q) => $q->latest('id')->limit(1)]);
+        $server->loadMissing('club');
+
+        // One fanbase per server, so the counts are computed once and shared by every channel row.
+        $club = $server->club;
+        $onlineFans = $club !== null ? User::where('favourite_club_id', $club->id)->online()->count() : 0;
+        $totalFans = $club !== null ? User::where('favourite_club_id', $club->id)->count() : 0;
+
+        return $server->channels->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans): array {
+            $preview = $channel->messages->first();
+
+            return [
+                'id' => $channel->id,
+                'slug' => $channel->slug,
+                'name' => $channel->name,
+                'topic' => $channel->topic,
+                'scope' => ChannelScope::Club->value,
+                'is_read_only' => $channel->is_read_only,
+                'is_active' => $active !== null && $channel->id === $active->id,
+                'href' => $this->threadHref($channel),
+                'online_count' => $onlineFans,
+                'fan_count' => $totalFans,
+                'last_message' => $preview ? [
+                    'body' => $preview->body,
+                    'created_at' => $preview->created_at?->toIso8601String(),
+                    'is_mine' => $viewer !== null && (int) $preview->author_id === (int) $viewer->id,
+                ] : null,
+            ];
+        })->values()->all();
     }
 
     /**
@@ -206,13 +277,15 @@ class ChatService
                 'scope' => ChannelScope::Direct->value,
                 'is_read_only' => $channel->is_read_only,
                 'is_active' => $active !== null && $channel->id === $active->id,
-                'href' => '/social/chat?inbox=friends&channel='.$channel->id,
+                'href' => $this->threadHref($channel),
                 'peer' => $peer ? [
                     'id' => $peer->id,
                     'name' => $peer->name,
                     'handle' => $peer->handle,
                     'avatar_url' => $peer->avatar_url,
                     'avatar_emoji' => $peer->avatar_emoji,
+                    'is_online' => $peer->isOnline(),
+                    'last_seen_at' => $peer->last_seen_at?->toIso8601String(),
                 ] : null,
                 'last_message' => $preview ? [
                     'body' => $preview->body,
@@ -233,6 +306,9 @@ class ChatService
         return $channels->map(function (Channel $channel) use ($viewer, $active): array {
             $preview = $channel->messages->first();
             $memberCount = $channel->memberships->count();
+            $onlineCount = $channel->memberships
+                ->filter(fn ($membership) => $membership->user?->isOnline())
+                ->count();
 
             return [
                 'id' => $channel->id,
@@ -242,8 +318,9 @@ class ChatService
                 'scope' => ChannelScope::Group->value,
                 'is_read_only' => $channel->is_read_only,
                 'is_active' => $active !== null && $channel->id === $active->id,
-                'href' => '/social/chat?inbox=groups&channel='.$channel->id,
+                'href' => $this->threadHref($channel),
                 'member_count' => $memberCount,
+                'online_count' => $onlineCount,
                 'last_message' => $preview ? [
                     'body' => $preview->body,
                     'created_at' => $preview->created_at?->toIso8601String(),
@@ -251,6 +328,34 @@ class ChatService
                 ] : null,
             ];
         })->values()->all();
+    }
+
+    /**
+     * Every conversation the viewer can open, newest first — the desktop chat rail.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function presentRail(User $viewer, int $limit = 16): array
+    {
+        $rows = [
+            ...$this->presentDirectThreads($viewer, null),
+            ...$this->presentGroupThreads($viewer, null),
+        ];
+
+        $viewer->loadMissing('favouriteClub');
+
+        if ($viewer->favouriteClub !== null) {
+            $rows = [
+                ...$rows,
+                ...$this->presentChannels($this->serverForClub($viewer->favouriteClub), null, $viewer),
+            ];
+        }
+
+        // ISO 8601 stamps share one offset here, so a string compare is a time compare.
+        usort($rows, fn (array $a, array $b): int => ($b['last_message']['created_at'] ?? '')
+            <=> ($a['last_message']['created_at'] ?? ''));
+
+        return array_slice($rows, 0, $limit);
     }
 
     /**
@@ -341,7 +446,7 @@ class ChatService
         ];
 
         if ($channel->isDirect()) {
-            $channel->loadMissing(['memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji']);
+            $channel->loadMissing(['memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji,last_seen_at']);
             $peer = $channel->memberships
                 ->first(fn ($membership) => (int) $membership->user_id !== (int) $viewer->id)
                 ?->user;
@@ -354,16 +459,125 @@ class ChatService
                 'handle' => $peer->handle,
                 'avatar_url' => $peer->avatar_url,
                 'avatar_emoji' => $peer->avatar_emoji,
+                'is_online' => $peer->isOnline(),
+                'last_seen_at' => $peer->last_seen_at?->toIso8601String(),
             ] : null;
         }
 
         if ($channel->isGroup()) {
-            $channel->loadMissing('memberships');
-            $base['topic'] = $channel->memberships->count().' members';
-            $base['member_count'] = $channel->memberships->count();
+            $channel->loadMissing('memberships.user:id,last_seen_at');
+            $memberCount = $channel->memberships->count();
+            $onlineCount = $channel->memberships
+                ->filter(fn ($membership) => $membership->user?->isOnline())
+                ->count();
+            $base['topic'] = $memberCount.' members';
+            $base['member_count'] = $memberCount;
+            $base['presence'] = ['scope' => 'group', 'online' => $onlineCount, 'total' => $memberCount];
+        }
+
+        if ($channel->isClub()) {
+            $club = $channel->club();
+            if ($club !== null) {
+                $base['presence'] = [
+                    'scope' => 'club',
+                    'online' => User::where('favourite_club_id', $club->id)->online()->count(),
+                    'total' => User::where('favourite_club_id', $club->id)->count(),
+                ];
+            }
         }
 
         return $base;
+    }
+
+    /**
+     * Roster for the members modal: online first, last-seen on the rest. Fetched lazily
+     * (only when the modal opens) so a large club fanbase costs nothing until then.
+     *
+     * @return array{scope: string, title: ?string, online_count: int, total_count: int, members: list<array<string, mixed>>}
+     */
+    public function presentMembers(Channel $channel, User $viewer): array
+    {
+        if ($channel->isDirect()) {
+            $channel->loadMissing(['memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji,last_seen_at']);
+            $peer = $channel->memberships
+                ->first(fn ($membership) => (int) $membership->user_id !== (int) $viewer->id)
+                ?->user;
+
+            $members = $peer !== null ? [$this->presentMember($peer)] : [];
+
+            return [
+                'scope' => 'direct',
+                'title' => null,
+                'online_count' => $peer?->isOnline() ? 1 : 0,
+                'total_count' => count($members),
+                'members' => $members,
+            ];
+        }
+
+        if ($channel->isGroup()) {
+            $channel->loadMissing('memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji,last_seen_at');
+
+            $users = $channel->memberships
+                ->map(fn ($membership) => $membership->user)
+                ->filter()
+                ->sortBy(fn (User $u) => [$u->isOnline() ? 0 : 1, mb_strtolower((string) $u->name)])
+                ->take(200)
+                ->values();
+
+            return [
+                'scope' => 'group',
+                'title' => 'Members',
+                'online_count' => $users->filter(fn (User $u) => $u->isOnline())->count(),
+                'total_count' => $channel->memberships->count(),
+                'members' => $users->map(fn (User $u) => $this->presentMember($u))->all(),
+            ];
+        }
+
+        // Club: bounded slice (online, then most-recently-seen) with exact counts.
+        $club = $channel->club();
+
+        if ($club === null) {
+            return ['scope' => 'club', 'title' => 'Fans', 'online_count' => 0, 'total_count' => 0, 'members' => []];
+        }
+
+        $columns = ['id', 'name', 'handle', 'fan_id', 'avatar_path', 'avatar_emoji', 'last_seen_at'];
+        $threshold = now()->subMinutes(User::ONLINE_WINDOW_MINUTES);
+
+        $online = User::where('favourite_club_id', $club->id)
+            ->online()
+            ->orderBy('name')
+            ->limit(80)
+            ->get($columns);
+
+        $offline = User::where('favourite_club_id', $club->id)
+            ->where(fn ($q) => $q->whereNull('last_seen_at')->orWhere('last_seen_at', '<', $threshold))
+            ->orderByDesc('last_seen_at')
+            ->limit(80)
+            ->get($columns);
+
+        return [
+            'scope' => 'club',
+            'title' => 'Fans',
+            'online_count' => User::where('favourite_club_id', $club->id)->online()->count(),
+            'total_count' => User::where('favourite_club_id', $club->id)->count(),
+            'members' => $online->concat($offline)->map(fn (User $u) => $this->presentMember($u))->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentMember(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'handle' => $user->handle,
+            'avatar_url' => $user->avatar_url,
+            'avatar_emoji' => $user->avatar_emoji,
+            'is_online' => $user->isOnline(),
+            'last_seen_at' => $user->last_seen_at?->toIso8601String(),
+        ];
     }
 
     /**
@@ -406,7 +620,7 @@ class ChatService
             ->where('scope', $scope)
             ->whereHas('memberships', fn ($q) => $q->where('user_id', $viewer->id))
             ->with([
-                'memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji',
+                'memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji,last_seen_at',
                 'messages' => fn ($q) => $q->latest('id')->limit(1),
             ])
             ->withMax('messages', 'id')

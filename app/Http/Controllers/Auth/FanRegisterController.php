@@ -12,6 +12,8 @@ use App\Services\RegistrationIdentityGuard;
 use App\Services\RegistrationNotificationService;
 use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
+use App\Support\CloudinaryImageStorage;
+use App\Support\SocialRouting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,13 +47,14 @@ class FanRegisterController extends Controller
 
             if (! ApplicationSettings::socialVerificationRequired()
                 || $this->socialAccounts->hasRequiredConnections($request->user())) {
-                return redirect()->intended(route('fan.dashboard'));
+                return redirect()->intended(SocialRouting::url('/'));
             }
 
             return redirect()->route('fan.connect-accounts', ['onboarding' => 1]);
         }
 
-        if ($this->registrationIdentity->hasRegistrationLock($request)) {
+        if ($this->registrationIdentity->enforcementActive()
+            && $this->registrationIdentity->hasRegistrationLock($request)) {
             return Inertia::render('Fan/Auth/Register', [
                 'email' => (string) $request->session()->get('waitlist_email', $request->input('email', '')),
                 'referrer_fan_id' => $this->referralService->resolveReferrerFanId(),
@@ -82,25 +85,25 @@ class FanRegisterController extends Controller
 
         $this->registrationIdentity->assertCanRegister($request, $data['email']);
 
-        $baseUsername = explode('@', $data['email'])[0];
-        $username = $baseUsername;
-        $count = 1;
-        while (User::query()->where('username', $username)->exists()) {
-            $username = $baseUsername.$count++;
-        }
-
         $club = Club::query()
             ->with('league:id,name')
             ->where('name', $data['club'])
             ->first();
 
+        $avatarPath = $request->hasFile('avatar')
+            ? CloudinaryImageStorage::replace(null, $request->file('avatar'), 'avatars')
+            : null;
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'username' => $username,
+            'username' => $data['username'],
             'handle' => null,
             'club' => $club?->name ?? $data['club'],
             'league' => $club?->league?->name,
+            'bio' => $data['bio'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'avatar_path' => $avatarPath,
             'password_hash' => Hash::make($data['password']),
             'auth_provider' => 'password',
             'fan_id' => 'MF-'.strtoupper(Str::random(5)),
@@ -125,7 +128,7 @@ class FanRegisterController extends Controller
             $redirect = ApplicationSettings::socialVerificationRequired()
                 ? redirect()->route('fan.connect-accounts', ['onboarding' => 1])
                     ->with('success', 'Passport created! Connect your accounts to continue.')
-                : redirect()->intended(route('fan.dashboard'))
+                : redirect()->intended(SocialRouting::url('/'))
                     ->with('success', 'Passport created! Welcome to Mad Fan.');
 
             return $redirect->withCookie($this->registrationIdentity->makeLockCookie($user));

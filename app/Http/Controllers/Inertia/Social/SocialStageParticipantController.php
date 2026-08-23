@@ -44,6 +44,17 @@ class SocialStageParticipantController extends Controller
         return back()->with('success', 'Moved back to listeners.');
     }
 
+    public function dismissHand(Request $request, Stage $stage, User $user, StageService $stages): RedirectResponse
+    {
+        $this->authorize('manageSpeakers', $stage);
+
+        /** @var User $host */
+        $host = $request->user();
+        $stages->dismissSpeakRequest($stage, $host, $user);
+
+        return back()->with('success', 'Raise hand cleared.');
+    }
+
     public function mute(Request $request, Stage $stage, StageService $stages): RedirectResponse
     {
         $this->authorize('muteSelf', $stage);

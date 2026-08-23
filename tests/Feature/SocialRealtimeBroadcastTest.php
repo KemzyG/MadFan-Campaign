@@ -118,7 +118,7 @@ test('social chat inertia reports reverb mode when broadcasting is configured', 
         ->get('/social/chat')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('realtime.mode', 'reverb')
             ->has('realtime.note'))
         ->assertSee('window.__MADFAN_REVERB__', false)

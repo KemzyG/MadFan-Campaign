@@ -82,7 +82,7 @@
 | Actions | `EnsureClubChatRooms`, `SendChatMessage` |
 | Service | `ChatService` |
 | Routes | `GET /social/chat`, `POST /social/chat/channels/{channel}/messages` |
-| UI | `resources/js/pages/Social/Chat.jsx` |
+| UI | `resources/js/pages/Social/Chat/` |
 | Realtime | Inertia poll (`realtime.mode = poll`) — Reverb follow-up |
 
 **Env / process notes:** No `REVERB_*` required for this slice. Keep `BROADCAST_CONNECTION=log` (see `.env.example`). When adding Reverb later: install `laravel/reverb`, set `BROADCAST_CONNECTION=reverb`, add `REVERB_*` + `VITE_REVERB_*`, run `php artisan reverb:start` alongside `composer run dev` / Vite.

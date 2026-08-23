@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Support\ApplicationSettings;
+use App\Support\SocialRouting;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 
@@ -32,7 +33,7 @@ test('unverified fans can open social onboarding when email verification is disa
         ->assertOk();
 });
 
-test('registration skips verification mail and lands on the dashboard when disabled', function () {
+test('registration skips verification mail and lands in social when disabled', function () {
     config([
         'auth.email_verification_enabled' => false,
         'registration.unique_ip' => false,
@@ -43,7 +44,7 @@ test('registration skips verification mail and lands on the dashboard when disab
     $this->post('/register', fanRegisterPayload([
         'email' => 'skip-verify@madfan.test',
         'device_fingerprint' => deviceFingerprint('skip-verify-device'),
-    ]))->assertRedirect(route('fan.dashboard'));
+    ]))->assertRedirect(SocialRouting::url('/'));
 
     $this->assertAuthenticated();
 

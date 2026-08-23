@@ -35,7 +35,7 @@ test('onboarded members can send a chat message to their club channel', function
         ->get('/social/chat')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->has('messages.items', 1)
             ->where('messages.items.0.body', 'Floodlights look good tonight.'));
 });

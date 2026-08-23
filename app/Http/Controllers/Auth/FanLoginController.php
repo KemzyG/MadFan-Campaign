@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\RegistrationIdentityGuard;
 use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
+use App\Support\SocialRouting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,6 +93,6 @@ class FanLoginController extends Controller
                 ->route('fan.connect-accounts', ['onboarding' => 1]);
         }
 
-        return redirect()->intended(route('fan.dashboard'));
+        return redirect()->intended(SocialRouting::url('/'));
     }
 }

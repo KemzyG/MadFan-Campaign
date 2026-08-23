@@ -19,6 +19,12 @@ import {
     canApplyRemoteOffer,
     normalizeRemoteDescription,
 } from './stageSdp';
+import { effectiveVolume, subscribeAudioOutput } from './stageAudioOutput';
+
+// Active-speaker detection tuning: RMS above threshold marks "speaking", held for the
+// hangover window so a tile ring doesn't flicker between syllables.
+const SPEAKING_THRESHOLD = 0.04;
+const SPEAKING_HANGOVER_MS = 450;
 
 export function createStageMeshVoiceSession({
     stageId,
@@ -32,6 +38,7 @@ export function createStageMeshVoiceSession({
     /** When false, skip HTTP signal poll (Reverb delivers .signal.created). */
     allowHttpSignals = true,
     onStatus,
+    onActiveSpeakers,
 }) {
     const peers = new Map();
     const seenSignalIds = new Set();
@@ -50,6 +57,12 @@ export function createStageMeshVoiceSession({
     let unlockAudioContext = null;
     /** After a hard mic deny, pause auto getUserMedia until Enable microphone. */
     let micBlocked = false;
+    /** Active-speaker detection: one AnalyserNode per stream + a single rAF loop. */
+    const analyserNodes = new Map();
+    let localAnalyser = null;
+    let speakerRafHandle = null;
+    let lastSpeakingKey = '';
+    let unsubscribeAudioOutput = null;
 
     function normalizeIceServers(servers) {
         if (Array.isArray(servers) && servers.length > 0) {
@@ -174,6 +187,7 @@ export function createStageMeshVoiceSession({
         }
         localStream = result.stream;
         micBlocked = false;
+        trackLocalAnalyser();
         localStream.getAudioTracks().forEach((t) => {
             t.enabled = !isMuted;
         });
@@ -214,11 +228,12 @@ export function createStageMeshVoiceSession({
             document.body.appendChild(audio);
         }
         audio.muted = false;
-        audio.volume = 1;
+        audio.volume = effectiveVolume();
         const sameStream = audio.srcObject === stream;
         if (!sameStream) {
             audio.srcObject = stream;
         }
+        trackRemoteAnalyser(peerUserId, stream);
         if (sameStream && !audio.paused) {
             return;
         }
@@ -229,12 +244,159 @@ export function createStageMeshVoiceSession({
         return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
     }
 
+    /** Re-apply the listener's chosen output volume (0 when deafened) to every remote element. */
+    function applyOutputVolume() {
+        const volume = effectiveVolume();
+        listRemoteAudios().forEach((audio) => {
+            audio.volume = volume;
+        });
+    }
+
+    // --- Active-speaker detection -------------------------------------------------
+    // Each stream feeds an AnalyserNode (never connected to destination, so this does
+    // not double-play audio). A single rAF loop computes RMS and emits the set of
+    // user ids currently talking. Output volume/deafen does not affect detection.
+
+    function makeAnalyserNode(stream) {
+        const ctx = ensureUnlockAudioContext();
+        if (!ctx || !stream) {
+            return null;
+        }
+        try {
+            const source = ctx.createMediaStreamSource(stream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 512;
+            analyser.smoothingTimeConstant = 0.6;
+            source.connect(analyser);
+            return { source, analyser, data: new Uint8Array(analyser.fftSize), lastLoud: 0, streamId: stream.id ?? null };
+        } catch (err) {
+            console.warn('stage analyser', err);
+            return null;
+        }
+    }
+
+    function trackRemoteAnalyser(peerUserId, stream) {
+        const existing = analyserNodes.get(peerUserId);
+        if (existing) {
+            if (existing.streamId === (stream?.id ?? null)) {
+                return;
+            }
+            try {
+                existing.source.disconnect();
+            } catch {
+                // ignore
+            }
+            analyserNodes.delete(peerUserId);
+        }
+        const node = makeAnalyserNode(stream);
+        if (node) {
+            analyserNodes.set(peerUserId, node);
+            ensureSpeakerLoop();
+        }
+    }
+
+    function untrackAnalyser(peerUserId) {
+        const node = analyserNodes.get(peerUserId);
+        if (node) {
+            try {
+                node.source.disconnect();
+            } catch {
+                // ignore
+            }
+            analyserNodes.delete(peerUserId);
+        }
+    }
+
+    function trackLocalAnalyser() {
+        if (!localStream) {
+            return;
+        }
+        if (localAnalyser?.streamId === localStream.id) {
+            return;
+        }
+        teardownLocalAnalyser();
+        localAnalyser = makeAnalyserNode(localStream);
+        if (localAnalyser) {
+            ensureSpeakerLoop();
+        }
+    }
+
+    function teardownLocalAnalyser() {
+        if (localAnalyser) {
+            try {
+                localAnalyser.source.disconnect();
+            } catch {
+                // ignore
+            }
+            localAnalyser = null;
+        }
+    }
+
+    function computeRms(node) {
+        if (!node?.analyser) {
+            return 0;
+        }
+        node.analyser.getByteTimeDomainData(node.data);
+        let sum = 0;
+        const { data } = node;
+        for (let i = 0; i < data.length; i += 1) {
+            const v = (data[i] - 128) / 128;
+            sum += v * v;
+        }
+        return Math.sqrt(sum / data.length);
+    }
+
+    function ensureSpeakerLoop() {
+        if (speakerRafHandle != null || stopped) {
+            return;
+        }
+        speakerRafHandle = window.requestAnimationFrame(speakerTick);
+    }
+
+    function speakerTick() {
+        speakerRafHandle = null;
+        if (stopped) {
+            return;
+        }
+        const now = window.performance?.now?.() ?? Date.now();
+        const speaking = [];
+
+        if (localAnalyser && iAmOnStage && !isMuted) {
+            if (computeRms(localAnalyser) >= SPEAKING_THRESHOLD) {
+                localAnalyser.lastLoud = now;
+            }
+            if (now - localAnalyser.lastLoud < SPEAKING_HANGOVER_MS) {
+                speaking.push(Number(myUserId));
+            }
+        }
+        for (const [peerId, node] of analyserNodes) {
+            if (computeRms(node) >= SPEAKING_THRESHOLD) {
+                node.lastLoud = now;
+            }
+            if (now - node.lastLoud < SPEAKING_HANGOVER_MS) {
+                speaking.push(Number(peerId));
+            }
+        }
+
+        const key = speaking.slice().sort((a, b) => a - b).join(',');
+        if (key !== lastSpeakingKey) {
+            lastSpeakingKey = key;
+            if (typeof onActiveSpeakers === 'function') {
+                onActiveSpeakers(speaking);
+            }
+        }
+
+        if (!stopped && (analyserNodes.size > 0 || localAnalyser)) {
+            speakerRafHandle = window.requestAnimationFrame(speakerTick);
+        }
+    }
+
     function playRemoteAudio(audio) {
         if (!audio) {
             return Promise.resolve(false);
         }
         audio.muted = false;
-        audio.volume = 1;
+        audio.volume = effectiveVolume();
         if (!audio.paused && audio.srcObject) {
             playbackUnlocked = true;
             return Promise.resolve(true);
@@ -347,6 +509,7 @@ export function createStageMeshVoiceSession({
         iceQueues.delete(peerUserId);
         pendingRemoteIce.delete(peerUserId);
         removeRemoteAudio(peerUserId);
+        untrackAnalyser(peerUserId);
     }
 
     function resetAllPeers() {
@@ -701,6 +864,9 @@ export function createStageMeshVoiceSession({
 
     function start() {
         if (stopped) return;
+        if (!unsubscribeAudioOutput) {
+            unsubscribeAudioOutput = subscribeAudioOutput(() => applyOutputVolume());
+        }
         if (!voiceEnabled) {
             setStatus('Waiting for host to start voice');
             return;
@@ -729,6 +895,27 @@ export function createStageMeshVoiceSession({
         if (localStream) {
             localStream.getTracks().forEach((t) => t.stop());
             localStream = null;
+        }
+        if (speakerRafHandle != null) {
+            window.cancelAnimationFrame(speakerRafHandle);
+            speakerRafHandle = null;
+        }
+        teardownLocalAnalyser();
+        analyserNodes.forEach((node) => {
+            try {
+                node.source.disconnect();
+            } catch {
+                // ignore
+            }
+        });
+        analyserNodes.clear();
+        lastSpeakingKey = '';
+        if (typeof onActiveSpeakers === 'function') {
+            onActiveSpeakers([]);
+        }
+        if (unsubscribeAudioOutput) {
+            unsubscribeAudioOutput();
+            unsubscribeAudioOutput = null;
         }
         if (unlockAudioContext) {
             try {
@@ -789,6 +976,7 @@ export function createStageMeshVoiceSession({
                 localStream.getTracks().forEach((t) => t.stop());
                 localStream = null;
             }
+            teardownLocalAnalyser();
             window.clearTimeout(pollTimer);
             window.clearInterval(syncTimer);
             if (iceFlushTimer) window.clearTimeout(iceFlushTimer);

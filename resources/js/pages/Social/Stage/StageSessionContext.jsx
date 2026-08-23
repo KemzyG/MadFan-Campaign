@@ -10,9 +10,19 @@ import {
 } from 'react';
 import { getEcho, leaveEchoChannel, subscribeEchoConnection } from '../../../echo';
 import { requestStageMicrophone } from './stageMicPermission';
+import {
+    getAudioOutput,
+    setDeafened as setOutputDeafened,
+    setVolume as setOutputVolume,
+    subscribeAudioOutput,
+    toggleDeafened as toggleOutputDeafened,
+} from './stageAudioOutput';
 import { createStageVoiceSession } from './useStageVoice';
 
 const StageSessionContext = createContext(null);
+
+// How long a floating reaction emoji lives before it's removed from the layer.
+const REACTION_TTL_MS = 4200;
 
 function csrfHeaders() {
     const headers = {
@@ -30,6 +40,14 @@ function csrfHeaders() {
     return headers;
 }
 
+/** True when `path` is the room route for `stageId` (works in `/social` and subdomain modes). */
+function isStageRoomPath(path, stageId) {
+    if (!stageId) {
+        return false;
+    }
+    return String(path).split('?')[0].endsWith(`/stage/${stageId}`);
+}
+
 function roomFromPageProps(props) {
     if (!props?.stage?.id) {
         return null;
@@ -39,6 +57,9 @@ function roomFromPageProps(props) {
         stage: props.stage,
         participants: props.participants || [],
         messages: props.messages || [],
+        pinned_message: props.pinned_message ?? null,
+        reactions: props.reactions || [],
+        reaction_options: props.reaction_options || [],
         me: props.me ?? null,
         voice: props.voice ?? null,
         realtime: props.realtime ?? null,
@@ -49,12 +70,17 @@ function roomFromPageProps(props) {
 
 export function StageSessionProvider({ children }) {
     const [activeStageId, setActiveStageId] = useState(null);
-    const [modalOpen, setModalOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
     const [chatUnread, setChatUnread] = useState(0);
     const [room, setRoom] = useState(null);
     const [voiceStatus, setVoiceStatus] = useState('Idle');
     const [loading, setLoading] = useState(false);
+    const [reactions, setReactions] = useState([]);
+    const [activeSpeakers, setActiveSpeakers] = useState(() => new Set());
+    const [audioOutputState, setAudioOutputState] = useState(getAudioOutput);
+    const [currentPath, setCurrentPath] = useState(() =>
+        typeof window !== 'undefined' ? window.location.pathname : '',
+    );
 
     const roomRef = useRef(null);
     const voiceRef = useRef(null);
@@ -66,6 +92,9 @@ export function StageSessionProvider({ children }) {
     const pendingUnlockRef = useRef(false);
     const unlockVoicePlaybackRef = useRef(() => {});
     const echoConnectedRef = useRef(false);
+    const reactionSeqRef = useRef(0);
+    const reactionTimersRef = useRef(new Map());
+    const seenReactionIdsRef = useRef(new Set());
     const [echoConnected, setEchoConnected] = useState(false);
 
     useEffect(() => {
@@ -83,6 +112,9 @@ export function StageSessionProvider({ children }) {
     useEffect(() => {
         echoConnectedRef.current = echoConnected;
     }, [echoConnected]);
+
+    // Mirror the persisted audio-output store into React state for the audio menu UI.
+    useEffect(() => subscribeAudioOutput(setAudioOutputState), []);
 
     useEffect(() => {
         const shell = document.querySelector('.mf-stage');
@@ -111,6 +143,57 @@ export function StageSessionProvider({ children }) {
         return subscribeEchoConnection(setEchoConnected);
     }, [room?.realtime?.mode]);
 
+    // Float a single emoji over the deck and schedule its removal.
+    const animateEmoji = useCallback((emoji) => {
+        if (!emoji) {
+            return;
+        }
+        reactionSeqRef.current += 1;
+        const key = `rx-${reactionSeqRef.current}`;
+        setReactions((prev) => {
+            const trimmed = prev.length >= 40 ? prev.slice(prev.length - 39) : prev;
+            return [...trimmed, { key, emoji }];
+        });
+        const timer = window.setTimeout(() => {
+            setReactions((prev) => prev.filter((r) => r.key !== key));
+            reactionTimersRef.current.delete(key);
+        }, REACTION_TTL_MS);
+        reactionTimersRef.current.set(key, timer);
+    }, []);
+
+    // Merge server reaction rows (poll + Echo). Each id animates at most once; my own
+    // reactions are skipped here because the control bar already animated them locally.
+    // On a fresh join the existing window is seeded (marked seen) so history doesn't burst.
+    const ingestReactions = useCallback(
+        (list, myId, { seed = false } = {}) => {
+            if (!Array.isArray(list) || list.length === 0) {
+                return;
+            }
+            for (const reaction of list) {
+                const id = reaction?.id;
+                if (id == null || seenReactionIdsRef.current.has(id)) {
+                    continue;
+                }
+                seenReactionIdsRef.current.add(id);
+                if (seed) {
+                    continue;
+                }
+                if (myId != null && Number(reaction.user_id) === Number(myId)) {
+                    continue;
+                }
+                animateEmoji(reaction.emoji);
+            }
+        },
+        [animateEmoji],
+    );
+
+    const clearReactions = useCallback(() => {
+        reactionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+        reactionTimersRef.current.clear();
+        seenReactionIdsRef.current.clear();
+        setReactions([]);
+    }, []);
+
     const stopVoice = useCallback(() => {
         if (!voiceRef.current) {
             return;
@@ -118,6 +201,11 @@ export function StageSessionProvider({ children }) {
         voiceRef.current.stop();
         voiceRef.current = null;
         setVoiceStatus('Idle');
+        setActiveSpeakers(new Set());
+    }, []);
+
+    const handleActiveSpeakers = useCallback((ids) => {
+        setActiveSpeakers(new Set((ids || []).map((id) => Number(id))));
     }, []);
 
     const clearSession = useCallback(() => {
@@ -128,42 +216,43 @@ export function StageSessionProvider({ children }) {
         roomPollBackoffRef.current = null;
         pendingUnlockRef.current = false;
         stopVoice();
+        clearReactions();
         setActiveStageId(null);
-        setModalOpen(false);
         setChatOpen(false);
         setChatUnread(0);
         seenMessageCountRef.current = 0;
         setRoom(null);
         setLoading(false);
-    }, [stopVoice]);
+    }, [stopVoice, clearReactions]);
 
-    const applyRoom = useCallback((nextRoom, { openModal = false } = {}) => {
-        if (!nextRoom?.stage?.id) {
-            return;
-        }
+    const applyRoom = useCallback(
+        (nextRoom) => {
+            if (!nextRoom?.stage?.id) {
+                return;
+            }
 
-        const messageCount = nextRoom.messages?.length ?? 0;
-        const isNewStage = activeStageIdRef.current !== nextRoom.stage.id;
+            const messageCount = nextRoom.messages?.length ?? 0;
+            const isNewStage = activeStageIdRef.current !== nextRoom.stage.id;
 
-        if (isNewStage) {
-            seenMessageCountRef.current = messageCount;
-            setChatUnread(0);
-            setChatOpen(false);
-        } else if (chatOpenRef.current) {
-            seenMessageCountRef.current = messageCount;
-            setChatUnread(0);
-        } else {
-            setChatUnread(Math.max(0, messageCount - seenMessageCountRef.current));
-        }
+            if (isNewStage) {
+                seenMessageCountRef.current = messageCount;
+                setChatUnread(0);
+                setChatOpen(false);
+            } else if (chatOpenRef.current) {
+                seenMessageCountRef.current = messageCount;
+                setChatUnread(0);
+            } else {
+                setChatUnread(Math.max(0, messageCount - seenMessageCountRef.current));
+            }
 
-        setActiveStageId(nextRoom.stage.id);
-        setRoom(nextRoom);
-        setLoading(false);
+            ingestReactions(nextRoom.reactions, nextRoom.me?.user_id ?? null, { seed: isNewStage });
 
-        if (openModal) {
-            setModalOpen(true);
-        }
-    }, []);
+            setActiveStageId(nextRoom.stage.id);
+            setRoom(nextRoom);
+            setLoading(false);
+        },
+        [ingestReactions],
+    );
 
     const enterFromPage = useCallback(
         (pageProps) => {
@@ -172,22 +261,25 @@ export function StageSessionProvider({ children }) {
                 return;
             }
             pendingUnlockRef.current = true;
-            applyRoom(next, { openModal: true });
+            applyRoom(next);
             unlockVoicePlaybackRef.current?.();
         },
         [applyRoom],
     );
 
-    const syncFromPage = useCallback((pageProps) => {
-        const next = roomFromPageProps(pageProps);
-        if (!next) {
-            return;
-        }
-        if (activeStageIdRef.current && activeStageIdRef.current !== next.stage.id) {
-            return;
-        }
-        applyRoom(next);
-    }, [applyRoom]);
+    const syncFromPage = useCallback(
+        (pageProps) => {
+            const next = roomFromPageProps(pageProps);
+            if (!next) {
+                return;
+            }
+            if (activeStageIdRef.current && activeStageIdRef.current !== next.stage.id) {
+                return;
+            }
+            applyRoom(next);
+        },
+        [applyRoom],
+    );
 
     const patchRoom = useCallback((updater) => {
         setRoom((prev) => {
@@ -226,10 +318,9 @@ export function StageSessionProvider({ children }) {
 
     unlockVoicePlaybackRef.current = unlockVoicePlayback;
 
-    const openModal = useCallback(() => {
-        setModalOpen(true);
-        unlockVoicePlaybackRef.current?.();
-    }, []);
+    // Reactions the local user throws: animate instantly, no round-trip wait.
+    const pushReaction = useCallback((emoji) => animateEmoji(emoji), [animateEmoji]);
+
     const closeChat = useCallback(() => setChatOpen(false), []);
     const openChat = useCallback(() => {
         const count = roomRef.current?.messages?.length ?? 0;
@@ -237,34 +328,39 @@ export function StageSessionProvider({ children }) {
         setChatUnread(0);
         setChatOpen(true);
     }, []);
-    const minimize = useCallback(() => {
-        setChatOpen(false);
-        setModalOpen(false);
-    }, []);
-    const reopen = useCallback(() => {
-        if (activeStageIdRef.current) {
-            setModalOpen(true);
-            unlockVoicePlaybackRef.current?.();
-        }
-    }, []);
 
-    const fetchRoom = useCallback(async (stageId) => {
-        const res = await fetch(`/social/stage/${stageId}/room`, {
-            credentials: 'same-origin',
-            headers: csrfHeaders(),
-        });
-        if (res.status === 401 || res.status === 403) {
-            clearSession();
-            return { error: res.status };
-        }
-        if (res.status === 429) {
-            return { error: 429 };
-        }
-        if (!res.ok) {
-            return { error: res.status };
-        }
-        return { data: await res.json() };
-    }, [clearSession]);
+    // Audio-output controls for the in-room audio menu (voice hooks read the store directly).
+    const audioOutput = useMemo(
+        () => ({
+            volume: audioOutputState.volume,
+            deafened: audioOutputState.deafened,
+            setVolume: setOutputVolume,
+            setDeafened: setOutputDeafened,
+            toggleDeafened: toggleOutputDeafened,
+        }),
+        [audioOutputState],
+    );
+
+    const fetchRoom = useCallback(
+        async (stageId) => {
+            const res = await fetch(`/social/stage/${stageId}/room`, {
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
+            });
+            if (res.status === 401 || res.status === 403) {
+                clearSession();
+                return { error: res.status };
+            }
+            if (res.status === 429) {
+                return { error: 429 };
+            }
+            if (!res.ok) {
+                return { error: res.status };
+            }
+            return { data: await res.json() };
+        },
+        [clearSession],
+    );
 
     // Poll room while session is active — skipped when Reverb Echo is connected/healthy.
     useEffect(() => {
@@ -331,6 +427,9 @@ export function StageSessionProvider({ children }) {
                 stage: data.stage,
                 participants: data.participants || [],
                 messages: data.messages || [],
+                pinned_message: data.pinned_message ?? null,
+                reactions: data.reactions || [],
+                reaction_options: data.reaction_options || [],
                 me: data.me ?? null,
                 voice: data.voice ?? null,
                 realtime: data.realtime ?? null,
@@ -352,7 +451,7 @@ export function StageSessionProvider({ children }) {
         };
     }, [activeStageId, room?.poll_ms, room?.realtime?.mode, echoConnected, applyRoom, clearSession, fetchRoom]);
 
-    // Prefer Reverb for stage messages / signals / room changes; poll remains as fallback.
+    // Prefer Reverb for stage messages / signals / reactions / room changes; poll is fallback.
     useEffect(() => {
         if (!activeStageId || room?.realtime?.mode !== 'reverb') {
             return undefined;
@@ -378,6 +477,9 @@ export function StageSessionProvider({ children }) {
                 stage: data.stage,
                 participants: data.participants || [],
                 messages: data.messages || [],
+                pinned_message: data.pinned_message ?? null,
+                reactions: data.reactions || [],
+                reaction_options: data.reaction_options || [],
                 me: data.me ?? null,
                 voice: data.voice ?? null,
                 realtime: data.realtime ?? null,
@@ -412,6 +514,13 @@ export function StageSessionProvider({ children }) {
                 }
                 voiceRef.current?.ingestSignals?.([signal]);
             })
+            .listen('.reaction.created', (payload) => {
+                const reaction = payload?.reaction;
+                if (!reaction?.emoji) {
+                    return;
+                }
+                ingestReactions([reaction], roomRef.current?.me?.user_id ?? null);
+            })
             .listen('.room.updated', () => {
                 refreshRoom();
             });
@@ -419,12 +528,13 @@ export function StageSessionProvider({ children }) {
         return () => {
             channel.stopListening('.message.created');
             channel.stopListening('.signal.created');
+            channel.stopListening('.reaction.created');
             channel.stopListening('.room.updated');
             leaveEchoChannel(name);
         };
-    }, [activeStageId, room?.realtime?.mode, applyRoom, clearSession, fetchRoom, patchRoom]);
+    }, [activeStageId, room?.realtime?.mode, applyRoom, clearSession, fetchRoom, patchRoom, ingestReactions]);
 
-    // Keep Stage voice mounted for the life of the session (modal open or minimized).
+    // Keep Stage voice mounted for the life of the session (on the room route or off it).
     useEffect(() => {
         const stage = room?.stage;
         const me = room?.me;
@@ -461,6 +571,7 @@ export function StageSessionProvider({ children }) {
                 iceServers: room?.voice?.ice_servers || null,
                 allowHttpSignals,
                 onStatus: setVoiceStatus,
+                onActiveSpeakers: handleActiveSpeakers,
             });
             session.stageId = stage.id;
             voiceRef.current = session;
@@ -493,6 +604,7 @@ export function StageSessionProvider({ children }) {
         room?.realtime?.mode,
         echoConnected,
         stopVoice,
+        handleActiveSpeakers,
     ]);
 
     // If autoplay is blocked, retry on the next page interaction (not a dedicated button).
@@ -519,21 +631,16 @@ export function StageSessionProvider({ children }) {
         };
     }, [activeStageId, room?.stage?.voice_enabled, voiceStatus]);
 
-    // Minimize when navigating away from the Stage show route (keep listening).
+    // Track the current route; drop chat-open when navigating off the room (keep listening).
     useEffect(() => {
         const remove = router.on('success', (event) => {
-            const stageId = activeStageIdRef.current;
-            if (!stageId) {
-                return;
-            }
-
             const nextUrl = event.detail?.page?.url || '';
             const path = String(nextUrl).split('?')[0];
-            const stillOnShow = path === `/social/stage/${stageId}`;
+            setCurrentPath(path);
 
-            if (!stillOnShow) {
+            const stageId = activeStageIdRef.current;
+            if (stageId && !isStageRoomPath(path, stageId)) {
                 setChatOpen(false);
-                setModalOpen(false);
             }
         });
 
@@ -545,6 +652,8 @@ export function StageSessionProvider({ children }) {
         if (pollTimerRef.current) {
             window.clearTimeout(pollTimerRef.current);
         }
+        reactionTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+        reactionTimersRef.current.clear();
         voiceRef.current?.stop();
     }, []);
 
@@ -562,24 +671,26 @@ export function StageSessionProvider({ children }) {
         setChatUnread(Math.max(0, messageCount - seenMessageCountRef.current));
     }, [activeStageId, room?.messages?.length, chatOpen, room]);
 
+    const isOnStageRoute = Boolean(activeStageId) && isStageRoomPath(currentPath, activeStageId);
+
     const api = useMemo(
         () => ({
             activeStageId,
-            modalOpen,
             chatOpen,
             chatUnread,
-            minimized: Boolean(activeStageId) && !modalOpen,
+            isOnStageRoute,
             room,
+            reactions,
+            activeSpeakers,
+            audioOutput,
             voiceStatus,
             loading,
             enterFromPage,
             syncFromPage,
             patchRoom,
-            openModal,
+            pushReaction,
             openChat,
             closeChat,
-            minimize,
-            reopen,
             clearSession,
             setLoading,
             unlockVoicePlayback,
@@ -587,20 +698,21 @@ export function StageSessionProvider({ children }) {
         }),
         [
             activeStageId,
-            modalOpen,
             chatOpen,
             chatUnread,
+            isOnStageRoute,
             room,
+            reactions,
+            activeSpeakers,
+            audioOutput,
             voiceStatus,
             loading,
             enterFromPage,
             syncFromPage,
             patchRoom,
-            openModal,
+            pushReaction,
             openChat,
             closeChat,
-            minimize,
-            reopen,
             clearSession,
             unlockVoicePlayback,
             retryMicAccess,

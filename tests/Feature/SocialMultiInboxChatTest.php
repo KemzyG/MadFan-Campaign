@@ -13,7 +13,7 @@ test('chat page exposes club friends and groups inboxes', function () {
         ->get('/social/chat')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('inbox', 'club')
             ->has('channels', 2)
             ->has('messages.items', 0)
@@ -25,7 +25,7 @@ test('chat page exposes club friends and groups inboxes', function () {
         ->get('/social/chat?inbox=friends')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('inbox', 'friends')
             ->where('channel', null));
 
@@ -33,7 +33,7 @@ test('chat page exposes club friends and groups inboxes', function () {
         ->get('/social/chat?inbox=groups')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('inbox', 'groups')
             ->where('channel', null));
 });
@@ -71,7 +71,7 @@ test('fans can open a friends direct chat and send left-right messages', functio
         ->get('/social/chat?inbox=friends&channel='.$channel->id)
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Chat')
+            ->component('Social/Chat/Index')
             ->where('inbox', 'friends')
             ->where('channel.id', $channel->id)
             ->has('messages.items', 1)

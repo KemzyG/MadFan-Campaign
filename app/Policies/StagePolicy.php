@@ -63,6 +63,32 @@ class StagePolicy
         return $this->end($user, $stage);
     }
 
+    /**
+     * Host-only live edit of title/description/toggles/backdrop.
+     */
+    public function update(User $user, Stage $stage): bool
+    {
+        return $this->end($user, $stage);
+    }
+
+    /**
+     * Pinning a room message is a host moderation action.
+     */
+    public function pin(User $user, Stage $stage): bool
+    {
+        return $this->manageSpeakers($user, $stage);
+    }
+
+    /**
+     * Reactions are the quiet channel — allowed even when room chat is off.
+     */
+    public function react(User $user, Stage $stage): bool
+    {
+        return $this->canAccessStageNetwork($user)
+            && $stage->status === StageStatus::Live
+            && $this->activeParticipant($stage, $user) !== null;
+    }
+
     public function sendMessage(User $user, Stage $stage): bool
     {
         return $this->canAccessStageNetwork($user)
