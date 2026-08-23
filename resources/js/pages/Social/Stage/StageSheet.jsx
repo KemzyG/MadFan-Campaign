@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { IconClose } from './StageIcons';
 
 /**
@@ -42,7 +43,11 @@ export default function StageSheet({
         return null;
     }
 
-    return (
+    // Portal to <body> so the sheet escapes the page's stacking context. The
+    // Stage lobby/room run a `mf-page-in` animation (transform + opacity), which
+    // makes them stacking contexts and would otherwise trap this fixed overlay
+    // *below* sibling chrome like the bottom tab bar and hero.
+    return createPortal(
         <div className={`mf-sheet mf-sheet--stage ${className}`.trim()} role="presentation">
             <button type="button" className="mf-sheet__backdrop" aria-label="Close" onClick={onClose} />
             <div
@@ -79,6 +84,7 @@ export default function StageSheet({
 
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

@@ -74,7 +74,14 @@ class FanLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return SurfaceRedirect::to($request, route('fan.campaign'));
+        // Land on the fan login screen. On subdomains that's social.<root>/login;
+        // single-host has no /social/login route, so fall back to the campaign
+        // /login there. SurfaceRedirect keeps the cross-host hop CORS-safe.
+        $loginUrl = SocialRouting::usesSubdomain()
+            ? SocialRouting::url('login')
+            : route('login');
+
+        return SurfaceRedirect::to($request, $loginUrl);
     }
 
     private function redirectAuthenticatedFan(Request $request): SymfonyResponse
