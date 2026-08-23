@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Support\SocialRouting;
-use Illuminate\Http\RedirectResponse;
+use App\Support\SurfaceRedirect;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class EmailVerificationNotificationController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): SymfonyResponse
     {
         if ($request->user()?->hasVerifiedEmail()) {
-            return redirect()->intended(SocialRouting::url('/'));
+            return SurfaceRedirect::intended($request, SocialRouting::url('/'));
         }
 
         $request->user()?->sendEmailVerificationNotification();
