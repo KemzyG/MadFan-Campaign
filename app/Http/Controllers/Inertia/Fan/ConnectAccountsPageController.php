@@ -7,19 +7,20 @@ use App\Services\Fan\FanPageDataService;
 use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
 use App\Support\SocialRouting;
-use Illuminate\Http\RedirectResponse;
+use App\Support\SurfaceRedirect;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ConnectAccountsPageController extends Controller
 {
-    public function index(Request $request, SocialAccountService $socialAccounts, FanPageDataService $data): Response|RedirectResponse
+    public function index(Request $request, SocialAccountService $socialAccounts, FanPageDataService $data): Response|SymfonyResponse
     {
         $user = $request->user();
 
         if (! ApplicationSettings::socialVerificationRequired()) {
-            return redirect()->to(SocialRouting::url('/'));
+            return SurfaceRedirect::to($request, SocialRouting::url('/'));
         }
 
         $onboarding = $request->boolean('onboarding') || $request->session()->get('onboarding_required', false);
@@ -28,14 +29,14 @@ class ConnectAccountsPageController extends Controller
         $requiredComplete = $connected['required_accounts_complete'];
 
         if ($requiredComplete && ! $manage && ! $onboarding) {
-            return redirect()->to(SocialRouting::url('/'));
+            return SurfaceRedirect::to($request, SocialRouting::url('/'));
         }
 
         if ($requiredComplete && $onboarding) {
             $request->session()->forget('onboarding_required');
+            $request->session()->flash('success', 'You\'re all set! Welcome to Mad Fan.');
 
-            return redirect()->intended(SocialRouting::url('/'))
-                ->with('success', 'You\'re all set! Welcome to Mad Fan.');
+            return SurfaceRedirect::intended($request, SocialRouting::url('/'));
         }
 
         return Inertia::render('Fan/ConnectAccounts', [

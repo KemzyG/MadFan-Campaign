@@ -14,13 +14,14 @@ use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
 use App\Support\CloudinaryImageStorage;
 use App\Support\SocialRouting;
-use Illuminate\Http\RedirectResponse;
+use App\Support\SurfaceRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class FanRegisterController extends Controller
 {
@@ -32,7 +33,7 @@ class FanRegisterController extends Controller
         protected RegistrationIdentityGuard $registrationIdentity,
     ) {}
 
-    public function create(Request $request): Response|RedirectResponse
+    public function create(Request $request): Response|SymfonyResponse
     {
         if (! ApplicationSettings::registrationEnabled()) {
             return redirect()
@@ -47,7 +48,7 @@ class FanRegisterController extends Controller
 
             if (! ApplicationSettings::socialVerificationRequired()
                 || $this->socialAccounts->hasRequiredConnections($request->user())) {
-                return redirect()->intended(SocialRouting::url('/'));
+                return SurfaceRedirect::intended($request, SocialRouting::url('/'));
             }
 
             return redirect()->route('fan.connect-accounts', ['onboarding' => 1]);
@@ -73,7 +74,7 @@ class FanRegisterController extends Controller
         ]);
     }
 
-    public function store(FanRegisterRequest $request): RedirectResponse
+    public function store(FanRegisterRequest $request): SymfonyResponse
     {
         if (! ApplicationSettings::registrationEnabled()) {
             return redirect()
@@ -125,13 +126,19 @@ class FanRegisterController extends Controller
         }
 
         if (! config('auth.email_verification_enabled')) {
-            $redirect = ApplicationSettings::socialVerificationRequired()
-                ? redirect()->route('fan.connect-accounts', ['onboarding' => 1])
+            if (ApplicationSettings::socialVerificationRequired()) {
+                return redirect()->route('fan.connect-accounts', ['onboarding' => 1])
                     ->with('success', 'Passport created! Connect your accounts to continue.')
-                : redirect()->intended(SocialRouting::url('/'))
-                    ->with('success', 'Passport created! Welcome to Mad Fan.');
+                    ->withCookie($this->registrationIdentity->makeLockCookie($user));
+            }
 
-            return $redirect->withCookie($this->registrationIdentity->makeLockCookie($user));
+            // The social home lives on another origin, so flash to the shared
+            // session and let Inertia do a full-page visit instead of a doomed
+            // cross-origin 302 that the browser's CORS check would kill.
+            $request->session()->flash('success', 'Passport created! Welcome to Mad Fan.');
+
+            return SurfaceRedirect::intended($request, SocialRouting::url('/'))
+                ->withCookie($this->registrationIdentity->makeLockCookie($user));
         }
 
         return redirect()

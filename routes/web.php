@@ -208,6 +208,16 @@ if ($socialDomain !== null) {
         $mountSocial('social', 'api/social', false);
     });
 
+    // Session actions the social SPA posts to on its own origin. The named
+    // `logout` route stays on the campaign host (route('logout')); this unnamed
+    // twin just lets social.<root>/logout resolve so the "Sign out" button isn't
+    // a 404. The shared session cookie means logging out here logs out everywhere.
+    Route::domain($socialDomain)
+        ->middleware(['app.maintenance', 'auth'])
+        ->group(function (): void {
+            Route::post('/logout', [FanLoginController::class, 'destroy']);
+        });
+
     // Old single-host bookmarks: /social/* → social subdomain clean URL.
     $legacySocialRedirect = function (): void {
         Route::any('/social/{path?}', function (?string $path = null) {

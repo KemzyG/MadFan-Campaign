@@ -8,12 +8,13 @@ use App\Services\RegistrationIdentityGuard;
 use App\Services\SocialAccountService;
 use App\Support\ApplicationSettings;
 use App\Support\SocialRouting;
-use Illuminate\Http\RedirectResponse;
+use App\Support\SurfaceRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class FanLoginController extends Controller
 {
@@ -22,7 +23,7 @@ class FanLoginController extends Controller
         protected RegistrationIdentityGuard $registrationIdentity,
     ) {}
 
-    public function create(Request $request): Response|RedirectResponse
+    public function create(Request $request): Response|SymfonyResponse
     {
         if ($request->user()) {
             return $this->redirectAuthenticatedFan($request);
@@ -31,7 +32,7 @@ class FanLoginController extends Controller
         return Inertia::render('Fan/Auth/Login');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): SymfonyResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -50,7 +51,7 @@ class FanLoginController extends Controller
         $user?->update(['last_login_at' => now()]);
 
         $redirect = $user?->hasAnyRole(User::ADMIN_ROLES)
-            ? redirect()->intended(route('admin.dashboard'))
+            ? SurfaceRedirect::intended($request, route('admin.dashboard'))
             : $this->redirectAuthenticatedFan($request);
 
         if ($user instanceof User && ! $user->hasAnyRole(User::ADMIN_ROLES)) {
@@ -60,7 +61,7 @@ class FanLoginController extends Controller
         return $redirect;
     }
 
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): SymfonyResponse
     {
         $user = $request->user();
 
@@ -73,10 +74,10 @@ class FanLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('fan.campaign');
+        return SurfaceRedirect::to($request, route('fan.campaign'));
     }
 
-    private function redirectAuthenticatedFan(Request $request): RedirectResponse
+    private function redirectAuthenticatedFan(Request $request): SymfonyResponse
     {
         $user = $request->user();
 
@@ -93,6 +94,6 @@ class FanLoginController extends Controller
                 ->route('fan.connect-accounts', ['onboarding' => 1]);
         }
 
-        return redirect()->intended(SocialRouting::url('/'));
+        return SurfaceRedirect::intended($request, SocialRouting::url('/'));
     }
 }
