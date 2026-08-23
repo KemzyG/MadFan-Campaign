@@ -218,6 +218,23 @@ if ($socialDomain !== null) {
             Route::post('/logout', [FanLoginController::class, 'destroy']);
         });
 
+    // Guest auth twins so the fan can sign in on the social host itself — e.g.
+    // after logout lands on social.<root>/login. The named routes (route('login'),
+    // route('register'), route('password.*')) stay on the campaign host; these
+    // unnamed twins just let the same forms resolve and POST same-origin here.
+    Route::domain($socialDomain)
+        ->middleware(['app.maintenance', 'guest'])
+        ->group(function (): void {
+            Route::get('/login', [FanLoginController::class, 'create']);
+            Route::post('/login', [FanLoginController::class, 'store'])->middleware('throttle:login');
+            Route::get('/register', [FanRegisterController::class, 'create']);
+            Route::post('/register', [FanRegisterController::class, 'store'])->middleware('throttle:register');
+            Route::get('/forgot-password', [PasswordResetLinkController::class, 'create']);
+            Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('throttle:login');
+            Route::get('/reset-password/{token}', [NewPasswordController::class, 'create']);
+            Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:login');
+        });
+
     // Old single-host bookmarks: /social/* → social subdomain clean URL.
     $legacySocialRedirect = function (): void {
         Route::any('/social/{path?}', function (?string $path = null) {
