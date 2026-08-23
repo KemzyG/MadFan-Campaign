@@ -1,0 +1,341 @@
+/*
+ * Mad Fan Social — Wallet
+ * Namespaced .mf-wallet-* surface. Relies on the --mf-* tokens from social.css.
+ * Monochrome: value weight and bar length carry meaning, not colour (the only
+ * colour is the +/- ledger amount, reusing the semantic status tokens).
+ */
+
+.mf-wallet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    padding-bottom: var(--mf-page-pad-bottom);
+}
+
+.mf-wallet-section__title {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+    margin: 0 0 0.5rem;
+}
+
+/* ---- Hero: balance + loyalty side by side on wide screens ---- */
+.mf-wallet-hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--mf-section-gap);
+}
+
+/* ---- Shared progress / component bar ---- */
+.mf-wallet-bar {
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--mf-line);
+    overflow: hidden;
+}
+
+.mf-wallet-bar__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mf-pitch);
+    transition: width var(--mf-dur) var(--mf-ease);
+}
+
+/* ---- Balance card ---- */
+.mf-wallet-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+.mf-wallet-balance__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-wallet-balance__label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-wallet-balance__tier {
+    font-size: var(--mf-text-micro);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+    color: var(--mf-void);
+    background: var(--mf-pitch);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.mf-wallet-balance__value {
+    font-family: var(--mf-font-display);
+    font-size: clamp(2.4rem, 12vw, 3.25rem);
+    line-height: 1;
+    letter-spacing: var(--mf-tracking-score);
+    color: var(--mf-text);
+}
+
+.mf-wallet-balance__earned {
+    color: var(--mf-muted);
+}
+
+.mf-wallet-balance__next {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+.mf-wallet-balance__next-copy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: var(--mf-muted);
+}
+
+/* ---- Loyalty score card ---- */
+.mf-wallet-loyalty {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.1rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+.mf-wallet-loyalty__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mf-wallet-loyalty__score {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.mf-wallet-loyalty__value {
+    font-family: var(--mf-font-display);
+    font-size: 2.6rem;
+    line-height: 1;
+    letter-spacing: var(--mf-tracking-score);
+    color: var(--mf-text);
+}
+
+.mf-wallet-loyalty__max {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-wallet-loyalty__grade-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.mf-wallet-loyalty__grade {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.5rem;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    font-size: 1.4rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.mf-wallet-loyalty__grade-label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-wallet-loyalty__components {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-wallet-loyalty__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.mf-wallet-loyalty__row.is-muted {
+    opacity: 0.5;
+}
+
+.mf-wallet-loyalty__row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: var(--mf-text);
+}
+
+.mf-wallet-loyalty__weight {
+    color: var(--mf-muted);
+}
+
+/* ---- Stat tiles ---- */
+.mf-wallet-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.mf-wallet-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.8rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-wallet-stat__value {
+    font-family: var(--mf-font-display);
+    font-size: 1.7rem;
+    line-height: 1;
+    color: var(--mf-text);
+}
+
+.mf-wallet-stat__label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-wallet-stat__hint {
+    color: var(--mf-pitch-dim);
+}
+
+/* ---- Breakdown ---- */
+.mf-wallet-breakdown__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-wallet-breakdown__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.mf-wallet-breakdown__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-text);
+}
+
+.mf-wallet-breakdown__percent {
+    color: var(--mf-muted);
+}
+
+/* ---- Activity ledger ---- */
+.mf-wallet-activity__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-wallet-activity__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-wallet-activity__row:last-child {
+    border-bottom: none;
+}
+
+.mf-wallet-activity__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.mf-wallet-activity__reason {
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-wallet-activity__when {
+    color: var(--mf-muted);
+}
+
+.mf-wallet-activity__nums {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    flex: none;
+}
+
+.mf-wallet-activity__amount {
+    font-size: var(--mf-text-meta);
+}
+
+.mf-wallet-activity__amount.is-positive {
+    color: var(--mf-ok);
+}
+
+.mf-wallet-activity__amount.is-negative {
+    color: var(--mf-bad);
+}
+
+.mf-wallet-activity__balance {
+    color: var(--mf-muted);
+}
+
+/* ---- Wider viewports ---- */
+@media (min-width: 768px) {
+    .mf-wallet-hero {
+        grid-template-columns: 1fr 1fr;
+        align-items: stretch;
+    }
+
+    .mf-wallet-stats__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

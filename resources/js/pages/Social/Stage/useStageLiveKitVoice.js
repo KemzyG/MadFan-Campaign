@@ -199,7 +199,7 @@ export function createStageLiveKitVoiceSession({
         return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
     }
 
-    /** Re-apply the listener's chosen output volume (0 when deafened) to every remote element. */
+    /** Re-apply the listener's chosen output volume to every remote element. */
     function applyOutputVolume() {
         const volume = effectiveVolume();
         listRemoteAudios().forEach((audio) => {

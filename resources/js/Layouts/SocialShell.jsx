@@ -217,6 +217,38 @@ function IconReels({ active }) {
     );
 }
 
+function IconLeaderboard({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2.1 : 1.65}
+                d="M8 21h8M12 17v4M7 4h10v4.5a5 5 0 0 1-10 0V4Z"
+            />
+            <path
+                strokeLinecap="round"
+                strokeWidth={active ? 2 : 1.55}
+                d="M7 6H4.5v1.5A2.5 2.5 0 0 0 7 10M17 6h2.5v1.5A2.5 2.5 0 0 1 17 10"
+            />
+        </svg>
+    );
+}
+
+function IconWallet({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="3.2" y="6" width="17.6" height="13" rx="2.4" strokeWidth={active ? 2.1 : 1.65} />
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={active ? 2 : 1.6}
+                d="M3.6 8.5 16 8.5M16.5 12.5h4.3v3.5h-4.3a1.75 1.75 0 0 1 0-3.5Z"
+            />
+        </svg>
+    );
+}
+
 function pathMatches(current, href, exact = false) {
     if (!current || !href) {
         return false;
@@ -657,6 +689,12 @@ export default function SocialShell({
             active: pathMatches(current, '/social/clubs'),
         },
         {
+            href: '/social/leaderboard',
+            label: 'Leaderboard',
+            icon: IconLeaderboard,
+            active: pathMatches(current, '/social/leaderboard'),
+        },
+        {
             href: '/social/shop',
             label: 'Store',
             icon: IconShop,
@@ -673,6 +711,12 @@ export default function SocialShell({
             label: 'Passport',
             icon: IconPassport,
             active: pathMatches(current, '/social/passport'),
+        },
+        {
+            href: '/social/wallet',
+            label: 'Wallet',
+            icon: IconWallet,
+            active: pathMatches(current, '/social/wallet'),
         },
         {
             href: profileHref,

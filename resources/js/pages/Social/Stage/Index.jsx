@@ -202,7 +202,7 @@ export default function Index({
                                 <span className="mf-stage-live-dot" />
                                 {stageList.length} live · {voiceLiveCount} on voice
                             </span>
-                            <h1 className="mf-stage-hero__title">The terrace is open</h1>
+                            <h1 className="mf-stage-hero__title">Live on stage</h1>
                             <p className="mf-stage-hero__sub mf-text-meta text-[var(--mf-muted)]">
                                 Drop into a live room, or start your own and take the mic.
                             </p>

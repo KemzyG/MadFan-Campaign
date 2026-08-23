@@ -1,0 +1,306 @@
+/*
+ * Fixtures (Social/Fixtures) — split-panel board + fixture detail.
+ * Namespaced .mf-fixture-*. Reuses shared chrome from social/split.css
+ * (.mf-panel-card, .mf-crest) and the badge/section/chip rules already in
+ * social.css. Only the split-panel-specific pieces live here.
+ */
+
+.mf-fixture-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    padding: 0.85rem 0.85rem var(--mf-page-pad-bottom);
+}
+
+.mf-fixture-page__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.mf-fixture-page__bar .mf-page-links {
+    margin-bottom: 0;
+}
+
+/* --- Filter tabs ---------------------------------------------------------- */
+
+.mf-fixture-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.mf-fixture-tabs button {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    cursor: pointer;
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        background-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-fixture-tabs button span {
+    font-size: var(--mf-text-micro);
+    opacity: 0.75;
+}
+
+.mf-fixture-tabs button:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-line) 60%, var(--mf-pitch));
+}
+
+.mf-fixture-tabs button.is-active {
+    color: var(--mf-void);
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
+}
+
+.mf-fixture-tabs button.is-active span {
+    opacity: 0.9;
+}
+
+/* --- Master pane: grouped fixture list ------------------------------------ */
+
+.mf-fixture-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.85rem;
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+/* Spacing between sections comes from the flex gap, not the legacy margin. */
+.mf-fixture-groups .mf-fixture-section + .mf-fixture-section {
+    margin-top: 0;
+}
+
+.mf-fixture-day + .mf-fixture-day {
+    margin-top: 0.65rem;
+}
+
+.mf-fixture-rows {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.mf-fixture-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    border-left: 2px solid transparent;
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        transform var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-fixture-row:hover {
+    border-color: color-mix(in srgb, var(--mf-line) 55%, var(--mf-pitch));
+}
+
+.mf-fixture-row:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--mf-pitch) 55%, transparent);
+}
+
+.mf-fixture-row.is-selected {
+    background: color-mix(in srgb, var(--mf-pitch) 9%, var(--mf-panel));
+    border-left-color: var(--mf-pitch);
+}
+
+.mf-fixture-row.is-live {
+    border-left-color: color-mix(in srgb, var(--mf-pitch) 60%, transparent);
+}
+
+.mf-fixture-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-fixture-row__comp {
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-fixture-row__sides {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-fixture-row__side {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-fixture-row__side--away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.mf-fixture-row__team {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-fixture-row__vs {
+    flex: none;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    letter-spacing: 0.08em;
+}
+
+.mf-fixture-row__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-fixture-row__venue {
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-fixture-row__price {
+    flex: none;
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+}
+
+/* --- Detail pane ---------------------------------------------------------- */
+
+.mf-fixture-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem;
+}
+
+.mf-fixture-detail--empty {
+    align-items: flex-start;
+    background: var(--mf-panel);
+    border: 1px dashed var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+}
+
+.mf-fixture-detail__board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0.85rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-fixture-detail__board.is-live {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+}
+
+.mf-fixture-detail__status {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-fixture-detail__board.is-live .mf-fixture-detail__status {
+    color: var(--mf-pitch);
+}
+
+.mf-fixture-detail__sides {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.mf-fixture-detail__side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-fixture-detail__team {
+    font-size: var(--mf-text-ui);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+    text-align: center;
+    line-height: 1.15;
+}
+
+.mf-fixture-detail__vs {
+    flex: none;
+    font-size: var(--mf-text-title);
+    letter-spacing: 0.1em;
+    color: var(--mf-muted);
+}
+
+.mf-fixture-detail__board.is-live .mf-fixture-detail__vs {
+    color: var(--mf-pitch);
+}
+
+.mf-fixture-detail__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fixture-detail__meta-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+}
+
+.mf-fixture-detail__meta-value {
+    color: var(--mf-text);
+    text-align: right;
+}
+
+.mf-fixture-detail__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}

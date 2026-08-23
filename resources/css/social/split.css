@@ -1,0 +1,297 @@
+/*
+ * Social split-panel primitive (.mf-split)
+ * -----------------------------------------------------------------------------
+ * A responsive two-pane layout shared by the content pages — league table,
+ * fixtures, tickets, store and profile. Two archetypes:
+ *
+ *   .mf-split--detail   master list (primary) + a detail pane. On desktop the
+ *                       detail sits on the right; below lg it rides in as a
+ *                       fixed overlay sheet when a row is selected.
+ *   .mf-split--rail     a persistent context rail (filters / identity) + the
+ *                       main content. On desktop the rail sits on the left;
+ *                       below lg it simply stacks above the content.
+ *
+ * The two-column layout only engages at lg+, and only inside a `wide`
+ * SocialShell (.mf-shell--wide) — which hands the page column the full width by
+ * dropping the chat rail, the same track Chat and the Stage room use. Below lg
+ * everything is a single column, so the primitive is mobile-first by default.
+ */
+
+.mf-split {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    min-width: 0;
+}
+
+.mf-split__master,
+.mf-split__detail,
+.mf-split__rail,
+.mf-split__content {
+    min-width: 0;
+}
+
+/* --- Detail mode: mobile overlay sheet ----------------------------------- */
+
+.mf-split--detail .mf-split__detail {
+    /*
+     * Off-canvas by default on phones — the master list owns the viewport until
+     * a row is chosen, then the sheet slides in from the right over a scrim.
+     */
+    position: fixed;
+    inset: var(--mf-safe-top) 0 0 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    background: var(--mf-panel);
+    border-left: 1px solid var(--mf-line);
+    box-shadow: var(--mf-shadow-3);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+        transform var(--mf-dur) var(--mf-ease),
+        visibility 0s linear var(--mf-dur);
+}
+
+.mf-split--detail.is-detail-open .mf-split__detail {
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+        transform var(--mf-dur) var(--mf-ease),
+        visibility 0s;
+}
+
+.mf-split__detail-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    padding-top: max(0.6rem, var(--mf-safe-top));
+    border-bottom: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 88%, transparent);
+    backdrop-filter: var(--mf-glass);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.mf-split__detail-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex: none;
+    border-radius: var(--mf-radius);
+    color: var(--mf-text);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: background-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-split__detail-back:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-split__detail-back svg {
+    height: 1.35rem;
+    width: 1.35rem;
+}
+
+.mf-split__detail-title {
+    font-size: var(--mf-text-title);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.mf-split__detail-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem;
+    padding-bottom: max(0.85rem, var(--mf-safe-bottom));
+}
+
+/* Backdrop behind the mobile detail sheet. */
+.mf-split__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    border: 0;
+    padding: 0;
+    background: color-mix(in srgb, var(--mf-void) 70%, transparent);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity var(--mf-dur) var(--mf-ease),
+        visibility 0s linear var(--mf-dur);
+    cursor: pointer;
+}
+
+.mf-split--detail.is-detail-open .mf-split__scrim {
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity var(--mf-dur) var(--mf-ease),
+        visibility 0s;
+}
+
+/* --- Shared panel chrome -------------------------------------------------- */
+
+/*
+ * A framed panel surface used inside either pane (list wrapper, detail card,
+ * rail section). Kept generic so pages compose it with their own inner markup.
+ */
+.mf-panel-card {
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+.mf-panel-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-panel-card__title {
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-panel-card__hint {
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+/* Sticky detail rail on desktop so it holds position while the list scrolls. */
+.mf-split__detail-sticky {
+    position: static;
+}
+
+/* --- lg+: real two-pane layout ------------------------------------------- */
+
+@media (min-width: 1024px) {
+    .mf-split {
+        display: grid;
+        gap: 1rem;
+        align-items: start;
+    }
+
+    /* master (primary, wide) + detail (secondary, right) */
+    .mf-split--detail {
+        grid-template-columns: minmax(0, 1fr) minmax(20rem, clamp(21rem, 25vw, 26rem));
+    }
+
+    /* rail (context, left) + content (primary, right) */
+    .mf-split--rail {
+        grid-template-columns: minmax(15rem, clamp(16rem, 21vw, 20rem)) minmax(0, 1fr);
+    }
+
+    /* Detail pane returns to a normal, in-flow grid child — no overlay. */
+    .mf-split--detail .mf-split__detail {
+        position: static;
+        inset: auto;
+        z-index: auto;
+        transform: none;
+        visibility: visible;
+        display: block;
+        background: transparent;
+        border-left: 0;
+        box-shadow: none;
+        transition: none;
+    }
+
+    .mf-split__detail-head {
+        display: none;
+    }
+
+    .mf-split__detail-body {
+        padding: 0;
+        overflow: visible;
+    }
+
+    /* On desktop the detail rail tracks the viewport as the list scrolls. */
+    .mf-split__detail-sticky {
+        position: sticky;
+        top: calc(var(--mf-header-h) + 0.85rem);
+    }
+
+    .mf-split__scrim {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-split--detail .mf-split__detail,
+    .mf-split__scrim {
+        transition: none;
+    }
+}
+
+/* --- Shared crest (club badges across the content pages) ------------------ */
+
+.mf-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    overflow: hidden;
+    border-radius: 0.4rem;
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-crest--sm {
+    height: 1.7rem;
+    width: 1.7rem;
+}
+
+.mf-crest--md {
+    height: 2.2rem;
+    width: 2.2rem;
+}
+
+.mf-crest--lg {
+    height: 3.1rem;
+    width: 3.1rem;
+    border-radius: 0.55rem;
+}
+
+.mf-crest__img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+}
+
+.mf-crest__mark {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    color: var(--mf-pitch-dim);
+    text-transform: uppercase;
+}
+
+.mf-crest--lg .mf-crest__mark {
+    font-size: 0.95rem;
+}
+
+/* Full-width button for detail-pane CTAs. */
+.mf-btn--block {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+}

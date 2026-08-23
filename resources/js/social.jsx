@@ -1,4 +1,13 @@
 import '../css/social.css';
+// Per-feature Social stylesheets (kept out of the monolithic social.css).
+import '../css/social/split.css';
+import '../css/social/leaderboard.css';
+import '../css/social/wallet.css';
+import '../css/social/clubs.css';
+import '../css/social/fixtures.css';
+import '../css/social/tickets.css';
+import '../css/social/shop.css';
+import '../css/social/profile.css';
 // Fan auth pages (login / register / password) can land in this SPA when an
 // Inertia visit redirects after session expiry — they need campaign styles.
 import '../css/madfan.css';

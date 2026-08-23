@@ -1,0 +1,44 @@
+/*
+ * Profile (Social/Profile) — rail layout additions.
+ * The identity hero moves into a persistent rail (.mf-profile-rail) beside a
+ * width-capped post feed (.mf-profile-feed) via .mf-split--rail. The hero, chip,
+ * stat and stream visuals themselves live in social.css — only the rail
+ * arrangement and its scoped tweaks live here.
+ */
+
+.mf-profile-page {
+    padding: 0.85rem 0.85rem var(--mf-page-pad-bottom);
+    animation: mf-page-in 240ms var(--mf-ease) both;
+}
+
+/* The hero reads as a self-contained card in the rail rather than a full-bleed
+ * page banner: full border + radius instead of the page's bottom rule. */
+.mf-profile-rail .mf-profile-hero {
+    border: 1px solid var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+/* Cap the reading measure of the feed and centre it in the wider content
+ * column so posts don't stretch uncomfortably on desktop. */
+.mf-profile-feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap-tight, 0.75rem);
+    width: 100%;
+    max-width: 40rem;
+    margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+    /* Hold the identity rail in view while the feed scrolls. */
+    .mf-profile-rail {
+        position: sticky;
+        top: calc(var(--mf-header-h) + 0.85rem);
+    }
+
+    /* Left-align the feed under its column once the rail carries the identity. */
+    .mf-profile-feed {
+        margin-inline: 0;
+    }
+}

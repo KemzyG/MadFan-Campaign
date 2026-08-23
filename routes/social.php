@@ -13,6 +13,7 @@ use App\Http\Controllers\Inertia\Social\SocialFixtureController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
 use App\Http\Controllers\Inertia\Social\SocialGroupChatController;
 use App\Http\Controllers\Inertia\Social\SocialHomeController;
+use App\Http\Controllers\Inertia\Social\SocialLeaderboardController;
 use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
 use App\Http\Controllers\Inertia\Social\SocialPassportController;
 use App\Http\Controllers\Inertia\Social\SocialPostBookmarkController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Inertia\Social\SocialStandingsController;
 use App\Http\Controllers\Inertia\Social\SocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
 use App\Http\Controllers\Inertia\Social\SocialVideoController;
+use App\Http\Controllers\Inertia\Social\SocialWalletController;
 use App\Http\Middleware\TouchLastSeen;
 use Illuminate\Support\Facades\Route;
 
@@ -203,6 +205,8 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
 
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
+                Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
+                Route::get('/wallet', SocialWalletController::class)->name('wallet');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
                 Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');
                 Route::get('/tickets/{ticket}', [SocialTicketController::class, 'show'])->name('tickets.show');

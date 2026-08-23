@@ -1,0 +1,400 @@
+/*
+ * League table (Social/Clubs) — split-panel standings + club detail.
+ * Namespaced .mf-club-*. Monochrome, token-driven; two panes via .mf-split.
+ */
+
+.mf-club-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    padding: 0.85rem 0.85rem var(--mf-page-pad-bottom);
+}
+
+.mf-club-page__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+/* --- League tabs ---------------------------------------------------------- */
+
+.mf-club-leagues {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mf-club-leagues button {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition:
+        color var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        background-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-club-leagues button:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-line) 60%, var(--mf-pitch));
+}
+
+.mf-club-leagues button.is-active {
+    color: var(--mf-void);
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
+}
+
+.mf-club-leagues__short {
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+}
+
+.mf-club-leagues__name {
+    font-size: var(--mf-text-caption);
+    opacity: 0.85;
+}
+
+/* --- Crest ---------------------------------------------------------------- */
+
+.mf-club-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    overflow: hidden;
+    border-radius: 0.4rem;
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-club-crest--sm {
+    height: 1.65rem;
+    width: 1.65rem;
+}
+
+.mf-club-crest--md {
+    height: 2.1rem;
+    width: 2.1rem;
+}
+
+.mf-club-crest--lg {
+    height: 3.35rem;
+    width: 3.35rem;
+    border-radius: 0.6rem;
+}
+
+.mf-club-crest__img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+}
+
+.mf-club-crest__mark {
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    color: var(--mf-pitch-dim);
+    text-transform: uppercase;
+}
+
+.mf-club-crest--lg .mf-club-crest__mark {
+    font-size: 0.95rem;
+}
+
+/* --- Master pane: standings table ---------------------------------------- */
+
+.mf-club-master {
+    overflow: hidden;
+}
+
+.mf-club-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mf-club-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--mf-text-meta);
+}
+
+.mf-club-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 0.35rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-club-table__pos,
+.mf-club-table thead .mf-club-table__pos {
+    width: 2rem;
+    text-align: center;
+}
+
+.mf-club-table__club,
+.mf-club-table thead .mf-club-table__club {
+    text-align: left;
+    min-width: 9rem;
+}
+
+.mf-club-table__num {
+    width: 2.1rem;
+    text-align: center;
+}
+
+.mf-club-table__pts,
+.mf-club-table thead .mf-club-table__pts {
+    width: 2.6rem;
+    text-align: center;
+    color: var(--mf-text);
+}
+
+.mf-club-row {
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition:
+        background-color var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+    outline: none;
+}
+
+.mf-club-row td {
+    padding: 0.5rem 0.35rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+    color: var(--mf-text);
+    text-align: center;
+}
+
+.mf-club-row td.mf-club-table__club {
+    text-align: left;
+}
+
+.mf-club-row:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-club-row:focus-visible {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--mf-pitch) 55%, transparent);
+}
+
+.mf-club-row.is-selected {
+    background: color-mix(in srgb, var(--mf-pitch) 9%, var(--mf-panel));
+    border-left-color: var(--mf-pitch);
+}
+
+.mf-club-row.is-top .mf-club-table__pos {
+    color: var(--mf-text);
+    font-weight: 600;
+}
+
+.mf-club-row.is-top td.mf-club-table__pos {
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mf-pitch) 45%, transparent);
+}
+
+.mf-club-row.is-bottom td.mf-club-table__pos {
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mf-muted) 55%, transparent);
+    opacity: 0.92;
+}
+
+.mf-club-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.mf-club-cell__copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.1;
+}
+
+.mf-club-cell__name {
+    color: var(--mf-text);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-club-cell__short {
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+.mf-club-cell__fav {
+    margin-left: auto;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    color: var(--mf-pitch-dim);
+    background: var(--mf-elevated);
+    white-space: nowrap;
+}
+
+.mf-club-legend {
+    padding: 0.55rem 0.9rem 0.75rem;
+}
+
+/* --- Detail pane ---------------------------------------------------------- */
+
+.mf-club-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem;
+}
+
+.mf-club-detail--empty {
+    align-items: flex-start;
+}
+
+.mf-club-detail__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mf-club-detail__id {
+    min-width: 0;
+}
+
+.mf-club-detail__eyebrow {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-club-detail__name {
+    font-size: var(--mf-text-section);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+    line-height: 1.1;
+}
+
+.mf-club-detail__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+.mf-club-detail__short {
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+.mf-club-detail__zone {
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid var(--mf-line);
+    color: var(--mf-muted);
+}
+
+.mf-club-detail__zone--ok {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+}
+
+.mf-club-detail__zone--bad {
+    color: var(--mf-muted);
+    border-style: dashed;
+}
+
+.mf-club-detail__fav {
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mf-void);
+    background: var(--mf-pitch);
+}
+
+.mf-club-detail__points {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-club-detail__points-value {
+    font-size: var(--mf-text-display);
+    color: var(--mf-text);
+    line-height: 1;
+}
+
+.mf-club-detail__points-label {
+    color: var(--mf-muted);
+}
+
+.mf-club-detail__record,
+.mf-club-detail__goals {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.mf-club-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.55rem 0.3rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    text-align: center;
+}
+
+.mf-club-stat__value {
+    font-size: var(--mf-text-title);
+    color: var(--mf-text);
+    line-height: 1;
+}
+
+.mf-club-stat__label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.mf-club-detail__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}
+
+.mf-club-detail__actions .mf-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+}
+
+.mf-club-empty {
+    padding: 1.5rem 0.5rem;
+}
