@@ -1,0 +1,348 @@
+/*
+ * Mad Fan Social — Leaderboard
+ * Namespaced .mf-lb-* surface. Relies on the --mf-* tokens defined in social.css
+ * (loaded first). Monochrome: rank/grade weight carries meaning, not colour.
+ */
+
+.mf-lb {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    padding-bottom: var(--mf-page-pad-bottom);
+}
+
+.mf-lb-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mf-lb-head__title {
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-score);
+    letter-spacing: var(--mf-tracking-score);
+    line-height: var(--mf-leading-tight);
+    color: var(--mf-text);
+    text-transform: uppercase;
+}
+
+.mf-lb-head__sub {
+    color: var(--mf-muted);
+    line-height: var(--mf-leading-body);
+    max-width: 46ch;
+}
+
+/* ---- Shared fan avatar ---- */
+.mf-lb-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-lb-avatar--sm {
+    width: 2.25rem;
+    height: 2.25rem;
+}
+
+.mf-lb-avatar--md {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.mf-lb-avatar--lg {
+    width: 3.75rem;
+    height: 3.75rem;
+}
+
+.mf-lb-avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-lb-avatar__emoji {
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+.mf-lb-avatar__initial {
+    font-family: var(--mf-font-display);
+    color: var(--mf-pitch);
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* ---- Loyalty score pill ---- */
+.mf-lb-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+    white-space: nowrap;
+}
+
+.mf-lb-score__grade {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 0.35rem;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    font-size: 0.8rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.mf-lb-score__value {
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-lb-score--sm .mf-lb-score__grade {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.7rem;
+}
+
+.mf-lb-score--md .mf-lb-score__value {
+    font-size: var(--mf-text-ui);
+}
+
+/* ---- Podium (top 3) ---- */
+.mf-lb-podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: end;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-lb-podium__slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+    padding: 0.9rem 0.5rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+/* First place lifts above the wings. */
+.mf-lb-podium__slot--1 {
+    background: var(--mf-elevated);
+    border-color: color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
+    box-shadow: var(--mf-sheen), var(--mf-shadow-2);
+    transform: translateY(-0.6rem);
+}
+
+.mf-lb-podium__slot.is-you {
+    border-color: color-mix(in srgb, var(--mf-pitch) 34%, var(--mf-line));
+}
+
+.mf-lb-podium__rank {
+    font-family: var(--mf-font-display);
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--mf-muted);
+}
+
+.mf-lb-podium__slot--1 .mf-lb-podium__rank {
+    color: var(--mf-pitch);
+    font-size: 1.85rem;
+}
+
+.mf-lb-podium__handle {
+    font-size: var(--mf-text-meta);
+    color: var(--mf-text);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-lb-podium__club {
+    color: var(--mf-muted);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-lb-podium__points {
+    color: var(--mf-pitch-dim);
+    font-size: var(--mf-text-meta);
+}
+
+/* ---- Ranked list (4+) ---- */
+.mf-lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-lb-row {
+    display: grid;
+    grid-template-columns: 1.75rem auto 1fr auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-lb-row.is-you {
+    background: var(--mf-elevated);
+    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+}
+
+.mf-lb-row__rank {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    text-align: center;
+}
+
+.mf-lb-row__identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mf-lb-row__handle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-lb-row__you-tag {
+    padding: 0.05rem 0.3rem;
+    border-radius: 0.3rem;
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-lb-row__club {
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-lb-row__points {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    color: var(--mf-text);
+}
+
+.mf-lb-row__points-value {
+    font-size: var(--mf-text-ui);
+}
+
+.mf-lb-row__points-label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+}
+
+/* ---- Viewer standing dock ---- */
+.mf-lb-you-dock {
+    position: sticky;
+    bottom: calc(var(--mf-safe-bottom) + 0.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.65rem;
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 26%, var(--mf-line));
+    box-shadow: var(--mf-shadow-2);
+    backdrop-filter: var(--mf-glass);
+}
+
+.mf-lb-you-dock__label {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-lb-you {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.mf-lb-you__lead {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.mf-lb-you__rank {
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-ui);
+}
+
+.mf-lb-you__identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mf-lb-you__handle {
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-lb-you__meta {
+    color: var(--mf-muted);
+}
+
+/* ---- Wider viewports ---- */
+@media (min-width: 768px) {
+    .mf-lb-head__title {
+        font-size: 2.1rem;
+    }
+
+    .mf-lb-podium {
+        gap: 0.9rem;
+    }
+
+    .mf-lb-podium__slot {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .mf-lb-row {
+        padding: 0.65rem 0.85rem;
+    }
+}

@@ -1,0 +1,246 @@
+/*
+ * Box office (Social/Tickets/Index) — split-panel fixture list + checkout.
+ * Namespaced .mf-ticket-* (page/row/detail). Reuses shared chrome from
+ * social/split.css (.mf-panel-card, .mf-crest) and the chip/link rules in
+ * social.css. The wallet (.mf-ticket-wallet) and box-office match card
+ * (.mf-ticket-match) styles already in social.css are left untouched.
+ */
+
+.mf-ticket-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+    padding: 0.85rem 0.85rem var(--mf-page-pad-bottom);
+}
+
+.mf-ticket-page__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.mf-ticket-page__title {
+    font-size: var(--mf-text-section);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+    line-height: 1.1;
+}
+
+.mf-ticket-page__sub {
+    margin-top: 0.15rem;
+}
+
+.mf-ticket-page__bar .mf-page-links {
+    margin-bottom: 0;
+}
+
+/* --- Master pane: box-office rows ----------------------------------------- */
+
+.mf-ticket-rows {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    background: var(--mf-panel);
+    border: 1px solid var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+}
+
+.mf-ticket-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    border-left: 2px solid transparent;
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-ticket-row:hover {
+    border-color: color-mix(in srgb, var(--mf-line) 55%, var(--mf-pitch));
+}
+
+.mf-ticket-row:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--mf-pitch) 55%, transparent);
+}
+
+.mf-ticket-row.is-selected {
+    background: color-mix(in srgb, var(--mf-pitch) 9%, var(--mf-panel));
+    border-left-color: var(--mf-pitch);
+}
+
+.mf-ticket-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-ticket-row__comp {
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-ticket-row__kick {
+    flex: none;
+    color: var(--mf-muted);
+}
+
+.mf-ticket-row__sides {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-ticket-row__side {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-ticket-row__side--away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.mf-ticket-row__team {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-ticket-row__vs {
+    flex: none;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    letter-spacing: 0.08em;
+}
+
+.mf-ticket-row__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-ticket-row__venue {
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-ticket-row__price {
+    flex: none;
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+}
+
+/* --- Detail pane: checkout ------------------------------------------------ */
+
+.mf-ticket-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem;
+}
+
+.mf-ticket-detail--empty {
+    align-items: flex-start;
+    background: var(--mf-panel);
+    border: 1px dashed var(--mf-line);
+    border-radius: calc(var(--mf-radius) + 0.25rem);
+}
+
+.mf-ticket-detail__board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0.85rem;
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-ticket-detail__eyebrow {
+    color: var(--mf-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+.mf-ticket-detail__sides {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.mf-ticket-detail__side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-ticket-detail__team {
+    font-size: var(--mf-text-ui);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+    text-align: center;
+    line-height: 1.15;
+}
+
+.mf-ticket-detail__vs {
+    flex: none;
+    font-size: var(--mf-text-title);
+    letter-spacing: 0.1em;
+    color: var(--mf-muted);
+}
+
+.mf-ticket-detail__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-ticket-detail__meta-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+}
+
+.mf-ticket-detail__meta-value {
+    color: var(--mf-text);
+    text-align: right;
+}
+
+.mf-ticket-detail__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}

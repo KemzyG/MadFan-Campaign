@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import StageAudioMenu from './StageAudioMenu';
 import { IconHand, IconMic, IconMicOff, IconVoice, IconVolume, StageIconButton } from './StageIcons';
 import { useStageActions } from './useStageActions';
-import { useStageSession } from './StageSessionContext';
 
 /**
  * The room's footer control row. Pared back to the voice-critical, one-tap
@@ -12,7 +11,6 @@ import { useStageSession } from './StageSessionContext';
  */
 export default function StageControlBar() {
     const actions = useStageActions();
-    const { audioOutput } = useStageSession();
     const [audioMenu, setAudioMenu] = useState(false);
     const audioRef = useRef(null);
 
@@ -49,9 +47,8 @@ export default function StageControlBar() {
             <div className="mf-stage-control-bar__group">
                 <div className="mf-stage-popover-anchor" ref={audioRef}>
                     <StageIconButton
-                        label={`Audio output${audioOutput.deafened ? ' (deafened)' : ''}`}
+                        label="Audio output"
                         active={audioMenu}
-                        danger={audioOutput.deafened}
                         aria-haspopup="dialog"
                         aria-expanded={audioMenu}
                         onClick={() => setAudioMenu((open) => !open)}

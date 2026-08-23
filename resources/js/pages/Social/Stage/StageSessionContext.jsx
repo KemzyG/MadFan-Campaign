@@ -12,10 +12,8 @@ import { getEcho, leaveEchoChannel, subscribeEchoConnection } from '../../../ech
 import { requestStageMicrophone } from './stageMicPermission';
 import {
     getAudioOutput,
-    setDeafened as setOutputDeafened,
     setVolume as setOutputVolume,
     subscribeAudioOutput,
-    toggleDeafened as toggleOutputDeafened,
 } from './stageAudioOutput';
 import { createStageVoiceSession } from './useStageVoice';
 import { reduceVoiceConnection } from './stageVoiceConnection';
@@ -368,10 +366,7 @@ export function StageSessionProvider({ children }) {
     const audioOutput = useMemo(
         () => ({
             volume: audioOutputState.volume,
-            deafened: audioOutputState.deafened,
             setVolume: setOutputVolume,
-            setDeafened: setOutputDeafened,
-            toggleDeafened: toggleOutputDeafened,
         }),
         [audioOutputState],
     );
@@ -485,6 +480,86 @@ export function StageSessionProvider({ children }) {
             }
         };
     }, [activeStageId, room?.poll_ms, room?.realtime?.mode, echoConnected, applyRoom, clearSession, fetchRoom]);
+
+    // Presence heartbeat + eviction. Under reverb-primary the room poll stretches
+    // to >=60s, but the server prunes stale participants at 45s — so a listener
+    // who is present and foregrounded would be evicted between polls. A light 7s
+    // heartbeat keeps last_seen_at fresh while the tab is visible. A failed beat
+    // never drops the session: a transient network blip on a foregrounded app
+    // must not eject the user (the poll's own 401/403 path handles real auth loss).
+    // When the tab is hidden past a short grace window (backgrounded / switched
+    // away) or the page is unloading, we fire a keepalive leave so closed apps
+    // release their seat promptly instead of waiting out the 45s backstop.
+    useEffect(() => {
+        if (!activeStageId) {
+            return undefined;
+        }
+        const stageId = activeStageId;
+        const HEARTBEAT_MS = 7000;
+        const HIDDEN_GRACE_MS = 15000;
+
+        const beat = () => {
+            if (document.visibilityState !== 'visible') {
+                return;
+            }
+            fetch(`/social/stage/${stageId}/heartbeat`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
+            }).catch(() => {});
+        };
+
+        const leaveBeacon = () => {
+            fetch(`/social/stage/${stageId}/leave`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
+                keepalive: true,
+            }).catch(() => {});
+        };
+
+        const clearHiddenTimer = () => {
+            if (hiddenLeaveTimerRef.current) {
+                window.clearTimeout(hiddenLeaveTimerRef.current);
+                hiddenLeaveTimerRef.current = null;
+            }
+        };
+
+        const handleVisibility = () => {
+            if (document.visibilityState === 'hidden') {
+                if (!hiddenLeaveTimerRef.current) {
+                    hiddenLeaveTimerRef.current = window.setTimeout(() => {
+                        hiddenLeaveTimerRef.current = null;
+                        leaveBeacon();
+                        clearSession();
+                    }, HIDDEN_GRACE_MS);
+                }
+            } else {
+                // Came back before the grace elapsed — stay in the room.
+                clearHiddenTimer();
+                beat();
+            }
+        };
+
+        const handlePageHide = () => {
+            leaveBeacon();
+        };
+
+        beat();
+        heartbeatTimerRef.current = window.setInterval(beat, HEARTBEAT_MS);
+        document.addEventListener('visibilitychange', handleVisibility);
+        window.addEventListener('pagehide', handlePageHide);
+
+        return () => {
+            if (heartbeatTimerRef.current) {
+                window.clearInterval(heartbeatTimerRef.current);
+                heartbeatTimerRef.current = null;
+            }
+            clearHiddenTimer();
+            document.removeEventListener('visibilitychange', handleVisibility);
+            window.removeEventListener('pagehide', handlePageHide);
+        };
+    }, [activeStageId, clearSession]);
 
     // Prefer Reverb for stage messages / signals / reactions / room changes; poll is fallback.
     useEffect(() => {

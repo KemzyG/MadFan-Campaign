@@ -1,0 +1,68 @@
+/*
+ * Store (Social/Shop/Index) — rail layout additions.
+ * The hero + featured ribbon stay full-width; the filters move into a
+ * persistent rail (.mf-shop-rail) beside the product grid via .mf-split--rail.
+ * The card, chip, hero and grid visuals themselves live in social.css — only
+ * the rail arrangement and its scoped overrides live here.
+ */
+
+.mf-shop-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap-tight, 0.75rem);
+}
+
+.mf-shop-rail__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-shop-rail__title {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
+}
+
+/*
+ * In the narrow rail the aisle chips read better as a wrapping cluster than a
+ * horizontally-scrolling ribbon, and the toolbar stacks instead of sitting in a
+ * row. On mobile (single column) the rail spans the full width above the grid.
+ */
+.mf-shop-rail .mf-shop-browse__rail {
+    flex-wrap: wrap;
+    overflow: visible;
+}
+
+.mf-shop-rail .mf-shop-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0.65rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+}
+
+.mf-shop-rail .mf-shop-filter__control {
+    width: 100%;
+}
+
+.mf-shop-rail .mf-shop-toolbar__count {
+    margin: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+    color: var(--mf-muted);
+}
+
+@media (min-width: 1024px) {
+    /* Hold the filter rail in view while the grid scrolls. */
+    .mf-shop-rail {
+        position: sticky;
+        top: calc(var(--mf-header-h) + 0.85rem);
+        max-height: calc(100dvh - var(--mf-header-h) - 1.7rem);
+        overflow-y: auto;
+        scrollbar-width: thin;
+        padding-right: 0.15rem;
+    }
+}

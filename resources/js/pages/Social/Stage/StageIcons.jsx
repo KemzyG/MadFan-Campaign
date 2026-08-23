@@ -191,16 +191,6 @@ export function IconVolume({ className }) {
     );
 }
 
-export function IconDeafen({ className }) {
-    return (
-        <svg {...IconProps({ className })}>
-            <path d="M11 5 6 9H2v6h4l5 4V5Z" />
-            <path d="m17 9 5 6" />
-            <path d="m22 9-5 6" />
-        </svg>
-    );
-}
-
 export function IconReaction({ className }) {
     return (
         <svg {...IconProps({ className })}>

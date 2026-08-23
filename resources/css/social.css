@@ -7532,6 +7532,46 @@ body,
     height: 1rem;
 }
 
+/* Mobile: the lobby hero goes full-bleed as a floodlit-stadium banner. The dark
+   scrim is fixed rgba (not theme tokens) so the copy stays legible over the night
+   image in either theme. */
+@media (max-width: 767.98px) {
+    .mf-stage-hero {
+        position: relative;
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        min-height: min(46vw, 13rem);
+        align-items: flex-end;
+        padding: 1.05rem 1.05rem 1.1rem;
+        border-width: 0 0 1px 0;
+        border-radius: 0;
+        box-shadow: none;
+        background:
+            linear-gradient(
+                0deg,
+                rgba(6, 14, 9, 0.9) 0%,
+                rgba(6, 14, 9, 0.28) 52%,
+                rgba(6, 14, 9, 0.62) 100%
+            ),
+            url('/landing-media/stage-hero-stadium.svg') center / cover no-repeat,
+            #071009;
+    }
+
+    .mf-stage-hero .mf-stage-hero__eyebrow,
+    .mf-stage-hero .mf-stage-hero__title {
+        color: #f4fff8;
+    }
+
+    .mf-stage-hero .mf-stage-hero__sub {
+        color: rgba(244, 255, 248, 0.82);
+    }
+
+    .mf-stage-hero__title {
+        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+    }
+}
+
 /* Toolbar — search, filter chips, sort chips. */
 .mf-stage-toolbar {
     display: flex;
@@ -7863,6 +7903,13 @@ body,
 
 .mf-stageroom__deck {
     position: relative;
+    /* Isolate the deck as its own base stacking layer. Its section headings
+       (.mf-stage-deck__head / .mf-stage-listeners__head) are static, and its
+       reaction layer is z-5 — without isolation those leak into the room's
+       shared context and can paint over the control-bar popover / reaction
+       picker. z-index:0 confines all deck content below the overlays, which
+       sit above it via their own z-index. */
+    z-index: 0;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -8376,6 +8423,11 @@ body,
 
 /* —— 9. Control bar —————————————————————————————————————————————————— */
 .mf-stage-control-bar {
+    /* Sits above the deck's base layer so the audio popover — trapped in this
+       bar's own backdrop-filter stacking context — reliably paints over the
+       deck headings and tiles. */
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8487,42 +8539,6 @@ body,
     height: 1.5rem;
     accent-color: var(--mf-pitch);
     cursor: pointer;
-}
-
-.mf-stage-audio-menu__slider:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-.mf-stage-audio-menu__deafen {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.6rem;
-    border: 1px solid var(--mf-line);
-    border-radius: 0.55rem;
-    background: transparent;
-    color: var(--mf-muted);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-        color var(--mf-dur-fast) var(--mf-ease),
-        border-color var(--mf-dur-fast) var(--mf-ease),
-        background var(--mf-dur-fast) var(--mf-ease);
-}
-
-.mf-stage-audio-menu__deafen:hover {
-    color: var(--mf-text);
-    border-color: var(--mf-pitch-dim);
-}
-
-.mf-stage-audio-menu__deafen.is-on {
-    border-color: color-mix(in srgb, var(--mf-rival) 50%, var(--mf-line));
-    background: color-mix(in srgb, var(--mf-rival) 12%, var(--mf-elevated));
-    color: var(--mf-rival);
 }
 
 /* —— 10. Rail (desktop right pane) ——————————————————————————————————— */

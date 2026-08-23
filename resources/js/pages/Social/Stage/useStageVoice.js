@@ -277,7 +277,7 @@ export function createStageMeshVoiceSession({
         return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
     }
 
-    /** Re-apply the listener's chosen output volume (0 when deafened) to every remote element. */
+    /** Re-apply the listener's chosen output volume to every remote element. */
     function applyOutputVolume() {
         const volume = effectiveVolume();
         listRemoteAudios().forEach((audio) => {
@@ -288,7 +288,7 @@ export function createStageMeshVoiceSession({
     // --- Active-speaker detection -------------------------------------------------
     // Each stream feeds an AnalyserNode (never connected to destination, so this does
     // not double-play audio). A single rAF loop computes RMS and emits the set of
-    // user ids currently talking. Output volume/deafen does not affect detection.
+    // user ids currently talking. Output volume does not affect detection.
 
     function makeAnalyserNode(stream) {
         const ctx = ensureUnlockAudioContext();

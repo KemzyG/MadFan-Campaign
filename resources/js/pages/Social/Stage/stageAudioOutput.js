@@ -2,15 +2,15 @@
 //
 // Both voice drivers (mesh `useStageVoice.js` and LiveKit `useStageLiveKitVoice.js`)
 // used to hardcode `audio.volume = 1` on every remote element. This tiny store lets
-// the room's audio menu drive one deafen toggle + one output-volume slider that both
-// drivers honour, persisted to localStorage so a refresh keeps the listener's choice.
+// the room's audio menu drive one output-volume slider that both drivers honour,
+// persisted to localStorage so a refresh keeps the listener's choice.
 //
 // Deliberately dependency-free: a hand-rolled subscribe/get/set store, no React, so the
 // voice hooks (plain JS) and the React components can both read it.
 
 const STORAGE_KEY = 'mf.stage.audioOutput';
 
-const DEFAULT_STATE = { volume: 1, deafened: false };
+const DEFAULT_STATE = { volume: 1 };
 
 function clampVolume(value) {
     const num = Number(value);
@@ -36,7 +36,6 @@ function readStorage() {
 
         return {
             volume: clampVolume(parsed?.volume ?? DEFAULT_STATE.volume),
-            deafened: Boolean(parsed?.deafened),
         };
     } catch {
         return { ...DEFAULT_STATE };
@@ -70,10 +69,9 @@ function emit() {
 
 /**
  * The multiplier a voice driver should apply to a remote element's volume.
- * Deafened collapses to silence regardless of the slider.
  */
 export function effectiveVolume() {
-    return state.deafened ? 0 : state.volume;
+    return state.volume;
 }
 
 export function getAudioOutput() {
@@ -89,21 +87,6 @@ export function setVolume(value) {
     state = { ...state, volume };
     persist();
     emit();
-}
-
-export function setDeafened(deafened) {
-    const next = Boolean(deafened);
-    if (next === state.deafened) {
-        return;
-    }
-
-    state = { ...state, deafened: next };
-    persist();
-    emit();
-}
-
-export function toggleDeafened() {
-    setDeafened(!state.deafened);
 }
 
 /**
