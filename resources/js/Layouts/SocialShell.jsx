@@ -9,7 +9,7 @@ import {
     useRef,
     useState,
 } from 'react';
-import { ComposeSheet } from '../pages/Social/components/PostCard';
+import ComposeSheet from '../pages/Social/components/composer/ComposeSheet';
 import {
     SocialPageSkeleton,
     resolveSocialSkeletonKind,

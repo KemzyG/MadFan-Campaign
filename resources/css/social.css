@@ -1760,79 +1760,85 @@ body,
     background: color-mix(in srgb, var(--mf-void) 45%, var(--mf-elevated));
 }
 
-/* Media grid — X-like 1–4 tile layouts */
+/* Media — natural aspect ratio (no fixed-height crop); tap to open the viewer */
 .mf-media {
-    display: grid;
-    gap: 0.2rem;
     margin-top: 0.65rem;
     margin-inline: auto;
     width: 100%;
-    max-width: 28rem;
-    overflow: hidden;
-    border-radius: 0.75rem;
-    border: 1px solid var(--mf-line);
-    background: var(--mf-void);
+    max-width: 30rem;
 }
 
-.mf-media--1 {
-    grid-template-columns: 1fr;
+/* Single image: show it whole, only capped so very tall images stay sane. */
+.mf-media--solo {
+    display: block;
 }
 
-.mf-media--2 {
-    grid-template-columns: 1fr 1fr;
-}
-
-.mf-media--3 {
-    grid-template-columns: 1.2fr 1fr;
-    grid-template-rows: 1fr 1fr;
-}
-
-.mf-media--3 .mf-media__cell--1 {
-    grid-row: 1 / span 2;
-}
-
+/* 2–4 images: masonry columns so every tile keeps its own natural height. */
+.mf-media--2,
+.mf-media--3,
 .mf-media--4 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    column-count: 2;
+    column-gap: 0.3rem;
 }
 
 .mf-media__cell {
     position: relative;
-    min-height: 0;
+    display: block;
+    width: 100%;
+    margin: 0 0 0.3rem;
+    padding: 0;
+    border: 1px solid var(--mf-line);
+    border-radius: 0.75rem;
     overflow: hidden;
     background: var(--mf-elevated);
+    cursor: zoom-in;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    transition: filter 140ms var(--mf-ease);
 }
 
-.mf-media--1 .mf-media__cell {
-    max-height: 22rem;
+.mf-media--solo .mf-media__cell {
+    margin-bottom: 0;
 }
 
-.mf-media--2 .mf-media__cell,
-.mf-media--3 .mf-media__cell,
-.mf-media--4 .mf-media__cell {
-    min-height: 7.5rem;
-    max-height: 11rem;
-    aspect-ratio: 1 / 1;
+.mf-media__cell:hover {
+    filter: brightness(1.05);
 }
 
-.mf-media--3 .mf-media__cell--1 {
-    aspect-ratio: auto;
-    min-height: 15.2rem;
-    max-height: 15.2rem;
+.mf-media__cell:focus-visible {
+    outline: 2px solid var(--mf-pitch);
+    outline-offset: 2px;
 }
 
 .mf-media__cell img {
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    height: auto;
+    object-fit: contain;
 }
 
-.mf-media--1 .mf-media__cell img {
-    object-fit: contain;
-    background: var(--mf-void);
+/* Cap a lone image's height without cropping it. */
+.mf-media--solo .mf-media__cell img {
+    width: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    margin-inline: auto;
 }
+
+.mf-media__more {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
 
 .mf-embed {
     margin-top: 0.65rem;

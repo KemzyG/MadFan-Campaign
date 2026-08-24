@@ -1,0 +1,288 @@
+/*
+ * Social — post/feed enhancements, media lightbox and threaded comments.
+ * Namespaced .mf-*. Relies on the --mf-* tokens from social.css and is imported
+ * AFTER it so a handful of rules here intentionally refine the base card.
+ */
+
+/* Clamp body text in the feed to a fixed preview height (tap card for full). */
+.mf-post__text--clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Secondary @handle beside the display name. */
+.mf-post__handle {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    text-decoration: none;
+}
+
+.mf-post__handle:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Detail (thread root): larger, roomier body. */
+.mf-post--detail .mf-post__text {
+    font-size: 1.1rem;
+    line-height: 1.55;
+}
+
+.mf-post__content--detail {
+    display: block;
+}
+
+/* Colour-coded action affordances (icon set is monochrome by default). */
+.mf-action--comment:hover {
+    color: #4aa3ff;
+    background: color-mix(in srgb, #4aa3ff 12%, transparent);
+}
+
+.mf-action--repost:hover {
+    color: #21c07a;
+    background: color-mix(in srgb, #21c07a 12%, transparent);
+}
+
+.mf-action--like:hover,
+.mf-action--like.is-liked {
+    color: var(--mf-rival);
+    background: color-mix(in srgb, var(--mf-rival) 12%, transparent);
+}
+
+.mf-action--like.is-liked {
+    background: transparent;
+}
+
+/* Heart pop on like. */
+@keyframes mf-like-pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.32); }
+    100% { transform: scale(1); }
+}
+
+.mf-like-pop svg {
+    animation: mf-like-pop 260ms var(--mf-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-like-pop svg {
+        animation: none;
+    }
+}
+
+/* ---- Media lightbox ---------------------------------------------------- */
+.mf-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mf-lightbox__backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.92);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    cursor: zoom-out;
+    animation: mf-fade-in 160ms var(--mf-ease);
+}
+
+.mf-lightbox__stage {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 3.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: min(100%, 62rem);
+    cursor: zoom-out;
+}
+
+.mf-lightbox__img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(100dvh - 6rem);
+    border-radius: 0.5rem;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    cursor: default;
+    animation: mf-fade-in 200ms var(--mf-ease);
+}
+
+.mf-lightbox__close,
+.mf-lightbox__nav {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 9999px;
+    background: rgba(20, 20, 22, 0.72);
+    color: #fff;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), transform 140ms var(--mf-ease);
+}
+
+.mf-lightbox__close {
+    top: calc(0.85rem + var(--mf-safe-top));
+    right: 0.9rem;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.mf-lightbox__close svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.mf-lightbox__close:hover,
+.mf-lightbox__nav:hover {
+    background: rgba(40, 40, 44, 0.9);
+}
+
+.mf-lightbox__nav {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.mf-lightbox__nav svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.mf-lightbox__nav:hover {
+    transform: translateY(-50%) scale(1.06);
+}
+
+.mf-lightbox__nav--prev {
+    left: 0.6rem;
+}
+
+.mf-lightbox__nav--next {
+    right: 0.6rem;
+}
+
+.mf-lightbox__counter {
+    position: absolute;
+    top: calc(1.15rem + var(--mf-safe-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-meta);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Threaded comments ------------------------------------------------- */
+.mf-thread__head {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-thread > .mf-comment {
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-comment__body {
+    padding: 0.75rem 1rem 0.3rem;
+}
+
+.mf-comment.is-optimistic {
+    opacity: 0.65;
+}
+
+/* Nested children: clickable connector rail + indented stack. */
+.mf-comment__children {
+    display: flex;
+    gap: 0.4rem;
+    padding-left: 1.35rem;
+}
+
+.mf-comment__rail {
+    position: relative;
+    flex: 0 0 auto;
+    width: 1.1rem;
+    align-self: stretch;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.mf-comment__rail::before {
+    content: '';
+    position: absolute;
+    left: 0.45rem;
+    top: 0.1rem;
+    bottom: 0.5rem;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mf-line) 92%, transparent);
+    transition: background 140ms var(--mf-ease);
+}
+
+.mf-comment__rail:hover::before {
+    background: var(--mf-pitch);
+}
+
+.mf-comment__stack {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Nested comment bodies rely on the rail for indent, not their own padding. */
+.mf-comment__stack .mf-comment__body {
+    padding-left: 0;
+    padding-right: 0.35rem;
+}
+
+.mf-comment__expand {
+    margin: 0.1rem 0 0.65rem 1rem;
+    padding: 0.28rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    background: transparent;
+    color: var(--mf-pitch);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease);
+}
+
+.mf-comment__expand:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+}
+
+/* Inline reply composer under a comment. */
+.mf-composer--reply-inline {
+    margin: 0.1rem 0 0.55rem;
+    padding: 0;
+}
+
+.mf-comment__body .mf-actions {
+    margin-inline: 0;
+    max-width: 20rem;
+}
