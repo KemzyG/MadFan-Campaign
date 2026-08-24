@@ -28,7 +28,7 @@ function FeedEmpty({ mode, message, onCompose }) {
     );
 }
 
-function HomeFeed({ feed }) {
+function PostStream({ feed }) {
     const { openCompose, composeOpen } = useSocialCompose();
     const stageSession = useStageSessionOptional();
     const [dismissedIds, setDismissedIds] = useState([]);
@@ -56,7 +56,7 @@ function HomeFeed({ feed }) {
                 <div className="mf-feed-toolbar">
                     <div className="mf-segment" role="tablist" aria-label="Feed mode">
                         <Link
-                            href="/social?mode=global"
+                            href="/social/feed?mode=global"
                             role="tab"
                             aria-selected={mode === 'global'}
                             className={mode === 'global' ? 'is-active' : ''}
@@ -66,7 +66,7 @@ function HomeFeed({ feed }) {
                             Global
                         </Link>
                         <Link
-                            href="/social?mode=following"
+                            href="/social/feed?mode=following"
                             role="tab"
                             aria-selected={mode === 'following'}
                             className={mode === 'following' ? 'is-active' : ''}
@@ -132,11 +132,11 @@ function HomeFeed({ feed }) {
     );
 }
 
-export default function Home({ feed }) {
+export default function Feed({ feed }) {
     return (
-        <SocialShell title="Home">
-            <Head title="Home" />
-            {feed == null ? <FeedSkeleton /> : <HomeFeed feed={feed} />}
+        <SocialShell title="Feed">
+            <Head title="Feed" />
+            {feed == null ? <FeedSkeleton /> : <PostStream feed={feed} />}
         </SocialShell>
     );
 }

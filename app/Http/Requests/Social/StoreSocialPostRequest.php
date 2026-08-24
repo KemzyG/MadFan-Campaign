@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Social;
 
+use App\Enums\PostVisibility;
+use App\Enums\ReplyScope;
 use App\Models\Post;
 use App\Services\Social\FeedService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
 class StoreSocialPostRequest extends FormRequest
@@ -24,6 +27,10 @@ class StoreSocialPostRequest extends FormRequest
             'body' => ['nullable', 'string', 'max:'.FeedService::MAX_BODY_LENGTH],
             'images' => ['nullable', 'array', 'max:'.FeedService::MAX_IMAGES],
             'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+            'visibility' => ['nullable', new Enum(PostVisibility::class)],
+            'reply_scope' => ['nullable', new Enum(ReplyScope::class)],
+            'tagged' => ['nullable', 'array', 'max:10'],
+            'tagged.*' => ['integer', 'exists:users,id'],
         ];
     }
 

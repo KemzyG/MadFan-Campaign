@@ -62,6 +62,44 @@ export function FeedSkeleton({ count = 4, includeToolbar = true }) {
     );
 }
 
+export function EventsSkeleton({ count = 4 }) {
+    return (
+        <div className="mf-skel-page mf-skel-events" aria-busy="true" aria-label="Loading events">
+            <div className="mf-skel-events__head">
+                <Bone className="mf-skel-line mf-skel-line--caption" />
+                <Bone className="mf-skel-line mf-skel-line--display" />
+            </div>
+            <div className="mf-skel-events__filters">
+                {Array.from({ length: 5 }, (_, index) => (
+                    <Bone key={index} className="mf-skel-pill" />
+                ))}
+            </div>
+            <div className="mf-skel-events__stream">
+                {Array.from({ length: count }, (_, index) => (
+                    <article
+                        key={index}
+                        className="mf-skel-event"
+                        style={{ '--mf-skel-stagger': `${index * 50}ms` }}
+                        aria-hidden
+                    >
+                        <div className="mf-skel-event__topline">
+                            <Bone className="mf-skel-chip" />
+                            <Bone className="mf-skel-line mf-skel-line--time" />
+                        </div>
+                        <Bone className="mf-skel-line mf-skel-line--title" />
+                        <Bone className="mf-skel-line mf-skel-line--body-short" />
+                        <Bone className="mf-skel-event__stage" />
+                        <div className="mf-skel-event__foot">
+                            <Bone className="mf-skel-chip mf-skel-chip--btn" />
+                            <Bone className="mf-skel-chip" />
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function ChatSkeleton({ rows = 6 }) {
     return (
         <div className="mf-skel-page mf-skel-chat" aria-busy="true" aria-label="Loading chat">
@@ -402,12 +440,15 @@ export function ComposeSkeleton() {
 
 /**
  * @param {string} pathname
- * @returns {'feed'|'chat'|'tickets'|'wallet'|'ticket'|'stage'|'stage-room'|'passport'|'profile'|'thread'|'generic'}
+ * @returns {'events'|'feed'|'chat'|'tickets'|'wallet'|'ticket'|'stage'|'stage-room'|'passport'|'profile'|'thread'|'generic'}
  */
 export function resolveSocialSkeletonKind(pathname) {
     const path = String(pathname || '').split('?')[0].replace(/\/+$/, '') || '/';
 
     if (path === '/social') {
+        return 'events';
+    }
+    if (path === '/social/feed') {
         return 'feed';
     }
     if (path.startsWith('/social/posts/')) {
@@ -467,6 +508,8 @@ function ReelsSkeleton() {
 
 export function SocialPageSkeleton({ kind = 'generic' }) {
     switch (kind) {
+        case 'events':
+            return <EventsSkeleton />;
         case 'feed':
             return <FeedSkeleton />;
         case 'reels':

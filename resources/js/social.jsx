@@ -9,6 +9,13 @@ import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';
 import '../css/social/post.css';
+import '../css/social/composer.css';
+import '../css/social/stage-card.css';
+// Events feed: shared card chrome, then one sheet per family of templates.
+import '../css/social/events.css';
+import '../css/social/event-live.css';
+import '../css/social/event-media.css';
+import '../css/social/event-news.css';
 // Fan auth pages (login / register / password) can land in this SPA when an
 // Inertia visit redirects after session expiry — they need campaign styles.
 import '../css/madfan.css';

@@ -19,7 +19,7 @@ export default function EmbeddedPost({ embed, label }) {
                 <span className="font-semibold text-[var(--mf-text)]">{embed.author?.name}</span>
             </p>
             {embed.body ? (
-                <p className="mf-text-ui mt-1 whitespace-pre-wrap text-[var(--mf-text)]">{embed.body}</p>
+                <p className="mf-text-ui mt-1 whitespace-pre-wrap break-words text-[var(--mf-text)]">{embed.body}</p>
             ) : null}
             <MediaGrid media={embed.media} />
         </div>

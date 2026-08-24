@@ -34,10 +34,10 @@ test('global feed lists top-level posts across clubs', function () {
     ]);
 
     $this->actingAs($user)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->where('feed.mode', 'global')
             ->has('feed.posts', 3)
             ->where('feed.posts.0.body', 'Parent')
@@ -49,10 +49,10 @@ test('legacy club mode query still resolves to the global feed', function () {
     $user = socialReadyUser();
 
     $this->actingAs($user)
-        ->get('/social?mode=club')
+        ->get('/social/feed?mode=club')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->where('feed.mode', 'global'));
 });
 
@@ -61,7 +61,7 @@ test('onboarded fans can create a text post on the club terrace', function () {
 
     $this->actingAs($user)
         ->post('/social/posts', ['body' => 'First ball in.'])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     $post = Post::query()->first();
 
@@ -147,7 +147,7 @@ test('authors can soft-delete their own posts', function () {
 
     $this->actingAs($user)
         ->delete(route('social.posts.destroy', $post))
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     expect(Post::query()->find($post->id))->toBeNull()
         ->and(Post::withTrashed()->find($post->id))->not->toBeNull();

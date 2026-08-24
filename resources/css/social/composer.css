@@ -1,0 +1,465 @@
+/*
+ * Social — composer: full-height compose sheet, post-settings bar, dropdown
+ * menus (visibility / who-can-reply), emoji picker, tagged chips + friend
+ * picker. Namespaced .mf-*; relies on --mf-* tokens from social.css.
+ */
+
+/* ---- Full-height compose sheet ----------------------------------------- */
+.mf-sheet--full {
+    align-items: stretch;
+}
+
+.mf-sheet__panel--full {
+    width: min(100%, var(--mf-app-width));
+    height: 100dvh;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-radius: 0;
+    border: 0;
+    overflow: hidden;
+    animation: mf-fade-in 180ms var(--mf-ease);
+}
+
+@media (min-width: 768px) {
+    /* Centered tall column on larger screens. */
+    .mf-sheet--full {
+        align-items: center;
+    }
+
+    .mf-sheet__panel--full {
+        height: min(94dvh, 46rem);
+        border: 1px solid var(--mf-line);
+        border-radius: 1.15rem;
+    }
+}
+
+.mf-sheet__head--full {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-void) 60%, transparent);
+}
+
+.mf-sheet__head--full .mf-display {
+    flex: 1;
+    text-align: center;
+}
+
+.mf-sheet__head-spacer {
+    flex: 0 0 auto;
+    width: 2.35rem;
+    height: 2.35rem;
+}
+
+/* The composer fills the sheet; the textarea grows, the action bar pins low. */
+.mf-sheet__panel--full .mf-composer--sheet {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0.85rem 1rem calc(0.85rem + var(--mf-safe-bottom));
+}
+
+.mf-sheet__panel--full .mf-composer__row {
+    height: 100%;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.mf-sheet__panel--full .mf-composer__main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.mf-sheet__panel--full .mf-composer__input {
+    flex: 1 1 auto;
+    min-height: 6rem;
+    overflow: auto;
+}
+
+/* ---- Post settings bar ------------------------------------------------- */
+.mf-settings {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+
+.mf-settings__row,
+.mf-settings__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ---- Dropdown chips + menus (visibility / who-can-reply) --------------- */
+.mf-cmenu {
+    position: relative;
+    display: inline-flex;
+}
+
+.mf-cchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-pitch) 5%, transparent);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease), color 140ms var(--mf-ease);
+}
+
+.mf-cchip:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+}
+
+.mf-cchip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mf-cchip svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-cchip > svg:last-child {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: var(--mf-muted);
+}
+
+.mf-cchip--ghost.is-active {
+    border-color: color-mix(in srgb, var(--mf-pitch) 55%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 16%, transparent);
+    color: var(--mf-pitch);
+}
+
+.mf-cmenu__pop {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    z-index: 20;
+    min-width: 15rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.35rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-shadow-2);
+    animation: mf-menu-in 140ms var(--mf-ease);
+}
+
+.mf-cmenu__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    border-radius: calc(var(--mf-radius) - 2px);
+    background: transparent;
+    color: var(--mf-text);
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease);
+}
+
+.mf-cmenu__item svg {
+    flex: 0 0 auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.1rem;
+    color: var(--mf-muted);
+}
+
+.mf-cmenu__item:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+}
+
+.mf-cmenu__item.is-active {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+}
+
+.mf-cmenu__item.is-active svg {
+    color: var(--mf-pitch);
+}
+
+.mf-cmenu__item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.mf-cmenu__item-label {
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+}
+
+.mf-cmenu__item-hint {
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+/* ---- Composer tool button (emoji) + emoji popover ---------------------- */
+.mf-composer-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-pitch) 5%, transparent);
+    color: var(--mf-text);
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease);
+}
+
+.mf-composer-tool:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+}
+
+.mf-composer-tool:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mf-composer-tool svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.mf-emoji-pop {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.4rem);
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.1rem;
+    width: 16rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.4rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-shadow-2);
+    animation: mf-menu-in 140ms var(--mf-ease);
+}
+
+.mf-emoji-pop__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease), transform 120ms var(--mf-ease);
+}
+
+.mf-emoji-pop__btn:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    transform: scale(1.12);
+}
+
+/* ---- Tagged chips (composer, removable) -------------------------------- */
+.mf-tagged {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+}
+
+.mf-tagged__lead {
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-tagged__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.35rem 0.15rem 0.2rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-tagged__name {
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-tagged__x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    padding: 0;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition: color 120ms var(--mf-ease), background 120ms var(--mf-ease);
+}
+
+.mf-tagged__x:hover {
+    color: var(--mf-text);
+    background: color-mix(in srgb, var(--mf-pitch) 18%, transparent);
+}
+
+.mf-tagged__x svg {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+/* ---- Tag-friends picker ------------------------------------------------ */
+.mf-tagpick {
+    display: flex;
+    flex-direction: column;
+    max-height: min(80dvh, 34rem);
+}
+
+.mf-tagpick__count {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-tagpick__search {
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 0.35rem 0 0.5rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-void);
+    color: var(--mf-text);
+    font: inherit;
+    font-size: var(--mf-text-ui);
+    outline: none;
+}
+
+.mf-tagpick__search:focus {
+    border-color: var(--mf-pitch-dim);
+    box-shadow: 0 0 0 1px var(--mf-pitch-dim);
+}
+
+.mf-tagpick__list {
+    flex: 1 1 auto;
+    min-height: 6rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.mf-tagpick__hint {
+    margin: 1.25rem 0;
+    text-align: center;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-tagpick__row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.5rem;
+    border: 0;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    color: var(--mf-text);
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease);
+}
+
+.mf-tagpick__row:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+}
+
+.mf-tagpick__row.is-selected {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+}
+
+.mf-tagpick__row:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.mf-tagpick__who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-tagpick__name {
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-tagpick__handle {
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-tagpick__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mf-line);
+    color: var(--mf-muted);
+}
+
+.mf-tagpick__check svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-tagpick__check.is-on {
+    border-color: var(--mf-pitch);
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+}
+
+.mf-tagpick__done {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-top: 0.6rem;
+}

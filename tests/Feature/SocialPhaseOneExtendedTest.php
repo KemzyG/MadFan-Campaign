@@ -48,19 +48,19 @@ test('fans can follow users and see following feed without other authors', funct
         ->toBeTrue();
 
     $this->actingAs($viewer)
-        ->get('/social?mode=following')
+        ->get('/social/feed?mode=following')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->where('feed.mode', 'following')
             ->has('feed.posts', 1)
             ->where('feed.posts.0.body', 'From followed'));
 
     $this->actingAs($viewer)
-        ->get('/social?mode=global')
+        ->get('/social/feed?mode=global')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->where('feed.mode', 'global')
             ->has('feed.posts', 3));
 });
@@ -255,13 +255,13 @@ test('reporting a post hides it from the reporter feed', function () {
 
     $this->actingAs($viewer)
         ->post(route('social.posts.report', $post), ['reason' => 'spam'])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     expect(SocialReport::query()->where('reporter_id', $viewer->id)->where('target_id', $post->id)->exists())
         ->toBeTrue();
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertInertia(fn ($page) => $page->has('feed.posts', 0));
 });
 
@@ -278,14 +278,14 @@ test('fans can repost and quote another post', function () {
 
     $this->actingAs($viewer)
         ->post(route('social.posts.repost', $post))
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     expect(Post::query()->where('type', PostType::Repost)->where('repost_of_id', $post->id)->exists())->toBeTrue();
     expect($post->fresh()->reposts_count)->toBe(1);
 
     $this->actingAs($viewer)
         ->post(route('social.posts.quote', $post), ['body' => 'Adding heat'])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     expect(Post::query()->where('type', PostType::Quote)->where('quote_of_id', $post->id)->where('body', 'Adding heat')->exists())
         ->toBeTrue();
@@ -324,7 +324,7 @@ test('fans can attach images to a post', function () {
             'body' => 'Matchday photo',
             'images' => [$image],
         ])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     $post = Post::query()->latest('id')->first();
 

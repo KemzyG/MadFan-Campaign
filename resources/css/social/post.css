@@ -286,3 +286,49 @@
     margin-inline: 0;
     max-width: 20rem;
 }
+
+/* ---- Shared: image inside a wrapper .mf-avatar -------------------------- */
+/* StageAvatar puts .mf-avatar on the <img> itself; the composer/stage-card
+ * stacks wrap an <img> in a sized .mf-avatar span, so fill it here. */
+.mf-avatar > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---- Post audience glyph (club / only-me) ------------------------------ */
+.mf-post__audience {
+    display: inline-flex;
+    align-items: center;
+    color: var(--mf-muted);
+}
+
+.mf-post__audience svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+/* ---- Tagged row (read-only "with @a, @b +N") --------------------------- */
+.mf-tagrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin: 0.15rem 0 0.35rem;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-tagrow__lead {
+    color: var(--mf-muted);
+}
+
+.mf-tagrow__name {
+    color: var(--mf-pitch);
+    font-weight: 600;
+}
+
+.mf-tagrow__more {
+    color: var(--mf-muted);
+}

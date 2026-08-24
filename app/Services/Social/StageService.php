@@ -595,13 +595,12 @@ class StageService
             ]);
         }
 
-        $url = route('social.stage.show', $stage);
         $note = trim((string) $note);
-        $body = $note !== ''
-            ? $note."\n".$url
-            : 'Live on Stage: '.$stage->title."\n".$url;
 
-        return app(CreateSocialPost::class)->handle($user, ['body' => $body]);
+        return app(CreateSocialPost::class)->handle($user, [
+            'body' => $note !== '' ? $note : null,
+            'stage_id' => $stage->id,
+        ]);
     }
 
     public function heartbeat(Stage $stage, User $user): void
@@ -888,6 +887,54 @@ class StageService
     public function presentStageSummary(Stage $stage): array
     {
         return $this->presentStage($stage, includeCounts: true, stageForCounts: $stage);
+    }
+
+    /**
+     * Compact live-stage card for the feed: title, host, live/ended state, a
+     * top-4 avatar stack (host + speakers first) with a +N overflow count, and a
+     * join link. Two lightweight queries per card (counts + avatars); stage posts
+     * are rare enough in a feed page that this stays cheap.
+     *
+     * @return array<string, mixed>
+     */
+    public function presentStageCard(Stage $stage): array
+    {
+        $counts = $stage->participants()
+            ->whereNull('left_at')
+            ->selectRaw('COUNT(*) as participant_count')
+            ->selectRaw("SUM(CASE WHEN role IN ('host', 'speaker') THEN 1 ELSE 0 END) as speaker_count")
+            ->first();
+
+        $participantCount = (int) ($counts?->participant_count ?? 0);
+        $speakerCount = (int) ($counts?->speaker_count ?? 0);
+
+        $avatars = $stage->participants()
+            ->whereNull('left_at')
+            ->with('user:id,name,handle,username,fan_id,avatar_path,avatar_emoji')
+            ->orderByRaw("CASE role WHEN 'host' THEN 0 WHEN 'speaker' THEN 1 ELSE 2 END")
+            ->orderBy('joined_at')
+            ->limit(4)
+            ->get()
+            ->map(fn (StageParticipant $participant): ?array => $this->presentUser($participant->user))
+            ->filter()
+            ->values()
+            ->all();
+
+        return [
+            'id' => $stage->id,
+            'title' => $stage->title,
+            'status' => $stage->status->value,
+            'is_live' => $stage->isLive(),
+            'host' => $this->presentUser($stage->host),
+            'participant_count' => $participantCount,
+            'speaker_count' => $speakerCount,
+            'overflow_count' => max(0, $participantCount - count($avatars)),
+            'avatars' => $avatars,
+            // Relative path (not route()) so the Inertia <Link> stays same-origin:
+            // the feed SPA and the app may be served from different origins here,
+            // matching how the rest of the Stage UI navigates (e.g. StageMiniDock).
+            'join_url' => "/social/stage/{$stage->id}",
+        ];
     }
 
     /**

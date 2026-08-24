@@ -1,18 +1,20 @@
 <?php
 
-use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
+use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
+use App\Http\Controllers\Api\Social\EventInterestController as ApiSocialEventInterestController;
 use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
 use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
+use App\Http\Controllers\Inertia\Social\SocialEventsController;
+use App\Http\Controllers\Inertia\Social\SocialFeedController;
 use App\Http\Controllers\Inertia\Social\SocialFixtureController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
 use App\Http\Controllers\Inertia\Social\SocialGroupChatController;
-use App\Http\Controllers\Inertia\Social\SocialHomeController;
 use App\Http\Controllers\Inertia\Social\SocialLeaderboardController;
 use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
 use App\Http\Controllers\Inertia\Social\SocialPassportController;
@@ -65,12 +67,22 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:60,1')
                     ->name('posts.unlike');
 
+                Route::post('/events/interest', [ApiSocialEventInterestController::class, 'store'])
+                    ->middleware('throttle:60,1')
+                    ->name('events.interest');
+                Route::delete('/events/interest', [ApiSocialEventInterestController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('events.uninterest');
+
                 Route::post('/users/{user}/follow', [ApiSocialFollowController::class, 'store'])
                     ->middleware('throttle:60,1')
                     ->name('users.follow');
                 Route::delete('/users/{user}/follow', [ApiSocialFollowController::class, 'destroy'])
                     ->middleware('throttle:60,1')
                     ->name('users.unfollow');
+                Route::get('/following', [ApiSocialFollowController::class, 'following'])
+                    ->middleware('throttle:120,1')
+                    ->name('following');
 
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
@@ -105,9 +117,10 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 ->name('onboarding.club.store');
 
             Route::middleware('social.onboarded')->group(function () use ($pathPrefix) {
-                Route::get('/', SocialHomeController::class)->name('home');
+                Route::get('/', SocialEventsController::class)->name('home');
                 $homeTarget = $pathPrefix === '' ? '/' : '/'.trim($pathPrefix, '/');
                 Route::redirect('/home', $homeTarget);
+                Route::get('/feed', SocialFeedController::class)->name('feed');
                 Route::get('/passport', SocialPassportController::class)->name('passport');
                 Route::get('/chat', [SocialChatController::class, 'index'])->name('chat');
                 Route::get('/chat/thread/{channelKey}', [SocialChatController::class, 'show'])

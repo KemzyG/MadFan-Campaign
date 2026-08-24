@@ -1,0 +1,344 @@
+/*
+ * Social events feed — the three editorial / progress bodies:
+ *
+ *   .mf-evwire  breaking_news  wire bulletin with a rail down the left edge
+ *   .mf-evcamp  campaign       segmented week meter
+ *   .mf-evtask  fan_challenge  task brief with the points reward as the hero
+ */
+
+/* ======================================================================== */
+/* breaking_news — wire bulletin                                            */
+/* ======================================================================== */
+.mf-evwire {
+    display: flex;
+    align-items: stretch;
+    gap: 0.7rem;
+}
+
+.mf-evwire__rail {
+    flex-shrink: 0;
+    width: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mf-pitch) 40%, transparent);
+}
+
+.mf-evwire.is-urgent .mf-evwire__rail {
+    background: var(--mf-bad);
+    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--mf-bad) 70%, transparent);
+}
+
+.mf-evwire__copy {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mf-evwire__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    margin: 0;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-evwire.is-urgent .mf-evwire__kicker {
+    color: var(--mf-bad);
+}
+
+.mf-evwire__kicker svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.mf-evwire__headline {
+    margin: 0.25rem 0 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-display);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-evwire.is-urgent .mf-evwire__headline {
+    font-size: var(--mf-text-score);
+    text-transform: uppercase;
+}
+
+.mf-evwire__standfirst {
+    margin: 0.3rem 0 0;
+    font-size: var(--mf-text-meta);
+    line-height: var(--mf-leading-body);
+    color: var(--mf-pitch-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mf-evwire__source {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.45rem 0 0;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+.mf-evwire__source-label {
+    padding: 0.06rem 0.32rem;
+    border-radius: 0.2rem;
+    border: 1px solid var(--mf-line);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-evwire__thumb {
+    flex-shrink: 0;
+    width: 4.75rem;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 0.35rem;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+}
+
+.mf-evwire__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ======================================================================== */
+/* campaign — week meter                                                    */
+/* ======================================================================== */
+.mf-evcamp__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--mf-text);
+}
+
+.mf-evcamp__meter {
+    margin-top: 0.6rem;
+}
+
+.mf-evcamp__bar {
+    position: relative;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--mf-elevated);
+    box-shadow: inset 0 0 0 1px var(--mf-line);
+    overflow: hidden;
+}
+
+.mf-evcamp__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--mf-pitch-dim), var(--mf-pitch));
+    transition: width var(--mf-dur-slow) var(--mf-ease);
+}
+
+.mf-evcamp__weeks {
+    display: flex;
+    gap: 0.15rem;
+    margin-top: 0.35rem;
+}
+
+.mf-evcamp__week {
+    flex: 1 1 0;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: var(--mf-elevated);
+    box-shadow: inset 0 0 0 1px var(--mf-line);
+}
+
+.mf-evcamp__week.is-done {
+    background: color-mix(in srgb, var(--mf-pitch) 42%, transparent);
+    box-shadow: none;
+}
+
+.mf-evcamp__week.is-now {
+    background: var(--mf-pitch);
+    box-shadow: 0 0 8px -1px color-mix(in srgb, var(--mf-pitch) 60%, transparent);
+}
+
+/* Week and days-left are both optional, so the track count follows the cells. */
+.mf-evcamp__stats {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    margin: 0.65rem 0 0;
+}
+
+.mf-evcamp__stats > div {
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-evcamp__stats dt {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    white-space: nowrap;
+}
+
+.mf-evcamp__stats dd {
+    display: flex;
+    align-items: baseline;
+    gap: 0.05rem;
+    margin: 0.1rem 0 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-display);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--mf-text);
+}
+
+.mf-evcamp__stats dd i {
+    font-style: normal;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-muted);
+}
+
+.mf-evcamp__ends {
+    margin: 0.55rem 0 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+/* ======================================================================== */
+/* fan_challenge — task brief                                               */
+/* ======================================================================== */
+.mf-evtask {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.mf-evtask__reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3.9rem;
+    padding: 0.45rem 0.25rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 24%, var(--mf-line));
+    background:
+        radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--mf-pitch) 9%, transparent), transparent 70%),
+        var(--mf-elevated);
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-evtask__reward svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-evtask__reward b {
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-display);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+    color: var(--mf-text);
+}
+
+.mf-evtask__reward span {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-evtask__brief {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mf-evtask__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-evtask__desc {
+    margin: 0.22rem 0 0;
+    font-size: var(--mf-text-meta);
+    line-height: var(--mf-leading-body);
+    color: var(--mf-pitch-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mf-evtask__tags {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin-top: 0.45rem;
+}
+
+.mf-evtask__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--mf-line);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-evtask__tag svg {
+    width: 0.7rem;
+    height: 0.7rem;
+}
+
+.mf-evtask__tag.is-proof {
+    border-color: color-mix(in srgb, var(--mf-warn) 45%, var(--mf-line));
+    color: var(--mf-warn);
+}
+
+.mf-evtask__tag.is-external {
+    border-style: dashed;
+    color: var(--mf-muted);
+}

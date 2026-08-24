@@ -30,6 +30,7 @@ class ProductionCoreSeeder extends Seeder
             SportsPostSeeder::class,
             LandingMediaSeeder::class,
             VideoHighlightSeeder::class,
+            SocialAnnouncementSeeder::class,
         ]);
     }
 }

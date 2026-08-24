@@ -22,7 +22,8 @@ Onboarding (outside `social.onboarded` but still `social.enabled`):
 
 | Method | Path | Name | Notes |
 | --- | --- | --- | --- |
-| GET | `/social` | `social.home` | Club / Following (`?mode=`) |
+| GET | `/social` | `social.home` | Events feed — "What's happening NOW" |
+| GET | `/social/feed` | `social.feed` | Club / Following post timeline (`?mode=`) |
 | GET | `/social/passport` | `social.passport` | **Identity** — score, club, records, ledger |
 | GET | `/social/u/{handle}` | `social.profile` | Public profile + posts tab |
 | POST/DELETE | `/social/users/{user}/follow` | `social.users.follow` / `unfollow` | |

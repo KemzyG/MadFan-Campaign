@@ -32,7 +32,7 @@ class SocialPostReportController extends Controller
         );
 
         return redirect()
-            ->route('social.home')
+            ->route('social.feed')
             ->with('success', 'Reported. That post is hidden from your feed.');
     }
 }

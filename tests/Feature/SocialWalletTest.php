@@ -15,7 +15,7 @@ test('wallet shows balance loyalty breakdown stats and activity', function () {
     // Earn points through the real award flow (avoids the stale ledger factory).
     $this->actingAs($user)
         ->post('/social/posts', ['body' => 'First post into the wallet'])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     $points = AwardSocialPoints::RULES[AwardSocialPoints::SOURCE_POST]['points'];
 

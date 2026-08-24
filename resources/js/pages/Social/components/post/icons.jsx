@@ -35,10 +35,10 @@ export function IconHeart({ filled }) {
 export function IconRepost() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m7 7 3-3 3 3" />
-            <path strokeLinecap="round" d="M10 4v9a4 4 0 0 0 4 4h3" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="m17 17-3 3-3-3" />
-            <path strokeLinecap="round" d="M14 20V11a4 4 0 0 0-4-4H7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 9V8a3 3 0 0 1 3-3h10.5" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="m14.5 2 3.5 3-3.5 3" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20 15v1a3 3 0 0 1-3 3H6.5" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 22 6 19l3.5-3" />
         </svg>
     );
 }
@@ -104,6 +104,86 @@ export function IconChevronRight() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+        </svg>
+    );
+}
+
+export function IconChevronDown() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m6 9 6 6 6-6" />
+        </svg>
+    );
+}
+
+/** Public / anyone — globe. */
+export function IconGlobe() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="12" r="9" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3Z" />
+        </svg>
+    );
+}
+
+/** Club-only — shield crest. */
+export function IconClubShield() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M12 3l7 2.5v5.5c0 4.4-3 7.7-7 9-4-1.3-7-4.6-7-9V5.5L12 3Z" />
+        </svg>
+    );
+}
+
+/** Only me — padlock. */
+export function IconLock() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="5" y="10.5" width="14" height="10" rx="2" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+        </svg>
+    );
+}
+
+/** Tag friends — person with a plus. */
+export function IconUserPlus() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M15 20v-1.5a4 4 0 0 0-4-4H6.5a4 4 0 0 0-4 4V20" />
+            <circle cx="8.75" cy="7.5" r="3.5" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M19 8v6M22 11h-6" />
+        </svg>
+    );
+}
+
+/** People / participants. */
+export function IconUsers() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20" />
+            <circle cx="9" cy="7.5" r="3.5" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M22 20v-1.5a4 4 0 0 0-3-3.87M16 4.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    );
+}
+
+/** Emoji — smiley face. */
+export function IconSmile() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="12" r="9" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M8.5 14a4 4 0 0 0 7 0" />
+            <path strokeLinecap="round" d="M9 9.5h.01M15 9.5h.01" />
+        </svg>
+    );
+}
+
+/** Live — radiating broadcast dot (feed stage card). */
+export function IconLive() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none" />
+            <path strokeLinecap="round" strokeWidth="1.75" d="M6.7 6.7a7.5 7.5 0 0 0 0 10.6M17.3 17.3a7.5 7.5 0 0 0 0-10.6M4.2 4.2a11 11 0 0 0 0 15.6M19.8 19.8a11 11 0 0 0 0-15.6" />
         </svg>
     );
 }

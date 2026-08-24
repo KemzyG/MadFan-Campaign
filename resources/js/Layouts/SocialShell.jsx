@@ -32,22 +32,42 @@ export function useSocialCompose() {
     return useContext(SocialComposeContext);
 }
 
-function IconHome({ active }) {
+function IconEvents({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            {active ? (
-                <path
-                    fill="currentColor"
-                    stroke="none"
-                    d="M12 3.2 3.5 10.2V21a1 1 0 0 0 1 1h5.2v-6.2h4.6V22H19.5a1 1 0 0 0 1-1V10.2L12 3.2Z"
-                />
-            ) : (
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"
-                />
-            )}
+            <circle
+                cx="12"
+                cy="12"
+                r={active ? 3.3 : 2.5}
+                fill={active ? 'currentColor' : 'none'}
+                stroke={active ? 'none' : 'currentColor'}
+                strokeWidth="1.75"
+            />
+            <path
+                strokeLinecap="round"
+                strokeWidth={active ? 2.25 : 1.75}
+                d="M7.4 7.4a6.5 6.5 0 0 0 0 9.2M16.6 16.6a6.5 6.5 0 0 0 0-9.2"
+            />
+            <path
+                strokeLinecap="round"
+                strokeWidth={active ? 2 : 1.55}
+                opacity={active ? 0.7 : 0.45}
+                d="M4.4 4.4a10.6 10.6 0 0 0 0 15.2M19.6 19.6a10.6 10.6 0 0 0 0-15.2"
+            />
+        </svg>
+    );
+}
+
+function IconFeed({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="3.5" y="4.5" width="17" height="15" rx="2.4" strokeWidth={active ? 2.25 : 1.75} />
+            <circle cx="8" cy="9.6" r="1.6" fill={active ? 'currentColor' : 'none'} strokeWidth="1.5" />
+            <path
+                strokeLinecap="round"
+                strokeWidth={active ? 2 : 1.6}
+                d="M12.2 9.6H17M7 14h10M7 16.8h6.4"
+            />
         </svg>
     );
 }
@@ -646,13 +666,19 @@ export default function SocialShell({
         };
     }, [clearNavSkeleton]);
 
-    // Primary destinations shown in the mobile bottom tab bar (exactly these three).
+    // Primary destinations shown in the mobile bottom tab bar (exactly these four).
     const primaryTabs = [
         {
             href: '/social',
-            label: 'Home',
-            icon: IconHome,
-            active: pathMatches(current, '/social', true) || pathMatches(current, '/social/posts'),
+            label: 'Events',
+            icon: IconEvents,
+            active: pathMatches(current, '/social', true),
+        },
+        {
+            href: '/social/feed',
+            label: 'Feed',
+            icon: IconFeed,
+            active: pathMatches(current, '/social/feed') || pathMatches(current, '/social/posts'),
         },
         {
             href: '/social/tickets',

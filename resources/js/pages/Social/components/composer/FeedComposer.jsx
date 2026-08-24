@@ -1,11 +1,17 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { prependFeedPost, useSocialFlash, withRollbackFlash } from '../../optimistic';
 import { IconImage } from '../post/icons';
+import PostSettingsBar from './PostSettingsBar';
+import TaggedChips from './TaggedChips';
+import TagFriendsPicker from './TagFriendsPicker';
+
+const MAX_TAGGED = 10;
 
 /**
  * The primary "write a post" composer. Rendered inline on the feed and inside
- * the compose bottom sheet (`variant="sheet"`).
+ * the compose sheet (`variant="sheet"`). Carries the post's audience
+ * (visibility), who-can-reply scope, and tagged friends.
  */
 export default function FeedComposer({
     maxBodyLength = 280,
@@ -21,12 +27,17 @@ export default function FeedComposer({
     const initial = (user?.name || user?.handle || '?').slice(0, 1).toUpperCase();
     const inputId = useId();
     const { reportError } = useSocialFlash();
+    const textareaRef = useRef(null);
 
     const { data, setData, errors } = useForm({
         body: '',
         images: [],
     });
 
+    const [visibility, setVisibility] = useState('public');
+    const [replyScope, setReplyScope] = useState('everyone');
+    const [tagged, setTagged] = useState([]);
+    const [pickerOpen, setPickerOpen] = useState(false);
     const [previews, setPreviews] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +60,26 @@ export default function FeedComposer({
     const canPost = Boolean(data.body.trim() || data.images?.length > 0);
     const busy = submitting;
 
+    function insertEmoji(emoji) {
+        const el = textareaRef.current;
+
+        if (!el) {
+            setData('body', (data.body + emoji).slice(0, maxBodyLength));
+            return;
+        }
+
+        const start = el.selectionStart ?? data.body.length;
+        const end = el.selectionEnd ?? data.body.length;
+        const next = (data.body.slice(0, start) + emoji + data.body.slice(end)).slice(0, maxBodyLength);
+        setData('body', next);
+
+        requestAnimationFrame(() => {
+            el.focus();
+            const caret = Math.min(start + emoji.length, next.length);
+            el.setSelectionRange(caret, caret);
+        });
+    }
+
     function submit(event) {
         event.preventDefault();
         if (!canPost || busy) {
@@ -57,6 +88,7 @@ export default function FeedComposer({
 
         const body = data.body.trim();
         const images = [...(data.images || [])];
+        const taggedUsers = [...tagged];
         const tempId = `tmp-post-${Date.now()}`;
         const hasImages = images.length > 0;
 
@@ -68,6 +100,8 @@ export default function FeedComposer({
                     id: tempId,
                     body: body || (hasImages ? 'Uploading media…' : null),
                     type: 'post',
+                    visibility,
+                    reply_scope: replyScope,
                     likes_count: 0,
                     replies_count: 0,
                     reposts_count: 0,
@@ -77,6 +111,7 @@ export default function FeedComposer({
                     bookmarked_by_viewer: false,
                     hidden_by_viewer: false,
                     viewer_follows_author: false,
+                    viewer_can_reply: true,
                     is_own: true,
                     published_at: new Date().toISOString(),
                     created_at: new Date().toISOString(),
@@ -87,6 +122,13 @@ export default function FeedComposer({
                     },
                     club: null,
                     media: [],
+                    stage: null,
+                    tagged: taggedUsers.map((entry) => ({
+                        id: entry.id,
+                        name: entry.name,
+                        handle: entry.handle,
+                        avatar_url: entry.avatar_url,
+                    })),
                     quote_of: null,
                     repost_of: null,
                     can_delete: true,
@@ -98,7 +140,13 @@ export default function FeedComposer({
             )
             .post(
                 action,
-                { body, images },
+                {
+                    body,
+                    images,
+                    visibility,
+                    reply_scope: replyScope,
+                    tagged: taggedUsers.map((entry) => entry.id),
+                },
                 withRollbackFlash(reportError, {
                     forceFormData: true,
                     preserveScroll: true,
@@ -132,6 +180,7 @@ export default function FeedComposer({
                     </label>
                     <textarea
                         id={inputId}
+                        ref={textareaRef}
                         name="body"
                         rows={variant === 'sheet' ? 5 : 3}
                         maxLength={maxBodyLength}
@@ -153,8 +202,24 @@ export default function FeedComposer({
                         </div>
                     ) : null}
 
+                    <TaggedChips
+                        tagged={tagged}
+                        onRemove={(id) => setTagged((prev) => prev.filter((entry) => entry.id !== id))}
+                    />
+
                     {errors.body ? <p className="mf-field-error">{errors.body}</p> : null}
                     {errors.images ? <p className="mf-field-error">{errors.images}</p> : null}
+
+                    <PostSettingsBar
+                        visibility={visibility}
+                        onVisibilityChange={setVisibility}
+                        replyScope={replyScope}
+                        onReplyScopeChange={setReplyScope}
+                        onTagClick={() => setPickerOpen(true)}
+                        taggedCount={tagged.length}
+                        onEmoji={insertEmoji}
+                        disabled={busy}
+                    />
 
                     <div className="mf-composer__bar">
                         <div className="mf-composer__tools">
@@ -183,6 +248,14 @@ export default function FeedComposer({
                     </div>
                 </div>
             </div>
+
+            <TagFriendsPicker
+                open={pickerOpen}
+                onClose={() => setPickerOpen(false)}
+                selected={tagged}
+                onChange={setTagged}
+                max={MAX_TAGGED}
+            />
         </form>
     );
 }
