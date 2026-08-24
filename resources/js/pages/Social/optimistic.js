@@ -46,34 +46,46 @@ export function withRollbackFlash(reportError, options = {}, fallback = 'Action 
 }
 
 /**
- * Apply a partial page-props patch without a network visit (Inertia v3 replaceProp).
+ * Apply a partial page-props patch without a network visit (Inertia client visit).
+ *
+ * The router exposes no getter for the current page, so the props are only
+ * reachable inside the visit's own `props` callback — which is also where the
+ * pre-patch values are captured so rollback can put them back.
  *
  * @param {(props: object) => object} mapper
  * @returns {() => void} rollback
  */
 export function applyOptimisticProps(mapper) {
-    const page = router.page;
-    if (!page?.props || typeof mapper !== 'function') {
+    if (typeof mapper !== 'function') {
         return () => {};
     }
 
-    const previous = page.props;
-    const patch = mapper(previous) || {};
-    const keys = Object.keys(patch);
+    let previous = null;
 
-    if (keys.length === 0) {
-        return () => {};
-    }
+    router.replace({
+        preserveScroll: true,
+        preserveState: true,
+        props: (current) => {
+            const patch = mapper(current) || {};
+            const keys = Object.keys(patch);
 
-    for (const key of keys) {
-        router.replaceProp(key, patch[key]);
-    }
+            if (keys.length === 0) {
+                return current;
+            }
 
-    return () => {
-        for (const key of keys) {
-            router.replaceProp(key, previous[key]);
-        }
-    };
+            previous = Object.fromEntries(keys.map((key) => [key, current[key]]));
+
+            return { ...current, ...patch };
+        },
+    });
+
+    // Client visits are queued, so this always runs after the patch above —
+    // `previous` is populated by then, or the patch was a no-op.
+    return () => router.replace({
+        preserveScroll: true,
+        preserveState: true,
+        props: (current) => (previous ? { ...current, ...previous } : current),
+    });
 }
 
 /**
