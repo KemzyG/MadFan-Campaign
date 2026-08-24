@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Enums\PostType;
+use App\Enums\PostVisibility;
+use App\Enums\ReplyScope;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -19,7 +22,10 @@ class Post extends Model
     protected $fillable = [
         'author_id',
         'club_id',
+        'stage_id',
         'type',
+        'visibility',
+        'reply_scope',
         'body',
         'reply_to_id',
         'root_id',
@@ -42,6 +48,8 @@ class Post extends Model
     {
         return [
             'type' => PostType::class,
+            'visibility' => PostVisibility::class,
+            'reply_scope' => ReplyScope::class,
             'is_hidden' => 'boolean',
             'published_at' => 'datetime',
             'likes_count' => 'integer',
@@ -60,6 +68,16 @@ class Post extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(Stage::class);
+    }
+
+    public function taggedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'post_tags')->withTimestamps();
     }
 
     public function replyTo(): BelongsTo

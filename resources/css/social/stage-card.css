@@ -1,0 +1,209 @@
+/*
+ * Social — live-stage feed card. A shared Stage renders as a vivid gradient
+ * banner (deliberately NOT the monochrome feed black) with a LIVE pill, the
+ * speaker avatar carousel, and a Join button. Namespaced .mf-*.
+ */
+
+.mf-stagecard {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background:
+        radial-gradient(130% 120% at 0% 0%, #6d28d9 0%, transparent 55%),
+        radial-gradient(130% 120% at 100% 100%, #db2777 0%, transparent 52%),
+        linear-gradient(135deg, #4f46e5 0%, #7c3aed 48%, #c026d3 100%);
+    color: #fff;
+    box-shadow: 0 12px 34px -14px rgba(124, 58, 237, 0.7);
+}
+
+.mf-stagecard.is-ended {
+    background: linear-gradient(135deg, #34313c 0%, #2a2933 60%, #232228 100%);
+    border-color: var(--mf-line);
+    color: var(--mf-text);
+    box-shadow: none;
+}
+
+.mf-stagecard__glow {
+    position: absolute;
+    inset: -45% -10% auto -10%;
+    height: 85%;
+    z-index: -1;
+    background: radial-gradient(60% 60% at 50% 0%, rgba(255, 255, 255, 0.28), transparent 70%);
+    pointer-events: none;
+    animation: mf-stagecard-glow 4.5s var(--mf-ease) infinite alternate;
+}
+
+.mf-stagecard.is-ended .mf-stagecard__glow {
+    display: none;
+}
+
+@keyframes mf-stagecard-glow {
+    from { opacity: 0.55; transform: translateX(-6%); }
+    to { opacity: 1; transform: translateX(6%); }
+}
+
+.mf-stagecard__body {
+    padding: 0.95rem 1.05rem 1.05rem;
+}
+
+.mf-stagecard__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mf-stagecard__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.28);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 800;
+    letter-spacing: 0.09em;
+}
+
+.mf-stagecard__pill.is-live {
+    background: #ef4444;
+    color: #fff;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    animation: mf-stagecard-live 1.9s var(--mf-ease) infinite;
+}
+
+.mf-stagecard__pill svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+@keyframes mf-stagecard-live {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+    70% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.mf-stagecard__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-stagecard__count svg {
+    width: 1rem;
+    height: 1rem;
+    opacity: 0.9;
+}
+
+.mf-stagecard__title {
+    margin: 0.6rem 0 0.2rem;
+    font-family: var(--mf-font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+}
+
+.mf-stagecard__host {
+    margin: 0;
+    font-size: var(--mf-text-meta);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.mf-stagecard.is-ended .mf-stagecard__host {
+    color: var(--mf-muted);
+}
+
+.mf-stagecard__host span {
+    font-weight: 700;
+    color: #fff;
+}
+
+.mf-stagecard.is-ended .mf-stagecard__host span {
+    color: var(--mf-text);
+}
+
+.mf-stagecard__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.95rem;
+}
+
+.mf-stagecard__join.mf-btn {
+    min-height: 2.15rem;
+    padding: 0.4rem 1.5rem;
+    border-radius: 9999px;
+    background: #fff;
+    color: #14121c;
+    font-weight: 800;
+}
+
+.mf-stagecard__join.mf-btn:hover {
+    background: rgba(255, 255, 255, 0.88);
+    transform: translateY(-1px);
+}
+
+.mf-stagecard__ended {
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    color: var(--mf-muted);
+}
+
+/* ---- Overlapping avatar carousel --------------------------------------- */
+.mf-avstack {
+    display: flex;
+    align-items: center;
+}
+
+.mf-avstack__item {
+    position: relative;
+    margin-left: -0.55rem;
+    border-radius: 9999px;
+}
+
+.mf-avstack__item:first-child {
+    margin-left: 0;
+}
+
+.mf-avstack__item .mf-avatar {
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    background: var(--mf-panel);
+    color: var(--mf-text);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.mf-stagecard.is-ended .mf-avstack__item .mf-avatar {
+    border-color: color-mix(in srgb, var(--mf-text) 40%, transparent);
+}
+
+.mf-avstack__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    min-width: 2rem;
+    padding: 0 0.4rem;
+    border-radius: 9999px;
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    background: #2563eb;
+    color: #fff;
+    font-size: var(--mf-text-meta);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-stagecard__glow,
+    .mf-stagecard__pill.is-live {
+        animation: none;
+    }
+}

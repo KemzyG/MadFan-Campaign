@@ -1,8 +1,12 @@
 import { useEffect, useId } from 'react';
+import { createPortal } from 'react-dom';
+import { IconClose } from '../post/icons';
 import FeedComposer from './FeedComposer';
 
 /**
- * Bottom-sheet wrapper around {@link FeedComposer} for composing a new post.
+ * Full-height sheet wrapper around {@link FeedComposer} for composing a new post.
+ * Portals to <body> so it escapes any ancestor stacking context (same approach
+ * as the Stage sheet) and locks background scroll while open.
  */
 export default function ComposeSheet({ open, onClose, maxBodyLength = 280, maxImages = 4 }) {
     const titleId = useId();
@@ -32,18 +36,18 @@ export default function ComposeSheet({ open, onClose, maxBodyLength = 280, maxIm
         return null;
     }
 
-    return (
-        <div className="mf-sheet" role="presentation">
+    return createPortal(
+        <div className="mf-sheet mf-sheet--full" role="presentation">
             <button type="button" className="mf-sheet__backdrop" aria-label="Close composer" onClick={onClose} />
-            <div className="mf-sheet__panel" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-                <div className="mf-sheet__handle" aria-hidden />
-                <div className="mf-sheet__head">
+            <div className="mf-sheet__panel mf-sheet__panel--full" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+                <div className="mf-sheet__head mf-sheet__head--full">
+                    <button type="button" className="mf-stage-icon-btn" aria-label="Close" title="Close" onClick={onClose}>
+                        <IconClose />
+                    </button>
                     <p id={titleId} className="mf-display mf-text-title tracking-[0.03em]">
                         New post
                     </p>
-                    <button type="button" className="mf-sheet__close" onClick={onClose}>
-                        Cancel
-                    </button>
+                    <span className="mf-sheet__head-spacer" aria-hidden />
                 </div>
                 <FeedComposer
                     maxBodyLength={maxBodyLength}
@@ -53,6 +57,7 @@ export default function ComposeSheet({ open, onClose, maxBodyLength = 280, maxIm
                     variant="sheet"
                 />
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

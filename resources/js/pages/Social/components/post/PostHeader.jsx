@@ -1,9 +1,17 @@
 import { Link } from '@inertiajs/react';
 import { formatFullTime, formatRelative } from './format';
 import PostOverflowMenu from './PostOverflowMenu';
+import { IconClubShield, IconLock } from './icons';
+
+/** Non-public audiences get a small glyph next to the timestamp. */
+const VISIBILITY_GLYPH = {
+    club: { Icon: IconClubShield, label: 'Club only' },
+    only_me: { Icon: IconLock, label: 'Only you' },
+};
 
 /**
- * Post header row: avatar, display name, @handle, club flake, timestamp, ⋯ menu.
+ * Post header row: avatar, display name, @handle, club flake, timestamp,
+ * audience glyph, ⋯ menu.
  *
  * @param {{ post: object, onDismiss?: (id:any)=>void, size?: 'md'|'sm' }} props
  */
@@ -12,6 +20,8 @@ export default function PostHeader({ post, onDismiss, size = 'md' }) {
     const profileHref = handle ? `/social/u/${handle}` : '/social';
     const stamp = post.published_at || post.created_at;
     const avatarSize = size === 'sm' ? 'h-9 w-9' : 'h-10 w-10';
+    const audience = VISIBILITY_GLYPH[post.visibility];
+    const AudienceIcon = audience?.Icon;
 
     return (
         <div className="mf-post__header-row">
@@ -46,6 +56,11 @@ export default function PostHeader({ post, onDismiss, size = 'md' }) {
                     >
                         {formatRelative(stamp)}
                     </time>
+                    {AudienceIcon ? (
+                        <span className="mf-post__audience" title={audience.label} aria-label={audience.label}>
+                            <AudienceIcon />
+                        </span>
+                    ) : null}
                 </div>
 
                 <PostOverflowMenu post={post} onDismiss={onDismiss} />

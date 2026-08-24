@@ -1,0 +1,658 @@
+/*
+ * Social — "🔴 What's happening NOW" events feed: page chrome, filter chips, and
+ * the shell every one of the ten templates wears (byline, phase pill, countdown,
+ * action row). The ten bodies themselves live in event-live/-media/-news.css.
+ *
+ * Monochrome discipline holds: the only saturated ink is --mf-bad on live and
+ * urgent states, which is exactly what "live" is for. Namespaced .mf-*.
+ */
+
+.mf-events {
+    padding-bottom: var(--mf-page-pad-bottom);
+}
+
+/* ---- Page head ---------------------------------------------------------- */
+.mf-ev-head {
+    padding: 0.9rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-ev-head__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-ev-head__dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--mf-bad);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-bad) 55%, transparent);
+    animation: mf-ev-throb 1.9s var(--mf-ease) infinite;
+}
+
+@keyframes mf-ev-throb {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-bad) 55%, transparent); }
+    70% { box-shadow: 0 0 0 0.4rem color-mix(in srgb, var(--mf-bad) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-bad) 0%, transparent); }
+}
+
+.mf-ev-head__title {
+    margin: 0.2rem 0 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-score);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: var(--mf-tracking-score);
+    color: var(--mf-text);
+}
+
+.mf-ev-head__club {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-ev-head__club img {
+    width: 1.15rem;
+    height: 1.15rem;
+    object-fit: contain;
+}
+
+.mf-ev-head__club span {
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-ev-head__club i {
+    font-style: normal;
+}
+
+.mf-ev-head__club i::before {
+    content: '·';
+    margin-right: 0.35rem;
+}
+
+/* ---- Type filter chips -------------------------------------------------- */
+.mf-ev-filters {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-ev-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-ev-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--mf-muted);
+    transition: color var(--mf-dur-fast) var(--mf-ease), background var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-ev-filter:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 26%, var(--mf-line));
+}
+
+.mf-ev-filter.is-active {
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
+    color: var(--mf-void);
+}
+
+.mf-ev-filter svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.mf-ev-filter__count {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-caption);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
+
+/* ---- Stream ------------------------------------------------------------- */
+.mf-ev-stream {
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-ev-item {
+    animation: mf-rise 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-stagger, 0ms);
+}
+
+/* ---- The shell worn by every template ---------------------------------- */
+.mf-ev {
+    position: relative;
+    padding: 0.85rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--mf-line);
+    background: var(--mf-void);
+}
+
+/* Bleed cards (reel, gig poster) let their media run to the card edges. */
+.mf-ev.is-bleed .mf-ev__body {
+    margin-inline: -1rem;
+}
+
+/* A thin rail marks the phase without spending colour on the whole card. */
+.mf-ev::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: transparent;
+}
+
+.mf-ev[data-phase='live']::before {
+    background: var(--mf-bad);
+}
+
+.mf-ev[data-phase='upcoming']::before {
+    background: color-mix(in srgb, var(--mf-pitch) 34%, transparent);
+}
+
+.mf-ev__top {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.mf-ev__kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    white-space: nowrap;
+}
+
+.mf-ev__kind svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--mf-text);
+}
+
+.mf-ev__club-link {
+    text-decoration: none;
+    min-width: 0;
+}
+
+.mf-ev-club {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-width: 0;
+    max-width: 8rem;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-muted);
+}
+
+.mf-ev-club > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-ev-club img {
+    width: 0.95rem;
+    height: 0.95rem;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.mf-ev-club__fallback {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.02em;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-ev__club-link:hover .mf-ev-club {
+    color: var(--mf-text);
+}
+
+.mf-ev__spacer {
+    flex: 1 1 auto;
+}
+
+.mf-ev__stamp {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    white-space: nowrap;
+}
+
+.mf-ev__body {
+    margin-top: 0.6rem;
+}
+
+/* ---- Phase pill --------------------------------------------------------- */
+.mf-ev-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    flex-shrink: 0;
+    padding: 0.14rem 0.45rem;
+    border-radius: 0.3rem;
+    border: 1px solid var(--mf-line);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    color: var(--mf-muted);
+}
+
+.mf-ev-pill--live {
+    background: var(--mf-bad);
+    border-color: var(--mf-bad);
+    color: #fff;
+}
+
+.mf-ev-pill--upcoming {
+    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    color: var(--mf-text);
+}
+
+.mf-ev-pill--recent {
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
+    color: var(--mf-void);
+}
+
+.mf-ev-pill__dot {
+    width: 0.34rem;
+    height: 0.34rem;
+    border-radius: 999px;
+    background: #fff;
+    animation: mf-ev-blink 1.4s steps(1, end) infinite;
+}
+
+@keyframes mf-ev-blink {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0.25; }
+}
+
+.mf-ev-pill__count {
+    font-family: var(--mf-font-mono);
+    font-weight: 600;
+    letter-spacing: 0;
+    opacity: 0.85;
+}
+
+/* ---- Countdown block ---------------------------------------------------- */
+.mf-ev-countdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    box-shadow: var(--mf-sheen);
+}
+
+.mf-ev-countdown.is-compact {
+    margin-top: 0;
+    padding: 0.3rem 0.5rem;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.mf-ev-countdown__label {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-ev-countdown__units {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+
+.mf-ev-countdown__unit {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.08rem;
+}
+
+.mf-ev-countdown__unit b {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-body);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mf-text);
+}
+
+.mf-ev-countdown__unit i {
+    font-style: normal;
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    color: var(--mf-muted);
+}
+
+.mf-ev-countdown--past {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-start;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-ev-countdown--past svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+/* ---- Live minute clock -------------------------------------------------- */
+.mf-ev-clock {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mf-bad);
+}
+
+/* ---- Action row --------------------------------------------------------- */
+.mf-ev-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+}
+
+.mf-ev-actions__right {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.mf-ev-cta.mf-btn {
+    min-height: 2.1rem;
+    padding: 0.35rem 1.05rem;
+    border-radius: 999px;
+}
+
+.mf-ev-cta svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.mf-ev-cta--pitch {
+    background: var(--mf-pitch);
+    color: var(--mf-void);
+}
+
+.mf-ev-cta--live {
+    background: var(--mf-bad);
+    color: #fff;
+}
+
+.mf-ev-cta--gold {
+    background: var(--mf-amber);
+    color: var(--mf-void);
+}
+
+.mf-ev-cta--alert {
+    background: transparent;
+    color: var(--mf-bad);
+    box-shadow: inset 0 0 0 1px var(--mf-bad);
+}
+
+.mf-ev-cta--ghost {
+    background: transparent;
+    color: var(--mf-text);
+    box-shadow: inset 0 0 0 1px var(--mf-line);
+}
+
+.mf-ev-cta--ghost:hover {
+    background: var(--mf-elevated);
+}
+
+/* ---- Interest toggle ---------------------------------------------------- */
+.mf-ev-interest {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2.1rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    background: transparent;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition: color var(--mf-dur-fast) var(--mf-ease), border-color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-ev-interest:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 26%, var(--mf-line));
+}
+
+.mf-ev-interest:active {
+    transform: scale(0.97);
+}
+
+.mf-ev-interest.is-active {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    background: var(--mf-elevated);
+}
+
+.mf-ev-interest svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.mf-ev-interest.is-active svg {
+    animation: mf-ev-bolt 320ms var(--mf-ease) both;
+}
+
+@keyframes mf-ev-bolt {
+    0% { transform: scale(0.6) rotate(-12deg); }
+    60% { transform: scale(1.18) rotate(4deg); }
+    100% { transform: none; }
+}
+
+.mf-ev-interest b {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--mf-muted);
+}
+
+.mf-ev-interest.is-active b {
+    color: var(--mf-text);
+}
+
+.mf-ev-share {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    background: transparent;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition: color var(--mf-dur-fast) var(--mf-ease), border-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-ev-share:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 26%, var(--mf-line));
+}
+
+.mf-ev-share svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* ---- Crest ------------------------------------------------------------- */
+.mf-ev-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.4rem;
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-sheen);
+    overflow: hidden;
+}
+
+.mf-ev-crest img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mf-ev-crest__fallback {
+    font-family: var(--mf-font-display);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-ev-crest--sm {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.mf-ev-crest--sm .mf-ev-crest__fallback {
+    font-size: var(--mf-text-micro);
+}
+
+.mf-ev-crest--md {
+    width: 2.1rem;
+    height: 2.1rem;
+}
+
+.mf-ev-crest--md .mf-ev-crest__fallback {
+    font-size: var(--mf-text-caption);
+}
+
+.mf-ev-crest--lg {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.55rem;
+}
+
+.mf-ev-crest--lg .mf-ev-crest__fallback {
+    font-size: var(--mf-text-ui);
+}
+
+/* ---- Empty state -------------------------------------------------------- */
+.mf-empty--events .mf-empty-title {
+    font-family: var(--mf-font-display);
+}
+
+/* ---- Skeleton ----------------------------------------------------------- */
+.mf-skel-events__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.9rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-events__filters {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+    overflow: hidden;
+}
+
+.mf-skel-events__stream {
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-skel-event {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+    animation: mf-skel-in 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-event__topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-skel-event__stage {
+    height: 3.4rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-event__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-ev-head__dot,
+    .mf-ev-pill__dot,
+    .mf-ev-item,
+    .mf-skel-event,
+    .mf-ev-interest.is-active svg {
+        animation: none !important;
+    }
+}

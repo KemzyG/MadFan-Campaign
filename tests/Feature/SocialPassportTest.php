@@ -21,7 +21,7 @@ test('social passport shows loyalty identity club brand and referral qr payload'
 
     $this->actingAs($user)
         ->post('/social/posts', ['body' => 'Writing the passport'])
-        ->assertRedirect(route('social.home'));
+        ->assertRedirect(route('social.feed'));
 
     $user->refresh();
 

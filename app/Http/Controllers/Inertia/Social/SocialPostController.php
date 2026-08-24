@@ -10,6 +10,7 @@ use App\Http\Requests\Social\StoreSocialPostRequest;
 use App\Http\Requests\Social\StoreSocialQuoteRequest;
 use App\Http\Requests\Social\StoreSocialReplyRequest;
 use App\Models\Post;
+use App\Services\Social\FeedService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -23,10 +24,13 @@ class SocialPostController extends Controller
         $createSocialPost->handle($request->user(), [
             'body' => $validated['body'] ?? '',
             'images' => is_array($images) ? $images : [],
+            'visibility' => $validated['visibility'] ?? null,
+            'reply_scope' => $validated['reply_scope'] ?? null,
+            'tagged' => $validated['tagged'] ?? [],
         ]);
 
         return redirect()
-            ->route('social.home')
+            ->route('social.feed')
             ->with('success', 'Posted to the terrace.');
     }
 
@@ -34,7 +38,14 @@ class SocialPostController extends Controller
         StoreSocialReplyRequest $request,
         Post $post,
         CreateSocialPost $createSocialPost,
+        FeedService $feedService,
     ): RedirectResponse {
+        if (! $feedService->viewerCanReply($request->user(), $post)) {
+            return redirect()
+                ->route('social.posts.show', $post->root_id ?? $post->id)
+                ->with('error', 'The author limited who can reply to this post.');
+        }
+
         $createSocialPost->handle($request->user(), [
             ...$request->validated(),
             'reply_to_id' => $post->id,
@@ -52,7 +63,7 @@ class SocialPostController extends Controller
         $repostSocialPost->handle($request->user(), $post);
 
         return redirect()
-            ->route('social.home')
+            ->route('social.feed')
             ->with('success', 'Reposted to your terrace.');
     }
 
@@ -66,7 +77,7 @@ class SocialPostController extends Controller
         $quoteSocialPost->handle($request->user(), $post, $request->validated('body'));
 
         return redirect()
-            ->route('social.home')
+            ->route('social.feed')
             ->with('success', 'Quote posted.');
     }
 
@@ -89,7 +100,7 @@ class SocialPostController extends Controller
         }
 
         return redirect()
-            ->route('social.home')
+            ->route('social.feed')
             ->with('success', 'Post removed.');
     }
 }

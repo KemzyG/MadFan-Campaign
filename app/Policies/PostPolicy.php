@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Services\Social\FeedService;
 
 class PostPolicy
 {
@@ -18,7 +19,11 @@ class PostPolicy
             return false;
         }
 
-        return ! $post->is_hidden;
+        if ($post->is_hidden) {
+            return false;
+        }
+
+        return app(FeedService::class)->canView($user, $post);
     }
 
     public function create(User $user): bool

@@ -66,16 +66,16 @@ test('club feed impressions count a unique view once per viewer', function () {
     ]);
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->where('feed.posts.0.views_count', 1));
 
     expect($post->fresh()->views_count)->toBe(1);
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful();
 
     expect($post->fresh()->views_count)->toBe(1);
@@ -98,7 +98,7 @@ test('fans can bookmark and unbookmark a post', function () {
     expect(PostBookmark::query()->where('post_id', $post->id)->where('user_id', $viewer->id)->exists())->toBeTrue();
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('feed.posts.0.bookmarked_by_viewer', true));
@@ -128,10 +128,10 @@ test('not interested hides a post from the club feed and interested restores it'
     expect(PostHide::query()->where('post_id', $post->id)->where('user_id', $viewer->id)->exists())->toBeTrue();
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Feed')
             ->has('feed.posts', 0));
 
     $this->actingAs($viewer)
@@ -141,7 +141,7 @@ test('not interested hides a post from the club feed and interested restores it'
     expect(PostHide::query()->where('post_id', $post->id)->where('user_id', $viewer->id)->exists())->toBeFalse();
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->has('feed.posts', 1)
@@ -179,7 +179,7 @@ test('feed post payload exposes follow bookmark and engagement fields for the me
         ->assertRedirect();
 
     $this->actingAs($viewer)
-        ->get('/social')
+        ->get('/social/feed')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('feed.posts.0.id', $post->id)

@@ -1150,7 +1150,7 @@ body,
     backdrop-filter: blur(18px) saturate(1.25);
     -webkit-backdrop-filter: blur(18px) saturate(1.25);
     display: flex;
-    /* Primary mobile nav: Home · Ticket · Chat */
+    /* Primary mobile nav: Events · Feed · Ticket · Chat */
 }
 
 /*
@@ -1520,6 +1520,10 @@ body,
 .mf-post__text {
     margin: 0;
     color: var(--mf-text);
+    /* Break long, space-less strings (URLs, spammy "nnnn…") instead of
+     * overflowing the card; pairs with the whitespace-pre-wrap on the element. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .mf-club-flake {

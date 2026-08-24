@@ -1,0 +1,358 @@
+/*
+ * Social events feed — the three media-led bodies:
+ *
+ *   .mf-evreel  new_episode   16:9 thumbnail, play affordance, duration chip
+ *   .mf-evgig   concert       full-bleed gig poster with the artist over it
+ *   .mf-evdrop  song_release  square record sleeve beside the track block
+ *
+ * The reel and the gig are `is-bleed` cards: EventShell pulls the body out to
+ * the card edges, so their copy blocks restore the gutter themselves.
+ */
+
+/* ======================================================================== */
+/* new_episode — reel                                                       */
+/* ======================================================================== */
+.mf-evreel__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--mf-elevated);
+}
+
+.mf-evreel__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-evreel__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(80% 70% at 50% 30%, color-mix(in srgb, var(--mf-pitch) 7%, transparent), transparent 70%),
+        var(--mf-elevated);
+}
+
+.mf-evreel__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 45%, rgba(0, 0, 0, 0.55) 100%);
+    pointer-events: none;
+}
+
+.mf-evreel__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.1rem;
+    height: 3.1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: var(--mf-glass);
+    color: #fff;
+}
+
+.mf-evreel__play svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    margin-left: 0.1rem;
+}
+
+.mf-evreel__featured {
+    position: absolute;
+    top: 0.55rem;
+    left: 0.75rem;
+    padding: 0.14rem 0.45rem;
+    border-radius: 0.25rem;
+    background: var(--mf-pitch);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    color: var(--mf-void);
+}
+
+.mf-evreel__duration {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.55rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    background: rgba(0, 0, 0, 0.66);
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+}
+
+.mf-evreel__copy {
+    padding: 0.65rem 1rem 0;
+}
+
+.mf-evreel__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-evreel__caption {
+    margin: 0.22rem 0 0;
+    font-size: var(--mf-text-meta);
+    line-height: var(--mf-leading-body);
+    color: var(--mf-pitch-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mf-evreel__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin: 0.35rem 0 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-evreel__author {
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-evreel__meta > span + span::before {
+    content: '·';
+    margin-right: 0.45rem;
+}
+
+/* ======================================================================== */
+/* concert — gig poster                                                     */
+/* ======================================================================== */
+.mf-evgig__poster {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: var(--mf-elevated);
+}
+
+.mf-evgig__poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Posters are printed art; a touch of contrast keeps them from muddying
+       into the black card. */
+    filter: contrast(1.05) saturate(0.92);
+}
+
+.mf-evgig__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            color-mix(in srgb, var(--mf-pitch) 4%, transparent) 0 10px,
+            transparent 10px 20px
+        ),
+        var(--mf-elevated);
+}
+
+.mf-evgig__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.45) 52%, rgba(0, 0, 0, 0.88) 100%);
+    pointer-events: none;
+}
+
+.mf-evgig__over {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 0 1rem 0.75rem;
+}
+
+.mf-evgig__artist {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-score);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+}
+
+.mf-evgig__title {
+    margin: 0.15rem 0 0;
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    line-height: var(--mf-leading-tight);
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.mf-evgig__place {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.3rem 0 0;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.mf-evgig__place svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    flex-shrink: 0;
+}
+
+.mf-evgig__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 1rem 0;
+}
+
+.mf-evgig__lineup {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin: 0;
+    min-width: 0;
+}
+
+.mf-evgig__lineup-label {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-evgig__act {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--mf-line);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    color: var(--mf-pitch-dim);
+}
+
+/* ======================================================================== */
+/* song_release — record sleeve                                             */
+/* ======================================================================== */
+.mf-evdrop {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+}
+
+.mf-evdrop__sleeve {
+    position: relative;
+    flex-shrink: 0;
+    width: 5.5rem;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    box-shadow: var(--mf-shadow-2);
+}
+
+.mf-evdrop__sleeve img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-evdrop__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: color-mix(in srgb, var(--mf-pitch) 26%, transparent);
+}
+
+.mf-evdrop__placeholder svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.mf-evdrop__copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.mf-evdrop__stamp {
+    align-self: flex-start;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    background: var(--mf-pitch);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-label);
+    color: var(--mf-void);
+}
+
+.mf-evdrop__track {
+    margin: 0.35rem 0 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-display);
+    font-weight: 800;
+    line-height: var(--mf-leading-tight);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-evdrop__artist {
+    margin: 0.05rem 0 0;
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    color: var(--mf-pitch-dim);
+}
+
+.mf-evdrop__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin: 0.35rem 0 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+.mf-evdrop__album {
+    font-style: italic;
+}
+
+.mf-evdrop__platform {
+    padding: 0.08rem 0.38rem;
+    border-radius: 999px;
+    border: 1px solid var(--mf-line);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--mf-pitch-dim);
+}

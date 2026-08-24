@@ -2,6 +2,8 @@
 
 namespace App\Services\Social;
 
+use App\Enums\PostVisibility;
+use App\Enums\ReplyScope;
 use App\Enums\SocialReportTarget;
 use App\Models\Follow;
 use App\Models\Post;
@@ -99,9 +101,86 @@ class FeedService
         return Post::query()
             ->visible()
             ->topLevel()
+            ->tap(fn (Builder $query) => $this->applyVisibilityScope($query, $viewer))
             ->when($excludedIds->isNotEmpty(), fn (Builder $query) => $query->whereNotIn('id', $excludedIds))
             ->with($this->feedWith($viewer))
             ->latest('id');
+    }
+
+    /**
+     * Restrict a post query to what the viewer is allowed to see:
+     * public posts, the viewer's own posts, or club posts for a club the
+     * viewer belongs to. `only_me` posts fall through to the author-only branch.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function applyVisibilityScope(Builder $query, User $viewer): Builder
+    {
+        $clubIds = $this->viewerClubIds($viewer);
+
+        return $query->where(function (Builder $inner) use ($viewer, $clubIds): void {
+            $inner->where('visibility', PostVisibility::Public->value)
+                ->orWhere('author_id', $viewer->id)
+                ->when($clubIds !== [], fn (Builder $q) => $q->orWhere(function (Builder $clubQuery) use ($clubIds): void {
+                    $clubQuery->where('visibility', PostVisibility::Club->value)
+                        ->whereIn('club_id', $clubIds);
+                }));
+        });
+    }
+
+    /**
+     * Club ids the viewer belongs to (favourite club + memberships).
+     *
+     * @return list<int>
+     */
+    protected function viewerClubIds(User $viewer): array
+    {
+        return collect([$viewer->favourite_club_id])
+            ->merge($viewer->clubMemberships()->pluck('club_id'))
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Whether a single post is visible to the viewer (mirrors applyVisibilityScope
+     * for the single-post / thread route via PostPolicy::view).
+     */
+    public function canView(User $viewer, Post $post): bool
+    {
+        return match ($post->visibility) {
+            PostVisibility::Public => true,
+            PostVisibility::OnlyMe => $post->author_id === $viewer->id,
+            PostVisibility::Club => $post->author_id === $viewer->id
+                || in_array((int) $post->club_id, $this->viewerClubIds($viewer), true),
+        };
+    }
+
+    /**
+     * Whether the viewer may reply, per the thread root's reply-scope setting.
+     * Everyone → anyone; Following → only people the root author follows;
+     * Tagged → only users tagged on the root. The author can always reply.
+     */
+    public function viewerCanReply(User $viewer, Post $post): bool
+    {
+        $rootId = $post->root_id ?? $post->id;
+        $root = $rootId === $post->id ? $post : (Post::query()->find($rootId) ?? $post);
+
+        if ($root->author_id === $viewer->id) {
+            return true;
+        }
+
+        return match ($root->reply_scope) {
+            ReplyScope::Everyone => true,
+            ReplyScope::Following => Follow::query()
+                ->where('follower_id', $root->author_id)
+                ->where('following_id', $viewer->id)
+                ->exists(),
+            ReplyScope::Tagged => $root->taggedUsers()->whereKey($viewer->id)->exists(),
+        };
     }
 
     /**
@@ -113,6 +192,8 @@ class FeedService
             'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
             'club:id,name,short,logo',
             'media',
+            'stage.host:id,name,handle,username,fan_id,avatar_path,avatar_emoji,updated_at',
+            'taggedUsers:id,name,handle,username,fan_id,avatar_path,updated_at',
             'likes' => fn ($query) => $query->where('user_id', $viewer->id),
             'bookmarks' => fn ($query) => $query->where('user_id', $viewer->id),
             'hides' => fn ($query) => $query->where('user_id', $viewer->id),
@@ -191,6 +272,8 @@ class FeedService
             'id' => $post->id,
             'body' => $post->body,
             'type' => $post->type->value,
+            'visibility' => $post->visibility->value,
+            'reply_scope' => $post->reply_scope->value,
             'likes_count' => $post->likes_count,
             'replies_count' => $post->replies_count,
             'reposts_count' => $post->reposts_count,
@@ -229,10 +312,22 @@ class FeedService
                 : [],
             'quote_of' => $post->quoteOf ? $this->presentEmbeddedPost($post->quoteOf) : null,
             'repost_of' => $post->repostOf ? $this->presentEmbeddedPost($post->repostOf) : null,
+            'stage' => $post->stage
+                ? app(StageService::class)->presentStageCard($post->stage)
+                : null,
+            'tagged' => $post->relationLoaded('taggedUsers')
+                ? $post->taggedUsers->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'handle' => $user->handle ?: $user->username ?: $user->fan_id,
+                    'avatar_url' => $user->avatar_url,
+                ])->values()->all()
+                : [],
             'can_delete' => $viewer->can('delete', $post),
             'can_repost' => $viewer->id !== $post->author_id && $post->reply_to_id === null,
             'can_hide' => $viewer->can('hide', $post),
             'can_follow_author' => ! $isOwn && $author !== null,
+            'viewer_can_reply' => $this->viewerCanReply($viewer, $post),
         ];
     }
 

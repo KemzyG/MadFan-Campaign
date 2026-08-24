@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             VideoHighlightSeeder::class,
             TestDataSeeder::class,
             SettingSeeder::class,
+            // After SettingSeeder — it reads the social_network_enabled setting.
+            SocialAnnouncementSeeder::class,
         ]);
     }
 }

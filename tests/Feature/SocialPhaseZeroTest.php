@@ -51,6 +51,6 @@ test('fans can pick a favourite club and reach social home', function () {
         ->get('/social')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->component('Social/Home')
+            ->component('Social/Events')
             ->where('club.name', 'Terrace FC'));
 });

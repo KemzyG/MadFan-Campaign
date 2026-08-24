@@ -95,7 +95,8 @@ resources/js/pages/Social/
 
 ```
 GET  /social/passport               social.passport      → identity + ledger
-GET  /social                        social.home          → club / following feed
+GET  /social                        social.home          → "What's happening NOW" events feed
+GET  /social/feed                   social.feed          → club / following post timeline
 POST /social/posts                  social.posts.store
 GET  /social/posts/{post}           social.posts.show
 DELETE /social/posts/{post}         social.posts.destroy

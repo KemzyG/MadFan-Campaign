@@ -4,6 +4,8 @@ import PostText from './post/PostText';
 import MediaGrid from './post/MediaGrid';
 import EmbeddedPost from './post/EmbeddedPost';
 import PostActions from './post/PostActions';
+import StagePostCard from './post/StagePostCard';
+import TaggedRow from './post/TaggedRow';
 import { IconRepost } from './post/icons';
 
 /**
@@ -60,6 +62,10 @@ export default function PostCard({ post, compact = false, variant = 'feed', maxB
                         </Link>
                     )
                 ) : null}
+
+                <TaggedRow tagged={post.tagged} />
+
+                {post.stage ? <StagePostCard stage={post.stage} /> : null}
 
                 <MediaGrid media={post.media} />
                 <EmbeddedPost embed={post.quote_of} label="Quote" />

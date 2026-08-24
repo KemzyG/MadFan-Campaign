@@ -4,6 +4,9 @@ namespace App\Actions\Social;
 
 use App\Enums\MediaType;
 use App\Enums\PostType;
+use App\Enums\PostVisibility;
+use App\Enums\ReplyScope;
+use App\Models\Follow;
 use App\Models\Post;
 use App\Models\PostMedia;
 use App\Models\User;
@@ -19,7 +22,7 @@ class CreateSocialPost
     ) {}
 
     /**
-     * @param  array{body?: string|null, reply_to_id?: int|null, images?: list<UploadedFile>|null}  $data
+     * @param  array{body?: string|null, reply_to_id?: int|null, images?: list<UploadedFile>|null, visibility?: string|null, reply_scope?: string|null, tagged?: list<int>|null, stage_id?: int|null}  $data
      */
     public function handle(User $author, array $data): Post
     {
@@ -31,12 +34,23 @@ class CreateSocialPost
         $body = isset($data['body']) ? trim((string) $data['body']) : '';
         /** @var list<UploadedFile> $images */
         $images = array_values(array_filter($data['images'] ?? []));
+        $stageId = $replyToId === null ? ($data['stage_id'] ?? null) : null;
 
-        if ($body === '' && $images === [] && $replyToId === null) {
+        if ($body === '' && $images === [] && $replyToId === null && $stageId === null) {
             throw new InvalidArgumentException('Post body or images are required.');
         }
 
-        $post = DB::transaction(function () use ($author, $body, $replyToId, $images): Post {
+        // Top-level posts carry composer settings; replies inherit the parent thread's context.
+        $visibility = $replyToId === null
+            ? (PostVisibility::tryFrom((string) ($data['visibility'] ?? '')) ?? PostVisibility::Public)
+            : PostVisibility::Public;
+        $replyScope = $replyToId === null
+            ? (ReplyScope::tryFrom((string) ($data['reply_scope'] ?? '')) ?? ReplyScope::Everyone)
+            : ReplyScope::Everyone;
+        /** @var list<int> $tagged */
+        $tagged = $replyToId === null ? array_values(array_unique(array_map('intval', $data['tagged'] ?? []))) : [];
+
+        $post = DB::transaction(function () use ($author, $body, $replyToId, $images, $stageId, $visibility, $replyScope, $tagged): Post {
             $parent = null;
 
             if ($replyToId !== null) {
@@ -50,7 +64,10 @@ class CreateSocialPost
             $post = Post::query()->create([
                 'author_id' => $author->id,
                 'club_id' => $parent?->club_id ?? $author->favourite_club_id,
+                'stage_id' => $stageId,
                 'type' => PostType::Status,
+                'visibility' => $visibility,
+                'reply_scope' => $replyScope,
                 'body' => $body !== '' ? $body : null,
                 'reply_to_id' => $parent?->id,
                 'root_id' => $parent ? ($parent->root_id ?? $parent->id) : null,
@@ -70,6 +87,19 @@ class CreateSocialPost
                     'sort_order' => $index,
                     'created_at' => now(),
                 ]);
+            }
+
+            if ($tagged !== []) {
+                // Only people the author actually follows can be tagged.
+                $followed = Follow::query()
+                    ->where('follower_id', $author->id)
+                    ->whereIn('following_id', $tagged)
+                    ->pluck('following_id')
+                    ->all();
+
+                if ($followed !== []) {
+                    $post->taggedUsers()->sync($followed);
+                }
             }
 
             return $post->load('media');

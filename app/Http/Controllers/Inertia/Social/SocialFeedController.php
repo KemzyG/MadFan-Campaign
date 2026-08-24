@@ -10,7 +10,13 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class SocialHomeController extends Controller
+/**
+ * The fan post timeline — Global / Following.
+ *
+ * Formerly the Social landing page; it now sits on its own route so `/social`
+ * can lead with live events ({@see SocialEventsController}).
+ */
+class SocialFeedController extends Controller
 {
     public function __invoke(Request $request, FeedService $feedService, RecordPostView $recordPostView): Response
     {
@@ -35,7 +41,7 @@ class SocialHomeController extends Controller
             ? 'Follow fans to fill this terrace. Your own posts appear here too.'
             : 'Quiet floodlights — kick the first ball across every terrace.';
 
-        return Inertia::render('Social/Home', [
+        return Inertia::render('Social/Feed', [
             'club' => $club ? [
                 'id' => $club->id,
                 'name' => $club->name,
