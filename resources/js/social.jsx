@@ -8,6 +8,7 @@ import '../css/social/fixtures.css';
 import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';
+import '../css/social/post.css';
 // Fan auth pages (login / register / password) can land in this SPA when an
 // Inertia visit redirects after session expiry — they need campaign styles.
 import '../css/madfan.css';

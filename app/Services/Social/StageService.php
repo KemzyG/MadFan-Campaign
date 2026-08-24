@@ -55,11 +55,13 @@ class StageService
 
     /**
      * Presence window. A participant whose last heartbeat is older than this is
-     * swept out on the next read (see pruneStaleParticipants). Foreground clients
-     * ping every few seconds, so a brief network blip never reaches this bound —
-     * only a closed app / killed tab / dropped device does.
+     * swept out on the next read (see pruneStaleParticipants). Clients ping every
+     * few seconds even while the tab is backgrounded, so switching away, minimising
+     * or hiding the tab never reaches this bound. The window is wide enough to
+     * absorb browser background-timer throttling (~1 ping/min on an idle hidden
+     * tab) — only a genuinely gone app (closed, killed, or offline) trips it.
      */
-    public const PRESENCE_TIMEOUT_SECONDS = 45;
+    public const PRESENCE_TIMEOUT_SECONDS = 90;
 
     /**
      * Network-wide live Stage lobby — every live room is visible to Social fans.

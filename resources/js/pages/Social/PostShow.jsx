@@ -1,9 +1,13 @@
 import { Head } from '@inertiajs/react';
 import SocialShell from '../../Layouts/SocialShell';
-import PostCard, { ReplyComposer } from './components/PostCard';
+import PostCard from './components/PostCard';
+import ReplyComposer from './components/composer/ReplyComposer';
+import ReplyTree from './components/thread/ReplyTree';
 import { PostShowSkeleton } from './components/Skeletons';
 
 export default function PostShow({ post, replies = [], max_body_length = 280 }) {
+    const total = replies.length;
+
     return (
         <SocialShell title="Thread" backHref="/social">
             <Head title="Thread" />
@@ -12,25 +16,24 @@ export default function PostShow({ post, replies = [], max_body_length = 280 }) 
                 <PostShowSkeleton />
             ) : (
                 <div className="mf-page">
-                    <PostCard post={post} />
-                    <ReplyComposer postId={post.id} maxBodyLength={max_body_length} />
+                    <PostCard post={post} variant="detail" maxBodyLength={max_body_length} />
 
-                    {replies.length === 0 ? (
+                    <ReplyComposer postId={post.id} rootId={post.id} maxBodyLength={max_body_length} />
+
+                    {total === 0 ? (
                         <div className="mf-empty mf-empty--compact">
                             <p className="mf-empty-title">Open the exchange</p>
                             <p>No replies yet — first word gets the terrace warm.</p>
                         </div>
                     ) : (
-                        <div>
-                            <div className="border-b border-[var(--mf-line)] px-4 py-2">
+                        <>
+                            <div className="mf-thread__head">
                                 <p className="mf-text-caption text-[var(--mf-muted)]">
-                                    Replies · {replies.length}
+                                    {total} {total === 1 ? 'reply' : 'replies'}
                                 </p>
                             </div>
-                            {replies.map((reply) => (
-                                <PostCard key={reply.id} post={reply} compact />
-                            ))}
-                        </div>
+                            <ReplyTree replies={replies} rootId={post.id} maxBodyLength={max_body_length} />
+                        </>
                     )}
                 </div>
             )}

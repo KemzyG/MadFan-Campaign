@@ -87,7 +87,6 @@ export function StageSessionProvider({ children }) {
     const pollTimerRef = useRef(null);
     const activeStageIdRef = useRef(null);
     const heartbeatTimerRef = useRef(null);
-    const hiddenLeaveTimerRef = useRef(null);
     const chatOpenRef = useRef(false);
     const seenMessageCountRef = useRef(0);
     const roomPollBackoffRef = useRef(null);
@@ -241,10 +240,6 @@ export function StageSessionProvider({ children }) {
         if (heartbeatTimerRef.current) {
             window.clearInterval(heartbeatTimerRef.current);
             heartbeatTimerRef.current = null;
-        }
-        if (hiddenLeaveTimerRef.current) {
-            window.clearTimeout(hiddenLeaveTimerRef.current);
-            hiddenLeaveTimerRef.current = null;
         }
         roomPollBackoffRef.current = null;
         pendingUnlockRef.current = false;
@@ -481,27 +476,24 @@ export function StageSessionProvider({ children }) {
         };
     }, [activeStageId, room?.poll_ms, room?.realtime?.mode, echoConnected, applyRoom, clearSession, fetchRoom]);
 
-    // Presence heartbeat + eviction. Under reverb-primary the room poll stretches
-    // to >=60s, but the server prunes stale participants at 45s — so a listener
-    // who is present and foregrounded would be evicted between polls. A light 7s
-    // heartbeat keeps last_seen_at fresh while the tab is visible. A failed beat
-    // never drops the session: a transient network blip on a foregrounded app
-    // must not eject the user (the poll's own 401/403 path handles real auth loss).
-    // When the tab is hidden past a short grace window (backgrounded / switched
-    // away) or the page is unloading, we fire a keepalive leave so closed apps
-    // release their seat promptly instead of waiting out the 45s backstop.
+    // Presence heartbeat. Stage membership is liveness-driven: a light 7s beat
+    // keeps last_seen_at fresh, and the server prunes only participants whose
+    // heartbeat has gone silent past PRESENCE_TIMEOUT_SECONDS — i.e. the app is
+    // actually gone (closed, killed, or offline). Leaving the browser tab
+    // (switching away, minimising, even closing it) no longer releases the seat:
+    // a backgrounded listener is still hearing the room, so we keep beating while
+    // hidden and let the offline timeout be the only involuntary removal. The
+    // explicit Leave button stays the way to intentionally give up the seat.
+    // A failed beat never drops the session — a transient blip must not eject the
+    // user (the poll's own 401/403 path handles real auth loss).
     useEffect(() => {
         if (!activeStageId) {
             return undefined;
         }
         const stageId = activeStageId;
         const HEARTBEAT_MS = 7000;
-        const HIDDEN_GRACE_MS = 15000;
 
         const beat = () => {
-            if (document.visibilityState !== 'visible') {
-                return;
-            }
             fetch(`/social/stage/${stageId}/heartbeat`, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -509,57 +501,26 @@ export function StageSessionProvider({ children }) {
             }).catch(() => {});
         };
 
-        const leaveBeacon = () => {
-            fetch(`/social/stage/${stageId}/leave`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: csrfHeaders(),
-                keepalive: true,
-            }).catch(() => {});
-        };
-
-        const clearHiddenTimer = () => {
-            if (hiddenLeaveTimerRef.current) {
-                window.clearTimeout(hiddenLeaveTimerRef.current);
-                hiddenLeaveTimerRef.current = null;
-            }
-        };
-
+        // Regaining focus after the tab was backgrounded (and its timers throttled)
+        // refreshes last_seen_at at once instead of waiting for the next tick.
         const handleVisibility = () => {
-            if (document.visibilityState === 'hidden') {
-                if (!hiddenLeaveTimerRef.current) {
-                    hiddenLeaveTimerRef.current = window.setTimeout(() => {
-                        hiddenLeaveTimerRef.current = null;
-                        leaveBeacon();
-                        clearSession();
-                    }, HIDDEN_GRACE_MS);
-                }
-            } else {
-                // Came back before the grace elapsed — stay in the room.
-                clearHiddenTimer();
+            if (document.visibilityState === 'visible') {
                 beat();
             }
-        };
-
-        const handlePageHide = () => {
-            leaveBeacon();
         };
 
         beat();
         heartbeatTimerRef.current = window.setInterval(beat, HEARTBEAT_MS);
         document.addEventListener('visibilitychange', handleVisibility);
-        window.addEventListener('pagehide', handlePageHide);
 
         return () => {
             if (heartbeatTimerRef.current) {
                 window.clearInterval(heartbeatTimerRef.current);
                 heartbeatTimerRef.current = null;
             }
-            clearHiddenTimer();
             document.removeEventListener('visibilitychange', handleVisibility);
-            window.removeEventListener('pagehide', handlePageHide);
         };
-    }, [activeStageId, clearSession]);
+    }, [activeStageId]);
 
     // Prefer Reverb for stage messages / signals / reactions / room changes; poll is fallback.
     useEffect(() => {
