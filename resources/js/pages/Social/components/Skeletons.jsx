@@ -68,6 +68,11 @@ export function EventsSkeleton({ count = 4 }) {
             <div className="mf-skel-events__head">
                 <Bone className="mf-skel-line mf-skel-line--caption" />
                 <Bone className="mf-skel-line mf-skel-line--display" />
+                <div className="mf-skel-events__live">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Bone key={index} className="mf-skel-events__live-dot" />
+                    ))}
+                </div>
             </div>
             <div className="mf-skel-events__filters">
                 {Array.from({ length: 5 }, (_, index) => (
@@ -484,7 +489,7 @@ export function resolveSocialSkeletonKind(pathname) {
     if (path === '/social/passport') {
         return 'passport';
     }
-    if (path.startsWith('/social/u/')) {
+    if (path.startsWith('/social/u/') || path === '/social/you') {
         return 'profile';
     }
 

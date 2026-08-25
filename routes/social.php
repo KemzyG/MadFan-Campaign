@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeContr
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
+use App\Http\Controllers\Inertia\Social\SocialClubProfileController;
 use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
 use App\Http\Controllers\Inertia\Social\SocialEventsController;
 use App\Http\Controllers\Inertia\Social\SocialFeedController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Inertia\Social\SocialPostLikeController;
 use App\Http\Controllers\Inertia\Social\SocialPostReportController;
 use App\Http\Controllers\Inertia\Social\SocialPostShowController;
 use App\Http\Controllers\Inertia\Social\SocialProfileController;
+use App\Http\Controllers\Inertia\Social\SocialProfileSettingsController;
 use App\Http\Controllers\Inertia\Social\SocialShopCartController;
 use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
 use App\Http\Controllers\Inertia\Social\SocialShopController;
@@ -39,6 +41,7 @@ use App\Http\Controllers\Inertia\Social\SocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
 use App\Http\Controllers\Inertia\Social\SocialVideoController;
 use App\Http\Controllers\Inertia\Social\SocialWalletController;
+use App\Http\Controllers\Inertia\Social\SocialYouController;
 use App\Http\Middleware\TouchLastSeen;
 use Illuminate\Support\Facades\Route;
 
@@ -221,6 +224,7 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
 
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
+                Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
                 Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
                 Route::get('/wallet', SocialWalletController::class)->name('wallet');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
@@ -248,6 +252,11 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/shop/orders', [SocialShopOrderController::class, 'index'])->name('shop.orders.index');
                 Route::get('/shop/orders/{order}', [SocialShopOrderController::class, 'show'])->name('shop.orders.show');
                 Route::get('/shop/{jersey:slug}', [SocialShopController::class, 'show'])->name('shop.show');
+
+                Route::get('/you', SocialYouController::class)->name('you');
+                Route::patch('/you', SocialProfileSettingsController::class)
+                    ->middleware('throttle:10,1')
+                    ->name('you.update');
 
                 Route::get('/u/{handle}', SocialProfileController::class)
                     ->where('handle', '[A-Za-z0-9._\\-]+')

@@ -8,6 +8,7 @@ import '../css/social/fixtures.css';
 import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';
+import '../css/social/you.css';
 import '../css/social/post.css';
 import '../css/social/composer.css';
 import '../css/social/stage-card.css';

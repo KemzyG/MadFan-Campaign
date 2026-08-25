@@ -100,6 +100,47 @@ class StandingsService
         ];
     }
 
+    /**
+     * A single club's standings row plus its league context — the data shape
+     * a club profile page needs, without making the caller pick a league first.
+     *
+     * @return array{
+     *     league: array{id: int, name: string, short: string, logo_url: string},
+     *     row: array<string, mixed>,
+     *     total_clubs: int
+     * }|null
+     */
+    public function standingForClub(Club $club, ?User $user = null): ?array
+    {
+        if ($club->league_id === null) {
+            return null;
+        }
+
+        $league = League::query()->find($club->league_id);
+
+        if ($league === null) {
+            return null;
+        }
+
+        $table = $this->presentTable($league, $user);
+
+        if ($table === null) {
+            return null;
+        }
+
+        $row = collect($table['rows'])->first(fn (array $row) => $row['club']['id'] === $club->id);
+
+        if ($row === null) {
+            return null;
+        }
+
+        return [
+            'league' => $table['league'],
+            'row' => $row,
+            'total_clubs' => count($table['rows']),
+        ];
+    }
+
     public function resolveLeague(?int $leagueId, ?User $user = null): ?League
     {
         if ($leagueId !== null) {
