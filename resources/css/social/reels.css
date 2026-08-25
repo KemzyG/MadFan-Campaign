@@ -3,37 +3,97 @@
  * Loaded after the base social stylesheet via social.jsx.
  */
 
+/*
+ * Full-bleed, TikTok/Shorts-style feed. The page ships with mobileBare on
+ * SocialShell (no header, no bottom tab bar on mobile — see shell.css's
+ * `.mf-shell--mobile-bare .mf-reels-page` flex-fill rule), so this container
+ * gets the *entire* visible viewport to itself; there is no reserved chrome
+ * height to subtract. Its own back/create controls float over the video in
+ * `.mf-reels-topbar` instead of taking a row out of the layout.
+ */
 .mf-reels-page {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    min-height: calc(100dvh - 5.5rem);
-    padding-bottom: 0.25rem;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
 }
 
-.mf-reels-toolbar {
+.mf-reels-topbar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 6;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0 0.15rem;
+    gap: 0.6rem;
+    padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 0.85rem 1.6rem;
+    background: linear-gradient(180deg, color-mix(in srgb, #000 55%, transparent) 0%, transparent 100%);
+    pointer-events: none;
 }
 
-.mf-reels-toolbar__create {
-    min-height: 2.15rem;
-    padding-inline: 1rem;
+.mf-reels-topbar > * {
+    pointer-events: auto;
 }
 
-.mf-reels-flash {
-    margin: 0;
-    color: color-mix(in srgb, var(--mf-pitch) 80%, var(--mf-muted));
+.mf-reels-topbar__back,
+.mf-reels-topbar__create {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: var(--mf-radius-full);
+    border: 0;
+    background: color-mix(in srgb, #000 42%, transparent);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 120ms var(--mf-ease), background-color 160ms var(--mf-ease);
+}
+
+.mf-reels-topbar__back svg,
+.mf-reels-topbar__create svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-reels-topbar__back:active,
+.mf-reels-topbar__create:active {
+    transform: scale(0.9);
+}
+
+@media (hover: hover) {
+    .mf-reels-topbar__back:hover,
+    .mf-reels-topbar__create:hover {
+        background: color-mix(in srgb, #000 58%, transparent);
+    }
+}
+
+.mf-reels-topbar__count {
+    flex: 1;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, #fff 85%, transparent);
+    text-shadow: 0 1px 6px color-mix(in srgb, #000 60%, transparent);
+}
+
+.mf-reels-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 3.5rem;
 }
 
 .mf-reels-scroller {
     flex: 1;
     min-height: 0;
-    height: calc(100dvh - 7.5rem);
-    max-height: none;
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scroll-snap-type: y mandatory;
@@ -41,21 +101,20 @@
     border-radius: 0;
     border: 0;
     background: #000;
-    margin-inline: -0.85rem;
-    width: calc(100% + 1.7rem);
 }
 
 .mf-reel-slide-wrap {
     scroll-snap-align: start;
     scroll-snap-stop: always;
     height: 100%;
-    min-height: calc(100dvh - 7.5rem);
 }
 
 .mf-reel-slide {
     position: relative;
     height: 100%;
-    min-height: calc(100dvh - 7.5rem);
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
     overflow: hidden;
     background: #000;
     touch-action: pan-y;
@@ -100,6 +159,34 @@
     z-index: 2;
 }
 
+/* Double-tap-to-like burst — a big heart that blooms and fades once, centred
+   over the video, the same affordance every short-video app trained users to
+   expect. */
+.mf-reel-like-burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 4;
+    width: 6rem;
+    height: 6rem;
+    color: #fff;
+    filter: drop-shadow(0 2px 10px color-mix(in srgb, #000 55%, transparent));
+    pointer-events: none;
+    animation: mf-reel-like-burst 500ms var(--mf-ease) both;
+}
+
+.mf-reel-like-burst svg {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes mf-reel-like-burst {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    35% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
 .mf-reel-play {
     position: absolute;
     top: 50%;
@@ -107,13 +194,13 @@
     z-index: 4;
     display: grid;
     place-items: center;
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 4.5rem;
+    height: 4.5rem;
     margin: 0;
     padding: 0;
-    border: 0;
+    border: 1.5px solid color-mix(in srgb, #fff 30%, transparent);
     border-radius: 999px;
-    transform: translate(-50%, -50%) scale(0.92);
+    transform: translate(-50%, -50%) scale(0.9);
     background: color-mix(in srgb, #000 48%, transparent);
     color: #fff;
     opacity: 0;
@@ -156,11 +243,28 @@
     position: relative;
     aspect-ratio: 9 / 14;
     max-height: 42dvh;
+    margin-inline: auto;
     overflow: hidden;
     border-radius: 1rem;
-    border: 1px dashed color-mix(in srgb, var(--mf-line) 90%, transparent);
-    background: color-mix(in srgb, var(--mf-void) 70%, transparent);
+    border: 1.5px dashed color-mix(in srgb, var(--mf-pitch) 28%, var(--mf-line));
+    background: var(--mf-elevated);
     cursor: pointer;
+    transition: border-color 140ms var(--mf-ease);
+}
+
+.mf-reel-create__picker:not(.has-video) {
+    width: min(100%, 13.5rem);
+}
+
+@media (hover: hover) {
+    .mf-reel-create__picker:hover {
+        border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    }
+}
+
+.mf-reel-create__picker.has-video {
+    border-style: solid;
+    border-color: var(--mf-line);
 }
 
 .mf-reel-create__preview {
@@ -170,15 +274,263 @@
     display: block;
 }
 
+.mf-reel-create__scrim {
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, #000 65%, transparent));
+    pointer-events: none;
+}
+
+.mf-reel-create__duration {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--mf-radius-badge);
+    background: color-mix(in srgb, #000 55%, transparent);
+    color: #fff;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-reel-create__duration.is-over {
+    background: var(--mf-bad);
+}
+
+.mf-reel-create__remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 0;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, #000 55%, transparent);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 140ms var(--mf-ease), transform 120ms var(--mf-ease);
+}
+
+.mf-reel-create__remove svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.mf-reel-create__remove:active {
+    transform: scale(0.9);
+}
+
+@media (hover: hover) {
+    .mf-reel-create__remove:hover {
+        background: var(--mf-bad);
+    }
+}
+
 .mf-reel-create__placeholder {
     position: absolute;
     inset: 0;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
     padding: 1rem;
     text-align: center;
+}
+
+.mf-reel-create__placeholder-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    margin-bottom: 0.15rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+    color: var(--mf-pitch);
+}
+
+.mf-reel-create__placeholder-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.mf-reel-create__placeholder-title {
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-reel-create__placeholder-hint {
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
     color: var(--mf-muted);
-    font-size: 0.92rem;
+}
+
+.mf-reel-create__progress {
+    position: relative;
+    height: 1.9rem;
+    border-radius: var(--mf-radius-pill);
+    background: var(--mf-elevated);
+    overflow: hidden;
+}
+
+.mf-reel-create__progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: color-mix(in srgb, var(--mf-pitch) 16%, transparent);
+    transition: width 160ms var(--mf-ease);
+}
+
+.mf-reel-create__progress-label {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+/*
+ * The "New short" sheet's form chrome — was entirely unstyled (no rule
+ * anywhere matched these classes, unlike Stage's own `.mf-stage-form*`
+ * sheet), so raw inputs/textareas rendered with browser defaults. Mirrors
+ * `.mf-stage-form*` in stage.css so the two creation sheets read as one
+ * system rather than two different-looking dialogs.
+ */
+.mf-sheet__panel--stage-create {
+    display: flex;
+    flex-direction: column;
+    max-height: min(90dvh, 46rem);
+    padding: 0.45rem 0 0;
+    overflow: hidden;
+}
+
+.mf-sheet__head--stage-create {
+    align-items: flex-start;
+    padding: 0 1rem 0.6rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-stage-create-modal__brand {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-stage-create-modal {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.mf-stage-create-modal__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0.9rem 1rem;
+}
+
+.mf-stage-create-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.mf-stage-create-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mf-stage-create-field__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-stage-create-field__optional {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    font-weight: 400;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-stage-create__input,
+.mf-stage-create__textarea {
+    width: 100%;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-canvas);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    line-height: var(--mf-leading-body);
+    transition: border-color 140ms var(--mf-ease);
+}
+
+.mf-stage-create__input::placeholder,
+.mf-stage-create__textarea::placeholder {
+    color: var(--mf-muted);
+}
+
+.mf-stage-create__input:focus,
+.mf-stage-create__textarea:focus {
+    outline: none;
+    border-color: var(--mf-pitch-dim);
+}
+
+.mf-stage-create__textarea {
+    resize: vertical;
+    min-height: 4.5rem;
+}
+
+.mf-stage-create-field__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-stage-create-field__count {
+    flex-shrink: 0;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-stage-create-modal__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    padding: 0.7rem 1rem calc(0.7rem + var(--mf-safe-bottom));
+    border-top: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
 }
 
 .mf-autoplay-video {
@@ -257,8 +609,48 @@
     object-fit: cover;
 }
 
+/*
+ * Desktop keeps its header/sidebar (mobileBare is mobile-only — see
+ * shell.css), so the full-bleed treatment above is wrong here: it would
+ * fight the real header for viewport height. Fall back to a contained,
+ * in-flow card with a plain toolbar instead of an overlay.
+ */
 @media (min-width: 768px) {
+    .mf-reels-page {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        gap: 0.65rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .mf-reels-topbar {
+        position: static;
+        inset: auto;
+        padding: 0 0.15rem;
+        background: none;
+    }
+
+    .mf-reels-topbar__back,
+    .mf-reels-topbar__create {
+        background: var(--mf-elevated);
+        color: var(--mf-text);
+    }
+
+    .mf-reels-topbar__count {
+        color: var(--mf-muted);
+        text-shadow: none;
+        text-transform: none;
+        font-weight: 600;
+        letter-spacing: normal;
+    }
+
+    .mf-reels-empty {
+        padding-top: 0;
+    }
+
     .mf-reels-scroller {
+        flex: none;
         height: min(82dvh, 860px);
         margin-inline: 0;
         width: 100%;
@@ -272,13 +664,22 @@
     }
 }
 
+@media (min-width: 768px) and (hover: hover) {
+    .mf-reels-topbar__back:hover,
+    .mf-reels-topbar__create:hover {
+        background: var(--mf-line);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .mf-reels-scroller {
         scroll-behavior: auto;
     }
 
     .mf-reel-slide__loader,
-    .mf-autoplay-video__skel {
+    .mf-autoplay-video__skel,
+    .mf-reel-like-burst,
+    .mf-reel-action.is-liked svg {
         animation: none;
     }
 

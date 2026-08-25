@@ -1257,6 +1257,10 @@
     gap: 0.75rem;
     padding: 1rem 0.85rem 1.1rem;
     z-index: 2;
+    /* Nothing here set a colour, so title/author/caption were inheriting the
+       app's Deep Navy body text — near-invisible over a black video. This is
+       the one surface in Social where light-on-dark is actually correct. */
+    color: #fff;
 }
 
 .mf-reel-slide__copy {
@@ -1275,7 +1279,10 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--mf-gold) 88%, #fff);
+    /* --mf-gold was retired in the Vibrants retheme (never redefined), which
+       made this an invalid, silently-ignored declaration — Sky Wash is the
+       closest surviving accent for light copy over dark video. */
+    color: color-mix(in srgb, var(--mf-amber) 88%, #fff);
 }
 
 .mf-reel-slide__crest {
@@ -1286,15 +1293,18 @@
 
 .mf-reel-slide__title {
     margin: 0;
-    font-size: 1rem;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
     line-height: 1.25;
+    text-shadow: 0 1px 8px color-mix(in srgb, #000 55%, transparent);
 }
 
 .mf-reel-slide__caption {
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.35;
-    color: color-mix(in srgb, var(--mf-text) 88%, #fff);
+    color: color-mix(in srgb, #fff 88%, transparent);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1303,7 +1313,8 @@
 
 .mf-reel-slide__author {
     font-size: 0.78rem;
-    color: var(--mf-muted);
+    font-weight: 600;
+    color: color-mix(in srgb, #fff 72%, transparent);
     text-decoration: none;
 }
 
@@ -1319,7 +1330,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.12rem;
+    gap: 0.22rem;
     min-width: 2.75rem;
     padding: 0;
     border: 0;
@@ -1327,30 +1338,65 @@
     color: #fff;
     font: inherit;
     cursor: pointer;
+    transition: transform 120ms var(--mf-ease);
+}
+
+.mf-reel-action:active {
+    transform: scale(0.92);
 }
 
 .mf-reel-action.is-liked .mf-reel-action__icon {
+    background: color-mix(in srgb, #ff4d6d 30%, transparent);
     color: #ff4d6d;
+}
+
+.mf-reel-action.is-liked svg {
+    animation: mf-reel-like-pop 320ms var(--mf-ease) both;
+}
+
+@keyframes mf-reel-like-pop {
+    0% { transform: scale(0.6); }
+    55% { transform: scale(1.25); }
+    100% { transform: scale(1); }
 }
 
 .mf-reel-action__icon {
     display: grid;
     place-items: center;
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: var(--mf-radius-full);
     background: color-mix(in srgb, #000 42%, transparent);
-    font-size: 1rem;
-    line-height: 1;
+    backdrop-filter: blur(4px);
+    color: #fff;
+    transition: background-color 160ms var(--mf-ease);
+}
+
+.mf-reel-action__icon svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+@media (hover: hover) {
+    .mf-reel-action:hover .mf-reel-action__icon {
+        background: color-mix(in srgb, #000 58%, transparent);
+    }
 }
 
 .mf-reel-action__count {
-    font-size: 0.62rem;
-    color: color-mix(in srgb, #fff 82%, transparent);
+    font-size: var(--mf-text-micro);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, #fff 88%, transparent);
+    text-shadow: 0 1px 4px color-mix(in srgb, #000 45%, transparent);
 }
 
 .mf-reel-action--stat {
     cursor: default;
+}
+
+.mf-reel-action--stat:active {
+    transform: none;
 }
 
 @media (min-width: 768px) {

@@ -1,7 +1,12 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
+
+// How many upcoming shorts get `preload="auto"` ahead of the one on screen,
+// so they're already buffered and ready to play the instant a scroll lands
+// on them rather than starting a fetch at that moment.
+const PRELOAD_AHEAD = 5;
 
 function formatCount(value) {
     const n = Number(value) || 0;
@@ -16,6 +21,14 @@ function formatCount(value) {
     }
 
     return String(n);
+}
+
+function formatDuration(totalSeconds) {
+    const seconds = Math.max(0, Math.round(totalSeconds || 0));
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+
+    return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function IconPlay() {
@@ -35,9 +48,93 @@ function IconPause() {
     );
 }
 
+function IconBack() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 6 9 12l6 6" />
+        </svg>
+    );
+}
+
+function IconPlus() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14M5 12h14" />
+        </svg>
+    );
+}
+
+function IconHeart({ filled }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={filled ? 0 : 1.8}
+                d="M12 20.1c-.3 0-.6-.1-.85-.32-2-1.77-3.9-3.46-5.37-5.03C4.03 12.9 3 11.2 3 9.35 3 6.95 4.95 5 7.35 5c1.4 0 2.72.68 3.63 1.83.24.3.7.3.94 0C12.83 5.68 14.15 5 15.55 5 17.95 5 19.9 6.95 19.9 9.35c0 1.85-1.03 3.55-2.78 5.4-1.47 1.57-3.37 3.26-5.37 5.03-.25.22-.55.32-.85.32Z"
+            />
+        </svg>
+    );
+}
+
+function IconVolumeOff() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 9.5v5h3.4L12 18.2V5.8L7.4 9.5H4Z" />
+            <path strokeLinecap="round" strokeWidth="1.8" d="m16 9 4.6 6M20.6 9 16 15" />
+        </svg>
+    );
+}
+
+function IconVolumeOn() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 9.5v5h3.4L12 18.2V5.8L7.4 9.5H4Z" />
+            <path strokeLinecap="round" strokeWidth="1.8" d="M16.1 9.3a4 4 0 0 1 0 5.4M18.5 7a7.3 7.3 0 0 1 0 10" />
+        </svg>
+    );
+}
+
+function IconEye() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M2.5 12S5.8 5.6 12 5.6 21.5 12 21.5 12 18.2 18.4 12 18.4 2.5 12 2.5 12Z" />
+            <circle cx="12" cy="12" r="2.6" strokeWidth="1.8" />
+        </svg>
+    );
+}
+
+function IconUploadCloud() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.6"
+                d="M7.6 17.4a4 4 0 0 1-.7-7.93A5.5 5.5 0 0 1 17.4 8.5a4.25 4.25 0 0 1-.4 8.9H7.6Z"
+            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M12 10v6.4M9.4 12.6 12 10l2.6 2.6" />
+        </svg>
+    );
+}
+
+function IconTrash() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+                d="M5 7h14M9.5 7V5.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7M7.5 7l.7 11.2a1.5 1.5 0 0 0 1.5 1.4h4.6a1.5 1.5 0 0 0 1.5-1.4L17 7"
+            />
+        </svg>
+    );
+}
+
 function CreateReelSheet({ open, onClose, limits }) {
     const titleId = useId();
     const { reportError } = useSocialFlash();
+    const maxTitle = 120;
     const maxCaption = limits?.max_caption_length ?? 500;
     const maxDuration = limits?.max_duration_seconds ?? 90;
     const maxKb = limits?.max_upload_kb ?? 51200;
@@ -48,6 +145,7 @@ function CreateReelSheet({ open, onClose, limits }) {
         duration_seconds: null,
     });
     const [previewUrl, setPreviewUrl] = useState(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (!open) {
@@ -105,6 +203,15 @@ function CreateReelSheet({ open, onClose, limits }) {
         probe.src = URL.createObjectURL(file);
     }
 
+    function clearVideo(event) {
+        event.stopPropagation();
+        setData('video', null);
+        setData('duration_seconds', null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }
+
     function submit(event) {
         event.preventDefault();
         if (!data.video || processing) {
@@ -125,7 +232,8 @@ function CreateReelSheet({ open, onClose, limits }) {
         }));
     }
 
-    const canPublish = Boolean(data.video) && !processing;
+    const durationTooLong = Boolean(data.duration_seconds) && data.duration_seconds > maxDuration;
+    const canPublish = Boolean(data.video) && !processing && !durationTooLong;
 
     return (
         <div className="mf-sheet mf-sheet--stage-create" role="presentation">
@@ -141,7 +249,7 @@ function CreateReelSheet({ open, onClose, limits }) {
                     <div className="mf-stage-create-modal__brand">
                         <div className="min-w-0">
                             <p id={titleId} className="mf-display mf-text-title tracking-[0.03em]">
-                                New reel
+                                New short
                             </p>
                             <p className="mf-text-meta text-[var(--mf-muted)]">
                                 Short mp4/webm · up to {Math.round(maxKb / 1024)}MB · {maxDuration}s
@@ -156,8 +264,9 @@ function CreateReelSheet({ open, onClose, limits }) {
                 <form className="mf-stage-create-modal" onSubmit={submit}>
                     <div className="mf-stage-create-modal__scroll">
                         <section className="mf-stage-create-section">
-                            <label className="mf-reel-create__picker">
+                            <label className={`mf-reel-create__picker ${previewUrl ? 'has-video' : ''}`}>
                                 <input
+                                    ref={fileInputRef}
                                     type="file"
                                     accept="video/mp4,video/webm"
                                     className="hidden"
@@ -165,25 +274,48 @@ function CreateReelSheet({ open, onClose, limits }) {
                                     disabled={processing}
                                 />
                                 {previewUrl ? (
-                                    <video
-                                        className="mf-reel-create__preview"
-                                        src={previewUrl}
-                                        muted
-                                        playsInline
-                                        loop
-                                        autoPlay
-                                    />
+                                    <>
+                                        <video
+                                            className="mf-reel-create__preview"
+                                            src={previewUrl}
+                                            muted
+                                            playsInline
+                                            loop
+                                            autoPlay
+                                        />
+                                        <span className="mf-reel-create__scrim" aria-hidden />
+                                        {data.duration_seconds ? (
+                                            <span
+                                                className={`mf-reel-create__duration ${durationTooLong ? 'is-over' : ''}`}
+                                            >
+                                                {formatDuration(data.duration_seconds)}
+                                            </span>
+                                        ) : null}
+                                        {!processing ? (
+                                            <button
+                                                type="button"
+                                                className="mf-reel-create__remove"
+                                                onClick={clearVideo}
+                                                aria-label="Remove clip"
+                                            >
+                                                <IconTrash />
+                                            </button>
+                                        ) : null}
+                                    </>
                                 ) : (
                                     <span className="mf-reel-create__placeholder">
-                                        Tap to choose a clip
+                                        <span className="mf-reel-create__placeholder-icon" aria-hidden>
+                                            <IconUploadCloud />
+                                        </span>
+                                        <span className="mf-reel-create__placeholder-title">Tap to choose a clip</span>
+                                        <span className="mf-reel-create__placeholder-hint">MP4 or WEBM</span>
                                     </span>
                                 )}
                             </label>
                             {errors.video ? <p className="mf-field-error">{errors.video}</p> : null}
-                            {data.duration_seconds ? (
-                                <p className="mf-text-meta text-[var(--mf-muted)] mt-2">
-                                    Duration · {data.duration_seconds}s
-                                    {data.duration_seconds > maxDuration ? ' (too long)' : ''}
+                            {durationTooLong ? (
+                                <p className="mf-field-error">
+                                    {formatDuration(data.duration_seconds)} is over the {maxDuration}s limit.
                                 </p>
                             ) : null}
                         </section>
@@ -197,13 +329,18 @@ function CreateReelSheet({ open, onClose, limits }) {
                                 <input
                                     id="reel-title"
                                     className="mf-stage-create__input"
-                                    maxLength={120}
+                                    maxLength={maxTitle}
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="Derby day clip"
                                     disabled={processing}
                                 />
-                                {errors.title ? <p className="mf-field-error">{errors.title}</p> : null}
+                                <div className="mf-stage-create-field__foot">
+                                    {errors.title ? <p className="mf-field-error">{errors.title}</p> : <span />}
+                                    <span className="mf-stage-create-field__count">
+                                        {data.title.length}/{maxTitle}
+                                    </span>
+                                </div>
                             </div>
                             <div className="mf-stage-create-field">
                                 <label className="mf-stage-create-field__label" htmlFor="reel-caption">
@@ -220,19 +357,25 @@ function CreateReelSheet({ open, onClose, limits }) {
                                     placeholder="Terrace angle, set-piece, last-minute chaos…"
                                     disabled={processing}
                                 />
-                                {errors.caption ? <p className="mf-field-error">{errors.caption}</p> : null}
+                                <div className="mf-stage-create-field__foot">
+                                    {errors.caption ? <p className="mf-field-error">{errors.caption}</p> : <span />}
+                                    <span className="mf-stage-create-field__count">
+                                        {data.caption.length}/{maxCaption}
+                                    </span>
+                                </div>
                             </div>
                         </section>
                     </div>
 
                     <div className="mf-stage-create-modal__footer">
                         {progress ? (
-                            <p className="mf-text-meta text-[var(--mf-muted)]">
-                                Uploading… {progress.percentage}%
-                            </p>
+                            <div className="mf-reel-create__progress" role="progressbar" aria-valuenow={progress.percentage} aria-valuemin={0} aria-valuemax={100}>
+                                <span className="mf-reel-create__progress-fill" style={{ width: `${progress.percentage}%` }} />
+                                <span className="mf-reel-create__progress-label">Uploading… {progress.percentage}%</span>
+                            </div>
                         ) : null}
                         <button type="submit" className="mf-btn mf-btn--pitch w-full" disabled={!canPublish}>
-                            {processing ? 'Publishing…' : 'Publish reel'}
+                            {processing ? 'Publishing…' : 'Publish short'}
                         </button>
                     </div>
                 </form>
@@ -241,7 +384,7 @@ function CreateReelSheet({ open, onClose, limits }) {
     );
 }
 
-function ReelSlide({ reel, active, near, onView }) {
+function ReelSlide({ reel, active, eagerLoad, onView }) {
     const videoRef = useRef(null);
     const [muted, setMuted] = useState(true);
     const [liked, setLiked] = useState(Boolean(reel.liked));
@@ -249,7 +392,9 @@ function ReelSlide({ reel, active, near, onView }) {
     const [playing, setPlaying] = useState(false);
     const [showControl, setShowControl] = useState(false);
     const [buffering, setBuffering] = useState(true);
+    const [likeBurst, setLikeBurst] = useState(false);
     const controlTimerRef = useRef(null);
+    const burstTimerRef = useRef(null);
     const viewedRef = useRef(false);
 
     useEffect(() => {
@@ -269,6 +414,9 @@ function ReelSlide({ reel, active, near, onView }) {
     useEffect(() => () => {
         if (controlTimerRef.current) {
             window.clearTimeout(controlTimerRef.current);
+        }
+        if (burstTimerRef.current) {
+            window.clearTimeout(burstTimerRef.current);
         }
     }, []);
 
@@ -332,6 +480,14 @@ function ReelSlide({ reel, active, near, onView }) {
         setLiked(nextLiked);
         setLikesCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
 
+        if (nextLiked) {
+            setLikeBurst(true);
+            if (burstTimerRef.current) {
+                window.clearTimeout(burstTimerRef.current);
+            }
+            burstTimerRef.current = window.setTimeout(() => setLikeBurst(false), 500);
+        }
+
         router.post(`/social/videos/${reel.id}/like`, {}, {
             preserveScroll: true,
             preserveState: true,
@@ -340,6 +496,14 @@ function ReelSlide({ reel, active, near, onView }) {
                 setLikesCount(reel.likes_count ?? 0);
             },
         });
+    }
+
+    function onDoubleTap(event) {
+        if (!liked) {
+            toggleLike(event);
+        } else {
+            togglePlayback(event);
+        }
     }
 
     const author = reel.author;
@@ -356,7 +520,7 @@ function ReelSlide({ reel, active, near, onView }) {
                 playsInline
                 loop
                 muted={muted}
-                preload={active || near ? 'auto' : 'metadata'}
+                preload={active || eagerLoad ? 'auto' : 'metadata'}
                 onWaiting={() => setBuffering(true)}
                 onPlaying={() => {
                     setBuffering(false);
@@ -364,11 +528,18 @@ function ReelSlide({ reel, active, near, onView }) {
                 }}
                 onPause={() => setPlaying(false)}
                 onClick={togglePlayback}
+                onDoubleClick={onDoubleTap}
             />
 
             {buffering ? <span className="mf-reel-slide__loader" aria-hidden /> : null}
 
             <div className="mf-reel-slide__scrim" aria-hidden />
+
+            {likeBurst ? (
+                <span className="mf-reel-like-burst" aria-hidden>
+                    <IconHeart filled />
+                </span>
+            ) : null}
 
             <button
                 type="button"
@@ -410,9 +581,11 @@ function ReelSlide({ reel, active, near, onView }) {
                         type="button"
                         className={`mf-reel-action ${liked ? 'is-liked' : ''}`}
                         onClick={toggleLike}
-                        aria-label={liked ? 'Unlike highlight' : 'Like highlight'}
+                        aria-label={liked ? 'Unlike short' : 'Like short'}
                     >
-                        <span className="mf-reel-action__icon" aria-hidden>{liked ? '♥' : '♡'}</span>
+                        <span className="mf-reel-action__icon" aria-hidden>
+                            <IconHeart filled={liked} />
+                        </span>
                         <span className="mf-reel-action__count">{formatCount(likesCount)}</span>
                     </button>
                     <button
@@ -421,11 +594,15 @@ function ReelSlide({ reel, active, near, onView }) {
                         onClick={toggleMute}
                         aria-label={muted ? 'Unmute video' : 'Mute video'}
                     >
-                        <span className="mf-reel-action__icon" aria-hidden>{muted ? '🔇' : '🔊'}</span>
+                        <span className="mf-reel-action__icon" aria-hidden>
+                            {muted ? <IconVolumeOff /> : <IconVolumeOn />}
+                        </span>
                         <span className="mf-reel-action__count">{muted ? 'Mute' : 'Sound'}</span>
                     </button>
                     <div className="mf-reel-action mf-reel-action--stat" aria-label={`${formatCount(reel.views_count)} views`}>
-                        <span className="mf-reel-action__icon" aria-hidden>👁</span>
+                        <span className="mf-reel-action__icon" aria-hidden>
+                            <IconEye />
+                        </span>
                         <span className="mf-reel-action__count">{formatCount(reel.views_count)}</span>
                     </div>
                 </div>
@@ -436,8 +613,6 @@ function ReelSlide({ reel, active, near, onView }) {
 
 export default function VideosIndex({ reels, limits }) {
     const items = reels?.items ?? [];
-    const page = usePage();
-    const flashSuccess = page.props?.flash?.success;
     const [activeIndex, setActiveIndex] = useState(0);
     const [composeOpen, setComposeOpen] = useState(false);
     const scrollerRef = useRef(null);
@@ -466,10 +641,16 @@ export default function VideosIndex({ reels, limits }) {
             return undefined;
         }
 
+        // Shrinking the observed root to a 0-height line at its vertical
+        // centre (via rootMargin) means "intersecting" only becomes true the
+        // instant a slide's box crosses dead centre — the same trick every
+        // centre-triggered autoplay feed uses, rather than an arbitrary
+        // percent-visible threshold that could fire before a slide is
+        // actually the one in focus.
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (!entry.isIntersecting || entry.intersectionRatio < 0.55) {
+                    if (!entry.isIntersecting) {
                         return;
                     }
 
@@ -479,7 +660,7 @@ export default function VideosIndex({ reels, limits }) {
                     }
                 });
             },
-            { root, threshold: [0.55, 0.75] },
+            { root, rootMargin: '-50% 0px -50% 0px', threshold: 0 },
         );
 
         slides.forEach((slide) => observer.observe(slide));
@@ -488,37 +669,37 @@ export default function VideosIndex({ reels, limits }) {
     }, [items.length]);
 
     return (
-        <SocialShell title="Reels">
-            <Head title="Reels" />
+        <SocialShell title="Shorts" mobileBare>
+            <Head title="Shorts" />
 
             <div className="mf-page mf-reels-page">
-                <div className="mf-reels-toolbar">
-                    <p className="mf-text-meta text-[var(--mf-muted)]">
-                        {items.length ? `${items.length} live` : 'Terrace clips'}
-                    </p>
+                <div className="mf-reels-topbar">
+                    <Link href="/social" className="mf-reels-topbar__back" aria-label="Back">
+                        <IconBack />
+                    </Link>
+                    {items.length ? (
+                        <span className="mf-reels-topbar__count">{items.length} live</span>
+                    ) : null}
                     <button
                         type="button"
-                        className="mf-btn mf-btn--pitch mf-reels-toolbar__create"
+                        className="mf-reels-topbar__create"
                         onClick={() => setComposeOpen(true)}
+                        aria-label="Create a short"
                     >
-                        Create
+                        <IconPlus />
                     </button>
                 </div>
 
-                {flashSuccess ? (
-                    <p className="mf-text-meta mf-reels-flash" role="status">{flashSuccess}</p>
-                ) : null}
-
                 {items.length === 0 ? (
-                    <div className="mf-empty mf-empty--feed">
-                        <p className="mf-empty-title">No reels yet</p>
+                    <div className="mf-empty mf-empty--feed mf-reels-empty">
+                        <p className="mf-empty-title">No shorts yet</p>
                         <p>Publish the first terrace clip, or seed sample Mixkit highlights.</p>
                         <button
                             type="button"
                             className="mf-btn mf-btn--pitch mt-4"
                             onClick={() => setComposeOpen(true)}
                         >
-                            Create reel
+                            Create short
                         </button>
                     </div>
                 ) : (
@@ -528,7 +709,7 @@ export default function VideosIndex({ reels, limits }) {
                                 <ReelSlide
                                     reel={reel}
                                     active={index === activeIndex}
-                                    near={Math.abs(index - activeIndex) <= 1}
+                                    eagerLoad={index >= activeIndex - 1 && index <= activeIndex + PRELOAD_AHEAD}
                                     onView={recordView}
                                 />
                             </div>
