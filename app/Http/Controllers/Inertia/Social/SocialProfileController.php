@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Follow;
 use App\Models\User;
 use App\Services\Social\FeedService;
+use App\Services\Social\SocialPassportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,8 +14,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SocialProfileController extends Controller
 {
-    public function __invoke(Request $request, string $handle, FeedService $feedService): Response
-    {
+    public function __invoke(
+        Request $request,
+        string $handle,
+        FeedService $feedService,
+        SocialPassportService $socialPassport,
+    ): Response {
         /** @var User $viewer */
         $viewer = $request->user();
 
@@ -48,6 +53,7 @@ class SocialProfileController extends Controller
                 'following_count' => Follow::query()->where('follower_id', $profile->id)->count(),
                 'is_self' => $viewer->id === $profile->id,
                 'is_following' => $viewer->id !== $profile->id && $viewer->isFollowing($profile),
+                'is_followed_by' => $viewer->id !== $profile->id && $profile->isFollowing($viewer),
                 'club' => $profile->favouriteClub ? [
                     'id' => $profile->favouriteClub->id,
                     'name' => $profile->favouriteClub->name,
@@ -60,6 +66,7 @@ class SocialProfileController extends Controller
                 'meta' => $presented['meta'],
                 'links' => $presented['links'],
             ],
+            'collections' => $socialPassport->collections($profile),
             'max_body_length' => FeedService::MAX_BODY_LENGTH,
         ]);
     }

@@ -200,13 +200,3 @@
     animation: mf-ticket-rise 420ms var(--mf-ease) both;
 }
 
-.mf-page-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem 1rem;
-    margin-bottom: 0.65rem;
-}
-
-.mf-page-links--end {
-    justify-content: flex-end;
-}

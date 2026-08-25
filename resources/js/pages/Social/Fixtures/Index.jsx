@@ -1,4 +1,4 @@
-import { Head, Link, router, usePoll } from '@inertiajs/react';
+import { Head, router, usePoll } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import SplitView from '../components/SplitView';
@@ -8,7 +8,7 @@ import FixtureTabs from './FixtureTabs';
 import FixtureGroups from './FixtureGroups';
 import FixtureDetail from './FixtureDetail';
 
-export default function Index({ tab = 'all', board, ticket_count = 0, poll_ms = 15000 }) {
+export default function Index({ tab = 'all', board, poll_ms = 15000 }) {
     const [issuedTicket, setIssuedTicket] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -78,20 +78,6 @@ export default function Index({ tab = 'all', board, ticket_count = 0, poll_ms = 
                 <div className="mf-fixture-page">
                     <div className="mf-fixture-page__bar">
                         <FixtureTabs tab={tab} counts={counts} onSelect={setTab} />
-                        <div className="mf-page-links mf-page-links--end">
-                            <Link href="/social/clubs" className="mf-tickets-mine-link" prefetch>
-                                League table
-                            </Link>
-                            <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
-                                Box office
-                            </Link>
-                            <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                                My tickets
-                                {ticket_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                                ) : null}
-                            </Link>
-                        </div>
                     </div>
 
                     <SplitView

@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SocialNotification;
 use App\Models\User;
 use App\Services\Admin\AdminOrganizationContext;
 use App\Services\Admin\ImpersonationService;
 use App\Services\Fan\FanPageDataService;
+use App\Services\Social\ChatService;
 use App\Services\SocialAccountService;
 use App\Services\Staff\StaffAssignmentService;
 use App\Support\AdminRouting;
@@ -113,6 +115,15 @@ class HandleInertiaRequests extends Middleware
             'workspace' => ($user && $onAdminSurface) ? AdminWorkspace::for($user) : null,
             'adminOrganization' => ($user && $onAdminSurface) ? $this->adminOrganizationProps($user) : null,
             'social' => $socialStatus,
+            'notifications' => $user && ! $onAdminSurface ? [
+                'unread_count' => fn () => SocialNotification::query()
+                    ->where('recipient_id', $user->id)
+                    ->unread()
+                    ->count(),
+            ] : null,
+            'chat' => $user && ! $onAdminSurface ? [
+                'unread_count' => fn () => app(ChatService::class)->unreadCount($user),
+            ] : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

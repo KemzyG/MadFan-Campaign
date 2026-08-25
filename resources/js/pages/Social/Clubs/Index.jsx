@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import SplitView from '../components/SplitView';
@@ -62,14 +62,6 @@ export default function Index({
             <div className="mf-club-page">
                 <div className="mf-club-page__bar">
                     <LeagueTabs leagues={leagues} activeLeagueId={activeLeagueId} onSelect={setLeague} />
-                    <div className="mf-page-links mf-page-links--end">
-                        <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
-                            Fixtures
-                        </Link>
-                        <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
-                            Box office
-                        </Link>
-                    </div>
                 </div>
 
                 {table ? (

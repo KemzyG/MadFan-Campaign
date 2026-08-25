@@ -331,6 +331,74 @@ class ChatService
     }
 
     /**
+     * Stamp the viewer as caught up on a channel — called every time they load
+     * a thread (including poll-driven partial reloads while it stays open), so
+     * `last_read_at` tracks "the last moment they had this thread on screen."
+     * Club channels have no membership row by default (see ChannelPolicy), so
+     * this is also what first creates one for them.
+     */
+    public function markRead(User $viewer, Channel $channel): void
+    {
+        $member = ChannelMember::query()->firstOrNew(
+            ['channel_id' => $channel->id, 'user_id' => $viewer->id],
+            ['role' => 'member', 'joined_at' => now()],
+        );
+
+        $member->last_read_at = now();
+        $member->save();
+    }
+
+    /**
+     * Total unread messages across every channel the viewer can reach —
+     * the nav bell's badge count.
+     */
+    public function unreadCount(User $viewer): int
+    {
+        return array_sum($this->unreadCountsByChannel($viewer));
+    }
+
+    /**
+     * @return array<int, int> channel_id => unread count
+     */
+    private function unreadCountsByChannel(User $viewer): array
+    {
+        $channelIds = collect();
+
+        $viewer->loadMissing('favouriteClub');
+        if ($viewer->favouriteClub !== null) {
+            $channelIds = $channelIds->merge($this->serverForClub($viewer->favouriteClub)->channels->pluck('id'));
+        }
+
+        $channelIds = $channelIds
+            ->merge(ChannelMember::query()->where('user_id', $viewer->id)->pluck('channel_id'))
+            ->unique()
+            ->values();
+
+        if ($channelIds->isEmpty()) {
+            return [];
+        }
+
+        $lastReadMap = ChannelMember::query()
+            ->where('user_id', $viewer->id)
+            ->whereIn('channel_id', $channelIds)
+            ->pluck('last_read_at', 'channel_id');
+
+        $counts = [];
+
+        foreach ($channelIds as $channelId) {
+            $lastReadAt = $lastReadMap[$channelId] ?? null;
+
+            $counts[$channelId] = Message::query()
+                ->where('channel_id', $channelId)
+                ->where('author_id', '!=', $viewer->id)
+                ->when($lastReadAt !== null, fn ($q) => $q->where('created_at', '>', $lastReadAt))
+                ->count();
+        }
+
+        return $counts;
+    }
+
+    /**
      * Every conversation the viewer can open, newest first — the desktop chat rail.
      *
      * @return list<array<string, mixed>>

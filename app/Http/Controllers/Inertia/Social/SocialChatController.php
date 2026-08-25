@@ -113,6 +113,10 @@ class SocialChatController extends Controller
             }
         }
 
+        if ($view === 'thread' && $channel !== null) {
+            $chatService->markRead($user, $channel);
+        }
+
         $messages = $channel !== null
             ? $chatService->latestMessages($channel)
             : [];

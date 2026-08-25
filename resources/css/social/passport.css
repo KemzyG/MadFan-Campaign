@@ -1,0 +1,288 @@
+/*
+ * Social — Passport collections: jerseys owned, tickets attended, badges
+ * earned, listed below the passport card itself. Unlike the card (a "dark
+ * island" per docs/social/02-ux-ui.md), this sits on the normal light page,
+ * so it's a per-feature sheet rather than piled onto core/passport.css.
+ */
+
+.mf-pass-collections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0.5rem 1rem 1.5rem;
+}
+
+.mf-pass-collections__kicker {
+    margin: 0;
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-pass-collection__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.mf-pass-collection__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-pass-collection__count {
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-pass-collection__row {
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+}
+
+.mf-pass-collection__empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px dashed var(--mf-line);
+    border-radius: var(--mf-radius);
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-pass-collection__empty p {
+    margin: 0;
+}
+
+.mf-pass-collection__empty-link {
+    flex-shrink: 0;
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    color: var(--mf-pitch);
+    text-decoration: none;
+}
+
+.mf-pass-collection__empty-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ---- Recent activity timeline ---------------------------------------------- */
+.mf-pass-timeline {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    overflow: hidden;
+}
+
+.mf-pass-timeline__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-pass-timeline__row:last-child {
+    border-bottom: 0;
+}
+
+.mf-pass-timeline__dot {
+    flex-shrink: 0;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-muted);
+}
+
+.mf-pass-timeline__dot.is-social {
+    background: var(--mf-ok);
+}
+
+.mf-pass-timeline__reason {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-text);
+}
+
+.mf-pass-timeline__amount {
+    flex-shrink: 0;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    color: var(--mf-pitch);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-pass-timeline__when {
+    flex-shrink: 0;
+    width: 2rem;
+    text-align: right;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+/* ---- Jersey card ---------------------------------------------------------- */
+.mf-pass-jersey-card {
+    flex-shrink: 0;
+    width: 7rem;
+    scroll-snap-align: start;
+}
+
+.mf-pass-jersey-card__media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    overflow: hidden;
+}
+
+.mf-pass-jersey-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mf-pass-jersey-card__fallback {
+    font-size: 1.75rem;
+}
+
+.mf-pass-jersey-card__qty {
+    position: absolute;
+    right: 0.3rem;
+    bottom: 0.3rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: var(--mf-radius-badge);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-pass-jersey-card__name {
+    margin: 0.35rem 0 0;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-pass-jersey-card__meta {
+    margin: 0.05rem 0 0;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+/* ---- Ticket card ------------------------------------------------------------ */
+.mf-pass-ticket-card {
+    flex-shrink: 0;
+    width: 9.5rem;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    scroll-snap-align: start;
+}
+
+.mf-pass-ticket-card__teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.mf-pass-ticket-card__crest {
+    width: 1.5rem;
+    height: 1.5rem;
+    object-fit: contain;
+}
+
+.mf-pass-ticket-card__vs {
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    color: var(--mf-muted);
+    text-transform: uppercase;
+}
+
+.mf-pass-ticket-card__matchup {
+    margin: 0.5rem 0 0;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-text);
+    text-align: center;
+}
+
+.mf-pass-ticket-card__meta {
+    margin: 0.1rem 0 0;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    text-align: center;
+}
+
+/* ---- Badges — a wrapping grid, not a scroll row ---------------------------- */
+.mf-pass-collection__row > .mf-pass-badges {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+}
+
+.mf-pass-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mf-pass-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 11rem;
+    padding: 0.35rem 0.7rem 0.35rem 0.5rem;
+    border-radius: var(--mf-radius-pill);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+}
+
+.mf-pass-badge--streak {
+    border-color: color-mix(in srgb, var(--mf-warn) 40%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-warn) 8%, var(--mf-elevated));
+}
+
+.mf-pass-badge--referral {
+    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 6%, var(--mf-elevated));
+}
+
+.mf-pass-badge__icon {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.mf-pass-badge__name {
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-text);
+}

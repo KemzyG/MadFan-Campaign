@@ -79,12 +79,25 @@ export default function ReplyComposer({
                     _optimistic: true,
                 };
 
+                const bumpReplies = (item) => ({
+                    ...item,
+                    replies_count: (item.replies_count || 0) + 1,
+                });
+
+                // A reply to a comment bumps that comment's own count, but the
+                // root post's card is what the feed actually shows — if this
+                // reply is nested (postId isn't the root), that count needs
+                // the same +1 or it undercounts until the next full reload.
+                let working = { ...props, ...patchPostInProps(props, postId, bumpReplies) };
+                const effectiveRootId = rootId ?? postId;
+
+                if (effectiveRootId !== postId) {
+                    working = { ...working, ...patchPostInProps(working, effectiveRootId, bumpReplies) };
+                }
+
                 return {
-                    ...patchPostInProps(props, postId, (item) => ({
-                        ...item,
-                        replies_count: (item.replies_count || 0) + 1,
-                    })),
-                    replies: [...(props.replies || []), pending],
+                    ...working,
+                    replies: [...(working.replies || props.replies || []), pending],
                 };
             }}
         >

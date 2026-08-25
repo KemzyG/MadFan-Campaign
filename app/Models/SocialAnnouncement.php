@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Social\CreateSocialNotification;
 use App\Enums\EventType;
 use App\Support\PublicStorageUrl;
 use Database\Factories\SocialAnnouncementFactory;
@@ -36,6 +37,33 @@ class SocialAnnouncement extends Model
         'ends_at',
         'published_at',
     ];
+
+    /**
+     * A published-on-creation announcement notifies every fan immediately —
+     * this is the one event source with a genuine single authoring point
+     * (see class docblock); scheduled/future `published_at` rows don't
+     * notify here since nothing currently detects that transition later.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (SocialAnnouncement $announcement): void {
+            if ($announcement->published_at === null || $announcement->published_at->isFuture()) {
+                return;
+            }
+
+            $recipients = User::query()->fanAccounts()->get();
+
+            app(CreateSocialNotification::class)->notifyMany(
+                $recipients,
+                SocialNotification::TYPE_ANNOUNCEMENT,
+                $announcement,
+                [
+                    'headline' => $announcement->headline,
+                    'link_url' => $announcement->link_url,
+                ],
+            );
+        });
+    }
 
     /**
      * @return array<string, string>

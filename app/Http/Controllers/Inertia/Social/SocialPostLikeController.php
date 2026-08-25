@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Inertia\Social;
 
 use App\Actions\Social\AwardSocialPoints;
+use App\Actions\Social\CreateSocialNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostLike;
+use App\Models\SocialNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SocialPostLikeController extends Controller
 {
-    public function store(Request $request, Post $post, AwardSocialPoints $awardSocialPoints): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        Post $post,
+        AwardSocialPoints $awardSocialPoints,
+        CreateSocialNotification $notifications,
+    ): RedirectResponse {
         $this->authorize('like', $post);
 
         $user = $request->user();
@@ -42,6 +48,13 @@ class SocialPostLikeController extends Controller
             if ($post->author !== null) {
                 // After commit so a points CHECK failure cannot abort the like.
                 $awardSocialPoints->forLikeReceived($post->author, $post->id, $user->id);
+                $notifications->notify(
+                    $post->author,
+                    $user,
+                    SocialNotification::TYPE_POST_LIKED,
+                    $post,
+                    ['snippet' => str($post->body)->limit(80)->toString()],
+                );
             }
         }
 

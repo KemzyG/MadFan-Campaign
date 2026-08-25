@@ -9,6 +9,7 @@ use App\Enums\ReplyScope;
 use App\Models\Follow;
 use App\Models\Post;
 use App\Models\PostMedia;
+use App\Models\SocialNotification;
 use App\Models\User;
 use App\Support\CloudinaryImageStorage;
 use Illuminate\Http\UploadedFile;
@@ -19,6 +20,7 @@ class CreateSocialPost
 {
     public function __construct(
         private AwardSocialPoints $awardSocialPoints,
+        private CreateSocialNotification $notifications,
     ) {}
 
     /**
@@ -50,15 +52,31 @@ class CreateSocialPost
         /** @var list<int> $tagged */
         $tagged = $replyToId === null ? array_values(array_unique(array_map('intval', $data['tagged'] ?? []))) : [];
 
-        $post = DB::transaction(function () use ($author, $body, $replyToId, $images, $stageId, $visibility, $replyScope, $tagged): Post {
+        $parentAuthor = null;
+        $taggedUsers = collect();
+
+        $post = DB::transaction(function () use ($author, $body, $replyToId, $images, $stageId, $visibility, $replyScope, $tagged, &$parentAuthor, &$taggedUsers): Post {
             $parent = null;
 
             if ($replyToId !== null) {
                 $parent = Post::query()
                     ->visible()
+                    ->with('author')
                     ->findOrFail($replyToId);
 
                 $parent->increment('replies_count');
+
+                // A reply to a reply only bumped the immediate parent's count,
+                // so the root post's card — the "comments" total fans actually
+                // see in the feed — silently undercounted every nested reply.
+                // Bump the root too whenever it isn't the parent itself.
+                $rootId = $parent->root_id ?? $parent->id;
+
+                if ($rootId !== $parent->id) {
+                    Post::query()->whereKey($rootId)->increment('replies_count');
+                }
+
+                $parentAuthor = $parent->author;
             }
 
             $post = Post::query()->create([
@@ -99,14 +117,14 @@ class CreateSocialPost
 
             if ($tagged !== []) {
                 // Only people the author actually follows can be tagged.
-                $followed = Follow::query()
+                $followedIds = Follow::query()
                     ->where('follower_id', $author->id)
                     ->whereIn('following_id', $tagged)
-                    ->pluck('following_id')
-                    ->all();
+                    ->pluck('following_id');
 
-                if ($followed !== []) {
-                    $post->taggedUsers()->sync($followed);
+                if ($followedIds->isNotEmpty()) {
+                    $post->taggedUsers()->sync($followedIds->all());
+                    $taggedUsers = User::query()->whereKey($followedIds)->get();
                 }
             }
 
@@ -115,8 +133,28 @@ class CreateSocialPost
 
         if ($replyToId !== null) {
             $this->awardSocialPoints->forReply($author, $post->id, (string) $post->body);
+
+            if ($parentAuthor !== null) {
+                $this->notifications->notify(
+                    $parentAuthor,
+                    $author,
+                    SocialNotification::TYPE_POST_REPLIED,
+                    $post,
+                    ['snippet' => str((string) $post->body)->limit(80)->toString()],
+                );
+            }
         } else {
             $this->awardSocialPoints->forPost($author, $post->id);
+        }
+
+        foreach ($taggedUsers as $taggedUser) {
+            $this->notifications->notify(
+                $taggedUser,
+                $author,
+                SocialNotification::TYPE_POST_TAGGED,
+                $post,
+                ['snippet' => str((string) $post->body)->limit(80)->toString()],
+            );
         }
 
         return $post;

@@ -89,6 +89,15 @@ class SocialPostController extends Controller
 
         if ($parentId !== null) {
             Post::query()->whereKey($parentId)->decrement('replies_count');
+
+            // Mirrors the increment in CreateSocialPost: a reply nested under
+            // another reply also counted against the root post, so deleting
+            // it has to give that count back too, not just the immediate parent.
+            $rootId = $post->root_id ?? $parentId;
+
+            if ($rootId !== $parentId) {
+                Post::query()->whereKey($rootId)->decrement('replies_count');
+            }
         }
 
         $post->delete();

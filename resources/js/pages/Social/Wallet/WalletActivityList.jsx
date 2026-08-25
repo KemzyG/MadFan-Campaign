@@ -29,6 +29,7 @@ export default function WalletActivityList({ activity = [] }) {
 
                         return (
                             <li key={item.id} className="mf-wallet-activity__row">
+                                <span className={`mf-wallet-activity__dot${item.is_social ? ' is-social' : ''}`} aria-hidden />
                                 <span className="mf-wallet-activity__copy">
                                     <span className="mf-wallet-activity__reason">
                                         {item.reason || item.source_type}

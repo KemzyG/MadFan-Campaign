@@ -51,8 +51,9 @@ test('club profile shows the season standing, member count and top fans', functi
             ->where('member_count', 2)
             ->where('is_favourite', true)
             ->has('top_fans', 2)
-            ->where('top_fans.0.id', $user->id)
-            ->where('top_fans.0.total_points', 500));
+            ->where('top_fans.0.fan.id', $user->id)
+            ->where('top_fans.0.points', 500)
+            ->where('top_fans.0.rank', 1));
 });
 
 test('club profile handles a club with no standings yet', function () {
@@ -67,5 +68,5 @@ test('club profile handles a club with no standings yet', function () {
             ->where('club.name', 'No Table FC')
             ->where('standing', null)
             ->where('member_count', 1)
-            ->where('top_fans.0.id', $user->id));
+            ->where('top_fans.0.fan.id', $user->id));
 });

@@ -723,20 +723,6 @@
     line-height: 1;
 }
 
-.mf-passport-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.85rem 1rem 1rem;
-}
-
-@media (min-width: 400px) {
-    .mf-passport-actions {
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .mf-passport-inner {
         transition: none;

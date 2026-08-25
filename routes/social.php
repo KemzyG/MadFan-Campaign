@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
+use App\Http\Controllers\Api\Social\ChatUnreadController as ApiSocialChatUnreadController;
 use App\Http\Controllers\Api\Social\EventInterestController as ApiSocialEventInterestController;
 use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
+use App\Http\Controllers\Api\Social\NotificationController as ApiSocialNotificationController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
@@ -14,10 +16,10 @@ use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
 use App\Http\Controllers\Inertia\Social\SocialEventsController;
 use App\Http\Controllers\Inertia\Social\SocialFeedController;
 use App\Http\Controllers\Inertia\Social\SocialFixtureController;
-use App\Http\Controllers\Inertia\Social\SocialSportController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
 use App\Http\Controllers\Inertia\Social\SocialGroupChatController;
 use App\Http\Controllers\Inertia\Social\SocialLeaderboardController;
+use App\Http\Controllers\Inertia\Social\SocialNotificationController;
 use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
 use App\Http\Controllers\Inertia\Social\SocialPassportController;
 use App\Http\Controllers\Inertia\Social\SocialPostBookmarkController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Inertia\Social\SocialShopCartController;
 use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
 use App\Http\Controllers\Inertia\Social\SocialShopController;
 use App\Http\Controllers\Inertia\Social\SocialShopOrderController;
+use App\Http\Controllers\Inertia\Social\SocialSportController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
 use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
@@ -94,9 +97,22 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/chat/rail', ApiSocialChatRailController::class)
                     ->middleware('throttle:120,1')
                     ->name('chat.rail');
+                Route::get('/chat/unread-count', ApiSocialChatUnreadController::class)
+                    ->middleware('throttle:120,1')
+                    ->name('chat.unread-count');
                 Route::get('/chat/channels/{channel}/members', ApiSocialChatMembersController::class)
                     ->middleware('throttle:120,1')
                     ->name('chat.channels.members');
+
+                Route::get('/notifications/unread-count', [ApiSocialNotificationController::class, 'unreadCount'])
+                    ->middleware('throttle:120,1')
+                    ->name('notifications.unread-count');
+                Route::post('/notifications/{notification}/read', [ApiSocialNotificationController::class, 'read'])
+                    ->middleware('throttle:120,1')
+                    ->name('notifications.read');
+                Route::post('/notifications/read-all', [ApiSocialNotificationController::class, 'readAll'])
+                    ->middleware('throttle:20,1')
+                    ->name('notifications.read-all');
 
                 Route::get('/tickets/{ticket}', [ApiSocialTicketController::class, 'show'])
                     ->middleware('throttle:60,1')
@@ -233,6 +249,7 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
                 Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
                 Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
+                Route::get('/notifications', SocialNotificationController::class)->name('notifications');
                 Route::get('/wallet', SocialWalletController::class)->name('wallet');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
                 Route::get('/tickets/mine', [SocialTicketController::class, 'mine'])->name('tickets.mine');
