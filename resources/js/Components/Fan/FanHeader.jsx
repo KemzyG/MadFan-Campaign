@@ -8,7 +8,7 @@ export default function FanHeader({ showStreak = false }) {
     const streak = user?.current_streak_days ?? 0;
 
     return (
-        <header>
+        <header className="fan-header">
             <div className="header-inner">
                 <FanBrandLogo />
                 <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>

@@ -1,0 +1,105 @@
+/*
+ * Empty states — .mf-empty*.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.25rem;
+    animation: mf-rise 280ms var(--mf-ease) both;
+}
+
+.mf-empty--feed {
+    position: relative;
+    padding: 3.5rem 1.5rem 4rem;
+    overflow: hidden;
+}
+
+.mf-empty--feed::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 8% 15% auto;
+    height: 55%;
+    background: radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.14), transparent 68%);
+}
+
+.mf-empty-mark {
+    position: relative;
+    width: 4.5rem;
+    height: 2.75rem;
+    margin-bottom: 1.1rem;
+}
+
+.mf-empty-beam {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 0.18rem;
+    height: 100%;
+    border-radius: var(--mf-radius-full);
+    /* A Sky Wash ray falling into ink. On marble the beam is drawn, not lit —
+     * so the glow goes and the gradient carries the whole gesture. */
+    background: linear-gradient(
+        180deg,
+        var(--mf-amber),
+        color-mix(in srgb, var(--mf-pitch) 45%, transparent) 45%,
+        transparent
+    );
+    transform: translateX(-50%) rotate(-18deg);
+    transform-origin: top center;
+    animation: mf-beam 2.4s var(--mf-ease) infinite alternate;
+}
+
+.mf-empty-beam--late {
+    transform: translateX(-50%) rotate(16deg);
+    opacity: 0.65;
+    animation-delay: 0.35s;
+}
+
+@keyframes mf-beam {
+    from {
+        opacity: 0.55;
+        filter: brightness(0.9);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1.15);
+    }
+}
+
+.mf-empty-title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-display);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-display);
+    line-height: 1.1;
+    color: var(--mf-text);
+    font-synthesis: none;
+}
+
+.mf-empty--compact {
+    padding-block: 1.75rem;
+}
+
+.mf-empty p {
+    margin: 0.5rem 0 0;
+    max-width: 20rem;
+    font-size: var(--mf-text-ui);
+    line-height: var(--mf-leading-body);
+    color: var(--mf-muted);
+}
+
+.mf-empty .mf-empty-title + p {
+    margin-top: 0.5rem;
+}

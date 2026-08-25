@@ -1,0 +1,815 @@
+/*
+ * Fan Passport — .mf-pass-*.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* Hover lifts the hairline toward Sky Wash rather than casting a shadow. */
+.mf-passport-card:hover .mf-passport-face {
+    border-color: color-mix(in srgb, var(--mf-amber) 60%, var(--mf-line));
+}
+
+.mf-passport-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 620ms cubic-bezier(0.4, 0.15, 0.2, 1);
+}
+
+.mf-passport-card.is-flipped .mf-passport-inner {
+    transform: rotateY(180deg);
+}
+
+/*
+ * The passport is a paper document, so its face is paper: Warm Sand at the head
+ * falling through Snow to a Cloud foot, held by one Silver Mist hairline. The
+ * drop shadow, the white top sheen and the black bottom lip are all gone — the
+ * hairline is the entire elevation story.
+ */
+.mf-passport-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background:
+        linear-gradient(155deg, var(--mf-warm-sand) 0%, var(--mf-panel) 45%, var(--mf-recess) 100%);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Inner guilloche frame — two hairlines, one Sky Wash and one ink. */
+.mf-passport-edge {
+    pointer-events: none;
+    position: absolute;
+    inset: 0.2rem;
+    z-index: 2;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-amber) 55%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+}
+
+/* Security hatch: ink over the paper at 4%, the same idiom as every other
+ * surface tint here. The specular highlights are gone — paper doesn't gleam. */
+.mf-passport-face::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        -18deg,
+        transparent,
+        transparent 11px,
+        color-mix(in srgb, var(--mf-pitch) 4%, transparent) 11px,
+        color-mix(in srgb, var(--mf-pitch) 4%, transparent) 12px
+    );
+    z-index: 0;
+}
+
+.mf-passport-face > *:not(.mf-passport-edge) {
+    position: relative;
+    z-index: 1;
+}
+
+.mf-passport-face--back {
+    transform: rotateY(180deg);
+}
+
+/* Mast / security band */
+.mf-pass-mast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    padding: 0.28rem var(--mf-radius);
+    /* Deep Navy band leaning into Midnight Navy, with a Sky Wash cast at the
+     * trailing edge. The inset white/black lips are gone — no bevels here. */
+    background: linear-gradient(
+        95deg,
+        var(--mf-pitch) 0%,
+        var(--mf-rival) 52%,
+        color-mix(in srgb, var(--mf-rival) 76%, var(--mf-amber)) 100%
+    );
+}
+
+/* The reverse band runs the same ink the other way, Sky Wash leading. */
+.mf-pass-mast--back {
+    background: linear-gradient(
+        95deg,
+        color-mix(in srgb, var(--mf-rival) 76%, var(--mf-amber)) 0%,
+        var(--mf-rival) 48%,
+        var(--mf-pitch) 100%
+    );
+}
+
+/*
+ * The masthead is a Deep Navy strip across the top of the passport, so every
+ * mark on it is drawn in Snow (--mf-on-fill) at a tint. It stays a tracked
+ * Montserrat label rather than the serif display: at 12px the serif is the
+ * wrong voice, and the guide gives 20px+ to Fraunces.
+ */
+.mf-pass-mast-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    font-family: var(--mf-font-label);
+    color: var(--mf-on-fill);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    font-synthesis: none;
+}
+
+.mf-pass-mast-logo {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-badge);
+    object-fit: cover;
+    /* Hairline ring, not elevation — it stops the crest bleeding into the navy. */
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-on-fill) 28%, transparent);
+}
+
+.mf-pass-mast-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-on-fill);
+    opacity: 0.55;
+    flex-shrink: 0;
+}
+
+.mf-pass-mast-divider {
+    width: 1px;
+    height: 0.7rem;
+    background: color-mix(in srgb, var(--mf-on-fill) 35%, transparent);
+    flex-shrink: 0;
+}
+
+.mf-pass-mast-doc {
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    opacity: 0.85;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Same 10px step as the doc line; the tint, not a sixth size, ranks it lower. */
+.mf-pass-mast-meta {
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    color: color-mix(in srgb, var(--mf-on-fill) 72%, transparent);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Front: large square photo flush with identity stack, full-width allegiance */
+.mf-pass-front {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: var(--mf-pass-photo) minmax(0, 1fr);
+    grid-template-rows: var(--mf-pass-photo) auto;
+    grid-template-areas:
+        'photo id'
+        'allegiance allegiance';
+    column-gap: 0.55rem;
+    row-gap: 0.4rem;
+    padding: 0.42rem 0.55rem 0.32rem;
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.mf-pass-photo {
+    grid-area: photo;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--mf-pass-photo);
+    height: var(--mf-pass-photo);
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    align-self: start;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 75%, var(--mf-pitch));
+    background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+}
+
+.mf-pass-photo-img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center;
+}
+
+.mf-pass-photo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 1.55rem;
+    color: var(--mf-pitch);
+    line-height: 1;
+}
+
+.mf-pass-photo-tag {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.12rem 0.15rem;
+    font-size: 0.4375rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--mf-on-fill);
+    background: color-mix(in srgb, var(--mf-pitch) 88%, transparent);
+}
+
+.mf-pass-id {
+    grid-area: id;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.3rem;
+    overflow: hidden;
+}
+
+.mf-pass-id-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.mf-pass-id-who {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mf-pass-name {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.05;
+    color: var(--mf-text);
+    letter-spacing: var(--mf-tracking-display);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-subline {
+    margin: 0.12rem 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.28rem;
+    min-width: 0;
+    font-size: 0.625rem;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.mf-pass-subline-sep {
+    color: var(--mf-muted);
+    flex-shrink: 0;
+}
+
+.mf-pass-handle,
+.mf-pass-member {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-handle {
+    color: var(--mf-muted);
+    min-width: 0;
+}
+
+.mf-pass-member {
+    color: var(--mf-pitch);
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.mf-pass-id-score {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 0.18rem;
+    flex-shrink: 0;
+    padding-top: 0.02rem;
+}
+
+.mf-pass-score {
+    margin: 0;
+    font-size: clamp(1.4rem, 5.5vw, 1.8rem);
+    line-height: 0.92;
+    color: var(--mf-pitch);
+    letter-spacing: var(--mf-tracking-score);
+}
+
+.mf-pass-score-unit {
+    font-family: var(--mf-font-display);
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--mf-muted);
+    line-height: 1;
+}
+
+.mf-pass-bio {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+    flex: 0 0 auto;
+}
+
+.mf-pass-cell {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.08rem;
+    padding: 0.28rem 0.3rem;
+    border-radius: var(--mf-radius-badge);
+    background: var(--mf-recess);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+}
+
+.mf-pass-cell-k {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    line-height: 1;
+}
+
+.mf-pass-cell-v {
+    font-size: 0.625rem;
+    line-height: 1.15;
+    color: var(--mf-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-cell-v--tier {
+    color: var(--mf-amber);
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.mf-pass-rank {
+    display: flex;
+    flex-direction: column;
+    gap: 0.16rem;
+    min-width: 0;
+    flex: 0 0 auto;
+}
+
+.mf-pass-rank-meta {
+    margin: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 0.28rem;
+    min-width: 0;
+    font-size: 0.5rem;
+    line-height: 1.15;
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-rank-meta > span:first-child {
+    color: var(--mf-pitch);
+}
+
+.mf-pass-meter {
+    width: 100%;
+    height: 0.3rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-line) 75%, transparent);
+    overflow: hidden;
+}
+
+.mf-pass-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--mf-pitch), color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-amber)));
+    min-width: 0;
+}
+
+.mf-pass-meter--wide {
+    height: 0.32rem;
+    margin: 0.2rem 0 0.14rem;
+}
+
+.mf-pass-allegiance {
+    grid-area: allegiance;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    width: 100%;
+    align-self: stretch;
+    padding: 0.32rem 0.4rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-recess);
+}
+
+.mf-pass-club {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-pass-club-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--mf-radius-full);
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--mf-line);
+}
+
+.mf-pass-club-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+    font-family: var(--mf-font-display);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-panel) 80%, transparent);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-pass-club-copy {
+    min-width: 0;
+}
+
+.mf-pass-club-name,
+.mf-pass-club-league {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.15;
+}
+
+.mf-pass-club-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-pass-club-league {
+    font-size: 0.5rem;
+    color: var(--mf-muted);
+}
+
+.mf-pass-pips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.18rem;
+    flex-shrink: 0;
+}
+
+.mf-pass-pip {
+    border-radius: var(--mf-radius-badge);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 80%, transparent);
+    padding: 0.14rem 0.28rem;
+    font-size: 0.5rem;
+    line-height: 1.15;
+    color: var(--mf-text);
+    white-space: nowrap;
+}
+
+.mf-pass-pip--hot {
+    border-color: color-mix(in srgb, var(--mf-amber) 40%, transparent);
+    background: color-mix(in srgb, var(--mf-amber) 14%, transparent);
+    color: var(--mf-amber);
+    font-weight: 600;
+}
+
+.mf-pass-mrz {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex-shrink: 0;
+    padding: 0.22rem 0.55rem 0.28rem;
+    border-top: 1px dashed color-mix(in srgb, var(--mf-line) 75%, transparent);
+    background: var(--mf-recess);
+    font-family: var(--mf-font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    line-height: 1.3;
+    color: color-mix(in srgb, var(--mf-muted) 78%, var(--mf-pitch));
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Back face â€” stats / contrib / earn+QR */
+.mf-pass-back {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 0.32rem;
+    padding: 0.38rem 0.55rem 0.38rem;
+    overflow: hidden;
+}
+
+.mf-pass-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.22rem;
+}
+
+.mf-pass-stat {
+    min-width: 0;
+    padding: 0.22rem 0.28rem;
+    border-radius: var(--mf-radius-badge);
+    background: var(--mf-recess);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 70%, transparent);
+}
+
+.mf-pass-stat-v {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.05;
+    color: var(--mf-text);
+}
+
+.mf-pass-stat-k {
+    margin: 0.04rem 0 0;
+    font-size: 0.5rem;
+    line-height: 1.1;
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-contrib {
+    padding: 0.28rem 0.35rem;
+    border-radius: var(--mf-radius-badge);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 72%, transparent);
+    background: var(--mf-recess);
+}
+
+.mf-pass-contrib-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
+    line-height: 1.15;
+    color: var(--mf-text);
+}
+
+.mf-pass-contrib-pct {
+    color: var(--mf-pitch);
+    flex-shrink: 0;
+}
+
+.mf-pass-contrib-meta {
+    margin: 0;
+    font-size: 0.5rem;
+    line-height: 1.15;
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.4rem;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mf-pass-earn-panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    padding: 0.22rem 0.1rem;
+    overflow: hidden;
+}
+
+.mf-pass-section-k {
+    margin: 0;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    line-height: 1.1;
+}
+
+.mf-pass-earn {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.mf-pass-earn li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.3rem;
+    padding: 0.16rem 0;
+    font-size: 0.625rem;
+    line-height: 1.2;
+    color: var(--mf-text);
+    border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 45%, transparent);
+}
+
+.mf-pass-earn li:last-child {
+    border-bottom: 0;
+}
+
+.mf-pass-foot-note {
+    margin: auto 0 0;
+    font-size: 0.5rem;
+    line-height: 1.15;
+    color: var(--mf-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pass-qr-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.22rem;
+    align-self: stretch;
+    padding: 0.35rem 0.4rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 55%, var(--mf-amber));
+    background:
+        linear-gradient(165deg, color-mix(in srgb, var(--mf-amber) 8%, transparent), var(--mf-recess));
+}
+
+.mf-pass-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    border-radius: var(--mf-radius-badge);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--mf-line);
+}
+
+.mf-pass-qr svg {
+    display: block;
+    width: 4.5rem;
+    height: 4.5rem;
+}
+
+.mf-pass-qr-cap {
+    margin: 0;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    line-height: 1;
+}
+
+.mf-passport-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.85rem 1rem 1rem;
+}
+
+@media (min-width: 400px) {
+    .mf-passport-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-passport-inner {
+        transition: none;
+        transform: none !important;
+    }
+
+    .mf-passport-face--front {
+        display: flex;
+    }
+
+    .mf-passport-face--back {
+        display: none;
+        transform: none;
+        position: absolute;
+    }
+
+    .mf-passport-card.is-flipped .mf-passport-face--front {
+        display: none;
+    }
+
+    .mf-passport-card.is-flipped .mf-passport-face--back {
+        display: flex;
+        position: absolute;
+        inset: 0;
+    }
+
+    .mf-passport-card.is-flipped,
+    .mf-passport-card.is-flipped .mf-passport-inner {
+        height: var(--mf-passport-h);
+        min-height: var(--mf-passport-h);
+    }
+}
+
+/* Motion */
+@keyframes mf-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes mf-like-flash {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(1.18);
+        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mf-pitch) 70%, transparent));
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.mf-like-pop {
+    animation: mf-like-flash 220ms var(--mf-ease);
+}
+
+@keyframes mf-page-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mf-page {
+    animation: mf-page-in 220ms var(--mf-ease) both;
+}

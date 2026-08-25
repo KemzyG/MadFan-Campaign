@@ -59,7 +59,7 @@ body::before {
 }
 
 /* HEADER */
-header {
+.fan-header {
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
     position: sticky;
@@ -624,7 +624,7 @@ body.pso-fullscreen-active {
     right: 0;
     width: 100%;
 }
-body.pso-fullscreen-active header,
+body.pso-fullscreen-active .fan-header,
 body.pso-fullscreen-active .sidebar-drawer,
 body.pso-fullscreen-active .campaign-nav-drawer {
     visibility: hidden !important;
@@ -1656,7 +1656,7 @@ body::before {
 }
 
 /* HEADER */
-header {
+.fan-header {
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
     position: sticky;
@@ -2343,7 +2343,7 @@ body::before {
 }
 
 /* HEADER */
-header {
+.fan-header {
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
     position: sticky;
@@ -3392,7 +3392,7 @@ body::before {
 }
 
 /* HEADER */
-header {
+.fan-header {
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
 }

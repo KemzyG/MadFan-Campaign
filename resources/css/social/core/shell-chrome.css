@@ -1,0 +1,118 @@
+/*
+ * Shell chrome — .mf-tabbar, .mf-flash inline alerts.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: 100%;
+    max-width: var(--mf-app-width);
+    padding-bottom: var(--mf-safe-bottom);
+    border-top: 1px solid var(--mf-line);
+    /* A hairline alone reads flat against scrolled content behind the blur;
+       the soft upward shadow gives the bar a touch of real elevation. */
+    box-shadow: 0 -12px 24px -20px color-mix(in srgb, var(--mf-pitch) 30%, transparent);
+    background: color-mix(in srgb, var(--mf-panel) 92%, transparent);
+    backdrop-filter: blur(18px) saturate(1.25);
+    -webkit-backdrop-filter: blur(18px) saturate(1.25);
+    display: flex;
+    /* Primary mobile nav: Events · Feed · Ticket · Chat */
+}
+
+/*
+ * Desktop has the sidebar, so the bottom tab bar is phone-only. This block has
+ * to sit *after* the base rule above — same specificity, and a media query adds
+ * none, so an earlier md+ block would lose on source order.
+ */
+@media (min-width: 768px) {
+    .mf-tabbar {
+        display: none;
+    }
+
+    .mf-main {
+        padding-bottom: max(1rem, var(--mf-safe-bottom));
+    }
+}
+
+.mf-tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    min-width: 0;
+    min-height: var(--mf-tab-h);
+    padding: 0.3rem 0.45rem;
+    color: var(--mf-muted);
+    text-decoration: none;
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 160ms var(--mf-ease);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.mf-tab svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    padding: 0.26rem;
+    box-sizing: content-box;
+    border-radius: var(--mf-radius-pill);
+    stroke-width: 1.75;
+    background: transparent;
+    transition: background-color 180ms var(--mf-ease), transform 120ms var(--mf-ease);
+}
+
+.mf-tab:active svg {
+    transform: scale(0.9);
+}
+
+.mf-tab[aria-current='page'],
+.mf-tab.is-active {
+    color: var(--mf-pitch);
+    font-weight: 700;
+}
+
+/* A rounded fill behind the icon, not just a colour swap — the same "current
+   tab" affordance most native app tab bars use. */
+.mf-tab[aria-current='page'] svg,
+.mf-tab.is-active svg {
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+}
+
+.mf-tab.is-soon {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.mf-flash {
+    margin: 0.75rem 1rem 0;
+    border-radius: var(--mf-radius);
+    padding: 0.55rem 0.75rem;
+    font-size: var(--mf-text-ui);
+    animation: mf-rise 220ms var(--mf-ease) both;
+}
+
+.mf-flash--ok {
+    border: 1px solid var(--mf-pitch-dim);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    color: var(--mf-pitch);
+}
+
+.mf-flash--err {
+    border: 1px solid color-mix(in srgb, var(--mf-rival) 40%, transparent);
+    background: color-mix(in srgb, var(--mf-rival) 12%, transparent);
+    color: var(--mf-rival);
+}

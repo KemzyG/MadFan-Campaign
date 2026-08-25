@@ -1,0 +1,140 @@
+/*
+ * Base — reset, html/body, #app, type utilities, focus-visible.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    margin: 0;
+    min-height: 100%;
+    min-height: 100dvh;
+    /* Keep UA 16px root so rem type tokens resolve to designed px */
+}
+
+body,
+.mf-social {
+    margin: 0;
+    min-height: 100%;
+    min-height: 100dvh;
+    background-color: var(--mf-canvas);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    font-weight: 400;
+    line-height: var(--mf-leading-body);
+    font-synthesis: none;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+}
+
+#app {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* Display â€” stadium / broadcast condensed (scores, brand, names) */
+.mf-display {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-display);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+.mf-score {
+    font-family: var(--mf-font-display);
+    font-weight: 800;
+    letter-spacing: var(--mf-tracking-score);
+    font-variant-numeric: tabular-nums;
+    font-synthesis: none;
+    line-height: 1;
+}
+
+/* Mono â€” handles, MRZ, ledger figures */
+.mf-mono {
+    font-family: var(--mf-font-mono);
+    font-feature-settings: "tnum" 1, "zero" 1;
+    font-variant-numeric: tabular-nums;
+    font-synthesis: none;
+}
+
+/* Type utilities (prefer over one-off Tailwind text-* in Social) */
+.mf-text-micro {
+    font-size: var(--mf-text-micro);
+}
+
+.mf-text-caption {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-text-meta {
+    font-size: var(--mf-text-meta);
+    line-height: var(--mf-leading-tight);
+}
+
+.mf-text-ui {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+}
+
+.mf-text-body {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    line-height: var(--mf-leading-body);
+    font-weight: 400;
+}
+
+.mf-text-title {
+    font-size: var(--mf-text-title);
+    line-height: var(--mf-leading-tight);
+}
+
+.mf-text-section {
+    font-size: var(--mf-text-section);
+    line-height: var(--mf-leading-tight);
+}
+
+.mf-text-display {
+    font-size: var(--mf-text-display);
+    line-height: 1.1;
+}
+
+.mf-text-score {
+    font-size: var(--mf-text-score);
+    line-height: 1;
+}
+
+:focus-visible {
+    outline: 2px solid var(--mf-pitch);
+    outline-offset: 2px;
+}
+
+/* —— App stage + shell (phone → X three-column) —— */
+
+.mf-stage {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    padding-left: var(--mf-safe-left);
+    padding-right: var(--mf-safe-right);
+    background: var(--mf-canvas);
+}

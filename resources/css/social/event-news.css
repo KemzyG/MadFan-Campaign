@@ -12,19 +12,19 @@
 .mf-evwire {
     display: flex;
     align-items: stretch;
-    gap: 0.7rem;
+    gap: 0.55rem;
 }
 
 .mf-evwire__rail {
     flex-shrink: 0;
     width: 3px;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-full);
     background: color-mix(in srgb, var(--mf-pitch) 40%, transparent);
 }
 
+/* Urgency is carried by the red rail itself — no glow, per the no-shadow rule. */
 .mf-evwire.is-urgent .mf-evwire__rail {
     background: var(--mf-bad);
-    box-shadow: 0 0 10px -1px color-mix(in srgb, var(--mf-bad) 70%, transparent);
 }
 
 .mf-evwire__copy {
@@ -37,9 +37,9 @@
     align-items: center;
     gap: 0.28rem;
     margin: 0;
-    font-family: var(--mf-font-ui);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
     color: var(--mf-muted);
@@ -57,15 +57,15 @@
 .mf-evwire__headline {
     margin: 0.25rem 0 0;
     font-family: var(--mf-font-display);
-    font-size: var(--mf-text-display);
-    font-weight: 800;
+    font-size: var(--mf-text-body);
+    font-weight: 700;
     line-height: var(--mf-leading-tight);
     letter-spacing: var(--mf-tracking-display);
     color: var(--mf-text);
 }
 
 .mf-evwire.is-urgent .mf-evwire__headline {
-    font-size: var(--mf-text-score);
+    font-size: var(--mf-text-title);
     text-transform: uppercase;
 }
 
@@ -75,7 +75,7 @@
     line-height: var(--mf-leading-body);
     color: var(--mf-pitch-dim);
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -85,18 +85,18 @@
     align-items: center;
     gap: 0.35rem;
     margin: 0.45rem 0 0;
-    font-family: var(--mf-font-mono);
+    font-family: var(--mf-font-ui);
     font-size: var(--mf-text-caption);
     color: var(--mf-muted);
 }
 
 .mf-evwire__source-label {
     padding: 0.06rem 0.32rem;
-    border-radius: 0.2rem;
+    border-radius: var(--mf-radius-badge);
     border: 1px solid var(--mf-line);
-    font-family: var(--mf-font-ui);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
     color: var(--mf-pitch-dim);
@@ -104,11 +104,11 @@
 
 .mf-evwire__thumb {
     flex-shrink: 0;
-    width: 4.75rem;
+    width: 3.8rem;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 0.35rem;
-    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-ev-accent, var(--mf-line)) 20%, var(--mf-line));
     background: var(--mf-elevated);
 }
 
@@ -124,8 +124,8 @@
 .mf-evcamp__title {
     margin: 0;
     font-family: var(--mf-font-display);
-    font-size: var(--mf-text-title);
-    font-weight: 800;
+    font-size: var(--mf-text-body);
+    font-weight: 700;
     line-height: var(--mf-leading-tight);
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -139,7 +139,7 @@
 .mf-evcamp__bar {
     position: relative;
     height: 0.4rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-full);
     background: var(--mf-elevated);
     box-shadow: inset 0 0 0 1px var(--mf-line);
     overflow: hidden;
@@ -148,8 +148,9 @@
 .mf-evcamp__fill {
     display: block;
     height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--mf-pitch-dim), var(--mf-pitch));
+    border-radius: var(--mf-radius-full);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 60%, transparent), var(--mf-ev-accent, var(--mf-pitch)));
+    box-shadow: 0 0 10px -2px color-mix(in srgb, var(--mf-ev-accent, transparent) 65%, transparent);
     transition: width var(--mf-dur-slow) var(--mf-ease);
 }
 
@@ -162,19 +163,18 @@
 .mf-evcamp__week {
     flex: 1 1 0;
     height: 0.28rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-full);
     background: var(--mf-elevated);
     box-shadow: inset 0 0 0 1px var(--mf-line);
 }
 
 .mf-evcamp__week.is-done {
-    background: color-mix(in srgb, var(--mf-pitch) 42%, transparent);
+    background: color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 55%, transparent);
     box-shadow: none;
 }
 
 .mf-evcamp__week.is-now {
-    background: var(--mf-pitch);
-    box-shadow: 0 0 8px -1px color-mix(in srgb, var(--mf-pitch) 60%, transparent);
+    background: var(--mf-ev-accent, var(--mf-pitch));
 }
 
 /* Week and days-left are both optional, so the track count follows the cells. */
@@ -182,22 +182,21 @@
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
-    gap: 0.5rem;
-    margin: 0.65rem 0 0;
+    gap: 0.4rem;
+    margin: 0.5rem 0 0;
 }
 
 .mf-evcamp__stats > div {
-    padding: 0.4rem 0.55rem;
+    padding: 0.3rem 0.45rem;
     border-radius: var(--mf-radius);
     border: 1px solid var(--mf-line);
     background: var(--mf-panel);
-    box-shadow: var(--mf-sheen);
 }
 
 .mf-evcamp__stats dt {
-    font-family: var(--mf-font-ui);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
     color: var(--mf-muted);
@@ -210,8 +209,8 @@
     gap: 0.05rem;
     margin: 0.1rem 0 0;
     font-family: var(--mf-font-display);
-    font-size: var(--mf-text-display);
-    font-weight: 800;
+    font-size: var(--mf-text-title);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1;
     color: var(--mf-text);
@@ -220,7 +219,7 @@
 .mf-evcamp__stats dd i {
     font-style: normal;
     font-size: var(--mf-text-caption);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--mf-muted);
 }
 
@@ -236,7 +235,7 @@
 .mf-evtask {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .mf-evtask__reward {
@@ -245,35 +244,34 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 3.9rem;
-    padding: 0.45rem 0.25rem;
+    width: 3.4rem;
+    padding: 0.4rem 0.2rem;
     border-radius: var(--mf-radius);
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 24%, var(--mf-line));
+    border: 1px solid color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 32%, var(--mf-line));
     background:
-        radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--mf-pitch) 9%, transparent), transparent 70%),
+        radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 16%, transparent), transparent 70%),
         var(--mf-elevated);
-    box-shadow: var(--mf-sheen);
 }
 
 .mf-evtask__reward svg {
     width: 0.95rem;
     height: 0.95rem;
-    color: var(--mf-pitch-dim);
+    color: var(--mf-ev-accent, var(--mf-pitch-dim));
 }
 
 .mf-evtask__reward b {
     font-family: var(--mf-font-display);
-    font-size: var(--mf-text-display);
-    font-weight: 800;
+    font-size: var(--mf-text-title);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1.05;
     color: var(--mf-text);
 }
 
 .mf-evtask__reward span {
-    font-family: var(--mf-font-ui);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
     color: var(--mf-muted);
@@ -287,8 +285,8 @@
 .mf-evtask__title {
     margin: 0;
     font-family: var(--mf-font-display);
-    font-size: var(--mf-text-title);
-    font-weight: 800;
+    font-size: var(--mf-text-body);
+    font-weight: 700;
     line-height: var(--mf-leading-tight);
     letter-spacing: var(--mf-tracking-display);
     color: var(--mf-text);
@@ -300,7 +298,7 @@
     line-height: var(--mf-leading-body);
     color: var(--mf-pitch-dim);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -318,12 +316,12 @@
     align-items: center;
     gap: 0.2rem;
     padding: 0.1rem 0.4rem;
-    border-radius: 0.25rem;
+    border-radius: var(--mf-radius-badge);
     border: 1px solid var(--mf-line);
-    font-family: var(--mf-font-ui);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
     color: var(--mf-pitch-dim);
 }

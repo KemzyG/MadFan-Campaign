@@ -12,11 +12,10 @@
 }
 
 /* The hero reads as a self-contained card in the rail rather than a full-bleed
- * page banner: full border + radius instead of the page's bottom rule. */
+ * page banner: one Silver Mist hairline and the 8px card radius, no shadow. */
 .mf-profile-rail .mf-profile-hero {
     border: 1px solid var(--mf-line);
-    border-radius: calc(var(--mf-radius) + 0.25rem);
-    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+    border-radius: var(--mf-radius);
 }
 
 /* Cap the reading measure of the feed and centre it in the wider content

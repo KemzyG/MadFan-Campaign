@@ -1,7 +1,7 @@
 /*
  * Mad Fan Social — Leaderboard
  * Namespaced .mf-lb-* surface. Relies on the --mf-* tokens defined in social.css
- * (loaded first). Monochrome: rank/grade weight carries meaning, not colour.
+ * (loaded first). Restrained: rank/grade weight carries meaning, not colour.
  */
 
 .mf-lb {
@@ -39,10 +39,9 @@
     justify-content: center;
     flex: none;
     overflow: hidden;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-full);
     background: var(--mf-elevated);
     border: 1px solid var(--mf-line);
-    box-shadow: var(--mf-sheen);
 }
 
 .mf-lb-avatar--sm {
@@ -74,7 +73,7 @@
 .mf-lb-avatar__initial {
     font-family: var(--mf-font-display);
     color: var(--mf-pitch);
-    font-size: 1.1rem;
+    font-size: var(--mf-text-body);
     line-height: 1;
 }
 
@@ -96,10 +95,10 @@
     justify-content: center;
     width: 1.35rem;
     height: 1.35rem;
-    border-radius: 0.35rem;
+    border-radius: var(--mf-radius-badge);
     background: var(--mf-pitch);
-    color: var(--mf-void);
-    font-size: 0.8rem;
+    color: var(--mf-on-fill);
+    font-size: var(--mf-text-caption);
     line-height: 1;
     font-weight: 700;
 }
@@ -112,7 +111,7 @@
 .mf-lb-score--sm .mf-lb-score__grade {
     width: 1.15rem;
     height: 1.15rem;
-    font-size: 0.7rem;
+    font-size: var(--mf-text-micro);
 }
 
 .mf-lb-score--md .mf-lb-score__value {
@@ -140,14 +139,12 @@
     border-radius: var(--mf-radius);
     background: var(--mf-panel);
     border: 1px solid var(--mf-line);
-    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
 }
 
-/* First place lifts above the wings. */
+/* First place lifts above the wings — tint shift + offset, never a shadow. */
 .mf-lb-podium__slot--1 {
     background: var(--mf-elevated);
     border-color: color-mix(in srgb, var(--mf-pitch) 22%, var(--mf-line));
-    box-shadow: var(--mf-sheen), var(--mf-shadow-2);
     transform: translateY(-0.6rem);
 }
 
@@ -157,14 +154,14 @@
 
 .mf-lb-podium__rank {
     font-family: var(--mf-font-display);
-    font-size: 1.5rem;
+    font-size: var(--mf-text-subheading);
     line-height: 1;
     color: var(--mf-muted);
 }
 
 .mf-lb-podium__slot--1 .mf-lb-podium__rank {
     color: var(--mf-pitch);
-    font-size: 1.85rem;
+    font-size: var(--mf-text-display);
 }
 
 .mf-lb-podium__handle {
@@ -240,9 +237,9 @@
 
 .mf-lb-row__you-tag {
     padding: 0.05rem 0.3rem;
-    border-radius: 0.3rem;
+    border-radius: var(--mf-radius-badge);
     background: var(--mf-pitch);
-    color: var(--mf-void);
+    color: var(--mf-on-fill);
     text-transform: uppercase;
     letter-spacing: var(--mf-tracking-label);
 }
@@ -281,7 +278,6 @@
     border-radius: var(--mf-radius);
     background: color-mix(in srgb, var(--mf-elevated) 92%, transparent);
     border: 1px solid color-mix(in srgb, var(--mf-pitch) 26%, var(--mf-line));
-    box-shadow: var(--mf-shadow-2);
     backdrop-filter: var(--mf-glass);
 }
 
@@ -331,7 +327,7 @@
 /* ---- Wider viewports ---- */
 @media (min-width: 768px) {
     .mf-lb-head__title {
-        font-size: 2.1rem;
+        font-size: var(--mf-text-heading-sm);
     }
 
     .mf-lb-podium {

@@ -1,0 +1,92 @@
+/*
+ * Toast stack — .mf-toast-stack, .mf-toast.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-toast-stack {
+    position: fixed;
+    z-index: 80;
+    right: max(0.85rem, env(safe-area-inset-right, 0px));
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: min(22rem, calc(100vw - 1.7rem));
+    pointer-events: none;
+}
+
+.mf-toast {
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 0.55rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-elevated) 92%, transparent);
+    backdrop-filter: blur(12px) saturate(1.1);
+    animation: mf-toast-in 220ms var(--mf-ease) both;
+}
+
+.mf-toast__mark {
+    width: 0.35rem;
+    height: 100%;
+    min-height: 1.1rem;
+    margin-top: 0.15rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-muted);
+}
+
+.mf-toast--ok {
+    border-color: color-mix(in srgb, var(--mf-pitch) 35%, var(--mf-line));
+}
+
+.mf-toast--ok .mf-toast__mark {
+    background: var(--mf-pitch);
+}
+
+.mf-toast--err {
+    border-color: color-mix(in srgb, var(--mf-rival) 40%, var(--mf-line));
+}
+
+.mf-toast--err .mf-toast__mark {
+    background: var(--mf-rival);
+}
+
+.mf-toast__copy {
+    margin: 0;
+    font-size: var(--mf-text-ui);
+    line-height: 1.35;
+    color: var(--mf-text);
+}
+
+.mf-toast__dismiss {
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.15rem;
+}
+
+.mf-toast__dismiss:hover {
+    color: var(--mf-text);
+}
+
+@keyframes mf-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

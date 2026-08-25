@@ -1,0 +1,1199 @@
+/*
+ * Tickets — .mf-ticket-*, .mf-stk-* paper stock.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-tickets {
+    padding: 0.75rem 1rem var(--mf-page-pad-bottom);
+    animation: mf-ticket-rise 420ms var(--mf-ease) both;
+}
+
+.mf-tickets--show {
+    max-width: 28rem;
+    margin-inline: auto;
+}
+
+.mf-tickets-kicker {
+    margin: 0 0 0.35rem;
+    color: var(--mf-pitch);
+    text-transform: uppercase;
+}
+
+.mf-tickets-lead {
+    margin: 0.45rem 0 0.85rem;
+    max-width: 38ch;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    line-height: var(--mf-leading-body);
+}
+
+.mf-tickets-mine-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--mf-amber);
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
+}
+
+.mf-tickets-mine-link:hover {
+    color: var(--mf-text);
+}
+
+.mf-tickets-count {
+    display: inline-flex;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.35rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-pitch) 22%, transparent);
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-ticket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Ticket stock: a Cloud card with an ink wash down the stub edge. The old inset
+ * white sheen is gone — the hairline border is the whole elevation story. */
+.mf-ticket-match {
+    position: relative;
+    padding: 0.9rem 0.95rem 0.9rem 1.15rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--mf-pitch) 8%, transparent), transparent 22%),
+        var(--mf-recess);
+    animation: mf-ticket-rise 480ms var(--mf-ease) both;
+    overflow: hidden;
+}
+
+/* Punched perforation: the holes show the page through the stock, so they are
+ * drawn in the canvas colour, not a tint. */
+.mf-ticket-match__perf {
+    position: absolute;
+    left: 0.35rem;
+    top: 0.55rem;
+    bottom: 0.55rem;
+    width: 0.45rem;
+    background:
+        radial-gradient(circle at 50% 0.35rem, var(--mf-canvas) 0.22rem, transparent 0.24rem) 0 0 / 100% 0.7rem repeat-y;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.mf-ticket-match:nth-child(2) {
+    animation-delay: 60ms;
+}
+
+.mf-ticket-match:nth-child(3) {
+    animation-delay: 110ms;
+}
+
+.mf-ticket-match:nth-child(4) {
+    animation-delay: 160ms;
+}
+
+.mf-ticket-match__league {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.mf-ticket-match__sides {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.mf-ticket-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.mf-ticket-side--away {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.mf-ticket-crest {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 28%, var(--mf-line));
+    background: var(--mf-recess-deep);
+    overflow: hidden;
+}
+
+.mf-ticket-crest__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mf-ticket-crest__mark {
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.06em;
+    color: var(--mf-pitch);
+}
+
+.mf-ticket-side__name {
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--mf-text);
+}
+
+.mf-ticket-vs {
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.14em;
+    color: var(--mf-muted);
+}
+
+.mf-ticket-match__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding-top: 0.7rem;
+    border-top: 1px dashed color-mix(in srgb, var(--mf-line) 80%, transparent);
+}
+
+.mf-ticket-match__meta > p {
+    margin: 0;
+}
+
+.mf-ticket-venue {
+    color: var(--mf-text);
+}
+
+.mf-ticket-dot {
+    margin: 0 0.35rem;
+    opacity: 0.55;
+}
+
+.mf-ticket-buy {
+    min-height: 2.35rem;
+    padding-inline: 0.9rem;
+    font-size: var(--mf-text-ui);
+}
+
+.mf-ticket-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.55rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-ticket-chip--owned {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+}
+
+.mf-ticket-chip--status {
+    border-color: color-mix(in srgb, var(--mf-amber) 40%, var(--mf-line));
+    color: var(--mf-amber);
+}
+
+.mf-ticket-wallet {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.mf-ticket-wallet__link {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--mf-radius-badge);
+    transition: transform 160ms var(--mf-ease), filter 160ms var(--mf-ease);
+}
+
+.mf-ticket-wallet__link:hover {
+    transform: translateY(-2px) rotate(-0.35deg);
+    filter: brightness(1.03);
+}
+
+.mf-ticket-wallet__link:focus-visible {
+    outline: 2px solid var(--mf-pitch);
+    outline-offset: 3px;
+}
+
+.mf-ticket-filters {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0 1rem 0.85rem;
+    overflow-x: auto;
+}
+
+.mf-ticket-filter {
+    flex: 0 0 auto;
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 80%, transparent);
+    color: var(--mf-muted);
+    border-radius: var(--mf-radius);
+    padding: 0.4rem 0.7rem;
+    font-size: var(--mf-text-meta);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.mf-ticket-filter.is-active {
+    border-color: color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+}
+
+.mf-ticket-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: end center;
+}
+
+.mf-ticket-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(4px);
+}
+
+.mf-ticket-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(34rem, 100%);
+    max-height: min(92vh, 52rem);
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--mf-radius-lg) var(--mf-radius-lg) 0 0;
+    border: 1px solid var(--mf-line);
+    border-bottom: 0;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 7%, var(--mf-panel)) 0%, var(--mf-panel) 28%),
+        var(--mf-panel);
+    animation: mf-sheet-up 240ms var(--mf-ease);
+}
+
+.mf-ticket-modal__chrome {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1rem 0.65rem;
+}
+
+.mf-ticket-modal__title {
+    margin: 0.15rem 0 0;
+    font-size: var(--mf-text-title);
+    letter-spacing: 0.04em;
+}
+
+.mf-ticket-modal__close {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mf-ticket-modal__scroll {
+    overflow: auto;
+    padding: 0.35rem 1rem 1rem;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.mf-ticket-modal__qr-tools {
+    display: grid;
+    gap: 0.65rem;
+    justify-items: start;
+}
+
+.mf-ticket-modal__qr-xl {
+    width: 100%;
+    display: grid;
+    justify-items: center;
+    gap: 0.45rem;
+    padding: 0.85rem;
+    border: 1px dashed color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 70%, transparent);
+}
+
+.mf-ticket-modal__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--mf-line);
+    background: var(--mf-recess);
+}
+
+.mf-ticket-modal__skel {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.mf-ticket-modal__skel-face {
+    height: 12rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-ticket-modal__skel-receipt {
+    height: 6rem;
+    border-radius: var(--mf-radius);
+}
+
+@media (min-width: 720px) {
+    .mf-ticket-modal {
+        place-items: center;
+        padding: 1.5rem;
+    }
+
+    .mf-ticket-modal__panel {
+        border-radius: var(--mf-radius-panel);
+        border-bottom: 1px solid var(--mf-line);
+        max-height: min(88vh, 48rem);
+    }
+
+    .mf-toast-stack {
+        bottom: 1.25rem;
+        /* Stay on the shell's edge, not the monitor's, so toasts read as part of the app. */
+        right: calc(var(--mf-shell-inset) + max(0.85rem, env(safe-area-inset-right, 0px)));
+    }
+}
+
+/*
+ * lg+: the chat rail now owns the right edge, so lift toasts clear of it exactly
+ * like the live-stage pill — otherwise they'd stack on top of the conversation
+ * list. Chat spans that track itself, so there the offset drops back to the edge.
+ */
+@media (min-width: 1024px) {
+    .mf-toast-stack {
+        right: calc(
+            var(--mf-shell-inset) + var(--mf-chat-rail-w) +
+                max(0.85rem, env(safe-area-inset-right, 0px))
+        );
+    }
+
+    .mf-stage--wide .mf-toast-stack {
+        right: calc(var(--mf-shell-inset) + max(0.85rem, env(safe-area-inset-right, 0px)));
+    }
+}
+
+/* Physical ticket face */
+
+.mf-stk {
+    --stk-radius: 0.2rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(5.5rem, 7.25rem);
+    color: var(--mf-stk-ink);
+    border-radius: var(--stk-radius);
+    isolation: isolate;
+    overflow: hidden;
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 55%, transparent),
+        0 14px 28px color-mix(in srgb, #000 42%, transparent),
+        0 2px 0 color-mix(in srgb, #000 18%, transparent);
+    animation: mf-stk-settle 560ms var(--mf-ease) both;
+}
+
+.mf-stk__paper,
+.mf-stk__grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.mf-stk__paper {
+    background:
+        linear-gradient(125deg, color-mix(in srgb, #fff 35%, transparent), transparent 42%),
+        linear-gradient(180deg, var(--mf-stk-paper), var(--mf-stk-paper-deep));
+}
+
+.mf-stk__grain {
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.mf-stk__body,
+.mf-stk__stub,
+.mf-stk__perf {
+    position: relative;
+    z-index: 1;
+}
+
+.mf-stk__body {
+    padding: 0.85rem 0.9rem 0.95rem 1rem;
+    min-width: 0;
+}
+
+.mf-stk__mast {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 2px solid var(--mf-stk-accent);
+}
+
+.mf-stk__brand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.mf-stk__brand-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-stk-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-stk-accent) 25%, transparent);
+}
+
+.mf-stk__brand-name {
+    font-size: var(--mf-text-meta);
+    letter-spacing: 0.12em;
+    color: var(--mf-stk-accent);
+}
+
+.mf-stk__brand-slash {
+    color: var(--mf-stk-ink-soft);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-stk__brand-doc {
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mf-stk-ink-soft);
+}
+
+.mf-stk__status {
+    flex-shrink: 0;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--mf-stk-stamp) 55%, transparent);
+    color: var(--mf-stk-stamp);
+    font-size: 0.5625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transform: rotate(2deg);
+}
+
+.mf-stk__comp {
+    margin: 0.55rem 0 0.35rem;
+    color: var(--mf-stk-ink-soft);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.mf-stk__fixture {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+}
+
+.mf-stk__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.mf-stk__side--away {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.mf-stk-crest {
+    display: grid;
+    place-items: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    border: 1px solid var(--mf-stk-rule);
+    background: color-mix(in srgb, #fff 55%, var(--mf-stk-paper));
+    overflow: hidden;
+}
+
+.mf-stk-crest__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mf-stk-crest__mark {
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.04em;
+    color: var(--mf-stk-accent);
+}
+
+.mf-stk__club {
+    margin: 0;
+    font-size: clamp(0.95rem, 3.6vw, 1.2rem);
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.mf-stk__vs {
+    font-size: 1.1rem;
+    color: var(--mf-stk-stamp);
+    opacity: 0.85;
+}
+
+.mf-stk__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem 0.75rem;
+    padding: 0.55rem 0;
+    border-top: 1px dashed var(--mf-stk-rule);
+    border-bottom: 1px dashed var(--mf-stk-rule);
+}
+
+.mf-stk__cell,
+.mf-stk__holder > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.mf-stk__k {
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mf-stk-ink-soft);
+}
+
+.mf-stk__v {
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--mf-stk-ink);
+    word-break: break-word;
+}
+
+.mf-stk__holder {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    margin-top: 0.65rem;
+}
+
+.mf-stk__watermark {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.35rem;
+    margin: 0;
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--mf-stk-accent) 14%, transparent);
+    transform: rotate(-12deg);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+.mf-stk__perf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1.15rem;
+    background: transparent;
+}
+
+.mf-stk__perf-line {
+    flex: 1;
+    width: 0;
+    border-left: 2px dashed color-mix(in srgb, var(--mf-stk-ink) 28%, transparent);
+}
+
+/* The notch is a hole in the paper, so it shows the canvas behind the ticket. */
+.mf-stk__perf-notch {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-canvas);
+    box-shadow: inset 0 0 0 1px var(--mf-line);
+    z-index: 2;
+}
+
+.mf-stk__perf-notch--top {
+    margin-top: -0.5rem;
+}
+
+.mf-stk__perf-notch--bottom {
+    margin-bottom: -0.5rem;
+}
+
+.mf-stk__stub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.75rem 0.55rem;
+    background:
+        repeating-linear-gradient(
+            -18deg,
+            transparent,
+            transparent 6px,
+            color-mix(in srgb, var(--mf-stk-accent) 7%, transparent) 6px,
+            color-mix(in srgb, var(--mf-stk-accent) 7%, transparent) 7px
+        ),
+        color-mix(in srgb, var(--mf-stk-paper-deep) 88%, #c8c8c8);
+    text-align: center;
+    border-left: 1px solid color-mix(in srgb, var(--mf-stk-ink) 8%, transparent);
+}
+
+.mf-stk__stub-label {
+    margin: 0;
+    color: var(--mf-stk-ink-soft);
+    letter-spacing: 0.14em;
+}
+
+.mf-stk__stub-ga {
+    margin: 0;
+    font-size: 1.55rem;
+    letter-spacing: 0.08em;
+    color: var(--mf-stk-accent);
+    line-height: 1;
+}
+
+.mf-stk__stub-code {
+    margin: 0;
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    color: var(--mf-stk-ink);
+    word-break: break-all;
+}
+
+.mf-stk__qr {
+    display: grid;
+    gap: 0.3rem;
+    justify-items: center;
+    margin-top: 0.15rem;
+}
+
+.mf-stk__qr-frame {
+    display: grid;
+    place-items: center;
+    padding: 0.28rem;
+    background: #f5f5f5;
+    border: 1px solid var(--mf-stk-rule);
+}
+
+.mf-stk__qr-hint {
+    margin: 0;
+    font-size: 0.5625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mf-stk-ink-soft);
+}
+
+.mf-stk__barcode {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.12rem;
+    height: 2.1rem;
+    width: 100%;
+    padding: 0.2rem 0.15rem;
+    margin-top: 0.2rem;
+}
+
+.mf-stk__barcode > span {
+    display: block;
+    width: 0.14rem;
+    background: var(--mf-stk-ink);
+    opacity: 0.85;
+}
+
+.mf-stk__barcode > span:nth-child(odd) {
+    width: 0.08rem;
+}
+
+.mf-stk__barcode > span:nth-child(3n) {
+    width: 0.22rem;
+}
+
+.mf-stk__stub-foot {
+    margin: 0.2rem 0 0;
+    font-size: 0.5rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mf-stk-ink-soft);
+}
+
+.mf-stk--wallet {
+    min-height: 9.5rem;
+}
+
+.mf-stk--wallet .mf-stk__body {
+    padding: 0.7rem 0.75rem 0.8rem 0.85rem;
+}
+
+.mf-stk--wallet .mf-stk-crest {
+    width: 1.85rem;
+    height: 1.85rem;
+}
+
+.mf-stk--wallet .mf-stk__club {
+    font-size: 0.95rem;
+}
+
+.mf-stk--wallet .mf-stk__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.5rem;
+}
+
+.mf-stk--wallet .mf-stk__stub {
+    min-width: 5.4rem;
+}
+
+.mf-stk--wallet .mf-stk__watermark {
+    font-size: 1.55rem;
+}
+
+.mf-stk--fresh {
+    animation: mf-stk-issue 720ms var(--mf-ease) both;
+}
+
+.mf-stk-issued {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px dashed color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-pitch) 8%, var(--mf-panel));
+    animation: mf-ticket-rise 380ms var(--mf-ease) both;
+}
+
+.mf-stk-issued__stamp {
+    flex-shrink: 0;
+    padding: 0.35rem 0.5rem;
+    border: 2px solid var(--mf-pitch);
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transform: rotate(-6deg);
+}
+
+.mf-stk-issued__copy {
+    margin: 0;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-text);
+    line-height: 1.35;
+}
+
+/* Receipt / wallet printout */
+
+/*
+ * Receipt printout: Cloud stock fading to Snow, with the ruled feed lines still
+ * drawn in Silver Mist. The white top sheen is gone — this is paper on marble.
+ */
+.mf-stk-receipt {
+    margin-top: 1rem;
+    padding: 0.95rem 0.95rem 1.05rem;
+    border: 1px solid color-mix(in srgb, var(--mf-line) 85%, var(--mf-amber));
+    border-radius: var(--mf-radius-badge);
+    background:
+        repeating-linear-gradient(
+            180deg,
+            transparent,
+            transparent 22px,
+            color-mix(in srgb, var(--mf-line) 35%, transparent) 22px,
+            color-mix(in srgb, var(--mf-line) 35%, transparent) 23px
+        ),
+        linear-gradient(180deg, var(--mf-recess), var(--mf-panel));
+    animation: mf-ticket-rise 520ms var(--mf-ease) both;
+    animation-delay: 80ms;
+}
+
+.mf-stk-receipt--fresh {
+    border-color: color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+}
+
+.mf-stk-receipt__head {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--mf-line);
+}
+
+.mf-stk-receipt__kicker {
+    margin: 0 0 0.25rem;
+    color: var(--mf-amber);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.mf-stk-receipt__title {
+    margin: 0;
+    font-size: var(--mf-text-section);
+    letter-spacing: 0.04em;
+}
+
+.mf-stk-receipt__flash {
+    margin: 0.4rem 0 0;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-pitch);
+}
+
+.mf-stk-receipt__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.mf-stk-receipt__row {
+    display: grid;
+    grid-template-columns: 1.8rem minmax(5.5rem, 7.5rem) minmax(0, 1fr);
+    gap: 0.45rem;
+    align-items: baseline;
+}
+
+.mf-stk-receipt__n {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-stk-receipt__label {
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-stk-receipt__value {
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    color: var(--mf-text);
+    word-break: break-word;
+}
+
+.mf-stk-receipt__terms {
+    margin: 0.85rem 0 0;
+    padding-top: 0.7rem;
+    border-top: 1px dashed var(--mf-line);
+    font-size: var(--mf-text-caption);
+    line-height: 1.45;
+    color: var(--mf-muted);
+}
+
+.mf-gate-pass__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+
+.mf-stk-print {
+    min-height: 2.35rem;
+}
+
+@keyframes mf-ticket-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes mf-stk-settle {
+    from {
+        opacity: 0;
+        transform: translateY(12px) rotate(-1.2deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+    }
+}
+
+@keyframes mf-stk-issue {
+    0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96) rotate(-2deg);
+        filter: brightness(1.2);
+    }
+    55% {
+        opacity: 1;
+        transform: translateY(-3px) scale(1.01) rotate(0.4deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(1);
+    }
+}
+
+@media (max-width: 420px) {
+    .mf-stk--full {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .mf-stk--full .mf-stk__perf {
+        flex-direction: row;
+        width: auto;
+        height: 1.15rem;
+    }
+
+    .mf-stk--full .mf-stk__perf-line {
+        width: auto;
+        flex: 1;
+        height: 0;
+        border-left: 0;
+        border-top: 2px dashed color-mix(in srgb, var(--mf-stk-ink) 28%, transparent);
+    }
+
+    .mf-stk--full .mf-stk__perf-notch--top {
+        margin: 0 0 0 -0.5rem;
+    }
+
+    .mf-stk--full .mf-stk__perf-notch--bottom {
+        margin: 0 -0.5rem 0 0;
+    }
+
+    .mf-stk--full .mf-stk__stub {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: center;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--mf-stk-ink) 8%, transparent);
+        padding: 0.7rem 0.75rem;
+    }
+
+    .mf-stk--full .mf-stk__qr {
+        order: 5;
+        width: 100%;
+    }
+
+    .mf-stk-receipt__row {
+        grid-template-columns: 1.6rem minmax(0, 1fr);
+        grid-template-areas:
+            "n label"
+            ". value";
+    }
+
+    .mf-stk-receipt__n {
+        grid-area: n;
+    }
+
+    .mf-stk-receipt__label {
+        grid-area: label;
+    }
+
+    .mf-stk-receipt__value {
+        grid-area: value;
+    }
+}
+
+@media print {
+    .mf-shell-header,
+    .mf-shell-nav,
+    .mf-tabbar,
+    .mf-flash,
+    .mf-toast-stack,
+    .mf-ticket-modal__backdrop,
+    .mf-ticket-modal__chrome,
+    .mf-ticket-modal__actions,
+    .mf-gate-pass__actions,
+    .mf-stk-issued {
+        display: none !important;
+    }
+
+    .mf-ticket-modal,
+    .mf-ticket-modal__panel,
+    .mf-ticket-modal__scroll {
+        position: static !important;
+        inset: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border: 0 !important;
+        animation: none !important;
+    }
+
+    .mf-tickets--show {
+        max-width: none;
+        padding: 0;
+    }
+
+    .mf-stk,
+    .mf-stk-receipt {
+        box-shadow: none;
+        break-inside: avoid;
+    }
+
+    .mf-stk-receipt {
+        background: #fff;
+        color: #111;
+        border-color: #ccc;
+    }
+
+    .mf-stk-receipt__title,
+    .mf-stk-receipt__value {
+        color: #111;
+    }
+
+    .mf-stk-receipt__kicker,
+    .mf-stk-receipt__label,
+    .mf-stk-receipt__n,
+    .mf-stk-receipt__terms {
+        color: #444;
+    }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ======================================================================
+ * Stage — live terrace voice rooms
+ * ----------------------------------------------------------------------
+ * A route-based experience (no modals). The lobby is a searchable board of
+ * live rooms; the room itself (`.mf-stageroom`) is a two-pane split on
+ * desktop (deck + tabbed rail) and a single full-screen column with a
+ * segmented control on mobile. Background listening survives navigation via
+ * the compact `.mf-stage-dock`.
+ *
+ * Sections:
+ *   1.  Keyframes
+ *   2.  Shared primitives (live dot/chip, conn chip, voice chip, icon
+ *       button, switch, backdrop picker, kbd)
+ *   3.  Lobby (hero, toolbar, board, card grid)
+ *   4.  Room shell (grid, segmented control, main column, header)
+ *   5.  Speaker deck + tiles
+ *   6.  Listener strip
+ *   7.  Reaction layer
+ *   8.  Pinned message
+ *   9.  Control bar (+ popovers, audio menu)
+ *   10. Rail (tabs + panes)
+ *   11. Chat pane
+ *   12. People pane
+ *   13. Info pane
+ *   14. Sheets (create / settings / share + form primitives)
+ *   15. Mini dock
+ *   16. Responsive (tablet / desktop two-pane / mobile fixed controls)
+ * ==================================================================== */
+
+/* —— 1. Keyframes ——————————————————————————————————————————————————— */
+@keyframes mf-stage-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-pitch) 55%, transparent);
+    }
+    70%,
+    100% {
+        box-shadow: 0 0 0 7px transparent;
+    }
+}
+
+@keyframes mf-stage-ring {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-pitch) 45%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 7px transparent;
+    }
+}
+
+@keyframes mf-stage-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes mf-stage-rx {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 0) scale(0.6);
+    }
+    12% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--mf-rx-drift, 0px)), -190px)
+            scale(var(--mf-rx-scale, 1));
+    }
+}

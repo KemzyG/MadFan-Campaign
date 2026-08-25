@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} Social</title>
     <link rel="icon" href="{{ asset('favicon.jpg') }}" type="image/jpeg">
@@ -19,8 +19,8 @@
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    {{-- Mad Fan Social: Saira Condensed (stadium/broadcast display) + IBM Plex Sans (readable terrace body) + IBM Plex Mono (handles / MRZ / stats) --}}
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+    {{-- Vibrants: Fraunces (editorial serif display, >=20px) + Inter (UI/body below 20px) + Montserrat (uppercase tracked labels) + Bebas Neue (badges / discount pills only) + IBM Plex Mono (MRZ / ledger / codes) --}}
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400..700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
     @inertiaHead
     @viteReactRefresh
     @vite(['resources/css/social.css', 'resources/js/social.jsx'])

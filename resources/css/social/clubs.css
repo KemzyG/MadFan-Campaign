@@ -1,6 +1,6 @@
 /*
  * League table (Social/Clubs) — split-panel standings + club detail.
- * Namespaced .mf-club-*. Monochrome, token-driven; two panes via .mf-split.
+ * Namespaced .mf-club-*. Token-driven Vibrants; two panes via .mf-split.
  */
 
 .mf-club-page {
@@ -31,7 +31,7 @@
     align-items: baseline;
     gap: 0.4rem;
     padding: 0.4rem 0.7rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-pill);
     border: 1px solid var(--mf-line);
     background: var(--mf-panel);
     color: var(--mf-muted);
@@ -48,7 +48,7 @@
 }
 
 .mf-club-leagues button.is-active {
-    color: var(--mf-void);
+    color: var(--mf-on-fill);
     background: var(--mf-pitch);
     border-color: var(--mf-pitch);
 }
@@ -71,7 +71,7 @@
     justify-content: center;
     flex: none;
     overflow: hidden;
-    border-radius: 0.4rem;
+    border-radius: var(--mf-radius);
     background: var(--mf-elevated);
     border: 1px solid var(--mf-line);
 }
@@ -89,7 +89,6 @@
 .mf-club-crest--lg {
     height: 3.35rem;
     width: 3.35rem;
-    border-radius: 0.6rem;
 }
 
 .mf-club-crest__img {
@@ -99,14 +98,15 @@
 }
 
 .mf-club-crest__mark {
-    font-size: 0.6rem;
-    letter-spacing: 0.02em;
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
     color: var(--mf-pitch-dim);
     text-transform: uppercase;
 }
 
 .mf-club-crest--lg .mf-club-crest__mark {
-    font-size: 0.95rem;
+    font-size: var(--mf-text-ui);
 }
 
 /* --- Master pane: standings table ---------------------------------------- */
@@ -132,11 +132,11 @@
     z-index: 1;
     background: var(--mf-panel);
     color: var(--mf-muted);
-    font-family: var(--mf-font-mono);
+    font-family: var(--mf-font-label);
     font-size: var(--mf-text-micro);
-    font-weight: 500;
+    font-weight: 600;
     text-align: center;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--mf-tracking-label);
     padding: 0.5rem 0.35rem;
     border-bottom: 1px solid var(--mf-line);
 }
@@ -190,7 +190,7 @@
 }
 
 .mf-club-row:focus-visible {
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--mf-pitch) 55%, transparent);
+    box-shadow: inset 0 0 0 2px var(--mf-amber);
 }
 
 .mf-club-row.is-selected {
@@ -242,7 +242,7 @@
 .mf-club-cell__fav {
     margin-left: auto;
     padding: 0.1rem 0.4rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-pill);
     border: 1px solid var(--mf-line);
     color: var(--mf-pitch-dim);
     background: var(--mf-elevated);
@@ -304,7 +304,7 @@
 
 .mf-club-detail__zone {
     padding: 0.12rem 0.5rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-pill);
     font-size: var(--mf-text-micro);
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -324,11 +324,11 @@
 
 .mf-club-detail__fav {
     padding: 0.12rem 0.5rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-pill);
     font-size: var(--mf-text-micro);
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--mf-void);
+    color: var(--mf-on-fill);
     background: var(--mf-pitch);
 }
 
@@ -397,4 +397,56 @@
 
 .mf-club-empty {
     padding: 1.5rem 0.5rem;
+}
+
+/* --- Club profile page: fan community ------------------------------------- */
+
+.mf-club-profile-page {
+    max-width: 34rem;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.mf-club-fans {
+    padding: 0;
+}
+
+.mf-club-fans__list {
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-club-fan-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+}
+
+.mf-club-fan-row__identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.2;
+}
+
+.mf-club-fan-row__name {
+    color: var(--mf-text);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-club-fan-row__handle {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-club-fan-row__points {
+    flex-shrink: 0;
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
 }

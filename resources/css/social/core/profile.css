@@ -1,0 +1,212 @@
+/*
+ * Profile — .mf-profile-* hero, chips, stats, stream.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* —— Social profile (visit + self) —— */
+.mf-profile-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 1.15rem 1rem 1.1rem;
+    border-bottom: 1px solid var(--mf-line);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 6%, var(--mf-panel)) 0%, transparent 55%),
+        var(--mf-panel);
+}
+
+.mf-profile--visit .mf-profile-hero {
+    padding-bottom: 1.25rem;
+}
+
+.mf-profile-hero__wash {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 85% 70% at 50% -35%, rgba(255, 255, 255, 0.1), transparent 58%),
+        linear-gradient(180deg, rgba(20, 20, 20, 0.5), transparent 70%);
+}
+
+.mf-profile-hero__crest {
+    pointer-events: none;
+    position: absolute;
+    right: -0.5rem;
+    top: 0.35rem;
+    width: 7.5rem;
+    height: 7.5rem;
+    opacity: 0.08;
+    object-fit: contain;
+    filter: grayscale(1);
+}
+
+.mf-profile-hero__row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.mf-profile-hero__avatar {
+    width: 4.25rem;
+    height: 4.25rem;
+    flex-shrink: 0;
+    /* The 2px navy-tinted rim is the whole treatment; the old 4px halo was
+     * decorative depth and the guide has no room for it. */
+    border: 2px solid color-mix(in srgb, var(--mf-pitch) 28%, var(--mf-line));
+}
+
+.mf-profile-hero__identity {
+    min-width: 0;
+    flex: 1;
+    padding-top: 0.15rem;
+}
+
+.mf-profile-hero__eyebrow {
+    margin: 0 0 0.2rem;
+    color: var(--mf-pitch);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-profile-hero__name {
+    margin: 0;
+    font-size: var(--mf-text-section);
+    letter-spacing: var(--mf-tracking-display);
+    color: var(--mf-text);
+}
+
+.mf-profile-hero__bio {
+    margin: 0.45rem 0 0;
+    color: var(--mf-text);
+}
+
+.mf-profile-hero__bio.is-muted {
+    color: var(--mf-muted);
+}
+
+.mf-profile-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.mf-profile-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-elevated) 80%, transparent);
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-profile-chip img {
+    width: 0.95rem;
+    height: 0.95rem;
+    object-fit: contain;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-profile-chip--accent {
+    border-color: color-mix(in srgb, var(--mf-amber) 35%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-amber) 10%, transparent);
+    color: var(--mf-amber);
+    font-weight: 600;
+}
+
+.mf-profile-chip--mono {
+    font-family: var(--mf-font-mono);
+    color: var(--mf-pitch);
+}
+
+.mf-profile-stats {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+    padding: 0.65rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 70%, transparent);
+}
+
+.mf-profile-stat {
+    text-align: center;
+    padding: 0.25rem 0.2rem;
+}
+
+.mf-profile-stat__value {
+    margin: 0;
+    font-size: var(--mf-text-title);
+    font-weight: 600;
+    color: var(--mf-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.mf-profile-stat__label {
+    margin: 0.15rem 0 0;
+    color: var(--mf-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mf-profile-actions {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    margin-top: 0.95rem;
+}
+
+.mf-profile-section {
+    padding: 0.7rem 1rem 0.45rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-profile-section__label {
+    margin: 0;
+    color: var(--mf-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mf-profile-stream {
+    animation: mf-page-in 240ms var(--mf-ease) both;
+}
+
+/* —— Match tickets (monochrome paper stock) —— */
+
+:root {
+    --mf-stk-paper: #ffffff; /* Snow */
+    --mf-stk-paper-deep: #f2f6ff; /* Cloud */
+    --mf-stk-ink: #021422; /* Deep Navy */
+    --mf-stk-ink-soft: #6a7c89; /* Slate */
+    --mf-stk-rule: color-mix(in srgb, #021422 18%, transparent);
+    --mf-stk-accent: #021422;
+    --mf-stk-stamp: #001f38; /* Midnight Navy */
+}
+
+.mf-fixtures {
+    padding: 0.75rem 1rem var(--mf-page-pad-bottom);
+    animation: mf-ticket-rise 420ms var(--mf-ease) both;
+}
+
+.mf-page-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1rem;
+    margin-bottom: 0.65rem;
+}
+
+.mf-page-links--end {
+    justify-content: flex-end;
+}

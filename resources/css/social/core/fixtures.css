@@ -1,0 +1,452 @@
+/*
+ * Fixtures — .mf-fixture-*, .mf-standings-table.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-fixtures-tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.65rem;
+    padding: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 70%, transparent);
+}
+
+.mf-fixtures-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-fixtures-tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid transparent;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    background: transparent;
+}
+
+.mf-fixtures-tabs button span {
+    opacity: 0.7;
+    font-size: var(--mf-text-micro);
+}
+
+.mf-fixtures-tabs button:hover {
+    color: var(--mf-text);
+    background: var(--mf-elevated);
+}
+
+.mf-fixtures-tabs button.is-active {
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
+    border-color: color-mix(in srgb, var(--mf-pitch) 28%, transparent);
+}
+
+.mf-fixture-section + .mf-fixture-section {
+    margin-top: 0.9rem;
+}
+
+.mf-fixture-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-fixture-section__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mf-text);
+}
+
+.mf-fixture-empty {
+    margin: 0.35rem 0 0;
+}
+
+.mf-fixture-days {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.mf-fixture-day__label {
+    margin: 0 0 0.45rem;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-meta);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-fixture-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.mf-fixture-card {
+    position: relative;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-panel) 88%, transparent);
+    animation: mf-ticket-rise 480ms var(--mf-ease) both;
+}
+
+.mf-fixture-card.is-live {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--mf-pitch) 10%, transparent), transparent 42%),
+        color-mix(in srgb, var(--mf-panel) 88%, transparent);
+}
+
+.mf-fixture-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.7rem;
+}
+
+.mf-fixture-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.45rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-fixture-badge--live {
+    border-color: color-mix(in srgb, var(--mf-pitch) 40%, transparent);
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    animation: mf-chat-pulse 1.8s var(--mf-ease) infinite;
+}
+
+.mf-fixture-badge--kick {
+    text-transform: none;
+    letter-spacing: 0.02em;
+}
+
+.mf-fixture-card__sides {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.mf-fixture-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    text-align: center;
+}
+
+.mf-fixture-crest {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    overflow: hidden;
+}
+
+.mf-fixture-crest__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.mf-fixture-crest__mark {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--mf-pitch);
+}
+
+.mf-fixture-side__name {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    color: var(--mf-text);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.mf-fixture-vs {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: var(--mf-muted);
+}
+
+.mf-fixture-card.is-live .mf-fixture-vs {
+    color: var(--mf-pitch);
+}
+
+.mf-fixture-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed color-mix(in srgb, var(--mf-line) 80%, transparent);
+}
+
+.mf-fixture-card__meta > p {
+    margin: 0;
+    min-width: 0;
+}
+
+.mf-fixture-dot {
+    margin-inline: 0.35rem;
+}
+
+.mf-fixture-card__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-shrink: 0;
+}
+
+.mf-fixture-buy {
+    min-height: 2.1rem !important;
+    padding-inline: 0.75rem !important;
+}
+
+.mf-standings {
+    padding: 0.75rem 1rem var(--mf-page-pad-bottom);
+    animation: mf-ticket-rise 420ms var(--mf-ease) both;
+}
+
+.mf-standings-tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.65rem;
+    padding: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 70%, transparent);
+}
+
+.mf-standings-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-standings-tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid transparent;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    background: transparent;
+}
+
+.mf-standings-tabs__name {
+    opacity: 0.75;
+    font-size: var(--mf-text-micro);
+    font-weight: 500;
+}
+
+.mf-standings-tabs button:hover {
+    color: var(--mf-text);
+    background: var(--mf-elevated);
+}
+
+.mf-standings-tabs button.is-active {
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
+    border-color: color-mix(in srgb, var(--mf-pitch) 28%, transparent);
+}
+
+.mf-standings-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+}
+
+.mf-standings-meta__title {
+    font-family: var(--mf-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.mf-standings-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 55%, transparent);
+}
+
+.mf-standings-table {
+    width: 100%;
+    min-width: 34rem;
+    border-collapse: collapse;
+    font-size: var(--mf-text-meta);
+}
+
+.mf-standings-table thead {
+    background: color-mix(in srgb, var(--mf-panel) 92%, #000);
+}
+
+.mf-standings-table th,
+.mf-standings-table td {
+    padding: 0.55rem 0.45rem;
+    border-bottom: 1px solid var(--mf-line);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.mf-standings-table th {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mf-standings-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.mf-standings-table__club {
+    text-align: left;
+    min-width: 10rem;
+}
+
+.mf-standings-table__pos {
+    width: 2rem;
+    color: var(--mf-muted);
+}
+
+.mf-standings-table__num {
+    width: 2rem;
+}
+
+.mf-standings-table__pts {
+    width: 2.4rem;
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-standings-table tbody tr.is-top td:first-child {
+    box-shadow: inset 3px 0 0 var(--mf-pitch);
+}
+
+.mf-standings-table tbody tr.is-bottom td:first-child {
+    box-shadow: inset 3px 0 0 color-mix(in srgb, #c0392b 70%, var(--mf-line));
+}
+
+.mf-standings-table tbody tr.is-favourite {
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+}
+
+.mf-standings-club {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.mf-standings-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    overflow: hidden;
+}
+
+.mf-standings-crest__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-standings-crest__mark {
+    font-size: 0.55rem;
+    letter-spacing: 0.04em;
+}
+
+.mf-standings-club__copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mf-standings-club__name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mf-standings-club__short {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-standings-fav {
+    margin-left: auto;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--mf-radius-full);
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    white-space: nowrap;
+}
+
+.mf-standings-legend,
+.mf-standings-empty {
+    margin-top: 0.85rem;
+}
+
+@media (max-width: 480px) {
+    .mf-standings-table__hide-sm {
+        display: none;
+    }
+
+    .mf-standings-table {
+        min-width: 22rem;
+    }
+}
