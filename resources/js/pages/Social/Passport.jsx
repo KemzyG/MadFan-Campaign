@@ -1,7 +1,8 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PassportQrCode from '../../Components/Fan/PassportQrCode';
 import SocialShell from '../../Layouts/SocialShell';
+import FanCollections from './components/FanCollections';
 import { PassportSkeleton } from './components/Skeletons';
 
 function initials(name) {
@@ -84,6 +85,39 @@ function tierProgress(loyalty) {
     };
 }
 
+function humanizeSource(sourceType) {
+    return String(sourceType || '')
+        .replace(/^social_/, '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Points';
+}
+
+function formatRelative(iso) {
+    if (!iso) {
+        return '';
+    }
+
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) {
+        return '';
+    }
+
+    const diffMinutes = Math.round((Date.now() - then) / 60000);
+    if (diffMinutes < 1) {
+        return 'now';
+    }
+    if (diffMinutes < 60) {
+        return `${diffMinutes}m`;
+    }
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) {
+        return `${diffHours}h`;
+    }
+    const diffDays = Math.round(diffHours / 24);
+
+    return `${diffDays}d`;
+}
+
 export default function Passport({
     identity,
     loyalty,
@@ -92,10 +126,10 @@ export default function Passport({
     season,
     brand,
     club_contribution: clubContribution,
+    collections,
+    activity,
 }) {
     const page = usePage();
-    const { auth } = page.props;
-    const handle = identity?.handle || auth?.user?.handle;
     const [flipped, setFlipped] = useState(false);
     const logoUrl = brand?.logo_url || page.props.app?.logo_url || null;
     const qrPayload =
@@ -120,6 +154,8 @@ export default function Passport({
             toggleFlip();
         }
     }
+
+    const recentActivity = activity ?? [];
 
     const recordItems = [
         ['Posts', records?.posts ?? 0],
@@ -411,23 +447,33 @@ export default function Passport({
                         </div>
                     </div>
 
-                    <div className="mf-passport-actions">
-                        <Link href="/social" className="mf-btn mf-btn--pitch w-full sm:w-auto">
-                            Engage on the terrace
-                        </Link>
-                        {handle ? (
-                            <Link href={`/social/u/${handle}`} className="mf-btn mf-btn--ghost w-full sm:w-auto">
-                                Public profile
-                            </Link>
+                    <div className="mf-pass-collections">
+                        {recentActivity.length > 0 ? (
+                            <section className="mf-pass-collection">
+                                <div className="mf-pass-collection__head">
+                                    <h2 className="mf-pass-collection__title">Recent activity</h2>
+                                </div>
+                                <ul className="mf-pass-timeline">
+                                    {recentActivity.map((item) => (
+                                        <li key={item.id} className="mf-pass-timeline__row">
+                                            <span className={`mf-pass-timeline__dot${item.is_social ? ' is-social' : ''}`} aria-hidden />
+                                            <span className="mf-pass-timeline__reason truncate">
+                                                {item.reason || humanizeSource(item.source_type)}
+                                            </span>
+                                            <span className="mf-pass-timeline__amount">
+                                                {item.amount > 0 ? '+' : ''}
+                                                {item.amount}
+                                            </span>
+                                            <span className="mf-pass-timeline__when">{formatRelative(item.created_at)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </section>
                         ) : null}
-                        <Link href="/passport" className="mf-btn mf-btn--muted w-full sm:w-auto">
-                            Campaign passport
-                        </Link>
-                        {passport?.campaign_url ? (
-                            <Link href={passport.campaign_url} className="mf-btn mf-btn--muted w-full sm:w-auto">
-                                Edit campaign passport
-                            </Link>
-                        ) : null}
+
+                        <p className="mf-pass-collections__kicker">Collections</p>
+
+                        <FanCollections collections={collections} />
                     </div>
                 </div>
             </div>

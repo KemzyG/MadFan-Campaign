@@ -16,6 +16,9 @@ class SocialPassportController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return Inertia::render('Social/Passport', $socialPassport->present($user));
+        return Inertia::render('Social/Passport', [
+            ...$socialPassport->present($user),
+            'collections' => $socialPassport->collections($user),
+        ]);
     }
 }

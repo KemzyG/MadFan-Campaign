@@ -19,6 +19,15 @@ function IconTable() {
     );
 }
 
+function IconLeaderboard() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M8 21h8M12 17v4M7 4h10v4.5a5 5 0 0 1-10 0V4Z" />
+            <path strokeLinecap="round" strokeWidth="1.6" d="M7 6H4.5v1.5A2.5 2.5 0 0 0 7 10M17 6h2.5v1.5A2.5 2.5 0 0 1 17 10" />
+        </svg>
+    );
+}
+
 function IconChevron() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -81,6 +90,19 @@ export default function SportIndex({ sports = [] }) {
                         <span className="mf-sport-tile__body">
                             <span className="mf-sport-tile__title">League table</span>
                             <span className="mf-sport-tile__hint">Standings across every division</span>
+                        </span>
+                        <span className="mf-sport-tile__chevron" aria-hidden>
+                            <IconChevron />
+                        </span>
+                    </Link>
+
+                    <Link href="/social/leaderboard?scope=sport" className="mf-panel-card mf-sport-tile">
+                        <span className="mf-sport-tile__icon" aria-hidden>
+                            <IconLeaderboard />
+                        </span>
+                        <span className="mf-sport-tile__body">
+                            <span className="mf-sport-tile__title">Leaderboard</span>
+                            <span className="mf-sport-tile__hint">Top fans across every club</span>
                         </span>
                         <span className="mf-sport-tile__chevron" aria-hidden>
                             <IconChevron />

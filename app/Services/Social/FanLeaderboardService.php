@@ -2,6 +2,7 @@
 
 namespace App\Services\Social;
 
+use App\Models\Club;
 use App\Models\LeagueStanding;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -31,14 +32,23 @@ class FanLeaderboardService
      *     limit: int
      * }
      */
-    public function present(?User $viewer, int $limit = self::DEFAULT_LIMIT): array
-    {
+    public function present(
+        ?User $viewer,
+        int $limit = self::DEFAULT_LIMIT,
+        ?int $sportId = null,
+        ?int $clubId = null,
+    ): array {
         $limit = max(1, min($limit, 100));
-        $totalFans = User::query()->fanAccounts()->count();
+
+        $scope = fn () => User::query()
+            ->fanAccounts()
+            ->when($sportId !== null, fn ($query) => $query->where('favourite_sport_id', $sportId))
+            ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId));
+
+        $totalFans = $scope()->count();
 
         /** @var Collection<int, User> $top */
-        $top = User::query()
-            ->fanAccounts()
+        $top = $scope()
             ->with('favouriteClub')
             ->orderByDesc('total_points')
             ->orderBy('id')
@@ -57,7 +67,7 @@ class FanLeaderboardService
             $inBoard = $top->firstWhere('id', $viewer->id);
             $currentUser = $inBoard
                 ? $this->findEntry($entries, $viewer->id)
-                : $this->viewerEntry($viewer, $totalFans);
+                : $this->viewerEntry($viewer, $totalFans, $sportId, $clubId);
         }
 
         return [
@@ -94,14 +104,19 @@ class FanLeaderboardService
     }
 
     /**
-     * Viewer standing when they are outside the visible board.
+     * Viewer standing when they are outside the visible board. Rank and
+     * loyalty score are computed against the same scoped population as the
+     * board itself, so a fan's score reads consistently whether they're on
+     * or off the visible list.
      *
      * @return array<string, mixed>
      */
-    private function viewerEntry(User $viewer, int $totalFans): array
+    private function viewerEntry(User $viewer, int $totalFans, ?int $sportId, ?int $clubId): array
     {
         $ahead = User::query()
             ->fanAccounts()
+            ->when($sportId !== null, fn ($query) => $query->where('favourite_sport_id', $sportId))
+            ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId))
             ->where(function ($query) use ($viewer): void {
                 $query->where('total_points', '>', $viewer->total_points)
                     ->orWhere(function ($query) use ($viewer): void {
@@ -111,10 +126,22 @@ class FanLeaderboardService
             })
             ->count();
 
+        $rank = $ahead + 1;
+        $viewer->loadMissing('favouriteClub');
+        $club = $viewer->favouriteClub
+            ? $this->clubPositionMap(collect([$viewer->favouriteClub]))[$viewer->favouriteClub->id] ?? null
+            : null;
+
+        $userComponent = $this->loyaltyScores->userComponent(
+            (int) $viewer->current_streak_days,
+            (int) $viewer->best_streak_days,
+        );
+        $global = $this->loyaltyScores->globalComponentFromRank($rank, $totalFans);
+
         return [
-            'rank' => $ahead + 1,
+            'rank' => $rank,
             'points' => (int) $viewer->total_points,
-            'loyalty' => $this->loyaltyScores->scoreFor($viewer),
+            'loyalty' => $this->loyaltyScores->composite($userComponent, $club, $global),
             'is_you' => true,
             'fan' => $this->publicIdentity($viewer),
         ];
@@ -147,7 +174,7 @@ class FanLeaderboardService
      * Build a club_id => normalised-position map from one standings query per
      * distinct league, so the board never issues a query per fan.
      *
-     * @param  Collection<int, \App\Models\Club>  $clubs
+     * @param  Collection<int, Club>  $clubs
      * @return array<int, float>
      */
     private function clubPositionMap(Collection $clubs): array

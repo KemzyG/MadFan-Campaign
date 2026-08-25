@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Club;
-use App\Models\User;
+use App\Models\Sport;
 use App\Services\Social\FanLeaderboardService;
 
 test('social leaderboard requires authentication', function () {
@@ -38,6 +38,69 @@ test('leaderboard ranks fans by points and flags the viewer', function () {
             ->has('current_user')
             ->where('current_user.is_you', true)
             ->where('current_user.rank', 2));
+});
+
+test('leaderboard scopes to a single club and excludes other clubs fans', function () {
+    $home = Club::factory()->create(['name' => 'Home FC']);
+    $away = Club::factory()->create(['name' => 'Away FC']);
+
+    $viewer = socialReadyUser($home);
+    $viewer->forceFill(['total_points' => 100])->save();
+
+    $clubmate = socialReadyUser($home);
+    $clubmate->forceFill(['total_points' => 200])->save();
+
+    $rival = socialReadyUser($away);
+    $rival->forceFill(['total_points' => 900])->save();
+
+    $this->actingAs($viewer)
+        ->get('/social/leaderboard?scope=club&club_id='.$home->id)
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Leaderboard/Index')
+            ->where('scope', 'club')
+            ->where('club.id', $home->id)
+            ->where('total_fans', 2)
+            ->has('entries', 2)
+            ->where('entries.0.fan.id', $clubmate->id)
+            ->where('entries.1.fan.id', $viewer->id));
+});
+
+test('leaderboard club scope defaults to the viewer own favourite club', function () {
+    $club = Club::factory()->create(['name' => 'Mine FC']);
+    $viewer = socialReadyUser($club);
+
+    $this->actingAs($viewer)
+        ->get('/social/leaderboard?scope=club')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('scope', 'club')
+            ->where('club.id', $club->id));
+});
+
+test('leaderboard scopes to a sport and excludes fans of other sports', function () {
+    $viewer = socialReadyUser();
+    $viewer->forceFill(['total_points' => 50])->save();
+
+    $otherSport = Sport::query()->create(['name' => 'Basketball', 'slug' => 'basketball', 'is_active' => true]);
+    $otherSportFan = createUser(['favourite_sport_id' => $otherSport->id, 'total_points' => 999]);
+
+    $this->actingAs($viewer)
+        ->get('/social/leaderboard?scope=sport&sport_id='.$viewer->favourite_sport_id)
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('scope', 'sport')
+            ->has('entries', 1)
+            ->where('entries.0.fan.id', $viewer->id));
+});
+
+test('leaderboard falls back to global when an invalid club id is requested', function () {
+    $viewer = socialReadyUser();
+
+    $this->actingAs($viewer)
+        ->get('/social/leaderboard?scope=club&club_id=999999')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->where('scope', 'global'));
 });
 
 test('leaderboard surfaces the viewer standing when they fall outside the board', function () {

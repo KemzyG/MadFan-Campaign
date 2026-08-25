@@ -18,6 +18,8 @@ import {
 } from '../pages/Social/components/Skeletons';
 import StageChrome from '../pages/Social/Stage/StageChrome';
 import { SocialFlashContext } from '../pages/Social/optimistic';
+import { socialApi } from '../lib/socialApi';
+import { getEcho, leaveEchoChannel } from '../echo';
 import ChatRail from './ChatRail';
 
 const NAV_SKELETON_DELAY_MS = 120;
@@ -106,6 +108,20 @@ function IconMenu() {
     );
 }
 
+function IconBell() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.75"
+                d="M6 9.5a6 6 0 0 1 12 0v4.2l1.6 2.4H4.4L6 13.7V9.5Z"
+            />
+            <path strokeLinecap="round" strokeWidth="1.75" d="M9.7 18.5a2.4 2.4 0 0 0 4.6 0" />
+        </svg>
+    );
+}
+
 function IconCampaign() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -175,11 +191,14 @@ function IconStage({ active }) {
 function IconReels({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <rect x="7" y="3.5" width="10" height="17" rx="2.2" strokeWidth={active ? 2.25 : 1.75} />
+            <rect x="4" y="4" width="16" height="16" rx="5" strokeWidth={active ? 2.25 : 1.75} />
+            <circle cx="7.4" cy="7.4" r="1.5" strokeWidth={active ? 1.85 : 1.45} />
+            <circle cx="16.6" cy="16.6" r="1.5" strokeWidth={active ? 1.85 : 1.45} />
             <path
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 strokeWidth={active ? 2.1 : 1.65}
-                d="M10.5 9.2 14.2 12l-3.7 2.8V9.2Z"
+                d="M10.6 9.6 14.7 12l-4.1 2.4V9.6Z"
                 fill="currentColor"
                 stroke="none"
             />
@@ -213,8 +232,17 @@ function BrandMark({ logoUrl }) {
  * explicit label is what names the link there; `title` gives the collapsed rail
  * the hover tooltip users expect of one.
  */
-function NavItem({ href, label, icon: Icon, active, onClick }) {
+function NavBadge({ count }) {
+    if (!count) {
+        return null;
+    }
+
+    return <span className="mf-sidebar__badge mf-mono">{count > 99 ? '99+' : count}</span>;
+}
+
+function NavItem({ href, label, icon: Icon, active, onClick, badge }) {
     const className = ['mf-sidebar__link', active ? 'is-active' : ''].filter(Boolean).join(' ');
+    const ariaLabel = badge ? `${label}, ${badge} unread` : label;
 
     if (onClick && !href) {
         return (
@@ -222,11 +250,12 @@ function NavItem({ href, label, icon: Icon, active, onClick }) {
                 type="button"
                 className={className}
                 onClick={onClick}
-                aria-label={label}
+                aria-label={ariaLabel}
                 title={label}
             >
                 <span className="mf-sidebar__icon">
                     <Icon active={active} />
+                    <NavBadge count={badge} />
                 </span>
                 <span className="mf-sidebar__label">{label}</span>
             </button>
@@ -238,12 +267,13 @@ function NavItem({ href, label, icon: Icon, active, onClick }) {
             href={href}
             className={className}
             aria-current={active ? 'page' : undefined}
-            aria-label={label}
+            aria-label={ariaLabel}
             title={label}
             prefetch
         >
             <span className="mf-sidebar__icon">
                 <Icon active={active} />
+                <NavBadge count={badge} />
             </span>
             <span className="mf-sidebar__label">{label}</span>
         </Link>
@@ -467,6 +497,60 @@ export default function SocialShell({
 
     const profileHref = '/social/you';
 
+    // Seeded from the shared Inertia prop (always fresh server-side, no extra
+    // request needed) and kept live via the viewer's private Reverb channel
+    // while they stay on a page without navigating.
+    const [unreadCount, setUnreadCount] = useState(page.props?.notifications?.unread_count ?? 0);
+
+    useEffect(() => {
+        setUnreadCount(page.props?.notifications?.unread_count ?? 0);
+    }, [page.props?.notifications?.unread_count]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return undefined;
+        }
+
+        const echo = getEcho();
+        if (!echo) {
+            return undefined;
+        }
+
+        const name = `social.notifications.${user.id}`;
+        const channel = echo.private(name).listen('.notification.created', () => {
+            setUnreadCount((prev) => prev + 1);
+        });
+
+        return () => {
+            channel.stopListening('.notification.created');
+            leaveEchoChannel(name);
+        };
+    }, [user?.id]);
+
+    // Chat has no per-user broadcast channel (messages broadcast per-channel
+    // only), so the badge is seeded from the shared prop on every navigation
+    // and topped up with a light poll — same "poll is the fallback" idiom the
+    // rest of Social chat already uses.
+    const [chatUnread, setChatUnread] = useState(page.props?.chat?.unread_count ?? 0);
+
+    useEffect(() => {
+        setChatUnread(page.props?.chat?.unread_count ?? 0);
+    }, [page.props?.chat?.unread_count]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return undefined;
+        }
+
+        const timer = window.setInterval(() => {
+            socialApi('/chat/unread-count')
+                .then((data) => setChatUnread(data?.unread_count ?? 0))
+                .catch(() => {});
+        }, 30000);
+
+        return () => window.clearInterval(timer);
+    }, [user?.id]);
+
     const [composeOpen, setComposeOpen] = useState(false);
     const [toasts, setToasts] = useState([]);
     const [navSkeletonKind, setNavSkeletonKind] = useState(null);
@@ -599,6 +683,7 @@ export default function SocialShell({
             label: 'Chat',
             icon: IconChat,
             active: pathMatches(current, '/social/chat'),
+            badge: chatUnread,
         },
     ];
 
@@ -687,6 +772,7 @@ export default function SocialShell({
                                             label={tab.label}
                                             icon={tab.icon}
                                             active={tab.active}
+                                            badge={tab.badge}
                                         />
                                     ))}
                                 </nav>
@@ -765,6 +851,25 @@ export default function SocialShell({
                                     </Link>
                                 ) : null}
                                 {showTabs && user ? (
+                                    <Link
+                                        href="/social/notifications"
+                                        className="mf-header__bell"
+                                        aria-label={
+                                            unreadCount > 0
+                                                ? `Notifications, ${unreadCount} unread`
+                                                : 'Notifications'
+                                        }
+                                        title="Notifications"
+                                    >
+                                        <IconBell />
+                                        {unreadCount > 0 ? (
+                                            <span className="mf-header__bell-badge mf-mono">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        ) : null}
+                                    </Link>
+                                ) : null}
+                                {showTabs && user ? (
                                     <SocialHeaderAccountMenu
                                         user={user}
                                         handle={handle}
@@ -800,9 +905,13 @@ export default function SocialShell({
                                             href={tab.href}
                                             className={className}
                                             aria-current={tab.active ? 'page' : undefined}
+                                            aria-label={tab.badge ? `${tab.label}, ${tab.badge} unread` : undefined}
                                             prefetch
                                         >
-                                            <Icon active={tab.active} />
+                                            <span className="mf-tab__icon">
+                                                <Icon active={tab.active} />
+                                                <NavBadge count={tab.badge} />
+                                            </span>
                                             {tab.label}
                                         </Link>
                                     );

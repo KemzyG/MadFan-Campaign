@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import SplitView from '../components/SplitView';
@@ -7,7 +7,7 @@ import TicketDetailModal from '../components/TicketDetailModal';
 import MatchRow from './MatchRow';
 import MatchDetail from './MatchDetail';
 
-export default function Index({ matches, ticket_count = 0 }) {
+export default function Index({ matches }) {
     const [issuedTicket, setIssuedTicket] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -41,17 +41,6 @@ export default function Index({ matches, ticket_count = 0 }) {
                             <p className="mf-ticket-page__sub mf-text-meta text-[var(--mf-muted)]">
                                 General-admission passes for upcoming fixtures.
                             </p>
-                        </div>
-                        <div className="mf-page-links mf-page-links--end">
-                            <Link href="/social/fixtures" className="mf-tickets-mine-link" prefetch>
-                                Full fixture board
-                            </Link>
-                            <Link href="/social/tickets/mine" className="mf-tickets-mine-link" prefetch>
-                                My tickets
-                                {ticket_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{ticket_count}</span>
-                                ) : null}
-                            </Link>
                         </div>
                     </div>
 

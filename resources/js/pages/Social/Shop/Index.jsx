@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useMemo } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import SplitView from '../components/SplitView';
@@ -14,7 +14,6 @@ export default function Index({
     clubs = [],
     leagues = [],
     categories = [],
-    cart_count = 0,
     filters = {},
     favourite_club_id = null,
 }) {
@@ -58,17 +57,6 @@ export default function Index({
                     <div className="mf-shop-mall-hero__bg" aria-hidden />
                     <div className="mf-shop-mall-hero__scrim" aria-hidden />
                     <div className="mf-shop-mall-hero__inner">
-                        <div className="mf-page-links mf-page-links--end">
-                            <Link href="/social/shop/cart" className="mf-tickets-mine-link" prefetch>
-                                Bag
-                                {cart_count > 0 ? (
-                                    <span className="mf-mono mf-tickets-count">{cart_count}</span>
-                                ) : null}
-                            </Link>
-                            <Link href="/social/shop/orders" className="mf-tickets-mine-link" prefetch>
-                                My orders
-                            </Link>
-                        </div>
                         <HeroCarousel jerseys={heroKits} />
                     </div>
                 </header>

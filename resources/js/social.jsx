@@ -2,10 +2,12 @@ import '../css/social.css';
 // Per-feature Social stylesheets (kept out of the monolithic social.css).
 import '../css/social/split.css';
 import '../css/social/leaderboard.css';
+import '../css/social/notifications.css';
 import '../css/social/wallet.css';
 import '../css/social/clubs.css';
 import '../css/social/fixtures.css';
 import '../css/social/sport.css';
+import '../css/social/passport.css';
 import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';

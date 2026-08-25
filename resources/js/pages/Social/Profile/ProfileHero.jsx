@@ -1,4 +1,5 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { socialApi } from '../../../lib/socialApi';
 import { runSocialMutation, setAuthorFollowInProps, useSocialFlash } from '../optimistic';
@@ -35,6 +36,27 @@ export default function ProfileHero({ profile, isVisit }) {
     const { reportError, reportSuccess } = useSocialFlash();
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
+    const [messaging, setMessaging] = useState(false);
+    const canMessage = Boolean(profile.is_following || profile.is_followed_by);
+
+    function messageUser() {
+        if (messaging || !canMessage) {
+            return;
+        }
+        setMessaging(true);
+        router.post(
+            '/social/chat/direct',
+            { user_id: profile.id },
+            {
+                onError: (errors) => {
+                    reportError(
+                        typeof errors?.user_id === 'string' ? errors.user_id : 'Could not start chat.',
+                    );
+                },
+                onFinish: () => setMessaging(false),
+            },
+        );
+    }
 
     function toggleFollow() {
         const next = !profile.is_following;
@@ -123,9 +145,15 @@ export default function ProfileHero({ profile, isVisit }) {
                     >
                         {profile.is_following ? 'Following' : 'Follow'}
                     </button>
-                    <Link href="/social/chat" className="mf-btn mf-btn--ghost">
-                        Club chat
-                    </Link>
+                    <button
+                        type="button"
+                        onClick={messageUser}
+                        disabled={!canMessage || messaging}
+                        title={canMessage ? undefined : 'Follow each other to start a chat'}
+                        className="mf-btn mf-btn--ghost"
+                    >
+                        {messaging ? 'Opening…' : 'Message'}
+                    </button>
                 </div>
             ) : (
                 <div className="mf-profile-actions">

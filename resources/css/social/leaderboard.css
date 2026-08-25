@@ -4,32 +4,62 @@
  * (loaded first). Restrained: rank/grade weight carries meaning, not colour.
  */
 
+/* Phone-width column always — this is a mobile surface, never a desktop
+ * dashboard, so it stays capped even when the shell around it has more room. */
 .mf-lb {
     display: flex;
     flex-direction: column;
     gap: var(--mf-section-gap);
+    width: 100%;
+    max-width: var(--mf-app-width);
+    margin-inline: auto;
     padding-bottom: var(--mf-page-pad-bottom);
+    overflow-x: hidden;
 }
 
-.mf-lb-head {
+.mf-lb-back {
+    display: inline-block;
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.mf-lb-back:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ---- Scope switcher: Global / Sport / My club ---- */
+.mf-lb-scope-tabs {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
 }
 
-.mf-lb-head__title {
-    font-family: var(--mf-font-display);
-    font-size: var(--mf-text-score);
-    letter-spacing: var(--mf-tracking-score);
-    line-height: var(--mf-leading-tight);
-    color: var(--mf-text);
-    text-transform: uppercase;
-}
-
-.mf-lb-head__sub {
+.mf-lb-scope-tabs button {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--mf-radius-pill);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
     color: var(--mf-muted);
-    line-height: var(--mf-leading-body);
-    max-width: 46ch;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--mf-dur-fast) var(--mf-ease), border-color var(--mf-dur-fast) var(--mf-ease),
+        background-color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-lb-scope-tabs button:hover {
+    color: var(--mf-text);
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+}
+
+.mf-lb-scope-tabs button.is-active {
+    color: var(--mf-on-fill);
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
 }
 
 /* ---- Shared fan avatar ---- */
@@ -118,14 +148,47 @@
     font-size: var(--mf-text-ui);
 }
 
-/* ---- Podium (top 3) ---- */
+/* ---- Podium card (top 3) ---- */
+.mf-lb-podium-card {
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 7%, var(--mf-elevated)) 0%, var(--mf-panel) 65%),
+        var(--mf-panel);
+    overflow: hidden;
+}
+
+.mf-lb-podium-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-lb-podium-card__kicker {
+    font-family: var(--mf-font-label, var(--mf-font-ui));
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-pitch);
+}
+
+.mf-lb-podium-card__count {
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    white-space: nowrap;
+}
+
 .mf-lb-podium {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: end;
     gap: 0.5rem;
     margin: 0;
-    padding: 0;
+    padding: 1.1rem 0.75rem 0.9rem;
     list-style: none;
 }
 
@@ -186,11 +249,48 @@
     font-size: var(--mf-text-meta);
 }
 
-/* ---- Ranked list (4+) ---- */
+/* ---- Ranked table card (4+) ---- */
+.mf-lb-table-card {
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    overflow: hidden;
+}
+
+.mf-lb-table-card__head {
+    display: grid;
+    grid-template-columns: 1.75rem auto 1fr auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-lb-table-card__head span {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.mf-lb-table-card__col-rank {
+    text-align: center;
+}
+
+.mf-lb-table-card__col-fan {
+    grid-column: span 2;
+}
+
+.mf-lb-table-card__col-points,
+.mf-lb-table-card__col-score {
+    text-align: right;
+}
+
 .mf-lb-list {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -201,15 +301,17 @@
     grid-template-columns: 1.75rem auto 1fr auto auto;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.5rem 0.65rem;
-    border-radius: var(--mf-radius);
-    background: var(--mf-panel);
-    border: 1px solid var(--mf-line);
+    min-width: 0;
+    padding: 0.55rem 0.65rem;
+    border-top: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
+}
+
+.mf-lb-row:first-child {
+    border-top: 0;
 }
 
 .mf-lb-row.is-you {
     background: var(--mf-elevated);
-    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
 }
 
 .mf-lb-row__rank {
@@ -324,21 +426,3 @@
     color: var(--mf-muted);
 }
 
-/* ---- Wider viewports ---- */
-@media (min-width: 768px) {
-    .mf-lb-head__title {
-        font-size: var(--mf-text-heading-sm);
-    }
-
-    .mf-lb-podium {
-        gap: 0.9rem;
-    }
-
-    .mf-lb-podium__slot {
-        padding: 1.25rem 0.75rem;
-    }
-
-    .mf-lb-row {
-        padding: 0.65rem 0.85rem;
-    }
-}

@@ -17,6 +17,7 @@ class ChannelMember extends Model
         'user_id',
         'role',
         'joined_at',
+        'last_read_at',
     ];
 
     /**
@@ -26,6 +27,7 @@ class ChannelMember extends Model
     {
         return [
             'joined_at' => 'datetime',
+            'last_read_at' => 'datetime',
         ];
     }
 

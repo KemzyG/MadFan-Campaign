@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { StadiumTicketFace, statusLabel } from '../components/StadiumTicket';
@@ -49,12 +49,6 @@ export default function Mine({ tickets }) {
                 <TicketWalletSkeleton />
             ) : (
                 <div className="mf-tickets">
-                    <div className="mf-page-links">
-                        <Link href="/social/tickets" className="mf-tickets-mine-link" prefetch>
-                            Browse fixtures
-                        </Link>
-                    </div>
-
                     {tickets.length === 0 ? (
                         <div className="mf-empty mf-empty--compact">
                             <p className="mf-empty-title">No tickets yet</p>

@@ -424,6 +424,18 @@
     border-top: 1px solid color-mix(in srgb, var(--mf-line) 60%, transparent);
 }
 
+.mf-club-fan-row.is-you {
+    background: var(--mf-elevated);
+}
+
+.mf-club-fan-row__rank {
+    flex-shrink: 0;
+    width: 1.5rem;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    text-align: center;
+}
+
 .mf-club-fan-row__identity {
     display: flex;
     flex-direction: column;
@@ -432,17 +444,25 @@
     line-height: 1.2;
 }
 
-.mf-club-fan-row__name {
+.mf-club-fan-row__handle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     color: var(--mf-text);
     font-weight: 500;
+    font-size: var(--mf-text-meta);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.mf-club-fan-row__handle {
-    color: var(--mf-muted);
-    font-size: var(--mf-text-micro);
+.mf-club-fan-row__you-tag {
+    padding: 0.05rem 0.3rem;
+    border-radius: var(--mf-radius-badge);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+    text-transform: uppercase;
+    letter-spacing: var(--mf-tracking-label);
 }
 
 .mf-club-fan-row__points {

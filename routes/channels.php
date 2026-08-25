@@ -10,6 +10,10 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
+Broadcast::channel('social.notifications.{userId}', function (User $user, int $userId): bool {
+    return $user->id === $userId;
+});
+
 Broadcast::channel('social.chat.{channelId}', function (User $user, int $channelId): bool {
     $channel = Channel::query()->find($channelId);
 

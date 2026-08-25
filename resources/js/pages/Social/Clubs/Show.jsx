@@ -4,15 +4,20 @@ import FanAvatar from '../Leaderboard/FanAvatar';
 import ClubCrest from './ClubCrest';
 import ClubDetailCard from './ClubDetailCard';
 
-function TopFanRow({ fan }) {
+function TopFanRow({ entry }) {
+    const { fan } = entry;
+
     return (
-        <li className="mf-club-fan-row">
+        <li className={`mf-club-fan-row${entry.is_you ? ' is-you' : ''}`}>
+            <span className="mf-club-fan-row__rank mf-mono">{entry.rank}</span>
             <FanAvatar fan={fan} size="sm" />
             <span className="mf-club-fan-row__identity">
-                <span className="mf-club-fan-row__name">{fan.name}</span>
-                <span className="mf-club-fan-row__handle mf-mono">@{fan.handle}</span>
+                <span className="mf-club-fan-row__handle mf-mono">
+                    @{fan.handle}
+                    {entry.is_you ? <span className="mf-club-fan-row__you-tag mf-text-micro">You</span> : null}
+                </span>
             </span>
-            <span className="mf-club-fan-row__points mf-mono">{fan.total_points.toLocaleString()} pts</span>
+            <span className="mf-club-fan-row__points mf-mono">{entry.points.toLocaleString()} pts</span>
         </li>
     );
 }
@@ -59,7 +64,7 @@ export default function Show({ club, standing, member_count: memberCount, top_fa
                                 {isFavourite ? ' · this is your club' : ''}
                             </p>
                         </div>
-                        <Link href="/social/leaderboard" className="mf-tickets-mine-link">
+                        <Link href={`/social/leaderboard?scope=club&club_id=${club.id}`} className="mf-tickets-mine-link">
                             Leaderboard
                         </Link>
                     </header>
@@ -70,8 +75,8 @@ export default function Show({ club, standing, member_count: memberCount, top_fa
                         </p>
                     ) : (
                         <ul className="mf-club-fans__list">
-                            {topFans.map((fan) => (
-                                <TopFanRow key={fan.id} fan={fan} />
+                            {topFans.map((entry) => (
+                                <TopFanRow key={entry.fan.id} entry={entry} />
                             ))}
                         </ul>
                     )}
