@@ -42,7 +42,8 @@ test('global feed lists top-level posts across clubs', function () {
             ->has('feed.posts', 3)
             ->where('feed.posts.0.body', 'Parent')
             ->where('feed.posts.1.body', 'Away terrace')
-            ->where('feed.posts.2.body', 'Kickoff vibes'));
+            ->where('feed.posts.2.body', 'Kickoff vibes')
+            ->where('feed.posts.0.author.avatar_url', $user->avatar_url));
 });
 
 test('legacy club mode query still resolves to the global feed', function () {
