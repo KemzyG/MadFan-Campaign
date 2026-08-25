@@ -1,0 +1,471 @@
+/*
+ * Post card — .mf-post, .mf-action row, .mf-overflow menu, .mf-media.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* Post / composer surfaces */
+.mf-post {
+    border-bottom: 1px solid var(--mf-line);
+    padding: 0.85rem 1rem;
+    transition: background-color 150ms var(--mf-ease);
+}
+
+.mf-post--compact {
+    padding-block: 0.7rem;
+}
+
+.mf-post:hover {
+    background: color-mix(in srgb, var(--mf-elevated) 42%, transparent);
+}
+
+.mf-post:active {
+    background: color-mix(in srgb, var(--mf-elevated) 55%, transparent);
+}
+
+.mf-post__header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.mf-post__header-row > .mf-avatar {
+    flex-shrink: 0;
+}
+
+.mf-post__header-row .mf-post__header {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-post__body {
+    min-width: 0;
+    margin-top: 0.55rem;
+}
+
+.mf-post__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.4rem;
+}
+
+.mf-post__name {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--mf-text);
+    text-decoration: none;
+}
+
+.mf-post__name:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mf-post__dot {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-meta);
+    line-height: 1;
+}
+
+.mf-post__content {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.mf-post__text {
+    margin: 0;
+    color: var(--mf-text);
+    /* Break long, space-less strings (URLs, spammy "nnnn…") instead of
+     * overflowing the card; pairs with the whitespace-pre-wrap on the element. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.mf-club-flake {
+    display: inline-flex;
+    align-items: center;
+    max-width: 7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 80%, var(--mf-pitch));
+    background: color-mix(in srgb, var(--mf-pitch) 7%, transparent);
+    padding: 0.08rem 0.32rem;
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-repost-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.45rem;
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+}
+
+.mf-repost-banner svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.mf-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.15rem;
+    margin-top: 0.55rem;
+    margin-inline: auto;
+    max-width: 22rem;
+    align-items: center;
+}
+
+.mf-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.1rem;
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.25rem 0.4rem;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    font: inherit;
+    font-size: var(--mf-text-meta);
+    cursor: pointer;
+    border-radius: var(--mf-radius-full);
+    transition: color 140ms var(--mf-ease), background 140ms var(--mf-ease), transform 140ms var(--mf-ease);
+    text-decoration: none;
+}
+
+.mf-action:hover {
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+}
+
+.mf-action.is-liked,
+.mf-action.is-active {
+    color: var(--mf-pitch);
+}
+
+.mf-action.is-danger:hover {
+    color: var(--mf-rival);
+    background: color-mix(in srgb, var(--mf-rival) 10%, transparent);
+}
+
+.mf-action--tool {
+    min-height: 1.75rem;
+    padding-inline: 0.35rem;
+    font-size: var(--mf-text-caption);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mf-action--stat {
+    cursor: default;
+}
+
+.mf-action--stat:hover {
+    color: var(--mf-muted);
+    background: transparent;
+}
+
+.mf-action--quote {
+    grid-column: 1 / -1;
+    margin-top: 0.1rem;
+}
+
+.mf-action svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    stroke-width: 1.75;
+}
+
+.mf-action__count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-meta);
+    min-width: 0.75rem;
+}
+
+.mf-action__label {
+    font-size: var(--mf-text-meta);
+    opacity: 0.92;
+}
+
+.mf-post__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.35rem;
+}
+
+.mf-post__header .mf-post__meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-post__tools {
+    display: none;
+}
+
+/* Overflow â‹¯ menu */
+.mf-overflow {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mf-overflow__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: -0.25rem -0.2rem 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mf-radius-full);
+    background: transparent;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition: color 140ms var(--mf-ease), background 140ms var(--mf-ease);
+}
+
+.mf-overflow__trigger:hover,
+.mf-overflow__trigger.is-open {
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+}
+
+.mf-overflow__trigger svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.mf-overflow__menu {
+    position: absolute;
+    top: calc(100% + 0.2rem);
+    right: 0;
+    z-index: 40;
+    min-width: 12.5rem;
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-elevated) 94%, var(--mf-canvas));
+    animation: mf-menu-in 140ms var(--mf-ease);
+}
+
+@keyframes mf-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.mf-overflow__item {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    color: var(--mf-text);
+    font: inherit;
+    font-size: var(--mf-text-ui);
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease), color 120ms var(--mf-ease);
+}
+
+.mf-overflow__item:hover,
+.mf-overflow__item:focus-visible {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    color: var(--mf-pitch);
+    outline: none;
+}
+
+.mf-overflow__item.is-danger {
+    color: var(--mf-rival);
+}
+
+.mf-overflow__item.is-danger:hover,
+.mf-overflow__item.is-danger:focus-visible {
+    background: color-mix(in srgb, var(--mf-rival) 12%, transparent);
+    color: var(--mf-rival);
+}
+
+.mf-quote-form {
+    margin-top: 0.75rem;
+    padding: 0.7rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-recess-deep);
+}
+
+/* Media — natural aspect ratio (no fixed-height crop); tap to open the viewer */
+.mf-media {
+    margin-top: 0.65rem;
+    margin-inline: auto;
+    width: 100%;
+    max-width: 30rem;
+}
+
+/* Single image: show it whole, only capped so very tall images stay sane. */
+.mf-media--solo {
+    display: block;
+}
+
+/* 2–4 images: masonry columns so every tile keeps its own natural height. */
+.mf-media--2,
+.mf-media--3,
+.mf-media--4 {
+    column-count: 2;
+    column-gap: 0.3rem;
+}
+
+.mf-media__cell {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0 0 0.3rem;
+    padding: 0;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    overflow: hidden;
+    background: var(--mf-elevated);
+    cursor: zoom-in;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    transition: filter 140ms var(--mf-ease);
+}
+
+.mf-media--solo .mf-media__cell {
+    margin-bottom: 0;
+}
+
+.mf-media__cell:hover {
+    filter: brightness(1.05);
+}
+
+.mf-media__cell:focus-visible {
+    outline: 2px solid var(--mf-pitch);
+    outline-offset: 2px;
+}
+
+.mf-media__cell img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Cap a lone image's height without cropping it. */
+.mf-media--solo .mf-media__cell img {
+    width: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    margin-inline: auto;
+}
+
+.mf-media__more {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+
+.mf-embed {
+    margin-top: 0.65rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    border-left: 3px solid var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-panel) 75%, transparent);
+    padding: 0.7rem 0.8rem;
+}
+
+.mf-embed .mf-media {
+    margin-top: 0.5rem;
+}
+
+/* Composer */
+.mf-composer {
+    border-bottom: 1px solid var(--mf-line);
+    padding: 0.85rem 1rem;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 4%, var(--mf-panel)) 0%, transparent 42%),
+        color-mix(in srgb, var(--mf-panel) 70%, transparent);
+    transition: background 140ms var(--mf-ease), box-shadow 140ms var(--mf-ease);
+}
+
+.mf-composer--sheet {
+    border-bottom: 0;
+    padding: 0.35rem 0 0;
+    background: transparent;
+}
+
+.mf-composer--sheet:focus-within {
+    background: transparent;
+    box-shadow: none;
+}
+
+.mf-composer:focus-within {
+    background: var(--mf-elevated);
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--mf-pitch) 35%, transparent);
+}
+
+.mf-composer--sheet:focus-within {
+    background: transparent;
+    box-shadow: none;
+}
+
+.mf-feed-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    position: sticky;
+    top: calc(var(--mf-header-h) + var(--mf-safe-top));
+    z-index: 20;
+    padding: 0 0.65rem 0 0;
+    border-bottom: 1px solid var(--mf-line-soft);
+    background: var(--mf-canvas);
+}
+
+.mf-feed-toolbar .mf-segment {
+    flex: 1;
+    position: static;
+    margin: 0;
+    border-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}

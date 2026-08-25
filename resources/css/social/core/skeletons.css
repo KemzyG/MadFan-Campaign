@@ -1,0 +1,864 @@
+/*
+ * Loading — #nprogress, .mf-skel-* skeletons.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* —— Social skeletons (monochrome terrace) —— */
+#nprogress,
+#nprogress .bar,
+#nprogress .peg,
+#nprogress .spinner {
+    display: none !important;
+}
+
+.mf-skel-page {
+    animation: mf-skel-in 220ms var(--mf-ease) both;
+}
+
+@keyframes mf-skel-in {
+    from {
+        opacity: 0.55;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.mf-skel-bone {
+    display: block;
+    background:
+        linear-gradient(
+            105deg,
+            color-mix(in srgb, var(--mf-elevated) 88%, #0a0a0a) 0%,
+            color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated)) 42%,
+            color-mix(in srgb, var(--mf-elevated) 92%, #111111) 78%
+        );
+    background-size: 220% 100%;
+    animation: mf-skel-shimmer 1.35s var(--mf-ease) infinite;
+    border-radius: var(--mf-radius);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mf-line) 55%, transparent);
+}
+
+@keyframes mf-skel-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+.mf-skel-feed__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem 0.5rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-segment {
+    width: 11rem;
+    height: 2rem;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-skel-chip {
+    width: 2.75rem;
+    height: 0.85rem;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-skel-chip--wide {
+    width: 3.5rem;
+    height: 1.75rem;
+}
+
+.mf-skel-chip--btn {
+    width: 4.5rem;
+    height: 2rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-pill {
+    width: 4.25rem;
+    height: 1.65rem;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-skel-club {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-club__crest {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--mf-radius-panel);
+    flex-shrink: 0;
+}
+
+.mf-skel-club__crest--sm {
+    width: 2.25rem;
+    height: 2.25rem;
+}
+
+.mf-skel-club__meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mf-skel-line {
+    height: 0.7rem;
+}
+
+.mf-skel-line--name {
+    width: 6.5rem;
+}
+
+.mf-skel-line--handle {
+    width: 4.5rem;
+}
+
+.mf-skel-line--time {
+    width: 2.5rem;
+}
+
+.mf-skel-line--caption {
+    width: 5rem;
+    height: 0.55rem;
+}
+
+.mf-skel-line--title {
+    width: 9rem;
+    height: 0.85rem;
+}
+
+.mf-skel-line--display {
+    width: min(14rem, 70%);
+    height: 1.15rem;
+}
+
+.mf-skel-line--body {
+    width: 92%;
+    height: 0.75rem;
+    margin-top: 0.35rem;
+}
+
+.mf-skel-line--body-short {
+    width: 62%;
+    height: 0.75rem;
+    margin-top: 0.35rem;
+}
+
+.mf-skel-line--chat {
+    height: 0.8rem;
+    margin-top: 0.2rem;
+}
+
+.mf-skel-feed__stream {
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-skel-feed__item {
+    animation: mf-skel-in 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-post {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-post--compact {
+    padding-block: 0.7rem;
+}
+
+.mf-skel-post__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+}
+
+.mf-skel-post__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-skel-post__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+}
+
+.mf-skel-post__actions {
+    display: flex;
+    gap: 1.1rem;
+    margin-top: 0.75rem;
+}
+
+.mf-skel-chat {
+    display: flex;
+    flex-direction: column;
+    /* The tab bar only exists on a phone, so only a phone pays for its height. */
+    min-height: calc(100dvh - var(--mf-header-h) - var(--mf-tab-h) - 1rem);
+}
+
+@media (min-width: 768px) {
+    .mf-skel-chat {
+        min-height: calc(100dvh - var(--mf-header-h) - 1rem);
+    }
+}
+
+.mf-skel-chat__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-chat__search {
+    padding: 0.55rem 1rem 0.25rem;
+}
+
+.mf-skel-chat__search .mf-skel-line {
+    height: 2.1rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-chat__channels {
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+    overflow: hidden;
+}
+
+.mf-skel-chat__stream {
+    flex: 1;
+    padding: 0.75rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.mf-skel-chat-row {
+    display: flex;
+    gap: 0.65rem;
+    animation: mf-skel-in 240ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-chat-row.is-grouped {
+    margin-top: -0.25rem;
+}
+
+.mf-skel-chat-row__gutter {
+    width: 2rem;
+    flex-shrink: 0;
+}
+
+.mf-skel-chat-row__avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+}
+
+.mf-skel-chat-row__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-skel-chat-row__meta {
+    display: flex;
+    gap: 0.45rem;
+    margin-bottom: 0.25rem;
+}
+
+.mf-skel-chat__composer,
+.mf-skel-compose__bar,
+.mf-skel-stage-create,
+.mf-skel-thread__reply {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--mf-line);
+}
+
+.mf-skel-stage-create--panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    border-top: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
+    padding: 0.9rem 1rem;
+}
+
+.mf-skel-stage-create__row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.mf-skel-stage-board-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.15rem;
+}
+
+.mf-skel-stage-row__chips,
+.mf-skel-stage-row__host,
+.mf-skel-stage-room__status,
+.mf-skel-stage-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mf-skel-stage-cols {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+    .mf-skel-stage-cols {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+}
+
+.mf-skel-composer-input {
+    flex: 1;
+    height: 2.35rem;
+    border-radius: var(--mf-radius-panel);
+}
+
+.mf-skel-composer-input--tall {
+    height: 4.5rem;
+}
+
+.mf-skel-tickets {
+    padding-bottom: var(--mf-page-pad-bottom);
+}
+
+.mf-skel-page-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0.85rem 1rem 0.35rem;
+}
+
+.mf-skel-stage-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mf-skel-ticket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem 1rem;
+}
+
+.mf-skel-ticket {
+    position: relative;
+    padding: 0.9rem 0.95rem 0.9rem 1.15rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-panel) 92%, #121212);
+    animation: mf-skel-in 300ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+    overflow: hidden;
+}
+
+.mf-skel-ticket__perf {
+    position: absolute;
+    left: 0.35rem;
+    top: 0.55rem;
+    bottom: 0.55rem;
+    width: 0.45rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-line) 80%, transparent);
+}
+
+.mf-skel-ticket__league {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.mf-skel-ticket__sides {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.mf-skel-ticket__side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-start;
+}
+
+.mf-skel-ticket__side--away {
+    align-items: flex-end;
+}
+
+.mf-skel-ticket__crest {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-ticket__vs {
+    width: 1.6rem;
+    height: 0.85rem;
+}
+
+.mf-skel-ticket__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mf-skel-wallet {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem var(--mf-page-pad-bottom);
+}
+
+.mf-skel-wallet__stub {
+    animation: mf-skel-in 300ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-wallet__face {
+    height: 8.5rem;
+    border-radius: var(--mf-radius-panel);
+}
+
+.mf-skel-shop {
+    padding: 0.75rem 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+}
+
+.mf-skel-shop__hero {
+    position: relative;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    overflow: hidden;
+    min-height: 10.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mf-line) 55%, transparent);
+}
+
+.mf-skel-shop__hero-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+}
+
+.mf-skel-shop__hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1rem 1.1rem;
+}
+
+.mf-skel-shop__hero-carousel {
+    height: 7.5rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-line) 70%, transparent);
+}
+
+.mf-skel-shop__featured {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-block: -0.25rem;
+    padding-block: 0;
+}
+
+.mf-skel-shop__featured-rail {
+    display: flex;
+    gap: 0.4rem;
+    overflow: hidden;
+}
+
+.mf-skel-shop__featured-card {
+    flex-shrink: 0;
+    width: clamp(7rem, 30vw, 9rem);
+    aspect-ratio: 1 / 1;
+    border-radius: var(--mf-radius-badge);
+}
+
+.mf-skel-shop__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+}
+
+.mf-skel-shop__filter {
+    width: 7.5rem;
+    height: 2.35rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-shop__segment {
+    border-radius: var(--mf-radius);
+    overflow: hidden;
+}
+
+.mf-skel-shop__browse {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-skel-shop__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+@media (min-width: 640px) {
+    .mf-skel-shop__grid {
+        grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+        gap: 0.6rem;
+    }
+}
+
+.mf-skel-shop-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    animation: mf-skel-in 300ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-shop-card__media {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--mf-radius-badge);
+    width: 100%;
+}
+
+.mf-skel-shop-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0 0.05rem;
+}
+
+.mf-skel-stage-lobby,
+.mf-skel-stage-room {
+    padding: 0.75rem 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+}
+
+.mf-skel-stage-room__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: color-mix(in srgb, var(--mf-panel) 92%, transparent);
+}
+
+.mf-skel-stage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.mf-skel-stage-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
+    animation: mf-skel-in 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-stage-row__dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+}
+
+.mf-skel-stage-row__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-skel-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0.75rem;
+}
+
+.mf-skel-stage-grid--deck {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+}
+
+.mf-skel-stage-person {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.85rem 0.5rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-elevated) 55%, transparent);
+}
+
+.mf-skel-stage-person__avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-skel-stage-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-top: 0.25rem;
+}
+
+/* Redesigned Stage skeletons — lobby card grid + room deck. */
+.mf-skel-stage-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: color-mix(in srgb, var(--mf-panel) 92%, transparent);
+}
+
+.mf-skel-stage-hero__copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-skel-stage-hero__cta {
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.mf-skel-stage-toolbar__search {
+    flex: 1;
+    height: 2.4rem;
+    border-radius: var(--mf-radius-panel);
+}
+
+.mf-skel-stage-toolbar__chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: color-mix(in srgb, var(--mf-panel) 90%, transparent);
+    animation: mf-skel-in 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-skel-stagger, 0ms);
+}
+
+.mf-skel-stage-card__topline,
+.mf-skel-stage-card__host,
+.mf-skel-stage-card__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mf-skel-stage-card__foot {
+    justify-content: space-between;
+    margin-top: 0.15rem;
+}
+
+.mf-skel-stage-room .mf-skel-stage-controls {
+    justify-content: center;
+    padding-block: 0.25rem;
+}
+
+.mf-skel-stage-control {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+}
+
+.mf-skel-stage-control--wide {
+    width: 6.5rem;
+    border-radius: var(--mf-radius-full);
+}
+
+.mf-skel-passport {
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mf-section-gap);
+}
+
+.mf-skel-passport__card {
+    display: flex;
+    justify-content: center;
+}
+
+.mf-skel-passport__face {
+    width: min(100%, 22rem);
+    height: clamp(16rem, 50vw, 17.75rem);
+    border-radius: var(--mf-radius-panel);
+}
+
+.mf-skel-passport__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.mf-skel-passport__stat {
+    height: 3.25rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-profile__hero {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem 1rem 1.15rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-profile__avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--mf-radius-full);
+    flex-shrink: 0;
+}
+
+.mf-skel-profile__meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-skel-profile__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+.mf-skel-profile__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-skel-profile__stat {
+    height: 3rem;
+    border-radius: var(--mf-radius);
+}
+
+.mf-skel-compose {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0.85rem 1rem 1.1rem;
+}
+
+.mf-skel-compose__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.mf-skel-thread__reply {
+    border-top: none;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-skel-bone,
+    .mf-skel-page,
+    .mf-skel-feed__item,
+    .mf-skel-chat-row,
+    .mf-skel-ticket,
+    .mf-skel-wallet__stub,
+    .mf-skel-shop-card,
+    .mf-skel-stage-row,
+    .mf-stage-lobby,
+    .mf-stage-room,
+    .mf-stage-card {
+        animation: none !important;
+    }
+
+    .mf-skel-bone {
+        background: color-mix(in srgb, var(--mf-elevated) 92%, var(--mf-pitch));
+    }
+}

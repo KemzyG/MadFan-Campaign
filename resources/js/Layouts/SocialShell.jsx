@@ -72,16 +72,6 @@ function IconFeed({ active }) {
     );
 }
 
-function IconPassport({ active }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <rect x="4" y="3" width="16" height="18" rx="2" strokeWidth={active ? 2.25 : 1.75} />
-            <circle cx="12" cy="10" r="2.5" />
-            <path strokeLinecap="round" d="M8 16.5c1.2-1.4 2.5-2 4-2s2.8.6 4 2" />
-        </svg>
-    );
-}
-
 function IconProfile({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -232,38 +222,6 @@ function IconReels({ active }) {
                 d="M10.5 9.2 14.2 12l-3.7 2.8V9.2Z"
                 fill="currentColor"
                 stroke="none"
-            />
-        </svg>
-    );
-}
-
-function IconLeaderboard({ active }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={active ? 2.1 : 1.65}
-                d="M8 21h8M12 17v4M7 4h10v4.5a5 5 0 0 1-10 0V4Z"
-            />
-            <path
-                strokeLinecap="round"
-                strokeWidth={active ? 2 : 1.55}
-                d="M7 6H4.5v1.5A2.5 2.5 0 0 0 7 10M17 6h2.5v1.5A2.5 2.5 0 0 1 17 10"
-            />
-        </svg>
-    );
-}
-
-function IconWallet({ active }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <rect x="3.2" y="6" width="17.6" height="13" rx="2.4" strokeWidth={active ? 2.1 : 1.65} />
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={active ? 2 : 1.6}
-                d="M3.6 8.5 16 8.5M16.5 12.5h4.3v3.5h-4.3a1.75 1.75 0 0 1 0-3.5Z"
             />
         </svg>
     );
@@ -520,7 +478,6 @@ function SocialHeaderAccountMenu({ user, handle, profileHref }) {
                     </li>
                     <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
                     <HeaderMenuItem href={profileHref} label="You" icon={IconProfile} onClick={close} />
-                    <HeaderMenuItem href="/social/passport" label="Passport" icon={IconPassport} onClick={close} />
                     <HeaderMenuItem href="/campaign" label="Campaign" icon={IconCampaign} onClick={close} />
                     <HeaderMenuItem
                         href="/logout"
@@ -557,7 +514,7 @@ export default function SocialShell({
     const current = page.url?.split('?')[0] || '';
     const logoUrl = app?.logo_url || null;
 
-    const profileHref = handle ? `/social/u/${handle}` : '/social/passport';
+    const profileHref = '/social/you';
 
     const [composeOpen, setComposeOpen] = useState(false);
     const [toasts, setToasts] = useState([]);
@@ -715,12 +672,6 @@ export default function SocialShell({
             active: pathMatches(current, '/social/clubs'),
         },
         {
-            href: '/social/leaderboard',
-            label: 'Leaderboard',
-            icon: IconLeaderboard,
-            active: pathMatches(current, '/social/leaderboard'),
-        },
-        {
             href: '/social/shop',
             label: 'Store',
             icon: IconShop,
@@ -733,22 +684,10 @@ export default function SocialShell({
             active: pathMatches(current, '/social/stage'),
         },
         {
-            href: '/social/passport',
-            label: 'Passport',
-            icon: IconPassport,
-            active: pathMatches(current, '/social/passport'),
-        },
-        {
-            href: '/social/wallet',
-            label: 'Wallet',
-            icon: IconWallet,
-            active: pathMatches(current, '/social/wallet'),
-        },
-        {
             href: profileHref,
             label: 'You',
             icon: IconProfile,
-            active: handle ? pathMatches(current, `/social/u/${handle}`) : false,
+            active: pathMatches(current, '/social/you'),
         },
     ];
 
@@ -822,10 +761,10 @@ export default function SocialShell({
 
                             {user ? (
                                 <Link
-                                    href="/social/passport"
+                                    href="/social/you"
                                     className="mf-sidebar__user"
-                                    aria-label={`Passport — ${user.name || handle || 'you'}`}
-                                    title="Passport"
+                                    aria-label={`You — ${user.name || handle || 'you'}`}
+                                    title="You"
                                     prefetch
                                 >
                                     {user.avatar_url ? (
@@ -871,13 +810,7 @@ export default function SocialShell({
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 6 9 12l6 6" />
                                         </svg>
                                     </Link>
-                                ) : (
-                                    <Link href="/social" className="mf-header__brand shrink-0" aria-label="Mad Fan Social home">
-                                        <span className="mf-display mf-text-title tracking-[0.04em] leading-none text-[var(--mf-text)]">
-                                            MF
-                                        </span>
-                                    </Link>
-                                )}
+                                ) : null}
                                 <div className="min-w-0 flex-1">
                                     {title ? (
                                         <p className="mf-display mf-text-title truncate tracking-[0.03em] text-[var(--mf-text)]">

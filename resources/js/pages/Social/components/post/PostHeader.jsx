@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { onImageError, resolveDefaultImageUrl } from '../../../../lib/defaultImage';
 import { formatFullTime, formatRelative } from './format';
 import PostOverflowMenu from './PostOverflowMenu';
 import { IconClubShield, IconLock } from './icons';
@@ -16,6 +17,8 @@ const VISIBILITY_GLYPH = {
  * @param {{ post: object, onDismiss?: (id:any)=>void, size?: 'md'|'sm' }} props
  */
 export default function PostHeader({ post, onDismiss, size = 'md' }) {
+    const { app } = usePage().props;
+    const fallbackUrl = resolveDefaultImageUrl({ app });
     const handle = post.author?.handle;
     const profileHref = handle ? `/social/u/${handle}` : '/social';
     const stamp = post.published_at || post.created_at;
@@ -30,7 +33,15 @@ export default function PostHeader({ post, onDismiss, size = 'md' }) {
                 className={`mf-avatar mf-text-meta ${avatarSize}`}
                 aria-label={`${post.author?.name || 'Fan'} profile`}
             >
-                {(post.author?.name || '?').slice(0, 1).toUpperCase()}
+                {post.author?.avatar_url ? (
+                    <img
+                        src={post.author.avatar_url}
+                        alt=""
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
+                ) : (
+                    (post.author?.name || '?').slice(0, 1).toUpperCase()
+                )}
             </Link>
 
             <div className="mf-post__header">

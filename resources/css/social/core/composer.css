@@ -1,0 +1,354 @@
+/*
+ * Composer — inline composer, FAB, compose sheet, .mf-field.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+.mf-compose-chip {
+    flex-shrink: 0;
+    min-height: 2rem;
+    margin-right: 0.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    color: var(--mf-pitch);
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease), transform 140ms var(--mf-ease);
+}
+
+.mf-compose-chip:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 20%, transparent);
+    border-color: var(--mf-pitch);
+}
+
+.mf-compose-chip:active {
+    transform: scale(0.97);
+}
+
+/*
+ * Floating compose FAB — the feed's one filled primary. Deep Navy fill, Snow
+ * glyph, pill corner. The gradient, the white glow and the 2px lip are all gone:
+ * a navy square on white marble is already ~19:1 against the page, so it needs
+ * no help separating itself and nothing in this system floats.
+ */
+.mf-fab {
+    position: sticky;
+    bottom: calc(var(--mf-tab-h) + 0.85rem + var(--mf-safe-bottom));
+    float: right;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.35rem;
+    height: 3.35rem;
+    margin: -4.2rem 1rem 1.25rem auto;
+    border: 0;
+    border-radius: var(--mf-radius-pill);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+    cursor: pointer;
+    transition: transform 160ms var(--mf-ease), background 160ms var(--mf-ease);
+}
+
+.mf-fab svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.mf-fab:hover {
+    transform: translateY(-2px);
+    background: var(--mf-rival);
+}
+
+.mf-fab:active {
+    transform: scale(0.96);
+}
+
+.mf-fab:focus-visible {
+    outline: 2px solid var(--mf-amber);
+    outline-offset: 3px;
+}
+
+/* Compose bottom sheet */
+.mf-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.mf-sheet__backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(2px);
+    cursor: pointer;
+    animation: mf-fade-in 160ms var(--mf-ease);
+}
+
+.mf-sheet__panel {
+    position: relative;
+    z-index: 1;
+    width: min(100%, var(--mf-app-width));
+    max-height: min(88dvh, 40rem);
+    overflow: auto;
+    padding: 0.45rem 1rem calc(1rem + var(--mf-safe-bottom));
+    border-radius: var(--mf-radius-lg) var(--mf-radius-lg) 0 0;
+    border: 1px solid var(--mf-line);
+    border-bottom: 0;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--mf-pitch) 8%, var(--mf-elevated)) 0%, var(--mf-panel) 28%),
+        var(--mf-panel);
+    animation: mf-sheet-up 220ms var(--mf-ease);
+}
+
+.mf-sheet__handle {
+    width: 2.5rem;
+    height: 0.28rem;
+    margin: 0.15rem auto 0.65rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-muted) 55%, transparent);
+}
+
+.mf-sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.mf-sheet__close {
+    min-height: 2rem;
+    padding: 0.25rem 0.55rem;
+    border: 0;
+    border-radius: var(--mf-radius-full);
+    background: transparent;
+    color: var(--mf-muted);
+    font: inherit;
+    font-size: var(--mf-text-meta);
+    cursor: pointer;
+}
+
+.mf-sheet__close:hover {
+    color: var(--mf-text);
+    background: var(--mf-elevated);
+}
+
+@keyframes mf-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes mf-sheet-up {
+    from {
+        opacity: 0.6;
+        transform: translateY(1.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.mf-composer__row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+}
+
+.mf-composer__main {
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-composer__input,
+.mf-composer textarea,
+.mf-field {
+    width: 100%;
+    resize: none;
+    border: 1px solid transparent;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    font-weight: 400;
+    line-height: var(--mf-leading-body);
+    padding: 0.35rem 0.15rem;
+    outline: none;
+    transition: border-color 120ms var(--mf-ease), box-shadow 120ms var(--mf-ease), background 120ms var(--mf-ease);
+}
+
+.mf-field {
+    border-color: var(--mf-line);
+    background: var(--mf-elevated);
+    padding: 0.65rem 0.85rem;
+}
+
+.mf-composer:focus-within .mf-composer__input,
+.mf-composer textarea:focus,
+.mf-field:focus {
+    border-color: transparent;
+}
+
+/* Focus: a 2px Sky Wash ring on a Sky Wash hairline. One signal, everywhere. */
+.mf-field:focus {
+    border-color: var(--mf-amber);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-amber) 55%, transparent);
+}
+
+.mf-composer__input::placeholder,
+.mf-composer textarea::placeholder,
+.mf-field::placeholder {
+    color: var(--mf-muted);
+}
+
+.mf-composer__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid color-mix(in srgb, var(--mf-line) 75%, transparent);
+}
+
+.mf-composer__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.mf-composer-attach {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 28%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease);
+}
+
+.mf-composer-attach:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 14%, transparent);
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+}
+
+.mf-composer-attach svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-composer-previews {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+}
+
+.mf-composer-previews__item {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    /* Cloud well behind the thumbnail so a slow-loading image has a floor. */
+    background: var(--mf-recess);
+}
+
+.mf-composer-previews__item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-composer--reply .mf-composer__input {
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    padding: 0.65rem 0.85rem;
+}
+
+.mf-composer--reply:focus-within .mf-composer__input {
+    border-color: var(--mf-amber);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-amber) 55%, transparent);
+}
+
+.mf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: var(--mf-radius);
+    border: 0;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 140ms var(--mf-ease), transform 140ms var(--mf-ease), background 140ms var(--mf-ease);
+}
+
+.mf-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.mf-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.mf-btn--pitch {
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+}
+
+.mf-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--mf-line);
+    color: var(--mf-text);
+}
+
+.mf-btn--muted {
+    background: transparent;
+    border: 1px solid var(--mf-line);
+    color: var(--mf-muted);
+}
+
+.mf-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    font-weight: 700;
+    overflow: hidden;
+    object-fit: cover;
+}

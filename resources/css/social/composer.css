@@ -31,7 +31,7 @@
     .mf-sheet__panel--full {
         height: min(94dvh, 46rem);
         border: 1px solid var(--mf-line);
-        border-radius: 1.15rem;
+        border-radius: var(--mf-radius-panel);
     }
 }
 
@@ -43,7 +43,7 @@
     margin: 0;
     padding: 0.7rem 0.85rem;
     border-bottom: 1px solid var(--mf-line);
-    background: color-mix(in srgb, var(--mf-void) 60%, transparent);
+    background: var(--mf-panel);
 }
 
 .mf-sheet__head--full .mf-display {
@@ -112,7 +112,7 @@
     gap: 0.3rem;
     min-height: 2rem;
     padding: 0.25rem 0.6rem;
-    border-radius: 9999px;
+    border-radius: var(--mf-radius-full);
     border: 1px solid var(--mf-line);
     background: color-mix(in srgb, var(--mf-pitch) 5%, transparent);
     color: var(--mf-text);
@@ -161,7 +161,6 @@
     border-radius: var(--mf-radius);
     border: 1px solid var(--mf-line);
     background: var(--mf-elevated);
-    box-shadow: var(--mf-shadow-2);
     animation: mf-menu-in 140ms var(--mf-ease);
 }
 
@@ -172,7 +171,7 @@
     width: 100%;
     padding: 0.5rem 0.6rem;
     border: 0;
-    border-radius: calc(var(--mf-radius) - 2px);
+    border-radius: var(--mf-radius-badge);
     background: transparent;
     color: var(--mf-text);
     text-align: left;
@@ -224,7 +223,7 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 9999px;
+    border-radius: var(--mf-radius-full);
     border: 1px solid var(--mf-line);
     background: color-mix(in srgb, var(--mf-pitch) 5%, transparent);
     color: var(--mf-text);
@@ -261,7 +260,6 @@
     border-radius: var(--mf-radius);
     border: 1px solid var(--mf-line);
     background: var(--mf-elevated);
-    box-shadow: var(--mf-shadow-2);
     animation: mf-menu-in 140ms var(--mf-ease);
 }
 
@@ -271,7 +269,7 @@
     justify-content: center;
     aspect-ratio: 1;
     border: 0;
-    border-radius: 0.4rem;
+    border-radius: var(--mf-radius);
     background: transparent;
     font-size: 1.15rem;
     line-height: 1;
@@ -303,7 +301,7 @@
     align-items: center;
     gap: 0.3rem;
     padding: 0.15rem 0.35rem 0.15rem 0.2rem;
-    border-radius: 9999px;
+    border-radius: var(--mf-radius-full);
     border: 1px solid var(--mf-line);
     background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
     font-size: var(--mf-text-meta);
@@ -322,7 +320,7 @@
     height: 1.05rem;
     padding: 0;
     border: 0;
-    border-radius: 9999px;
+    border-radius: var(--mf-radius-full);
     background: transparent;
     color: var(--mf-muted);
     cursor: pointer;
@@ -358,7 +356,7 @@
     padding: 0.6rem 0.85rem;
     border-radius: var(--mf-radius);
     border: 1px solid var(--mf-line);
-    background: var(--mf-void);
+    background: var(--mf-panel);
     color: var(--mf-text);
     font: inherit;
     font-size: var(--mf-text-ui);
@@ -366,8 +364,8 @@
 }
 
 .mf-tagpick__search:focus {
-    border-color: var(--mf-pitch-dim);
-    box-shadow: 0 0 0 1px var(--mf-pitch-dim);
+    border-color: var(--mf-amber);
+    box-shadow: 0 0 0 2px var(--mf-amber);
 }
 
 .mf-tagpick__list {
@@ -442,7 +440,7 @@
     flex: 0 0 auto;
     width: 1.7rem;
     height: 1.7rem;
-    border-radius: 9999px;
+    border-radius: var(--mf-radius-full);
     border: 1px solid var(--mf-line);
     color: var(--mf-muted);
 }
@@ -455,7 +453,7 @@
 .mf-tagpick__check.is-on {
     border-color: var(--mf-pitch);
     background: var(--mf-pitch);
-    color: var(--mf-void);
+    color: var(--mf-on-fill);
 }
 
 .mf-tagpick__done {

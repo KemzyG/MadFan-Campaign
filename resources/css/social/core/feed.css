@@ -1,0 +1,136 @@
+/*
+ * Feed — .mf-segment control, .mf-ptr pull-to-refresh, feed stream.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* Feed segments. Sticky bars are opaque Snow so rows don't ghost through. */
+.mf-segment {
+    display: flex;
+    position: sticky;
+    top: calc(var(--mf-header-h) + var(--mf-safe-top));
+    z-index: 20;
+    border-bottom: 1px solid var(--mf-line-soft);
+    background: var(--mf-canvas);
+}
+
+.mf-segment a {
+    flex: 1;
+    position: relative;
+    padding: 0.85rem 0.85rem 0.75rem;
+    text-align: center;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--mf-muted);
+    text-decoration: none;
+    transition: color 150ms var(--mf-ease);
+}
+
+.mf-segment a:hover {
+    color: var(--mf-text);
+    background: color-mix(in srgb, var(--mf-elevated) 40%, transparent);
+}
+
+.mf-segment a.is-active {
+    color: var(--mf-text);
+}
+
+.mf-segment a.is-active::after {
+    content: '';
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    bottom: 0;
+    height: 3px;
+    border-radius: var(--mf-radius-badge) var(--mf-radius-badge) 0 0;
+    background: var(--mf-pitch);
+}
+
+/* Pull-to-refresh (home feed) — monochrome, document scroll */
+.mf-ptr {
+    position: relative;
+}
+
+.mf-ptr__indicator {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.mf-ptr:not([data-ptr='active']) .mf-ptr__indicator {
+    transition: height 180ms var(--mf-ease), opacity 140ms var(--mf-ease);
+}
+
+.mf-ptr__visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1rem 0.65rem;
+    color: var(--mf-muted);
+}
+
+.mf-ptr__label {
+    color: var(--mf-muted);
+    letter-spacing: 0.1em;
+}
+
+.mf-ptr.is-ready .mf-ptr__label {
+    color: var(--mf-pitch-dim);
+}
+
+.mf-ptr__chev {
+    display: inline-flex;
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--mf-pitch-dim);
+    transition: transform 140ms var(--mf-ease);
+}
+
+.mf-ptr__chev svg {
+    width: 100%;
+    height: 100%;
+}
+
+.mf-ptr__bones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.28rem;
+    width: 7.5rem;
+}
+
+.mf-ptr__bone {
+    width: 100%;
+    height: 0.45rem;
+}
+
+.mf-ptr__bone--short {
+    width: 55%;
+}
+
+/* Feed stream */
+.mf-feed-item {
+    animation: mf-rise 280ms var(--mf-ease) both;
+    animation-delay: var(--mf-stagger, 0ms);
+}
+
+.mf-feed-more {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 1rem 1.5rem;
+}
+
+.mf-feed-end {
+    margin: 0;
+    padding: 1.25rem 1rem 1.75rem;
+    text-align: center;
+}

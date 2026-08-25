@@ -297,6 +297,7 @@ class FeedService
                 'name' => $author->name,
                 'handle' => $author->handle ?: $author->username ?: $author->fan_id,
                 'fan_id' => $author->fan_id,
+                'avatar_url' => $author->avatar_url,
             ] : null,
             'club' => $post->club ? [
                 'id' => $post->club->id,

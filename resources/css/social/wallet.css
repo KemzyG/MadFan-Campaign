@@ -1,7 +1,7 @@
 /*
  * Mad Fan Social — Wallet
  * Namespaced .mf-wallet-* surface. Relies on the --mf-* tokens from social.css.
- * Monochrome: value weight and bar length carry meaning, not colour (the only
+ * Restrained: value weight and bar length carry meaning, not colour (the only
  * colour is the +/- ledger amount, reusing the semantic status tokens).
  */
 
@@ -29,8 +29,8 @@
 /* ---- Shared progress / component bar ---- */
 .mf-wallet-bar {
     height: 0.4rem;
-    border-radius: 999px;
-    background: var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-recess);
     overflow: hidden;
 }
 
@@ -51,7 +51,6 @@
     border-radius: var(--mf-radius);
     background: var(--mf-elevated);
     border: 1px solid var(--mf-line);
-    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
 }
 
 .mf-wallet-balance__head {
@@ -71,15 +70,15 @@
     font-size: var(--mf-text-micro);
     text-transform: uppercase;
     letter-spacing: var(--mf-tracking-label);
-    color: var(--mf-void);
+    color: var(--mf-on-fill);
     background: var(--mf-pitch);
     padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+    border-radius: var(--mf-radius-pill);
 }
 
 .mf-wallet-balance__value {
     font-family: var(--mf-font-display);
-    font-size: clamp(2.4rem, 12vw, 3.25rem);
+    font-size: clamp(var(--mf-text-heading-sm), 12vw, var(--mf-text-hero));
     line-height: 1;
     letter-spacing: var(--mf-tracking-score);
     color: var(--mf-text);
@@ -113,7 +112,6 @@
     border-radius: var(--mf-radius);
     background: var(--mf-panel);
     border: 1px solid var(--mf-line);
-    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
 }
 
 .mf-wallet-loyalty__head {
@@ -131,7 +129,7 @@
 
 .mf-wallet-loyalty__value {
     font-family: var(--mf-font-display);
-    font-size: 2.6rem;
+    font-size: var(--mf-text-heading);
     line-height: 1;
     letter-spacing: var(--mf-tracking-score);
     color: var(--mf-text);
@@ -155,10 +153,11 @@
     justify-content: center;
     width: 2.4rem;
     height: 2.4rem;
-    border-radius: 0.5rem;
+    border-radius: var(--mf-radius);
     background: var(--mf-pitch);
-    color: var(--mf-void);
-    font-size: 1.4rem;
+    color: var(--mf-on-fill);
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-section);
     line-height: 1;
     font-weight: 700;
 }
@@ -219,7 +218,7 @@
 
 .mf-wallet-stat__value {
     font-family: var(--mf-font-display);
-    font-size: 1.7rem;
+    font-size: var(--mf-text-display);
     line-height: 1;
     color: var(--mf-text);
 }

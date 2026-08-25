@@ -1,0 +1,239 @@
+/*
+ * Design tokens — @theme bridge and --mf-* custom properties.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+/* Mad Fan Social — Vibrants: skyborne apothecary on white marble */
+
+@import 'tailwindcss';
+
+@source '../js/Layouts/SocialShell.jsx';
+@source '../js/pages/Social/**/*.{js,jsx}';
+@source '../js/social.jsx';
+@source '../views/social.blade.php';
+
+@theme {
+    /* Vibrants — editorial serif display, Inter UI, Montserrat labels. */
+    --font-mf-display: "Fraunces", "Playfair Display", Georgia, serif;
+    --font-mf-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mf-label: "Montserrat", "Inter", sans-serif;
+    --font-mf-stamp: "Bebas Neue", "Oswald", sans-serif;
+    --font-mf-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+    --color-mf-canvas: #ffffff;
+    --color-mf-panel: #ffffff;
+    --color-mf-elevated: #f2f6ff;
+    --color-mf-line: #ccd2d7;
+    --color-mf-text: #021422;
+    --color-mf-muted: #6a7c89;
+    --color-mf-pitch: #021422;
+    --color-mf-pitch-dim: #67727a;
+    --color-mf-amber: #91c3ff;
+    --color-mf-rival: #001f38;
+    --color-mf-ok: #00852e;
+}
+
+:root {
+    /*
+     * Vibrants surfaces — "skyborne apothecary on white marble". Snow canvas,
+     * Deep Navy ink, Cloud for anything sunken. Depth comes from hairlines and
+     * surface tint shifts, never shadow — see --mf-sheen / --mf-shadow-* below,
+     * which are deliberately none.
+     */
+    --mf-canvas: #ffffff; /* Snow — page background */
+    --mf-panel: #ffffff; /* Snow — card surface */
+    --mf-elevated: #f2f6ff; /* Cloud — panel tint, hover */
+    --mf-recess: #f2f6ff; /* Cloud — sunken wells, media placeholders, tracks */
+    /* A well sunk inside a Cloud panel. Vibrants' surface ramp stops at Cloud, so
+     * a second step down is a whisper of ink over it — the same "N% of ink over
+     * the surface" idiom the rest of the sheet uses, never a shadow. */
+    --mf-recess-deep: color-mix(in srgb, var(--mf-pitch) 4%, var(--mf-recess));
+    --mf-scrim: color-mix(in srgb, #021422 38%, transparent); /* sheet overlay */
+    --mf-on-fill: #ffffff; /* ink sitting on a Deep Navy fill */
+
+    --mf-line: #ccd2d7; /* Silver Mist — card borders, hairlines */
+    --mf-line-soft: #e6e8e9; /* nav dividers */
+    --mf-border-muted: #808f9c; /* Iron Gray — emphasised borders */
+
+    --mf-text: #021422; /* Deep Navy — primary ink */
+    --mf-muted: #6a7c89; /* Slate — >=14px metadata only (3.9:1, fails AA below) */
+    --mf-pitch: #021422; /* Deep Navy — primary fill + emphasis */
+    --mf-pitch-dim: #67727a; /* Graphite — small or load-bearing muted (4.6:1) */
+    --mf-amber: #91c3ff; /* Sky Wash — ghost borders, icon accents, links */
+    --mf-rival: #001f38; /* Midnight Navy — secondary emphasis */
+    --mf-charcoal: #262626; /* icon fills */
+    --mf-warm-sand: #fff6ea;
+    --mf-cream: #ffe9c9;
+    --mf-ink-invert: #ffffff; /* ink inside .mf-invert dark islands */
+
+    /* Hero-only chroma. Never on chrome, buttons or non-hero surfaces. */
+    --mf-sky-hero: linear-gradient(180deg, #c4e4fb, #f2f6ff);
+    --mf-spectrum: linear-gradient(
+        90deg,
+        color-mix(in srgb, #8b5cf6 5%, transparent),
+        color-mix(in srgb, #4f46e5 5%, transparent),
+        color-mix(in srgb, #06b6d4 5%, transparent),
+        color-mix(in srgb, #00852e 5%, transparent),
+        color-mix(in srgb, #eab308 5%, transparent),
+        color-mix(in srgb, #f97316 5%, transparent),
+        color-mix(in srgb, #dc2626 5%, transparent)
+    );
+
+    /*
+     * Semantic status tokens. Vibrant Green is the only vivid hue permitted on
+     * chrome, and only for status and badges — never a border, never a CTA fill.
+     */
+    --mf-ok: #00852e; /* Vibrant Green — success / live / verified */
+    --mf-warn: #8a5a00; /* functional amber, legible on Snow */
+    --mf-bad: #c43030; /* destructive */
+
+    /*
+     * Type roles — Vibrants. Fraunces owns >=20px (editorial serif display),
+     * Inter owns everything below it, Montserrat carries uppercase tracked
+     * labels, Bebas Neue is badge / discount-pill only, and mono is narrowed to
+     * genuinely machine-readable copy (passport MRZ, ledger figures, codes).
+     * Never mix Fraunces and Inter at the same size for the same role.
+     */
+    --mf-font-display: "Fraunces", "Playfair Display", Georgia, serif;
+    --mf-font-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --mf-font-label: "Montserrat", "Inter", sans-serif;
+    --mf-font-stamp: "Bebas Neue", "Oswald", sans-serif;
+    --mf-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+    /*
+     * Type scale — Vibrants. Rem targets assume a 16px root (do not set html
+     * font-size to a rem token). The lower steps carry feed, chat and chrome;
+     * the upper serif steps carry heroes, empty states and section headers.
+     */
+    --mf-text-micro: 0.625rem; /* 10px — Montserrat, badges, header chrome */
+    --mf-text-caption: 0.75rem; /* 12px — Montserrat eyebrow, tab labels */
+    --mf-text-meta: 0.8125rem; /* 13px — Inter, handles, timestamps */
+    --mf-text-ui: 0.875rem; /* 14px — Inter, secondary UI, buttons */
+    --mf-text-body: 1rem; /* 16px — Inter, post body, composer */
+    --mf-text-chat: 1rem; /* 16px — Inter, chat */
+    --mf-text-title: 1.25rem; /* 20px — Fraunces, page / display titles */
+    --mf-text-section: 1.375rem; /* 22px — Fraunces, section heads */
+    --mf-text-subheading: 1.5rem; /* 24px — Fraunces */
+    --mf-text-display: 1.75rem; /* 28px — Fraunces, onboarding / empty heads */
+    --mf-text-heading-sm: 2rem; /* 32px — Fraunces */
+    --mf-text-heading: 2.25rem; /* 36px — Fraunces */
+    --mf-text-heading-lg: 2.75rem; /* 44px — Fraunces */
+    --mf-text-hero: 3rem; /* 48px — Fraunces */
+    --mf-text-score: clamp(2rem, 6vw, 2.75rem); /* Fraunces, tabular */
+    --mf-leading-body: 1.45;
+    --mf-leading-tight: 1.2;
+    --mf-tracking-label: 0.13em; /* Montserrat uppercase labels */
+    --mf-tracking-body: -0.022em; /* Inter at 16px */
+    --mf-tracking-ui: -0.01em; /* Inter at 14px */
+    --mf-tracking-display: -0.01em; /* Fraunces */
+    --mf-tracking-hero: -0.02em;
+    --mf-tracking-stamp: 0.063em; /* Bebas Neue badge text */
+    --mf-tracking-score: -0.02em;
+
+    --mf-safe-top: env(safe-area-inset-top, 0px);
+    --mf-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --mf-safe-left: env(safe-area-inset-left, 0px);
+    --mf-safe-right: env(safe-area-inset-right, 0px);
+    --mf-app-width: 28.5rem; /* ~456px phone column */
+    --mf-feed-width: 37.5rem; /* ~600px X-like feed */
+    --mf-sidebar-w: 17.25rem; /* ~276px label rail */
+    --mf-sidebar-icon-w: 4.75rem; /* icon-only rail */
+    --mf-chat-rail-w: 21.875rem; /* ~350px chat panel */
+    --mf-people-rail-w: 20rem; /* ~320px people + info panel */
+    --mf-stage-footer-h: 3.9rem; /* slim single-row control bar */
+    /*
+     * md keeps the two-panel shell capped to its own tracks and centred; from lg
+     * up the shell spans the whole viewport — sidebar pinned left, chat rail
+     * pinned right, the page column flexing between — so wide monitors have no
+     * dead gutters. Only the md cap needs a token; lg/xl set their width inline.
+     */
+    --mf-shell-md: calc(var(--mf-sidebar-icon-w) + var(--mf-feed-width));
+    /*
+     * How wide the shell is at this breakpoint, and how much dead space is left
+     * either side of it. At md that space is the centring margin; from lg up the
+     * shell is full-width so it resolves to 0. Anything that floats above the
+     * panels — toasts, the live-stage pill — offsets by --mf-shell-inset so it
+     * tracks a panel edge instead of drifting out to the corner of a wide monitor.
+     */
+    --mf-shell-w: 100vw;
+    --mf-shell-inset: max(0px, calc((100vw - var(--mf-shell-w)) / 2));
+    --mf-header-h: 2.75rem;
+    --mf-tab-h: 3.5rem;
+
+    /*
+     * Shape — the guide's five steps. Do not introduce a radius outside this
+     * scale. The 3px badge corner is the deliberate tell that separates badges
+     * and discount pills from every other surface in the system.
+     */
+    --mf-radius-badge: 3px; /* badges, tags */
+    --mf-radius: 0.5rem; /* 8px — cards, buttons, inputs */
+    --mf-radius-panel: 0.75rem; /* 12px — nav, hero panels */
+    --mf-radius-pill: 1.25rem; /* 20px — pills, chips */
+    --mf-radius-lg: 2rem; /* 32px — large sheets */
+    --mf-radius-full: 9999px; /* avatars, circular controls */
+
+    --mf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Spacing — 4px base unit, comfortable density. */
+    --mf-space-4: 0.25rem;
+    --mf-space-8: 0.5rem;
+    --mf-space-12: 0.75rem;
+    --mf-space-16: 1rem;
+    --mf-space-24: 1.5rem;
+    --mf-space-32: 2rem;
+    --mf-space-48: 3rem;
+    --mf-space-64: 4rem;
+    --mf-space-128: 8rem;
+    --mf-card-pad: 1rem; /* 16px */
+    --mf-element-gap: 1rem; /* 16px */
+    --mf-section-gap: 1rem; /* 16px — in-card */
+    --mf-section-gap-tight: 0.75rem;
+    --mf-section-gap-page: 3rem; /* 48px — wide page surfaces only */
+    --mf-page-max: 75rem; /* 1200px — shop, wallet, leaderboard, clubs, fixtures */
+    --mf-page-pad-bottom: 1.15rem;
+
+    /*
+     * Elevation — nothing floats, everything sits precisely on a plane. The
+     * guide forbids shadow for depth, so the shadow steps degrade to hairline
+     * rings and the sheen is retired; depth comes from Silver Mist hairlines
+     * and Snow -> Cloud -> Warm Sand tint shifts instead. --mf-glass drops
+     * saturate(0) so Cloud tints survive the blur.
+     */
+    --mf-sheen: none;
+    --mf-shadow-1: none;
+    --mf-shadow-2: 0 0 0 1px var(--mf-line);
+    --mf-shadow-3: 0 0 0 1px var(--mf-line);
+    --mf-glass: blur(18px);
+    --mf-dur-fast: 140ms;
+    --mf-dur: 220ms;
+    --mf-dur-slow: 340ms;
+
+    /*
+     * Imagery. Photography is content, never chrome — the global .mf-stage
+     * stadium backdrop and its noise overlay are gone. These remain only for the
+     * surfaces where a stadium genuinely is the subject (fixtures, tickets, the
+     * stage room), and the page scrim is now the sky wash rather than a night
+     * gradient. The modal scrim stays a real dim, since that is its job.
+     */
+    --mf-stadium-image: url('/landing-media/hero.png');
+    --mf-stage-bg-image: url('/stage-media/stage-bg-1.png');
+    --mf-stadium-position: center 22%;
+    --mf-stadium-scrim:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-canvas) 78%, transparent) 0%,
+            color-mix(in srgb, var(--mf-canvas) 90%, transparent) 55%,
+            var(--mf-canvas) 100%
+        );
+    --mf-stadium-scrim-modal:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, #021422 46%, transparent) 0%,
+            color-mix(in srgb, #021422 34%, transparent) 44%,
+            color-mix(in srgb, #021422 46%, transparent) 100%
+        );
+}

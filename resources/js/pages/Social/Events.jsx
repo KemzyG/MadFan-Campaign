@@ -5,26 +5,32 @@ import PullToRefresh from './components/PullToRefresh';
 import { EventsSkeleton } from './components/Skeletons';
 import EventCard from './components/events/EventCard';
 import EventFilters from './components/events/EventFilters';
+import LiveNowStrip from './components/events/LiveNowStrip';
 import { useStageSessionOptional } from './Stage/StageSessionContext';
 
-function EventsHead({ club, live }) {
+function EventsHead({ club, stages }) {
     return (
         <header className="mf-ev-head">
-            <p className="mf-ev-head__kicker">
-                <span className="mf-ev-head__dot" aria-hidden />
-                What&apos;s happening now
-            </p>
-
-            <h1 className="mf-ev-head__title">
-                {live > 0 ? `${live} live` : 'Nothing live'}
-            </h1>
-
-            {club ? (
-                <p className="mf-ev-head__club">
-                    {club.logo_url ? <img src={club.logo_url} alt="" loading="lazy" /> : null}
-                    <span>{club.name}</span>
-                    {club.league ? <i>{club.league}</i> : null}
+            <div className="mf-ev-head__top">
+                <p className="mf-ev-head__kicker">
+                    <span className="mf-ev-head__dot" aria-hidden />
+                    What&apos;s happening now
                 </p>
+
+                {club ? (
+                    <Link href={`/social/clubs/${club.id}`} className="mf-ev-head__club">
+                        {club.logo_url ? <img src={club.logo_url} alt="" loading="lazy" /> : null}
+                        <span>{club.name}</span>
+                        {club.league ? <i>{club.league}</i> : null}
+                    </Link>
+                ) : null}
+            </div>
+
+            {stages?.length ? (
+                <div className="mf-ev-head__live">
+                    <p className="mf-ev-head__live-label">Live now</p>
+                    <LiveNowStrip stages={stages} />
+                </div>
             ) : null}
         </header>
     );
@@ -50,7 +56,10 @@ function EventStream({ events, filters, activeFilter, club }) {
     const stageSession = useStageSessionOptional();
 
     const cards = events?.data || [];
-    const live = cards.filter((event) => event.phase === 'live').length;
+    const liveStages = cards
+        .filter((event) => event.phase === 'live' && (event.type === 'livestream' || event.type === 'live_event'))
+        .map((event) => event.data?.stage)
+        .filter(Boolean);
     const ptrDisabled = Boolean(stageSession?.modalOpen || stageSession?.chatOpen);
 
     const refreshEvents = useCallback(() => new Promise((resolve) => {
@@ -65,7 +74,7 @@ function EventStream({ events, filters, activeFilter, club }) {
     return (
         <PullToRefresh onRefresh={refreshEvents} disabled={ptrDisabled}>
             <div className="mf-page mf-events">
-                <EventsHead club={club} live={live} />
+                <EventsHead club={club} stages={liveStages} />
 
                 <EventFilters filters={filters} active={activeFilter} />
 

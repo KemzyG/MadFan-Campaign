@@ -1,0 +1,221 @@
+/*
+ * Header — nav bar chrome, header menu.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/*
+ * Nav bar: white, held to the page by a single nav-weight hairline. The glass
+ * blur is gone — an opaque bar has nothing to blur, and the guide's chrome does
+ * not float above the content it sits on.
+ */
+.mf-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: calc(var(--mf-header-h) + var(--mf-safe-top));
+    padding-top: var(--mf-safe-top);
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-inline: 0.75rem 1rem;
+    border-bottom: 1px solid var(--mf-line-soft);
+    background: var(--mf-canvas);
+}
+
+/* Header menus â€” mobile hamburger + desktop account */
+.mf-header-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mf-header-menu--account {
+    display: none;
+}
+
+.mf-header-menu__trigger,
+.mf-header-menu__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    cursor: pointer;
+    transition: color 140ms var(--mf-ease), background 140ms var(--mf-ease);
+}
+
+.mf-header-menu__trigger {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: var(--mf-radius-panel);
+}
+
+.mf-header-menu__trigger:hover,
+.mf-header-menu__trigger.is-open {
+    color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+}
+
+.mf-header-menu__trigger svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.mf-header-menu__avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--mf-radius-full);
+    overflow: hidden;
+    border: 1px solid var(--mf-line);
+}
+
+.mf-header-menu__avatar:hover,
+.mf-header-menu__avatar.is-open {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-pitch) 18%, transparent);
+}
+
+.mf-header-menu__avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-header-menu__avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--mf-elevated);
+    color: var(--mf-pitch);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.mf-header-menu__panel {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    z-index: 50;
+    min-width: 13.5rem;
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-elevated) 96%, var(--mf-canvas));
+    animation: mf-menu-in 140ms var(--mf-ease);
+}
+
+.mf-header-menu__panel--account {
+    left: auto;
+    right: 0;
+}
+
+.mf-header-menu__identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.45rem 0.7rem 0.55rem;
+    pointer-events: none;
+}
+
+.mf-header-menu__identity-name {
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    color: var(--mf-text);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-header-menu__identity-handle {
+    font-size: var(--mf-text-meta);
+    color: var(--mf-muted);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-header-menu__sep {
+    height: 1px;
+    margin: 0.3rem 0.4rem;
+    background: var(--mf-line);
+    border: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-header-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    color: var(--mf-text);
+    font: inherit;
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease), color 120ms var(--mf-ease);
+}
+
+.mf-header-menu__item:hover,
+.mf-header-menu__item:focus-visible {
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    color: var(--mf-pitch);
+    outline: none;
+}
+
+.mf-header-menu__item.is-active {
+    color: var(--mf-pitch);
+}
+
+.mf-header-menu__item.is-danger {
+    color: var(--mf-rival);
+}
+
+.mf-header-menu__item.is-danger:hover,
+.mf-header-menu__item.is-danger:focus-visible {
+    background: color-mix(in srgb, var(--mf-rival) 12%, transparent);
+    color: var(--mf-rival);
+}
+
+.mf-header-menu__item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    flex-shrink: 0;
+    color: inherit;
+    opacity: 0.92;
+}
+
+.mf-header-menu__item-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.mf-main {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: calc(var(--mf-tab-h) + var(--mf-safe-bottom) + 0.5rem);
+}

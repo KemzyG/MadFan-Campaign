@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { router, useForm, usePage } from '@inertiajs/react';
+import { onImageError, resolveDefaultImageUrl } from '../../../../lib/defaultImage';
 import { prependFeedPost, useSocialFlash, withRollbackFlash } from '../../optimistic';
 import { IconImage } from '../post/icons';
 import PostSettingsBar from './PostSettingsBar';
@@ -25,6 +26,7 @@ export default function FeedComposer({
     const page = usePage();
     const user = page.props?.auth?.user;
     const initial = (user?.name || user?.handle || '?').slice(0, 1).toUpperCase();
+    const fallbackUrl = resolveDefaultImageUrl(page.props);
     const inputId = useId();
     const { reportError } = useSocialFlash();
     const textareaRef = useRef(null);
@@ -120,6 +122,7 @@ export default function FeedComposer({
                         id: user?.id,
                         name: user?.name || 'You',
                         handle: user?.handle || user?.fan_id,
+                        avatar_url: user?.avatar_url,
                     },
                     club: null,
                     media: [],
@@ -173,7 +176,15 @@ export default function FeedComposer({
         >
             <div className="mf-composer__row">
                 <div className="mf-avatar mf-text-meta h-10 w-10 shrink-0" aria-hidden>
-                    {initial}
+                    {user?.avatar_url ? (
+                        <img
+                            src={user.avatar_url}
+                            alt=""
+                            onError={(event) => onImageError(event, fallbackUrl)}
+                        />
+                    ) : (
+                        initial
+                    )}
                 </div>
                 <div className="mf-composer__main">
                     <label className="sr-only" htmlFor={inputId}>

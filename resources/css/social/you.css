@@ -1,0 +1,225 @@
+/*
+ * You (Social/You) — self profile page.
+ * Reuses the profile hero/rail chrome from social.css + core/profile.css and
+ * adds: the avatar-edit affordance, the quick-links list (former sidebar nav
+ * items for wallet/passport/leaderboard), and the settings dialog.
+ */
+
+.mf-you-page {
+    padding: 0.85rem 0.85rem var(--mf-page-pad-bottom);
+    animation: mf-page-in 240ms var(--mf-ease) both;
+}
+
+.mf-you-hero__avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mf-you-hero__avatar-img {
+    object-fit: cover;
+}
+
+.mf-you-hero__avatar-edit {
+    position: absolute;
+    right: -0.2rem;
+    bottom: -0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-panel);
+    color: var(--mf-pitch);
+    cursor: pointer;
+}
+
+.mf-you-hero__avatar-edit svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    stroke-width: 1.85;
+}
+
+.mf-you-hero__avatar-edit:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-you-hero__handle {
+    color: var(--mf-muted);
+    margin-top: -0.15rem;
+}
+
+/* Quick links — the former sidebar destinations for wallet, passport and
+ * leaderboard, now surfaced from the self profile instead. */
+.mf-you-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+}
+
+.mf-you-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.5rem;
+    border-radius: var(--mf-radius);
+    color: var(--mf-text);
+    text-decoration: none;
+    transition: background 120ms var(--mf-ease);
+}
+
+.mf-you-link:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-you-link__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    color: var(--mf-pitch);
+}
+
+.mf-you-link__icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-you-link__copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-you-link__label {
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+}
+
+.mf-you-link__hint {
+    color: var(--mf-muted);
+}
+
+.mf-you-link__chevron {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+}
+
+.mf-you-link__chevron svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Settings dialog — a centred sheet variant of the shared .mf-sheet chrome. */
+.mf-sheet--center {
+    align-items: center;
+}
+
+.mf-sheet--center .mf-sheet__panel {
+    width: min(100%, 28rem);
+    border-radius: var(--mf-radius-lg);
+    max-height: min(88dvh, 40rem);
+}
+
+.mf-you-settings__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.mf-you-settings__avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.mf-you-settings__avatar-preview {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.mf-you-settings__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mf-you-settings__input {
+    width: 100%;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    padding: 0.6rem 0.75rem;
+    outline: none;
+    transition: border-color 120ms var(--mf-ease), box-shadow 120ms var(--mf-ease);
+}
+
+.mf-you-settings__input:focus {
+    border-color: var(--mf-amber);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-amber) 55%, transparent);
+}
+
+.mf-you-settings__textarea {
+    resize: vertical;
+    min-height: 4.5rem;
+}
+
+.mf-you-settings__handle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-elevated);
+    padding: 0 0.75rem;
+}
+
+.mf-you-settings__handle-wrap .mf-you-settings__input {
+    border: 0;
+    background: transparent;
+    padding-inline-start: 0;
+}
+
+.mf-you-settings__handle-wrap:focus-within {
+    border-color: var(--mf-amber);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mf-amber) 55%, transparent);
+}
+
+.mf-you-settings__count {
+    align-self: flex-end;
+    color: var(--mf-muted);
+}
+
+.mf-you-settings__error {
+    color: var(--mf-bad);
+    font-size: var(--mf-text-meta);
+}
+
+.mf-you-settings__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+}
+
+.mf-profile-rail:has(.mf-you-links) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}

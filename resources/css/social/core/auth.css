@@ -1,0 +1,466 @@
+/*
+ * Auth + onboarding — .mf-auth-*, .mf-onboard-panel.
+ *
+ * Extracted verbatim from resources/css/social.css during the Vibrants
+ * decomposition. Cascade position is load-bearing: this file is imported from
+ * social.css in its original order, ahead of the per-feature sheets in
+ * resources/css/social/ that intentionally refine these rules.
+ */
+
+
+/* Onboarding full-bleed (no tabbar) */
+.mf-onboard {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 36rem;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: calc(2rem + var(--mf-safe-top)) 1.25rem calc(2rem + var(--mf-safe-bottom));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    animation: mf-rise 320ms var(--mf-ease) both;
+}
+
+.mf-club-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem 0.9rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 150ms var(--mf-ease), background 150ms var(--mf-ease), transform 150ms var(--mf-ease);
+}
+
+.mf-club-opt:hover {
+    border-color: color-mix(in srgb, var(--mf-muted) 60%, var(--mf-line));
+}
+
+.mf-club-opt.is-selected {
+    border-color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-panel));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mf-pitch) 35%, transparent);
+}
+
+.mf-club-opt:active {
+    transform: scale(0.99);
+}
+
+/* -- Auth (login / register / password reset / verify email) -- */
+
+/*
+ * Auth is one of the Vibrants "dark islands": a flat Deep Navy field with the
+ * 5% spectrum wash across it and a Sky Wash bloom off the top edge. The stadium
+ * photograph and the fractal-noise overlay are both gone — photography is
+ * content in this system, never chrome, and there is no texture layer.
+ */
+.mf-auth-stage {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    overflow: hidden;
+    background: var(--mf-pitch);
+}
+
+.mf-auth-stage::before {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(
+            ellipse 70% 50% at 50% 0%,
+            color-mix(in srgb, var(--mf-amber) 22%, transparent),
+            transparent 62%
+        ),
+        var(--mf-spectrum);
+}
+
+/* Auth card: Midnight Navy on the Deep Navy field, one navy-tinted hairline and
+ * the 12px hero-panel corner. No blur, no drop shadow — nothing floats. */
+.mf-onboard-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 26rem;
+    padding: 2.25rem 1.75rem 2rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid color-mix(in srgb, var(--mf-ink-invert) 14%, transparent);
+    background: var(--mf-rival);
+    animation: mf-rise 380ms var(--mf-ease) both;
+}
+
+@media (min-width: 480px) {
+    .mf-onboard-panel {
+        padding: 2.75rem 2.25rem 2.25rem;
+    }
+}
+
+/* Leading icon inside a text input (email / lock glyphs). */
+.mf-auth-input-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    display: flex;
+    color: var(--mf-muted);
+    pointer-events: none;
+}
+
+.mf-auth-input-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    fill: none;
+}
+
+.mf-auth-input.mf-auth-input--icon {
+    padding-left: 44px;
+}
+
+/* Centered logo + title block (login / register only — other auth pages
+   keep the left-aligned .mf-auth-brand on its own). */
+.mf-auth-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.mf-auth-header .mf-auth-brand {
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.mf-auth-header .mf-auth-title {
+    margin: 0;
+}
+
+.mf-auth-title {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-display);
+    font-size: 1.75rem;
+    color: var(--mf-text);
+}
+
+.mf-auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.75rem;
+    color: var(--mf-text);
+    text-decoration: none;
+}
+
+.mf-auth-brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--mf-radius);
+    object-fit: cover;
+}
+
+.mf-auth-brand span {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mf-auth-lead {
+    margin: 0.6rem 0 0;
+    max-width: 30rem;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-ui);
+    line-height: var(--mf-leading-body);
+}
+
+.mf-auth-banner {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 8%, transparent);
+    color: var(--mf-text);
+    font-size: var(--mf-text-ui);
+    line-height: var(--mf-leading-body);
+}
+
+.mf-auth-banner--error {
+    border-color: color-mix(in srgb, var(--mf-rival) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-rival) 10%, transparent);
+}
+
+.mf-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
+
+.mf-auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-auth-label {
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-auth-input-wrap {
+    position: relative;
+}
+
+.mf-auth-input {
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--mf-line) 90%, transparent);
+    border-radius: var(--mf-radius-panel);
+    background: var(--mf-recess);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    transition:
+        border-color 160ms var(--mf-ease),
+        box-shadow 160ms var(--mf-ease),
+        background 160ms var(--mf-ease);
+}
+
+.mf-auth-input::placeholder {
+    color: color-mix(in srgb, var(--mf-muted) 80%, transparent);
+}
+
+.mf-auth-input:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mf-pitch) 18%, transparent);
+    background: var(--mf-recess);
+}
+
+.mf-auth-input.has-error {
+    border-color: color-mix(in srgb, var(--mf-rival) 55%, var(--mf-line));
+}
+
+.mf-auth-input.mf-auth-input--password {
+    padding-right: 3.25rem;
+}
+
+.mf-auth-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+}
+
+.mf-auth-toggle:hover {
+    color: var(--mf-text);
+}
+
+.mf-auth-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-ui);
+}
+
+.mf-auth-checkbox input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--mf-pitch);
+}
+
+.mf-auth-league-group + .mf-auth-league-group {
+    margin-top: 1rem;
+}
+
+.mf-auth-league-label {
+    margin: 0 0 0.5rem;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-auth-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 1.1rem;
+    text-align: center;
+}
+
+.mf-auth-submit {
+    width: 100%;
+    transition:
+        transform 140ms var(--mf-ease),
+        opacity 140ms var(--mf-ease);
+}
+
+.mf-auth-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.mf-auth-link {
+    color: var(--mf-pitch);
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.mf-auth-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.mf-auth-foot {
+    margin-top: 1.75rem;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-ui);
+}
+
+/* Multi-step wizard (register / connect accounts) */
+.mf-auth-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.mf-auth-stepper-item-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.mf-auth-stepper-item-wrap:last-child {
+    flex: 0 0 auto;
+}
+
+.mf-auth-stepper-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--mf-muted);
+}
+
+.mf-auth-stepper-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 700;
+    color: var(--mf-muted);
+    transition: border-color 150ms var(--mf-ease), background 150ms var(--mf-ease), color 150ms var(--mf-ease);
+}
+
+.mf-auth-stepper-item.active .mf-auth-stepper-num,
+.mf-auth-stepper-item.done .mf-auth-stepper-num {
+    border-color: var(--mf-pitch);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+}
+
+.mf-auth-stepper-item.active .mf-auth-stepper-label {
+    color: var(--mf-text);
+}
+
+.mf-auth-stepper-label {
+    display: none;
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+}
+
+@media (min-width: 480px) {
+    .mf-auth-stepper-label {
+        display: inline;
+    }
+}
+
+.mf-auth-stepper-line {
+    flex: 1;
+    height: 1px;
+    background: var(--mf-line);
+}
+
+.mf-auth-stepper-line.done {
+    background: var(--mf-pitch);
+}
+
+/* Fan passport â€” stadium accreditation ID (fixed height, no scroll) */
+.mf-passport-stage {
+    padding: 0.75rem 0 0.25rem;
+}
+
+.mf-passport-deck {
+    perspective: 1600px;
+    padding: 0.65rem 1rem 0;
+}
+
+.mf-passport-card {
+    /* Slightly taller to fit 5.5rem square photo without scroll */
+    --mf-passport-h: clamp(16rem, 50vw, 17.75rem);
+    --mf-pass-photo: 5.5rem;
+    position: relative;
+    width: 100%;
+    height: var(--mf-passport-h);
+    max-width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    transform: translateZ(0);
+    overflow: hidden;
+}
+
+.mf-passport-card:focus-visible {
+    outline: 2px solid var(--mf-pitch);
+    outline-offset: 3px;
+    border-radius: var(--mf-radius-panel);
+}

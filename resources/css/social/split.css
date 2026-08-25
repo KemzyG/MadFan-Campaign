@@ -100,6 +100,7 @@
 }
 
 .mf-split__detail-title {
+    font-family: var(--mf-font-display);
     font-size: var(--mf-text-title);
     letter-spacing: var(--mf-tracking-display);
     color: var(--mf-text);
@@ -125,7 +126,7 @@
     z-index: 55;
     border: 0;
     padding: 0;
-    background: color-mix(in srgb, var(--mf-void) 70%, transparent);
+    background: var(--mf-scrim);
     backdrop-filter: blur(2px);
     opacity: 0;
     visibility: hidden;
@@ -148,12 +149,13 @@
 /*
  * A framed panel surface used inside either pane (list wrapper, detail card,
  * rail section). Kept generic so pages compose it with their own inner markup.
+ * This is the Vibrants Product Card recipe: Snow surface, one Silver Mist
+ * hairline, 8px, no shadow.
  */
 .mf-panel-card {
     background: var(--mf-panel);
     border: 1px solid var(--mf-line);
-    border-radius: calc(var(--mf-radius) + 0.25rem);
-    box-shadow: var(--mf-sheen), var(--mf-shadow-1);
+    border-radius: var(--mf-radius);
 }
 
 .mf-panel-card__head {
@@ -161,7 +163,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.7rem 0.9rem;
+    padding: 0.75rem var(--mf-card-pad);
     border-bottom: 1px solid var(--mf-line);
 }
 
@@ -250,7 +252,7 @@
     justify-content: center;
     flex: none;
     overflow: hidden;
-    border-radius: 0.4rem;
+    border-radius: var(--mf-radius);
     background: var(--mf-elevated);
     border: 1px solid var(--mf-line);
 }
@@ -268,7 +270,6 @@
 .mf-crest--lg {
     height: 3.1rem;
     width: 3.1rem;
-    border-radius: 0.55rem;
 }
 
 .mf-crest__img {
@@ -278,14 +279,15 @@
 }
 
 .mf-crest__mark {
-    font-size: 0.62rem;
-    letter-spacing: 0.02em;
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
     color: var(--mf-pitch-dim);
     text-transform: uppercase;
 }
 
 .mf-crest--lg .mf-crest__mark {
-    font-size: 0.95rem;
+    font-size: var(--mf-text-ui);
 }
 
 /* Full-width button for detail-pane CTAs. */
