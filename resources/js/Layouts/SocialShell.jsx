@@ -98,19 +98,6 @@ function IconChat({ active }) {
     );
 }
 
-function IconCompose() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.85"
-                d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
-            />
-        </svg>
-    );
-}
-
 function IconMenu() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -133,28 +120,15 @@ function IconCampaign() {
     );
 }
 
-function IconFixtures({ active }) {
+function IconSport({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="12" r="8.2" strokeWidth={active ? 2.25 : 1.75} />
             <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={active ? 2.25 : 1.75}
-                d="M5 5.5h14v13H5z"
-            />
-            <path strokeLinecap="round" strokeWidth={active ? 2 : 1.6} d="M5 9.5h14M9.5 5.5v13" />
-        </svg>
-    );
-}
-
-function IconStandings({ active }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={active ? 2.25 : 1.75}
-                d="M4 19h16M7 16V9m5 7V5m5 11v-4"
+                strokeWidth={active ? 1.9 : 1.5}
+                d="M12 8.6 15 11l-1.15 3.55h-3.7L9 11l3-2.4ZM12 3.8v2.3M12 20.2v-2.3M4.8 8.8l2.2.9M17 14.3l2.2.9M4.8 15.2l2.2-.9M17 9.7l2.2-.9"
             />
         </svg>
     );
@@ -358,7 +332,7 @@ function HeaderMenuItem({ href, label, icon: Icon, active, onClick, method, as, 
     );
 }
 
-function SocialHeaderNavMenu({ tabs, onCompose }) {
+function SocialHeaderNavMenu({ tabs }) {
     const menuId = useId();
     const [open, setOpen] = useState(false);
     const triggerRef = useRef(null);
@@ -400,15 +374,6 @@ function SocialHeaderNavMenu({ tabs, onCompose }) {
                         />
                     ))}
                     <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
-                    <HeaderMenuItem
-                        label="Compose"
-                        icon={IconCompose}
-                        onClick={() => {
-                            close();
-                            onCompose();
-                        }}
-                    />
-                    <HeaderMenuItem href="/campaign" label="Campaign" icon={IconCampaign} onClick={close} />
                     <HeaderMenuItem
                         href="/logout"
                         method="post"
@@ -638,20 +603,19 @@ export default function SocialShell({
     ];
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
-    // Ticket purchase/wallet is reached from a fixture's own match detail now,
-    // not as a standalone destination — Fixtures is the entry point.
+    // Fixtures and the League table are sport-specific pages, so both now
+    // live under this one Sport hub instead of two standalone nav entries —
+    // ticket purchase/wallet is reached from a fixture's own match detail.
     const secondaryTabs = [
         {
-            href: '/social/fixtures',
-            label: 'Fixtures',
-            icon: IconFixtures,
-            active: pathMatches(current, '/social/fixtures') || pathMatches(current, '/social/tickets'),
-        },
-        {
-            href: '/social/clubs',
-            label: 'Table',
-            icon: IconStandings,
-            active: pathMatches(current, '/social/clubs'),
+            href: '/social/sport',
+            label: 'Sport',
+            icon: IconSport,
+            active:
+                pathMatches(current, '/social/sport') ||
+                pathMatches(current, '/social/fixtures') ||
+                pathMatches(current, '/social/clubs') ||
+                pathMatches(current, '/social/tickets'),
         },
         {
             href: '/social/shop',
@@ -726,19 +690,6 @@ export default function SocialShell({
                                         />
                                     ))}
                                 </nav>
-
-                                <button
-                                    type="button"
-                                    className="mf-sidebar__post"
-                                    onClick={openCompose}
-                                    aria-label="Post"
-                                    title="Post"
-                                >
-                                    <span className="mf-sidebar__post-icon" aria-hidden>
-                                        <IconCompose />
-                                    </span>
-                                    <span className="mf-sidebar__post-label">Post</span>
-                                </button>
                             </div>
 
                             {user ? (
@@ -779,7 +730,7 @@ export default function SocialShell({
                         {(title || backHref || showTabs) && (
                             <header className={`mf-header ${fillViewport ? 'mf-header--compact' : ''}`}>
                                 {showTabs ? (
-                                    <SocialHeaderNavMenu tabs={tabs} onCompose={openCompose} />
+                                    <SocialHeaderNavMenu tabs={tabs} />
                                 ) : null}
 
                                 {backHref ? (

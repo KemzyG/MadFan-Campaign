@@ -57,10 +57,10 @@
 /* -- Auth (login / register / password reset / verify email) -- */
 
 /*
- * Auth is one of the Vibrants "dark islands": a flat Deep Navy field with the
- * 5% spectrum wash across it and a Sky Wash bloom off the top edge. The stadium
- * photograph and the fractal-noise overlay are both gone — photography is
- * content in this system, never chrome, and there is no texture layer.
+ * Auth now reads as the rest of Social: the light Vibrants canvas, with the
+ * campaign's own stadium photograph (the same --mf-stadium-image token
+ * fixtures/shop use) as the page backdrop, fading into the canvas via
+ * --mf-stadium-scrim so it never fights the card for legibility.
  */
 .mf-auth-stage {
     position: relative;
@@ -71,7 +71,7 @@
     justify-content: center;
     padding: 2rem 1.25rem;
     overflow: hidden;
-    background: var(--mf-pitch);
+    background: var(--mf-canvas);
 }
 
 .mf-auth-stage::before {
@@ -81,16 +81,13 @@
     inset: 0;
     z-index: 0;
     background:
-        radial-gradient(
-            ellipse 70% 50% at 50% 0%,
-            color-mix(in srgb, var(--mf-amber) 22%, transparent),
-            transparent 62%
-        ),
-        var(--mf-spectrum);
+        var(--mf-stadium-scrim),
+        var(--mf-stadium-image) var(--mf-stadium-position) / cover no-repeat;
 }
 
-/* Auth card: Midnight Navy on the Deep Navy field, one navy-tinted hairline and
- * the 12px hero-panel corner. No blur, no drop shadow — nothing floats. */
+/* Auth card: a frosted Snow panel over the photo, the same glass idiom the
+ * toast stack and chat rail use elsewhere (--mf-glass), one Silver Mist
+ * hairline and the 12px hero-panel corner — no drop shadow, nothing floats. */
 .mf-onboard-panel {
     position: relative;
     z-index: 1;
@@ -98,8 +95,10 @@
     max-width: 26rem;
     padding: 2.25rem 1.75rem 2rem;
     border-radius: var(--mf-radius-panel);
-    border: 1px solid color-mix(in srgb, var(--mf-ink-invert) 14%, transparent);
-    background: var(--mf-rival);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 94%, transparent);
+    backdrop-filter: var(--mf-glass) saturate(1.1);
+    -webkit-backdrop-filter: var(--mf-glass) saturate(1.1);
     animation: mf-rise 380ms var(--mf-ease) both;
 }
 
@@ -383,33 +382,42 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.6rem;
-    height: 1.6rem;
+    width: 1.75rem;
+    height: 1.75rem;
     flex-shrink: 0;
     border-radius: var(--mf-radius-full);
-    border: 1px solid var(--mf-line);
+    border: 1.5px solid var(--mf-line);
     font-family: var(--mf-font-ui);
     font-size: var(--mf-text-meta);
     font-weight: 700;
     color: var(--mf-muted);
-    transition: border-color 150ms var(--mf-ease), background 150ms var(--mf-ease), color 150ms var(--mf-ease);
+    transition: border-color 150ms var(--mf-ease), background 150ms var(--mf-ease), color 150ms var(--mf-ease),
+        transform 150ms var(--mf-ease);
 }
 
-.mf-auth-stepper-item.active .mf-auth-stepper-num,
 .mf-auth-stepper-item.done .mf-auth-stepper-num {
     border-color: var(--mf-pitch);
     background: var(--mf-pitch);
     color: var(--mf-on-fill);
 }
 
+.mf-auth-stepper-item.active .mf-auth-stepper-num {
+    border-color: var(--mf-pitch);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+    transform: scale(1.12);
+}
+
 .mf-auth-stepper-item.active .mf-auth-stepper-label {
     color: var(--mf-text);
+    font-weight: 700;
 }
 
 .mf-auth-stepper-label {
     display: none;
     font-size: var(--mf-text-meta);
     font-weight: 600;
+    transition: color 150ms var(--mf-ease), font-weight 150ms var(--mf-ease);
 }
 
 @media (min-width: 480px) {
@@ -420,8 +428,9 @@
 
 .mf-auth-stepper-line {
     flex: 1;
-    height: 1px;
+    height: 1.5px;
     background: var(--mf-line);
+    transition: background-color 200ms var(--mf-ease);
 }
 
 .mf-auth-stepper-line.done {

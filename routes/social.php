@@ -14,6 +14,7 @@ use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
 use App\Http\Controllers\Inertia\Social\SocialEventsController;
 use App\Http\Controllers\Inertia\Social\SocialFeedController;
 use App\Http\Controllers\Inertia\Social\SocialFixtureController;
+use App\Http\Controllers\Inertia\Social\SocialSportController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
 use App\Http\Controllers\Inertia\Social\SocialGroupChatController;
 use App\Http\Controllers\Inertia\Social\SocialLeaderboardController;
@@ -114,6 +115,11 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
             $pages->name('social.');
         }
         $pages->group(function () use ($pathPrefix) {
+            Route::get('/onboarding/sport', [SocialOnboardingController::class, 'sport'])->name('onboarding.sport');
+            Route::post('/onboarding/sport', [SocialOnboardingController::class, 'storeSport'])
+                ->middleware('throttle:12,1')
+                ->name('onboarding.sport.store');
+
             Route::get('/onboarding/club', [SocialOnboardingController::class, 'create'])->name('onboarding.club');
             Route::post('/onboarding/club', [SocialOnboardingController::class, 'store'])
                 ->middleware('throttle:12,1')
@@ -222,6 +228,7 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:120,1')
                     ->name('videos.view');
 
+                Route::get('/sport', SocialSportController::class)->name('sport');
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
                 Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');

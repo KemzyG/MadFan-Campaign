@@ -10,6 +10,7 @@ use App\Http\Resources\LeaderboardEntryResource;
 use App\Models\Club;
 use App\Models\League;
 use App\Models\Season;
+use App\Models\Sport;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Waitlist;
@@ -118,6 +119,24 @@ class FanPageDataService
     }
 
     /**
+     * @return list<array{id: int, name: string, slug: string, is_active: bool}>
+     */
+    public function sports(): array
+    {
+        return Sport::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'is_active'])
+            ->map(fn (Sport $sport): array => [
+                'id' => $sport->id,
+                'name' => $sport->name,
+                'slug' => $sport->slug,
+                'is_active' => $sport->is_active,
+            ])
+            ->all();
+    }
+
+    /**
      * @return list<array{
      *     id: int,
      *     name: string,
@@ -126,10 +145,14 @@ class FanPageDataService
      *     league: array{id: int, name: string, short: string}
      * }>
      */
-    public function clubs(): array
+    public function clubs(?int $sportId = null): array
     {
         return Club::query()
             ->with('league:id,name,short')
+            ->when($sportId, fn ($query) => $query->whereHas(
+                'league',
+                fn ($leagueQuery) => $leagueQuery->where('sport_id', $sportId),
+            ))
             ->orderBy(
                 League::query()
                     ->select('name')

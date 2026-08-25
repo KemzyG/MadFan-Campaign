@@ -31,6 +31,18 @@ function formatDuration(totalSeconds) {
     return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/**
+ * React doesn't reliably apply the `muted` JSX attribute to the underlying
+ * DOM property before the browser evaluates `autoPlay` — a callback ref sets
+ * it the instant the node mounts, ahead of that check, so autoplay never
+ * starts with sound.
+ */
+function muteOnMount(node) {
+    if (node) {
+        node.muted = true;
+    }
+}
+
 function IconPlay() {
     return (
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -276,6 +288,7 @@ function CreateReelSheet({ open, onClose, limits }) {
                                 {previewUrl ? (
                                     <>
                                         <video
+                                            ref={muteOnMount}
                                             className="mf-reel-create__preview"
                                             src={previewUrl}
                                             muted
@@ -386,7 +399,7 @@ function CreateReelSheet({ open, onClose, limits }) {
 
 function ReelSlide({ reel, active, eagerLoad, onView }) {
     const videoRef = useRef(null);
-    const [muted, setMuted] = useState(true);
+    const [muted, setMuted] = useState(false);
     const [liked, setLiked] = useState(Boolean(reel.liked));
     const [likesCount, setLikesCount] = useState(reel.likes_count ?? 0);
     const [playing, setPlaying] = useState(false);
@@ -441,7 +454,18 @@ function ReelSlide({ reel, active, eagerLoad, onView }) {
         if (playPromise !== undefined) {
             playPromise
                 .then(() => setPlaying(true))
-                .catch(() => setPlaying(false));
+                .catch(() => {
+                    // Autoplay-with-sound is blocked in some browsers without a
+                    // prior user gesture on the page. Fall back to muted so the
+                    // short still plays instead of sitting frozen on its poster.
+                    if (!muted) {
+                        video.muted = true;
+                        setMuted(true);
+                        video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+                        return;
+                    }
+                    setPlaying(false);
+                });
         }
 
         if (!viewedRef.current) {

@@ -4,6 +4,7 @@ import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
 import ToastStack from '../../../Components/Fan/ToastStack';
 import { groupClubsByLeague } from '../../../lib/groupClubsByLeague';
 import { useToasts } from '../../../lib/useToasts';
+import OnboardStepper from './OnboardStepper';
 
 export default function PickClub({ clubs = [], current_club_id: currentClubId }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -37,6 +38,8 @@ export default function PickClub({ clubs = [], current_club_id: currentClubId })
                     </div>
                     <h1 className="mf-auth-title">Choose your club</h1>
                 </div>
+
+                <OnboardStepper currentStep={2} />
 
                 <form onSubmit={submit}>
                     <div className="max-h-[min(52vh,28rem)] overflow-y-auto pe-1 sm:max-h-none">

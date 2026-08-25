@@ -5,6 +5,7 @@ import '../css/social/leaderboard.css';
 import '../css/social/wallet.css';
 import '../css/social/clubs.css';
 import '../css/social/fixtures.css';
+import '../css/social/sport.css';
 import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';

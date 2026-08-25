@@ -111,6 +111,17 @@
     border-inline: 1px solid transparent;
 }
 
+/*
+ * Shorts is a fullscreen, edge-to-edge video surface — unlike every other
+ * page, capping it to the feed/app-width column at any breakpoint leaves the
+ * canvas visible as a gap around the video. Override at every width rather
+ * than chasing each breakpoint's own max-width (mobile, md, lg+).
+ */
+.mf-app:has(.mf-reels-page) {
+    max-width: none;
+    border-inline: 0;
+}
+
 @media (min-width: 480px) and (max-width: 767.98px) {
     .mf-app {
         /* The hairline is the whole separation; the old triple drop shadow was
@@ -254,50 +265,6 @@
 .mf-sidebar__label {
     display: none;
     padding-right: 0.35rem;
-}
-
-/* The rail's compose button — Primary Filled in circular form. */
-.mf-sidebar__post {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 3.15rem;
-    height: 3.15rem;
-    margin: 0.85rem 0 0;
-    padding: 0;
-    border: 0;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-pitch);
-    color: var(--mf-on-fill);
-    font-family: var(--mf-font-display);
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: transform 160ms var(--mf-ease), background 160ms var(--mf-ease);
-}
-
-.mf-sidebar__post:hover {
-    transform: translateY(-1px);
-    background: var(--mf-rival);
-}
-
-.mf-sidebar__post:active {
-    transform: scale(0.97);
-}
-
-.mf-sidebar__post-icon {
-    display: inline-flex;
-}
-
-.mf-sidebar__post-icon svg {
-    width: 1.35rem;
-    height: 1.35rem;
-}
-
-.mf-sidebar__post-label {
-    display: none;
 }
 
 .mf-sidebar__user {
@@ -595,22 +562,6 @@
     }
 
     .mf-sidebar__label {
-        display: inline;
-    }
-
-    .mf-sidebar__post {
-        width: 100%;
-        height: auto;
-        min-height: 3.15rem;
-        padding: 0.85rem 1.1rem;
-        border-radius: var(--mf-radius-full);
-    }
-
-    .mf-sidebar__post-icon {
-        display: none;
-    }
-
-    .mf-sidebar__post-label {
         display: inline;
     }
 
