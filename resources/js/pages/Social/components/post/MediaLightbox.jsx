@@ -9,6 +9,18 @@ function isVideoItem(item) {
 }
 
 /**
+ * React doesn't reliably apply the `muted` JSX attribute to the underlying
+ * DOM property before the browser evaluates `autoPlay` — a callback ref sets
+ * it the instant the node mounts, ahead of that check, so autoplay never
+ * starts with sound.
+ */
+function muteOnMount(node) {
+    if (node) {
+        node.muted = true;
+    }
+}
+
+/**
  * Fullscreen media viewer. Shows one item at a time at natural aspect ratio,
  * with prev/next controls, keyboard navigation and backdrop/Escape close.
  *
@@ -81,6 +93,7 @@ export default function MediaLightbox({ media, index, onClose, onIndexChange }) 
                 {video ? (
                     <video
                         key={item.id ?? current}
+                        ref={muteOnMount}
                         className="mf-lightbox__video"
                         src={item.url}
                         controls
