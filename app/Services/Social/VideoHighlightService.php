@@ -10,6 +10,12 @@ use Illuminate\Support\Collection;
 
 class VideoHighlightService
 {
+    public const MAX_UPLOAD_KB = 51200;
+
+    public const MAX_DURATION_SECONDS = 90;
+
+    public const MAX_CAPTION_LENGTH = 500;
+
     /**
      * @return LengthAwarePaginator<int, VideoHighlight>
      */

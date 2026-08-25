@@ -124,6 +124,17 @@
     animation: mf-fade-in 200ms var(--mf-ease);
 }
 
+.mf-lightbox__video {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(100dvh - 6rem);
+    border-radius: 0.5rem;
+    background: #000;
+    cursor: default;
+}
+
 .mf-lightbox__close,
 .mf-lightbox__nav {
     position: absolute;

@@ -75,15 +75,23 @@ class CreateSocialPost
             ]);
 
             foreach ($images as $index => $file) {
-                $path = CloudinaryImageStorage::store($file, 'social/posts/'.$post->id);
-                $size = @getimagesize($file->getRealPath()) ?: [null, null];
+                $path = CloudinaryImageStorage::storeMedia($file, 'social/posts/'.$post->id);
+                $type = $this->mediaTypeFor($file);
+                $width = null;
+                $height = null;
+
+                if ($type !== MediaType::Video) {
+                    $size = @getimagesize($file->getRealPath()) ?: [null, null];
+                    $width = $size[0] ?? null;
+                    $height = $size[1] ?? null;
+                }
 
                 PostMedia::query()->create([
                     'post_id' => $post->id,
-                    'type' => MediaType::Image,
+                    'type' => $type,
                     'path' => $path,
-                    'width' => $size[0] ?? null,
-                    'height' => $size[1] ?? null,
+                    'width' => $width,
+                    'height' => $height,
                     'sort_order' => $index,
                     'created_at' => now(),
                 ]);
@@ -112,5 +120,20 @@ class CreateSocialPost
         }
 
         return $post;
+    }
+
+    private function mediaTypeFor(UploadedFile $file): MediaType
+    {
+        $mime = strtolower((string) $file->getMimeType());
+
+        if (str_starts_with($mime, 'video/')) {
+            return MediaType::Video;
+        }
+
+        if ($mime === 'image/gif' || strtolower($file->getClientOriginalExtension()) === 'gif') {
+            return MediaType::Gif;
+        }
+
+        return MediaType::Image;
     }
 }

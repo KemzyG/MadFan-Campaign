@@ -1,0 +1,288 @@
+/*
+ * Social reels — fullscreen snap feed, create sheet polish, center play/pause.
+ * Loaded after the base social stylesheet via social.jsx.
+ */
+
+.mf-reels-page {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-height: calc(100dvh - 5.5rem);
+    padding-bottom: 0.25rem;
+}
+
+.mf-reels-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0.15rem;
+}
+
+.mf-reels-toolbar__create {
+    min-height: 2.15rem;
+    padding-inline: 1rem;
+}
+
+.mf-reels-flash {
+    margin: 0;
+    color: color-mix(in srgb, var(--mf-pitch) 80%, var(--mf-muted));
+}
+
+.mf-reels-scroller {
+    flex: 1;
+    min-height: 0;
+    height: calc(100dvh - 7.5rem);
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    border-radius: 0;
+    border: 0;
+    background: #000;
+    margin-inline: -0.85rem;
+    width: calc(100% + 1.7rem);
+}
+
+.mf-reel-slide-wrap {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: 100%;
+    min-height: calc(100dvh - 7.5rem);
+}
+
+.mf-reel-slide {
+    position: relative;
+    height: 100%;
+    min-height: calc(100dvh - 7.5rem);
+    overflow: hidden;
+    background: #000;
+    touch-action: pan-y;
+}
+
+.mf-reel-slide__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+}
+
+.mf-reel-slide__loader {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+        linear-gradient(110deg, transparent 30%, color-mix(in srgb, #fff 8%, transparent) 50%, transparent 70%),
+        color-mix(in srgb, #000 35%, transparent);
+    background-size: 200% 100%;
+    animation: mf-reel-shimmer 1.1s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes mf-reel-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.mf-reel-slide__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, #000 18%, transparent) 0%,
+        color-mix(in srgb, #000 8%, transparent) 42%,
+        color-mix(in srgb, #000 78%, transparent) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+}
+
+.mf-reel-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    transform: translate(-50%, -50%) scale(0.92);
+    background: color-mix(in srgb, #000 48%, transparent);
+    color: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    backdrop-filter: blur(6px);
+}
+
+.mf-reel-play.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.mf-reel-play__icon {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+}
+
+.mf-reel-play__icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.mf-reel-slide__meta {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 0.95rem calc(1.15rem + env(safe-area-inset-bottom, 0px));
+    z-index: 5;
+}
+
+.mf-reel-create__picker {
+    display: block;
+    position: relative;
+    aspect-ratio: 9 / 14;
+    max-height: 42dvh;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px dashed color-mix(in srgb, var(--mf-line) 90%, transparent);
+    background: color-mix(in srgb, var(--mf-void) 70%, transparent);
+    cursor: pointer;
+}
+
+.mf-reel-create__preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.mf-reel-create__placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    text-align: center;
+    color: var(--mf-muted);
+    font-size: 0.92rem;
+}
+
+.mf-autoplay-video {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--mf-void) 80%, #111);
+}
+
+.mf-autoplay-video__skel {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        110deg,
+        color-mix(in srgb, var(--mf-elevated) 80%, transparent) 25%,
+        color-mix(in srgb, var(--mf-line) 55%, transparent) 50%,
+        color-mix(in srgb, var(--mf-elevated) 80%, transparent) 75%
+    );
+    background-size: 200% 100%;
+    animation: mf-reel-shimmer 1.2s linear infinite;
+}
+
+.mf-autoplay-video__el {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-media__cell--video {
+    position: relative;
+}
+
+.mf-media__video {
+    position: absolute;
+    inset: 0;
+}
+
+.mf-media__video .mf-autoplay-video__el {
+    pointer-events: none;
+}
+
+.mf-media__video-badge {
+    position: absolute;
+    left: 0.45rem;
+    bottom: 0.45rem;
+    z-index: 2;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #000 55%, transparent);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.mf-lightbox__video {
+    max-width: min(100%, 920px);
+    max-height: min(86dvh, 920px);
+    width: auto;
+    height: auto;
+    border-radius: 0.5rem;
+    background: #000;
+}
+
+.mf-composer-previews__item video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (min-width: 768px) {
+    .mf-reels-scroller {
+        height: min(82dvh, 860px);
+        margin-inline: 0;
+        width: 100%;
+        border-radius: 1rem;
+        border: 1px solid color-mix(in srgb, var(--mf-line) 80%, transparent);
+    }
+
+    .mf-reel-slide-wrap,
+    .mf-reel-slide {
+        min-height: min(82dvh, 860px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-reels-scroller {
+        scroll-behavior: auto;
+    }
+
+    .mf-reel-slide__loader,
+    .mf-autoplay-video__skel {
+        animation: none;
+    }
+
+    .mf-reel-play {
+        transition: none;
+    }
+}

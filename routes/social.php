@@ -209,6 +209,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->name('stage.livekit-token');
 
                 Route::get('/videos', [SocialVideoController::class, 'index'])->name('videos.index');
+                Route::post('/videos', [SocialVideoController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('videos.store');
                 Route::post('/videos/{videoHighlight}/like', [SocialVideoController::class, 'like'])
                     ->middleware('throttle:60,1')
                     ->name('videos.like');

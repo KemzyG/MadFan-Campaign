@@ -46,6 +46,7 @@ export default function FeedComposer({
             id: `${file.name}-${index}-${file.size}`,
             url: URL.createObjectURL(file),
             name: file.name,
+            isVideo: file.type?.startsWith('video/'),
         }));
 
         setPreviews(next);
@@ -196,7 +197,11 @@ export default function FeedComposer({
                         <div className="mf-composer-previews">
                             {previews.map((preview) => (
                                 <div key={preview.id} className="mf-composer-previews__item">
-                                    <img src={preview.url} alt="" />
+                                    {preview.isVideo ? (
+                                        <video src={preview.url} muted playsInline preload="metadata" />
+                                    ) : (
+                                        <img src={preview.url} alt="" />
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -228,7 +233,7 @@ export default function FeedComposer({
                                 <span>Media</span>
                                 <input
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
                                     multiple
                                     className="hidden"
                                     onChange={(event) => {

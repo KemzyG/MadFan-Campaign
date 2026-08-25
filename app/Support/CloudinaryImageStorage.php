@@ -15,7 +15,7 @@ class CloudinaryImageStorage
     /**
      * Test doubles for upload / destroy (null = use real Cloudinary SDK).
      *
-     * @var (callable(UploadedFile, string): array{secure_url: string, public_id: string})|null
+     * @var (callable(UploadedFile, string, string=): array{secure_url: string, public_id: string})|null
      */
     public static $uploadUsing = null;
 
@@ -97,11 +97,30 @@ class CloudinaryImageStorage
     }
 
     /**
-     * Store an image and return path + optional Cloudinary public_id.
+     * Store a video (mp4/webm) via Cloudinary video resource type, or the public disk.
+     */
+    public static function storeVideo(UploadedFile $file, string $directory): string
+    {
+        return self::storeWithMeta($file, $directory, 'video')['path'];
+    }
+
+    /**
+     * Store an image or video based on MIME type.
+     */
+    public static function storeMedia(UploadedFile $file, string $directory): string
+    {
+        $resourceType = self::resourceTypeFor($file);
+
+        return self::storeWithMeta($file, $directory, $resourceType)['path'];
+    }
+
+    /**
+     * Store media and return path + optional Cloudinary public_id.
      *
+     * @param  'image'|'video'|'auto'  $resourceType
      * @return array{path: string, public_id: ?string, remote: bool}
      */
-    public static function storeWithMeta(UploadedFile $file, string $directory): array
+    public static function storeWithMeta(UploadedFile $file, string $directory, string $resourceType = 'image'): array
     {
         if (! self::configured()) {
             return [
@@ -111,13 +130,23 @@ class CloudinaryImageStorage
             ];
         }
 
-        $result = self::upload($file, $directory);
+        $result = self::upload($file, $directory, $resourceType);
 
         return [
             'path' => $result['secure_url'],
             'public_id' => $result['public_id'],
             'remote' => true,
         ];
+    }
+
+    /**
+     * @return 'image'|'video'
+     */
+    public static function resourceTypeFor(UploadedFile $file): string
+    {
+        $mime = strtolower((string) $file->getMimeType());
+
+        return str_starts_with($mime, 'video/') ? 'video' : 'image';
     }
 
     public static function delete(?string $path): void
@@ -199,14 +228,18 @@ class CloudinaryImageStorage
             'cloudinary.default_image' => 'madfan/defaults/thumbnail',
         ]);
 
-        self::$uploadUsing = function (UploadedFile $file, string $directory): array {
+        self::$uploadUsing = function (UploadedFile $file, string $directory, string $resourceType = 'image'): array {
             $id = trim($directory, '/').'/'.Str::lower(Str::random(16));
             $publicId = 'madfan/'.$id;
             self::$fakePublicIds[] = $publicId;
+            $type = $resourceType === 'video' || self::resourceTypeFor($file) === 'video'
+                ? 'video'
+                : 'image';
+            $ext = $type === 'video' ? 'mp4' : 'jpg';
 
             return [
                 'public_id' => $publicId,
-                'secure_url' => 'https://res.cloudinary.com/test-cloud/image/upload/v1/'.$publicId.'.jpg',
+                'secure_url' => 'https://res.cloudinary.com/test-cloud/'.$type.'/upload/v1/'.$publicId.'.'.$ext,
             ];
         };
 
@@ -350,18 +383,19 @@ class CloudinaryImageStorage
     }
 
     /**
+     * @param  'image'|'video'|'auto'  $resourceType
      * @return array{secure_url: string, public_id: string}
      */
-    private static function upload(UploadedFile $file, string $directory): array
+    private static function upload(UploadedFile $file, string $directory, string $resourceType = 'image'): array
     {
         if (self::$uploadUsing !== null) {
-            return (self::$uploadUsing)($file, $directory);
+            return (self::$uploadUsing)($file, $directory, $resourceType);
         }
 
         $folder = self::folderFor($directory);
         $options = [
             'folder' => $folder,
-            'resource_type' => 'image',
+            'resource_type' => $resourceType,
             'overwrite' => false,
             'unique_filename' => true,
         ];

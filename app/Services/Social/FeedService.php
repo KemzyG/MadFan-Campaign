@@ -23,6 +23,10 @@ class FeedService
 
     public const MAX_IMAGES = 4;
 
+    public const MAX_IMAGE_KB = 5120;
+
+    public const MAX_VIDEO_KB = 30720;
+
     /**
      * Global feed: top-level posts from every club (not scoped to the viewer's club).
      *
@@ -354,6 +358,7 @@ class FeedService
             'media' => $post->relationLoaded('media')
                 ? $post->media->map(fn (PostMedia $media) => [
                     'id' => $media->id,
+                    'type' => $media->type->value,
                     'url' => $media->url,
                 ])->values()->all()
                 : [],

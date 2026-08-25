@@ -29,4 +29,14 @@ class PostMediaFactory extends Factory
             'created_at' => now(),
         ];
     }
+
+    public function video(): static
+    {
+        return $this->state(fn () => [
+            'type' => MediaType::Video,
+            'path' => 'https://res.cloudinary.com/demo/video/upload/v1/demo.mp4',
+            'width' => null,
+            'height' => null,
+        ]);
+    }
 }

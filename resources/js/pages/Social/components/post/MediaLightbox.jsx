@@ -4,6 +4,10 @@ import { onImageError, resolveDefaultImageUrl } from '../../../../lib/defaultIma
 import { usePage } from '@inertiajs/react';
 import { IconChevronLeft, IconChevronRight, IconClose } from './icons';
 
+function isVideoItem(item) {
+    return item?.type === 'video' || /\.(mp4|webm)(\?|$)/i.test(item?.url || '');
+}
+
 /**
  * Fullscreen media viewer. Shows one item at a time at natural aspect ratio,
  * with prev/next controls, keyboard navigation and backdrop/Escape close.
@@ -52,6 +56,7 @@ export default function MediaLightbox({ media, index, onClose, onIndexChange }) 
 
     const item = media[current];
     const hasMany = total > 1;
+    const video = isVideoItem(item);
 
     function go(delta, event) {
         event?.stopPropagation();
@@ -73,14 +78,28 @@ export default function MediaLightbox({ media, index, onClose, onIndexChange }) 
             ) : null}
 
             <figure className="mf-lightbox__stage" onClick={onClose}>
-                <img
-                    key={item.id ?? current}
-                    src={item.url}
-                    alt=""
-                    className="mf-lightbox__img"
-                    onClick={(event) => event.stopPropagation()}
-                    onError={(event) => onImageError(event, fallbackUrl)}
-                />
+                {video ? (
+                    <video
+                        key={item.id ?? current}
+                        className="mf-lightbox__video"
+                        src={item.url}
+                        controls
+                        autoPlay
+                        playsInline
+                        muted
+                        loop
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                ) : (
+                    <img
+                        key={item.id ?? current}
+                        src={item.url}
+                        alt=""
+                        className="mf-lightbox__img"
+                        onClick={(event) => event.stopPropagation()}
+                        onError={(event) => onImageError(event, fallbackUrl)}
+                    />
+                )}
             </figure>
 
             {hasMany ? (
