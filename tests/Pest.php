@@ -4,6 +4,7 @@ use App\Models\AdminOrganization;
 use App\Models\Club;
 use App\Models\ClubMembership;
 use App\Models\SocialAccount;
+use App\Models\Sport;
 use App\Models\User;
 use App\Services\Fan\FanPageDataService;
 use App\Services\PasetoService;
@@ -58,6 +59,7 @@ function socialReadyUser(?Club $club = null): User
     $club ??= Club::factory()->create(['name' => 'Terrace FC']);
     $user = createUser([
         'email_verified_at' => now(),
+        'favourite_sport_id' => ensureRegistrationSport()->id,
         'favourite_club_id' => $club->id,
         'club' => $club->name,
         'social_onboarded_at' => now(),
@@ -155,6 +157,12 @@ function ensureRegistrationClub(string $name = 'Liverpool FC'): Club
         ?? Club::factory()->create(['name' => $name]);
 }
 
+function ensureRegistrationSport(): Sport
+{
+    return Sport::query()->where('slug', 'football')->first()
+        ?? Sport::query()->create(['name' => 'Football', 'slug' => 'football', 'is_active' => true]);
+}
+
 /**
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
@@ -175,6 +183,8 @@ function fanRegisterPayload(array $overrides = []): array
         'email' => 'fan-'.uniqid().'@madfan.test',
         'password' => validTestPassword(),
         'password_confirmation' => validTestPassword(),
+        'sport_id' => $overrides['sport_id'] ?? ensureRegistrationSport()->id,
+        'username' => 'fan'.uniqid(),
         'club' => $clubName,
         'device_fingerprint' => deviceFingerprint('fp-'.uniqid('', true)),
         ...$overrides,

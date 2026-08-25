@@ -8,20 +8,25 @@ import { getDeviceFingerprint } from '../../../lib/deviceFingerprint';
 import { groupClubsByLeague } from '../../../lib/groupClubsByLeague';
 import { useToasts } from '../../../lib/useToasts';
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 const OTHER_CLUB = 'Other';
 const REGISTRATION_STEPS = [
     { id: 1, label: 'Your Details' },
-    { id: 2, label: 'Your Club' },
-    { id: 3, label: 'Your Profile' },
+    { id: 2, label: 'Your Sport' },
+    { id: 3, label: 'Your Club' },
+    { id: 4, label: 'Your Profile' },
 ];
 
 function stepForErrors(errors) {
     if (errors.username || errors.bio || errors.date_of_birth || errors.avatar || errors.registration || errors.device_fingerprint) {
-        return 3;
+        return 4;
     }
 
     if (errors.club) {
+        return 3;
+    }
+
+    if (errors.sport_id) {
         return 2;
     }
 
@@ -59,6 +64,7 @@ export default function FanRegister({
     email = '',
     referrer_fan_id = null,
     clubs = [],
+    sports = [],
     registration_blocked = false,
     registration_blocked_message = null,
 }) {
@@ -73,6 +79,7 @@ export default function FanRegister({
         email: email || '',
         password: '',
         password_confirmation: '',
+        sport_id: '',
         club: '',
         username: '',
         bio: '',
@@ -85,6 +92,17 @@ export default function FanRegister({
     useEffect(() => {
         setData('device_fingerprint', getDeviceFingerprint());
     }, [setData]);
+
+    // Only one sport exists today, so pre-select it — the step still shows
+    // (and still has to be explicitly continued past) so the UI is ready the
+    // moment a second sport exists, without making users click a foregone
+    // conclusion.
+    useEffect(() => {
+        if (sports.length === 1 && !data.sport_id) {
+            setData('sport_id', sports[0].id);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sports]);
 
     useEffect(() => {
         if (email && !data.email) {
@@ -151,6 +169,10 @@ export default function FanRegister({
         }
 
         if (step === 2) {
+            return data.sport_id !== '';
+        }
+
+        if (step === 3) {
             return data.club !== '';
         }
 
@@ -305,6 +327,40 @@ export default function FanRegister({
                         {step === 2 && (
                             <div>
                                 <p className="mf-text-section font-semibold text-[var(--mf-text)]">
+                                    Choose your sport
+                                </p>
+                                <p className="mf-text-meta mt-1 text-[var(--mf-muted)]">
+                                    More sports are coming — this is the one your club lives in today.
+                                </p>
+
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                    {sports.map((sport) => (
+                                        <button
+                                            key={sport.id}
+                                            type="button"
+                                            className={`mf-club-opt${data.sport_id === sport.id ? ' is-selected' : ''}`}
+                                            onClick={() => setData('sport_id', sport.id)}
+                                        >
+                                            <span className="mf-avatar h-10 w-10" aria-hidden>
+                                                ⚽
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
+                                                    {sport.name}
+                                                </span>
+                                                <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
+                                                    Available now
+                                                </span>
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div>
+                                <p className="mf-text-section font-semibold text-[var(--mf-text)]">
                                     Choose your club
                                 </p>
 
@@ -367,7 +423,7 @@ export default function FanRegister({
                             </div>
                         )}
 
-                        {step === 3 && (
+                        {step === 4 && (
                             <div className="mf-auth-form" style={{ marginTop: 0 }}>
                                 <div className="mf-auth-field">
                                     <label className="mf-auth-label">Avatar (optional)</label>

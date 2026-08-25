@@ -60,6 +60,7 @@ class FanRegisterController extends Controller
                 'email' => (string) $request->session()->get('waitlist_email', $request->input('email', '')),
                 'referrer_fan_id' => $this->referralService->resolveReferrerFanId(),
                 'clubs' => $this->fanPageData->clubs(),
+                'sports' => $this->fanPageData->sports(),
                 'registration_blocked' => true,
                 'registration_blocked_message' => 'This device already has a Mad Fan account. Sign in to finish connecting your accounts or continue.',
             ]);
@@ -69,6 +70,7 @@ class FanRegisterController extends Controller
             'email' => (string) $request->session()->get('waitlist_email', $request->input('email', '')),
             'referrer_fan_id' => $this->referralService->resolveReferrerFanId(),
             'clubs' => $this->fanPageData->clubs(),
+            'sports' => $this->fanPageData->sports(),
             'registration_blocked' => false,
             'registration_blocked_message' => null,
         ]);
@@ -102,6 +104,7 @@ class FanRegisterController extends Controller
             'handle' => null,
             'club' => $club?->name ?? $data['club'],
             'league' => $club?->league?->name,
+            'favourite_sport_id' => $data['sport_id'],
             'bio' => $data['bio'] ?? null,
             'date_of_birth' => $data['date_of_birth'] ?? null,
             'avatar_path' => $avatarPath,

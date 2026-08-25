@@ -40,6 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
     'league',
     'club',
     'favourite_club_id',
+    'favourite_sport_id',
     'bio',
     'date_of_birth',
     'banner_path',
@@ -299,6 +300,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function favouriteClub(): BelongsTo
     {
         return $this->belongsTo(Club::class, 'favourite_club_id');
+    }
+
+    public function favouriteSport(): BelongsTo
+    {
+        return $this->belongsTo(Sport::class, 'favourite_sport_id');
     }
 
     public function clubMemberships(): HasMany
