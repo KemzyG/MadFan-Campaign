@@ -160,20 +160,6 @@ function IconStandings({ active }) {
     );
 }
 
-function IconTickets({ active }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={active ? 2.25 : 1.75}
-                d="M4.5 9.5V7.8A1.8 1.8 0 0 1 6.3 6h11.4A1.8 1.8 0 0 1 19.5 7.8v1.7a1.7 1.7 0 0 0 0 3.4v1.7a1.8 1.8 0 0 1-1.8 1.8H6.3A1.8 1.8 0 0 1 4.5 14.6v-1.7a1.7 1.7 0 0 0 0-3.4Z"
-            />
-            <path strokeLinecap="round" strokeWidth={active ? 2 : 1.6} d="M9 8.2v7.6M15 8.2v7.6" />
-        </svg>
-    );
-}
-
 function IconShop({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -638,10 +624,10 @@ export default function SocialShell({
             active: pathMatches(current, '/social/feed') || pathMatches(current, '/social/posts'),
         },
         {
-            href: '/social/tickets',
-            label: 'Ticket',
-            icon: IconTickets,
-            active: pathMatches(current, '/social/tickets'),
+            href: '/social/videos',
+            label: 'Short',
+            icon: IconReels,
+            active: pathMatches(current, '/social/videos'),
         },
         {
             href: '/social/chat',
@@ -652,18 +638,14 @@ export default function SocialShell({
     ];
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
+    // Ticket purchase/wallet is reached from a fixture's own match detail now,
+    // not as a standalone destination — Fixtures is the entry point.
     const secondaryTabs = [
         {
             href: '/social/fixtures',
             label: 'Fixtures',
             icon: IconFixtures,
-            active: pathMatches(current, '/social/fixtures'),
-        },
-        {
-            href: '/social/videos',
-            label: 'Reels',
-            icon: IconReels,
-            active: pathMatches(current, '/social/videos'),
+            active: pathMatches(current, '/social/fixtures') || pathMatches(current, '/social/tickets'),
         },
         {
             href: '/social/clubs',
