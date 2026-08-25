@@ -565,7 +565,13 @@
     animation: mf-page-in var(--mf-dur) var(--mf-ease) both;
 }
 
+/* A packed, floodlit terrace behind the copy — the same "stadium is the
+   subject" treatment shop/fixtures/tickets use (see tokens.css), scoped here
+   since a live audio room is the other surface where that's genuinely true.
+   The scrim is fixed rgba (not theme tokens) so the copy stays legible over
+   the photo in either theme. */
 .mf-stage-hero {
+    position: relative;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -575,11 +581,13 @@
     border-radius: var(--mf-radius-panel);
     background:
         linear-gradient(
-            160deg,
-            color-mix(in srgb, var(--mf-pitch) 9%, var(--mf-elevated)) 0%,
-            var(--mf-panel) 55%
+            0deg,
+            rgba(6, 14, 9, 0.88) 0%,
+            rgba(6, 14, 9, 0.32) 55%,
+            rgba(6, 14, 9, 0.58) 100%
         ),
-        var(--mf-panel);
+        url('/landing-media/social.png') center 30% / cover no-repeat,
+        #071009;
     overflow: hidden;
 }
 
@@ -626,12 +634,29 @@
     height: 1rem;
 }
 
-/* Mobile: the lobby hero goes full-bleed as a floodlit-stadium banner. The dark
-   scrim is fixed rgba (not theme tokens) so the copy stays legible over the night
-   image in either theme. */
+/* Light copy over the photo — fixed values (not theme tokens) so it stays
+   legible over the dark scrim in either theme. */
+.mf-stage-hero .mf-stage-live-dot {
+    background: #ff5470;
+}
+
+.mf-stage-hero .mf-stage-hero__eyebrow,
+.mf-stage-hero .mf-stage-hero__title {
+    color: #f4fff8;
+}
+
+.mf-stage-hero .mf-stage-hero__sub {
+    color: rgba(244, 255, 248, 0.82);
+}
+
+.mf-stage-hero .mf-stage-hero__title {
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* Mobile: the lobby hero goes full-bleed edge to edge (the stadium photo and
+   its scrim are set once on the base rule above, so this only adjusts layout). */
 @media (max-width: 767.98px) {
     .mf-stage-hero {
-        position: relative;
         width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
@@ -641,28 +666,6 @@
         border-width: 0 0 1px 0;
         border-radius: 0;
         box-shadow: none;
-        background:
-            linear-gradient(
-                0deg,
-                rgba(6, 14, 9, 0.9) 0%,
-                rgba(6, 14, 9, 0.28) 52%,
-                rgba(6, 14, 9, 0.62) 100%
-            ),
-            url('/landing-media/stage-hero-stadium.svg') center / cover no-repeat,
-            #071009;
-    }
-
-    .mf-stage-hero .mf-stage-hero__eyebrow,
-    .mf-stage-hero .mf-stage-hero__title {
-        color: #f4fff8;
-    }
-
-    .mf-stage-hero .mf-stage-hero__sub {
-        color: rgba(244, 255, 248, 0.82);
-    }
-
-    .mf-stage-hero__title {
-        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
     }
 }
 

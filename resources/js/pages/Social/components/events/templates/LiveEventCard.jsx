@@ -27,7 +27,7 @@ export default function LiveEventCard({ event }) {
                     {description ? <p className="mf-evroom__desc">{description}</p> : null}
 
                     <div className="mf-evroom__people">
-                        <AvatarStack people={stage?.avatars} overflow={stage?.overflow_count} max={5} />
+                        <AvatarStack people={stage?.avatars} overflow={stage?.overflow_count} max={4} />
                         <span>{formatCount(inside)} inside</span>
                     </div>
                 </div>

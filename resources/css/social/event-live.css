@@ -299,17 +299,37 @@
 }
 
 /* The on-air foot borrows the avatar carousel from the stage card, but on the
-   feed's Snow surface a Silver Mist ring reads cleaner than the stage's own. */
+   feed's Snow surface it gets a richer treatment: bigger faces, a tighter
+   overlap (four heads reading as one cluster), and an accent-tinted ring
+   instead of the stage's plain Silver Mist border. */
+.mf-evair__foot .mf-avstack__item,
+.mf-evroom__people .mf-avstack__item {
+    margin-left: -0.65rem;
+}
+
+.mf-evair__foot .mf-avstack__item:first-child,
+.mf-evroom__people .mf-avstack__item:first-child {
+    margin-left: 0;
+}
+
 .mf-evair__foot .mf-avstack__item .mf-avatar,
 .mf-evroom__people .mf-avstack__item .mf-avatar {
-    border-color: var(--mf-line);
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 2px solid var(--mf-panel);
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--mf-ev-accent, var(--mf-line)) 45%, var(--mf-line));
 }
 
 .mf-evair__foot .mf-avstack__more,
 .mf-evroom__people .mf-avstack__more {
-    border-color: var(--mf-line);
-    background: var(--mf-elevated);
-    color: var(--mf-pitch-dim);
+    width: 1.9rem;
+    height: 1.9rem;
+    min-width: 1.9rem;
+    border: 2px solid var(--mf-panel);
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--mf-ev-accent, var(--mf-line)) 45%, var(--mf-line));
+    background: linear-gradient(135deg, var(--mf-ev-accent, var(--mf-pitch)), color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 65%, #000 18%));
+    color: #fff;
+    font-size: var(--mf-text-micro);
 }
 
 /* ======================================================================== */
