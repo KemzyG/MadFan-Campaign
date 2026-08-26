@@ -41,6 +41,17 @@ return [
 
     'paseto' => [
         'ttl_minutes' => (int) env('PASETO_TTL_MINUTES', 60 * 24),
+
+        // Base64-encoded 32-byte PASETO v3.local key that encrypts chat message
+        // bodies at rest. Deliberately separate from the auth-token key above —
+        // rotating/compromising one must never affect the other. MUST be set in
+        // production (and identical across every app instance): without it, each
+        // server falls back to its own auto-generated key file under
+        // storage/app/, and any messages encrypted by one instance become
+        // permanently undecryptable on another, or after a redeploy that wipes
+        // local storage. Generate one with:
+        //   php artisan tinker --execute="echo base64_encode(random_bytes(32));"
+        'chat_key' => env('CHAT_ENCRYPTION_KEY'),
     ],
 
     'admin_mfa' => [

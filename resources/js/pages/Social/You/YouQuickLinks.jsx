@@ -42,36 +42,65 @@ function IconClub() {
     );
 }
 
-const LINKS = [
+function IconTasks() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="4" y="4" width="16" height="16" rx="3" strokeWidth="1.7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" d="m8 12.3 2.3 2.3L16 9" />
+        </svg>
+    );
+}
+
+const DESTINATIONS = [
+    { href: '/social/tasks', label: 'Daily tasks', hint: 'Finish today, claim points', icon: IconTasks },
     { href: '/social/wallet', label: 'Wallet', hint: 'Balance & activity', icon: IconWallet },
     { href: '/social/passport', label: 'Passport', hint: 'Your fan card', icon: IconPassport },
     { href: '/social/leaderboard', label: 'Leaderboard', hint: 'Terrace rankings', icon: IconLeaderboard },
-    { href: '/social/onboarding/club', label: 'Change club', hint: 'Switch allegiance', icon: IconClub },
 ];
+
+function ChevronIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="m9 6 6 6-6 6" />
+        </svg>
+    );
+}
 
 /**
  * Destinations that used to live in the sidebar nav — wallet, passport,
- * leaderboard — now surfaced as quick-access cards from the self profile page.
+ * leaderboard — now surfaced as quick-access tiles from the self profile page.
+ * "Change club" sits apart as its own row: an account action, not a content
+ * destination, so it doesn't belong in the tile grid with the others.
  */
 export default function YouQuickLinks() {
     return (
         <nav className="mf-you-links" aria-label="Your destinations">
-            {LINKS.map(({ href, label, hint, icon: Icon }) => (
-                <Link key={href} href={href} className="mf-you-link" prefetch>
-                    <span className="mf-you-link__icon" aria-hidden>
-                        <Icon />
-                    </span>
-                    <span className="mf-you-link__copy">
-                        <span className="mf-you-link__label">{label}</span>
-                        <span className="mf-text-caption mf-you-link__hint">{hint}</span>
-                    </span>
-                    <span className="mf-you-link__chevron" aria-hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="m9 6 6 6-6 6" />
-                        </svg>
-                    </span>
-                </Link>
-            ))}
+            <div className="mf-you-links__grid">
+                {DESTINATIONS.map(({ href, label, hint, icon: Icon }) => (
+                    <Link key={href} href={href} className="mf-you-link" prefetch>
+                        <span className="mf-you-link__icon" aria-hidden>
+                            <Icon />
+                        </span>
+                        <span className="mf-you-link__copy">
+                            <span className="mf-you-link__label">{label}</span>
+                            <span className="mf-text-caption mf-you-link__hint">{hint}</span>
+                        </span>
+                    </Link>
+                ))}
+            </div>
+
+            <Link href="/social/onboarding/club" className="mf-you-link mf-you-link--row" prefetch>
+                <span className="mf-you-link__icon" aria-hidden>
+                    <IconClub />
+                </span>
+                <span className="mf-you-link__copy">
+                    <span className="mf-you-link__label">Change club</span>
+                    <span className="mf-text-caption mf-you-link__hint">Switch allegiance</span>
+                </span>
+                <span className="mf-you-link__chevron" aria-hidden>
+                    <ChevronIcon />
+                </span>
+            </Link>
         </nav>
     );
 }

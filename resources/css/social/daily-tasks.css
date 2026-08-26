@@ -1,0 +1,310 @@
+/*
+ * Daily Tasks (Social/DailyTasks) — profile-hub engagement loop. Vibrants
+ * light throughout; no dark-island exception here (unlike Stage/Passport).
+ */
+
+.mf-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    max-width: 34rem;
+    margin-inline: auto;
+    padding-bottom: 2rem;
+}
+
+/* Utility bar — week indicator + manual refresh, replaces a full page head */
+.mf-tasks-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.1rem 0.1rem 0;
+}
+
+.mf-tasks-week-chip {
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-tasks-refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-text);
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease);
+}
+
+.mf-tasks-refresh-btn svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.mf-tasks-refresh-btn:hover {
+    background: var(--mf-elevated);
+    border-color: var(--mf-pitch);
+}
+
+.mf-tasks-refresh-btn:disabled {
+    cursor: default;
+}
+
+.mf-tasks-refresh-btn.is-spinning svg {
+    animation: mf-tasks-spin 800ms linear infinite;
+}
+
+@keyframes mf-tasks-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Reward card */
+.mf-tasks-reward {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    padding: 1.2rem 1.3rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    transition: border-color 200ms var(--mf-ease), background 200ms var(--mf-ease);
+}
+
+.mf-tasks-reward.is-ready {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 6%, var(--mf-panel));
+}
+
+.mf-tasks-reward.is-claimed {
+    border-color: var(--mf-line);
+    background: var(--mf-elevated);
+}
+
+.mf-tasks-reward__ring {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+}
+
+.mf-tasks-reward__ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.mf-tasks-reward__ring-track,
+.mf-tasks-reward__ring-fill {
+    fill: none;
+    stroke-width: 5;
+}
+
+.mf-tasks-reward__ring-track {
+    stroke: var(--mf-elevated);
+}
+
+.mf-tasks-reward__ring-fill {
+    stroke: var(--mf-pitch);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 420ms var(--mf-ease);
+}
+
+.mf-tasks-reward.is-claimed .mf-tasks-reward__ring-fill {
+    stroke: var(--mf-muted);
+}
+
+.mf-tasks-reward__ring-count {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mf-font-mono);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tasks-reward__copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-tasks-reward__label {
+    margin: 0 0 0.15rem;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-label);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-tasks-reward__points {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-heading);
+    font-weight: 700;
+    color: var(--mf-text);
+    line-height: 1.1;
+}
+
+.mf-tasks-reward__points span {
+    margin-left: 0.15rem;
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+    color: var(--mf-muted);
+}
+
+.mf-tasks-reward__progress {
+    margin: 0.25rem 0 0;
+    color: var(--mf-muted);
+}
+
+.mf-tasks-reward__claim {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.mf-tasks-reward__claim svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-tasks-reward__claim:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+@media (max-width: 30rem) {
+    .mf-tasks-reward {
+        flex-wrap: wrap;
+    }
+
+    .mf-tasks-reward__claim {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Task list */
+.mf-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mf-task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    transition: border-color 200ms var(--mf-ease), background 200ms var(--mf-ease);
+}
+
+.mf-task-row.is-complete {
+    border-color: color-mix(in srgb, var(--mf-pitch) 35%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 5%, var(--mf-panel));
+}
+
+.mf-task-row__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    margin-top: 0.05rem;
+    border-radius: 50%;
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+}
+
+.mf-task-row.is-complete .mf-task-row__icon {
+    background: var(--mf-pitch);
+    color: #fff;
+}
+
+.mf-task-row__icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.mf-task-row__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.mf-task-row__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-task-row__label {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-task-row__count {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-task-row.is-complete .mf-task-row__count {
+    color: var(--mf-pitch-dim, var(--mf-pitch));
+}
+
+.mf-task-row__desc {
+    margin: 0;
+    color: var(--mf-muted);
+}
+
+.mf-task-row__track {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 0.4rem;
+    margin-top: 0.15rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    overflow: hidden;
+}
+
+.mf-task-row__track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mf-pitch);
+    transition: width 320ms var(--mf-ease);
+}

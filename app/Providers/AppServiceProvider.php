@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
 use App\Services\Admin\AdminOrganizationContext;
+use App\Services\Security\ChatMessageCipher;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Event;
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AdminOrganizationContext::class);
+        $this->app->singleton(ChatMessageCipher::class);
     }
 
     public function boot(): void

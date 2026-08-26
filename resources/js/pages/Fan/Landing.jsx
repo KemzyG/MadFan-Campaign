@@ -9,18 +9,25 @@ import { resolveSocialHref, socialPath } from '../../lib/socialPath';
 
 const CATEGORIES = [
     {
-        key: 'campaign',
-        label: 'Season campaign',
-        title: 'Earn loyalty for your club',
-        href: '/campaign',
-        cta: 'Enter campaign',
+        key: 'passport',
+        label: 'Fan identity',
+        title: 'Wear your loyalty',
+        href: '/social/passport',
+        cta: 'Build your passport',
     },
     {
         key: 'social',
-        label: 'Terrace social',
-        title: 'Feed, chat, fixtures',
-        href: '/social',
-        cta: 'Open terrace',
+        label: 'Fan community',
+        title: 'Terrace, chat, matchday',
+        href: '/community',
+        cta: 'Explore the community',
+    },
+    {
+        key: 'campaign',
+        label: 'Season 01',
+        title: 'Earn your standing',
+        href: '/campaign',
+        cta: 'Enter campaign',
     },
     {
         key: 'shop',
@@ -29,27 +36,14 @@ const CATEGORIES = [
         href: '/social/shop',
         cta: 'Browse store',
     },
-    {
-        key: 'passport',
-        label: 'Fan passport',
-        title: 'Your score is identity',
-        href: '/social/passport',
-        cta: 'View passport',
-    },
 ];
 
 const EMPTY_STORY = {
     thesis: {
         eyebrow: 'Why Mad Fan',
-        title: 'Loyalty deserves infrastructure',
+        title: 'Your loyalty was never the problem. The scoreboard was.',
         body: 'Mad Fan makes loyalty visible, verifiable, and valuable.',
     },
-    primitives: [],
-    earn: [],
-    weeks: [],
-    roadmap: [],
-    regions: [],
-    team: [],
     pages: [],
 };
 
@@ -81,7 +75,7 @@ export default function Landing({
 
     return (
         <div className="mf-land">
-            <Head title="Mad Fan — The loyalty layer of football">
+            <Head title="Mad Fan — Your place as a fan">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
                 <link
@@ -113,17 +107,17 @@ export default function Landing({
                 ) : null}
                 <div className="mf-land__hero-copy">
                     <p className="mf-land__hero-brand">Mad Fan</p>
-                    <h1 className="mf-land__hero-title">Loyalty that counts</h1>
+                    <h1 className="mf-land__hero-title">This is your place as a fan</h1>
                     <p className="mf-land__hero-lead">
-                        The loyalty layer of the football internet. Pick your club, earn on Season 01,
-                        engage on the terrace, and wear your standing on a passport.
+                        Pick your club, post on the terrace, talk in your club's room, and watch your
+                        loyalty become who you are — verified on your Fan Passport.
                     </p>
                     <div className="mf-land__hero-actions">
                         <Link href="/campaign" className="mf-land__pill mf-land__pill--light">
                             Enter campaign
                         </Link>
-                        <Link href="/about" className="mf-land__pill mf-land__pill--ghost">
-                            About Mad Fan
+                        <Link href="/community" className="mf-land__pill mf-land__pill--ghost">
+                            Explore the community
                         </Link>
                     </div>
                 </div>
@@ -185,59 +179,26 @@ export default function Landing({
                         body={thesis.body}
                         action={
                             <Link href="/about" className="mf-land__text-link">
-                                Read about us
+                                Read the full thesis
                             </Link>
                         }
                     />
                 </LandingReveal>
-                {story.primitives?.length > 0 ? (
-                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--5" stagger>
-                        {story.primitives.map((item) => (
-                            <article key={item.title} className="mf-land__info-card">
-                                <p className="mf-land__info-label">{item.label}</p>
-                                <h3>{item.title}</h3>
-                                <p>{item.body}</p>
-                            </article>
-                        ))}
-                    </LandingReveal>
-                ) : null}
             </section>
 
             <section className="mf-land__band mf-land__band--mist" aria-label="Season 01">
                 <LandingReveal>
                     <SectionHead
                         eyebrow="Season 01"
-                        title="8 weeks. Earn your standing."
-                        body="Daily claims, referrals, tasks, and streaks feed one passport ledger. Climb THE BOARD for early access and founding status."
+                        title="8 weeks. One board. Your name on it."
+                        body="Daily claims, referrals, and weekly tasks all feed the same passport ledger. Full mechanics, points, and THE BOARD live on the campaign page."
                         action={
                             <Link href="/campaign" className="mf-land__pill mf-land__pill--dark">
-                                Open campaign
+                                Explore campaigns
                             </Link>
                         }
                     />
                 </LandingReveal>
-                {story.earn?.length > 0 ? (
-                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--4" stagger>
-                        {story.earn.map((item) => (
-                            <article key={item.name} className="mf-land__info-card">
-                                <p className="mf-land__info-label">{item.pts}</p>
-                                <h3>{item.name}</h3>
-                                <p>{item.desc}</p>
-                            </article>
-                        ))}
-                    </LandingReveal>
-                ) : null}
-                {story.weeks?.length > 0 ? (
-                    <LandingReveal className="mf-land__week-grid" stagger aria-label="Season chapters">
-                        {story.weeks.map((week) => (
-                            <article key={week.num} className="mf-land__week">
-                                <p className="mf-land__info-label">{week.num}</p>
-                                <h3>{week.name}</h3>
-                                <p>{week.desc}</p>
-                            </article>
-                        ))}
-                    </LandingReveal>
-                ) : null}
             </section>
 
             <section className="mf-land__band" aria-label="Roadmap">
@@ -245,60 +206,23 @@ export default function Landing({
                     <SectionHead
                         eyebrow="Roadmap"
                         title="Proof before scale"
-                        body="Ship trust with live fans first, harden identity next, then unlock markets that compound for years."
+                        body="Season 01 first. Then identity that persists across seasons. Then the marketplace and index that make loyalty portable everywhere."
                         action={
                             <Link href="/roadmap" className="mf-land__text-link">
-                                Full roadmap
+                                See the full roadmap
                             </Link>
                         }
                     />
                 </LandingReveal>
-                {story.roadmap?.length > 0 ? (
-                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--3" stagger>
-                        {story.roadmap.map((item) => (
-                            <article key={item.title} className="mf-land__info-card">
-                                <p className="mf-land__info-label">{item.label}</p>
-                                <h3>{item.title}</h3>
-                                <p>{item.body}</p>
-                            </article>
-                        ))}
-                    </LandingReveal>
-                ) : null}
-            </section>
-
-            <section className="mf-land__band mf-land__band--mist" aria-label="Region">
-                <LandingReveal>
-                    <SectionHead
-                        eyebrow="Region"
-                        title="Football first, global next"
-                        body="Root where passion is lifelong, then grow hubs that feed one portable Loyalty Layer."
-                        action={
-                            <Link href="/region" className="mf-land__text-link">
-                                Explore regions
-                            </Link>
-                        }
-                    />
-                </LandingReveal>
-                {story.regions?.length > 0 ? (
-                    <LandingReveal className="mf-land__card-grid mf-land__card-grid--3" stagger>
-                        {story.regions.map((item) => (
-                            <article key={item.title} className="mf-land__info-card">
-                                <p className="mf-land__info-label">{item.label}</p>
-                                <h3>{item.title}</h3>
-                                <p>{item.body}</p>
-                            </article>
-                        ))}
-                    </LandingReveal>
-                ) : null}
             </section>
 
             {story.pages?.length > 0 ? (
-                <section className="mf-land__band mf-land__band--mist" aria-label="Company pages">
+                <section className="mf-land__band mf-land__band--mist" aria-label="Go deeper into Mad Fan">
                     <LandingReveal>
                         <SectionHead
-                            eyebrow="Company"
-                            title="Go deeper"
-                            body="Full narrative pages for vision, roadmap, regions, and the people building Mad Fan."
+                            eyebrow="Go deeper"
+                            title="More from Mad Fan"
+                            body="Vision, rewards, and the roadmap ahead — for fans, partners, and the just-curious."
                         />
                     </LandingReveal>
                     <LandingReveal className="mf-land__page-grid" stagger>
@@ -347,7 +271,7 @@ export default function Landing({
 
             <section className="mf-land__cta" aria-label="Join">
                 <LandingReveal className="mf-land__cta-inner">
-                    <p className="mf-land__eyebrow">Season 01 is live</p>
+                    <p className="mf-land__eyebrow mf-land__live">Season 01 is live</p>
                     <h2>Claim your spot. Build your passport.</h2>
                     <p>
                         Join the waitlist campaign, create your Fan Passport, and start earning on the terrace.

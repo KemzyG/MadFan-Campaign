@@ -45,6 +45,17 @@
 }
 
 /*
+ * A page that supplies its own mobile header (a screen with its own nav +
+ * settings bar, e.g. You) hides only the generic bar below 768px — unlike
+ * mobile-bare above, the tab bar stays, and desktop keeps the generic header.
+ */
+@media (max-width: 767.98px) {
+    .mf-shell--custom-header .mf-header {
+        display: none;
+    }
+}
+
+/*
  * Phone: lock the two full-screen "app" surfaces (chat thread + Stage room, the
  * only mobile-bare pages) to the *visible* viewport so the document itself never
  * rubber-band scrolls. `100dvh` is the toolbar-retracted height; while the page

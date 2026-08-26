@@ -2,9 +2,9 @@ import { usePage } from '@inertiajs/react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 
 export const INBOXES = [
-    { id: 'club', label: 'Club' },
     { id: 'friends', label: 'Friends' },
-    { id: 'groups', label: 'Groups' },
+    { id: 'groups', label: 'Group' },
+    { id: 'club', label: 'Club' },
 ];
 
 export function inboxHref(inbox) {

@@ -29,9 +29,7 @@ class SocialPostController extends Controller
             'tagged' => $validated['tagged'] ?? [],
         ]);
 
-        return redirect()
-            ->route('social.feed')
-            ->with('success', 'Posted to the terrace.');
+        return redirect()->route('social.feed');
     }
 
     public function reply(
@@ -51,9 +49,7 @@ class SocialPostController extends Controller
             'reply_to_id' => $post->id,
         ]);
 
-        return redirect()
-            ->route('social.posts.show', $post->root_id ?? $post->id)
-            ->with('success', 'Reply sent.');
+        return redirect()->route('social.posts.show', $post->root_id ?? $post->id);
     }
 
     public function repost(Request $request, Post $post, RepostSocialPost $repostSocialPost): RedirectResponse
@@ -62,9 +58,7 @@ class SocialPostController extends Controller
 
         $repostSocialPost->handle($request->user(), $post);
 
-        return redirect()
-            ->route('social.feed')
-            ->with('success', 'Reposted to your terrace.');
+        return redirect()->route('social.feed');
     }
 
     public function quote(
@@ -76,9 +70,7 @@ class SocialPostController extends Controller
 
         $quoteSocialPost->handle($request->user(), $post, $request->validated('body'));
 
-        return redirect()
-            ->route('social.feed')
-            ->with('success', 'Quote posted.');
+        return redirect()->route('social.feed');
     }
 
     public function destroy(Request $request, Post $post): RedirectResponse
@@ -103,13 +95,9 @@ class SocialPostController extends Controller
         $post->delete();
 
         if ($parentId !== null) {
-            return redirect()
-                ->route('social.posts.show', $post->root_id ?? $parentId)
-                ->with('success', 'Reply removed.');
+            return redirect()->route('social.posts.show', $post->root_id ?? $parentId);
         }
 
-        return redirect()
-            ->route('social.feed')
-            ->with('success', 'Post removed.');
+        return redirect()->route('social.feed');
     }
 }

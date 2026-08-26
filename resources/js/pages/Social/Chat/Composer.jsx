@@ -7,7 +7,7 @@ import ReplyQuote from './ReplyQuote';
 export default function Composer({ channel, maxBodyLength, inbox, replyTo, onClearReply }) {
     const page = usePage();
     const user = page.props?.auth?.user;
-    const { reportError, reportSuccess } = useSocialFlash();
+    const { reportError } = useSocialFlash();
     const textareaRef = useRef(null);
     const [body, setBody] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -101,8 +101,6 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                     },
                 };
             });
-
-            reportSuccess?.(data?.message || 'Message sent.');
         } catch (error) {
             rollback();
             setBody(text);

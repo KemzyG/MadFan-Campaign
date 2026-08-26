@@ -8,6 +8,7 @@ import '../css/social/clubs.css';
 import '../css/social/fixtures.css';
 import '../css/social/sport.css';
 import '../css/social/passport.css';
+import '../css/social/daily-tasks.css';
 import '../css/social/tickets.css';
 import '../css/social/shop.css';
 import '../css/social/profile.css';
@@ -16,6 +17,7 @@ import '../css/social/post.css';
 import '../css/social/composer.css';
 import '../css/social/stage-card.css';
 import '../css/social/reels.css';
+import '../css/social/feed-discovery.css';
 // Events feed: shared card chrome, then one sheet per family of templates.
 import '../css/social/events.css';
 import '../css/social/event-live.css';

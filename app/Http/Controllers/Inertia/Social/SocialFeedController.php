@@ -56,6 +56,7 @@ class SocialFeedController extends Controller
                 'links' => $presented['links'],
                 'empty_message' => $emptyMessage,
             ],
+            'suggestions' => $feedService->suggestedFollows($user),
             'max_body_length' => FeedService::MAX_BODY_LENGTH,
             'max_images' => FeedService::MAX_IMAGES,
         ]);

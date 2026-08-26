@@ -16,6 +16,7 @@ enum PointSourceType: string
     case SocialLikeReceived = 'social_like_received';
     case SocialChat = 'social_chat';
     case SocialMatchdayBonus = 'social_matchday_bonus';
+    case SocialDailyTask = 'social_daily_task';
 
     public function label(): string
     {
@@ -32,6 +33,7 @@ enum PointSourceType: string
             self::SocialLikeReceived => 'Social Like Received',
             self::SocialChat => 'Social Chat',
             self::SocialMatchdayBonus => 'Social Matchday Bonus',
+            self::SocialDailyTask => 'Social Daily Tasks',
         };
     }
 
@@ -77,6 +79,7 @@ enum PointSourceType: string
             self::SocialLikeReceived->value,
             self::SocialChat->value,
             self::SocialMatchdayBonus->value,
+            self::SocialDailyTask->value,
         ];
     }
 };

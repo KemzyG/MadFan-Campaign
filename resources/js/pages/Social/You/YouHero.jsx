@@ -24,13 +24,15 @@ export default function YouHero({ identity, loyalty, records, onEditProfile }) {
 
             <div className="mf-profile-hero__row">
                 <div className="mf-you-hero__avatar-wrap">
-                    {identity.avatar_url ? (
-                        <img src={identity.avatar_url} alt="" className="mf-avatar mf-profile-hero__avatar mf-you-hero__avatar-img" />
-                    ) : (
-                        <div className="mf-avatar mf-profile-hero__avatar mf-text-section" aria-hidden>
-                            {(identity.name || '?').slice(0, 1).toUpperCase()}
-                        </div>
-                    )}
+                    <span className="mf-you-hero__avatar-ring" aria-hidden>
+                        {identity.avatar_url ? (
+                            <img src={identity.avatar_url} alt="" className="mf-avatar mf-profile-hero__avatar mf-you-hero__avatar-img" />
+                        ) : (
+                            <div className="mf-avatar mf-profile-hero__avatar mf-text-section" aria-hidden>
+                                {(identity.name || '?').slice(0, 1).toUpperCase()}
+                            </div>
+                        )}
+                    </span>
                     <button
                         type="button"
                         className="mf-you-hero__avatar-edit"

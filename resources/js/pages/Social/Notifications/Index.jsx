@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { socialApi } from '../../../lib/socialApi';
+import { useSocialNotifications } from '../optimistic';
 import NotificationRow from './NotificationRow';
 
 /**
@@ -12,12 +13,19 @@ import NotificationRow from './NotificationRow';
 export default function NotificationsIndex({ notifications, unread_count: unreadCount = 0 }) {
     const [readIds, setReadIds] = useState(() => new Set());
     const [markingAll, setMarkingAll] = useState(false);
+    const { decrementUnread, setUnread } = useSocialNotifications();
 
     const items = notifications?.data ?? [];
     const remainingUnread = Math.max(0, unreadCount - readIds.size);
 
     function markRead(id) {
-        setReadIds((prev) => new Set(prev).add(id));
+        setReadIds((prev) => {
+            if (prev.has(id)) {
+                return prev;
+            }
+            decrementUnread(1);
+            return new Set(prev).add(id);
+        });
     }
 
     function markAllRead() {
@@ -29,6 +37,7 @@ export default function NotificationsIndex({ notifications, unread_count: unread
         socialApi('/notifications/read-all', { method: 'POST' })
             .then(() => {
                 setReadIds(new Set(items.map((item) => item.id)));
+                setUnread(0);
                 router.reload({ only: ['notifications', 'unread_count'], preserveScroll: true });
             })
             .catch(() => {})

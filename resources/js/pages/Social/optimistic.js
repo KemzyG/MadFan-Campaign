@@ -11,6 +11,20 @@ export function useSocialFlash() {
     return useContext(SocialFlashContext);
 }
 
+// The header bell / sidebar badge count lives in SocialShell (seeded from the
+// shared Inertia `notifications.unread_count` prop). Reading a notification
+// only round-trips a fire-and-forget POST — no navigation — so without this,
+// the badge would keep counting rows the viewer already opened until their
+// next full page visit refreshed the shared prop.
+export const SocialNotificationsContext = createContext({
+    decrementUnread: () => {},
+    setUnread: () => {},
+});
+
+export function useSocialNotifications() {
+    return useContext(SocialNotificationsContext);
+}
+
 export function firstErrorMessage(errors, fallback = 'Action failed — rolled back.') {
     if (!errors || typeof errors !== 'object') {
         return fallback;
@@ -116,10 +130,12 @@ export async function runSocialMutation(mapper, mutate, options = {}) {
 
     try {
         const data = await mutate();
+        // Deliberately NOT falling back to the server's `data.message` — routine
+        // mutations (like, follow, bookmark…) are already visible in the UI the
+        // instant they land, so a toast on top is just noise. Callers that truly
+        // need a confirmation (there are none today) can opt in via successMessage.
         const message =
-            typeof successMessage === 'function'
-                ? successMessage(data)
-                : successMessage || data?.message;
+            typeof successMessage === 'function' ? successMessage(data) : successMessage;
 
         if (message) {
             reportSuccess?.(message);

@@ -17,7 +17,7 @@ import {
     visitPathname,
 } from '../pages/Social/components/Skeletons';
 import StageChrome from '../pages/Social/Stage/StageChrome';
-import { SocialFlashContext } from '../pages/Social/optimistic';
+import { SocialFlashContext, SocialNotificationsContext } from '../pages/Social/optimistic';
 import { socialApi } from '../lib/socialApi';
 import { getEcho, leaveEchoChannel } from '../echo';
 import ChatRail from './ChatRail';
@@ -100,7 +100,7 @@ function IconChat({ active }) {
     );
 }
 
-function IconMenu() {
+export function IconMenu() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path strokeLinecap="round" strokeWidth="1.85" d="M4 7h16M4 12h16M4 17h16" />
@@ -108,7 +108,7 @@ function IconMenu() {
     );
 }
 
-function IconBell() {
+export function IconBell() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -122,7 +122,7 @@ function IconBell() {
     );
 }
 
-function IconCampaign() {
+export function IconCampaign() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -136,7 +136,7 @@ function IconCampaign() {
     );
 }
 
-function IconSport({ active }) {
+export function IconSport({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <circle cx="12" cy="12" r="8.2" strokeWidth={active ? 2.25 : 1.75} />
@@ -150,7 +150,7 @@ function IconSport({ active }) {
     );
 }
 
-function IconShop({ active }) {
+export function IconShop({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -164,7 +164,7 @@ function IconShop({ active }) {
     );
 }
 
-function IconStage({ active }) {
+export function IconStage({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <circle cx="12" cy="12" r="3.1" strokeWidth={active ? 2.25 : 1.75} />
@@ -487,6 +487,7 @@ export default function SocialShell({
     fillViewport = false,
     mobileBare = false,
     wide = false,
+    hideHeaderOnMobile = false,
 }) {
     const page = usePage();
     const { auth, flash, app } = page.props;
@@ -605,6 +606,14 @@ export default function SocialShell({
     const flashApi = useMemo(
         () => ({ reportError, reportSuccess, clearError }),
         [reportError, reportSuccess, clearError],
+    );
+
+    const notificationsApi = useMemo(
+        () => ({
+            decrementUnread: (by = 1) => setUnreadCount((count) => Math.max(0, count - by)),
+            setUnread: (count) => setUnreadCount(Math.max(0, count)),
+        }),
+        [],
     );
 
     useEffect(() => {
@@ -733,6 +742,7 @@ export default function SocialShell({
 
     return (
         <SocialFlashContext.Provider value={flashApi}>
+            <SocialNotificationsContext.Provider value={notificationsApi}>
             <SocialComposeContext.Provider value={composeApi}>
                 {/*
                   * The wide flag is mirrored onto .mf-stage because the floating
@@ -748,6 +758,7 @@ export default function SocialShell({
                         fillViewport ? 'mf-shell--fill' : '',
                         mobileBare ? 'mf-shell--mobile-bare' : '',
                         wide ? 'mf-shell--wide' : '',
+                        hideHeaderOnMobile ? 'mf-shell--custom-header' : '',
                     ]
                         .filter(Boolean)
                         .join(' ')}
@@ -964,6 +975,7 @@ export default function SocialShell({
                 </div>
             </div>
             </SocialComposeContext.Provider>
+            </SocialNotificationsContext.Provider>
         </SocialFlashContext.Provider>
     );
 }

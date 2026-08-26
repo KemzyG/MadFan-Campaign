@@ -6,6 +6,10 @@
     --color-soft-mist: #f5f5f5;
     --color-steel: #707072;
     --color-faint-gray: #9e9ea0;
+    /* The one brand accent — a floodlit-pitch green, used only as small dots,
+       glows and underlines. Never a fill; the gallery stays monochrome. */
+    --color-accent: #21c46d;
+    --color-accent-dim: rgba(33, 196, 109, 0.16);
 
     --font-ui: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-display: "Oswald", Futura, "Trebuchet MS", sans-serif;
@@ -13,8 +17,12 @@
     --text-caption: 12px;
     --text-body-sm: 14px;
     --text-body: 16px;
+    --text-body-lg: 18px;
     --text-subheading: 20px;
     --text-heading-sm: 24px;
+    /* Unified oversized scale: the homepage hero headline, the closing CTA,
+       and every story page's H1 all read as the same weight of statement. */
+    --text-hero: clamp(2.75rem, 6.6vw, 5.25rem);
     --text-display: 76px;
 
     --spacing-8: 8px;
@@ -75,14 +83,24 @@
 
 /* —— Main nav —— */
 .mf-land__nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--spacing-24);
-    max-width: var(--page-max-width);
+    max-width: none;
     margin-inline: auto;
-    padding: 8px 24px 16px;
-    background: transparent;
+    padding: 14px max(24px, calc((100% - var(--page-max-width)) / 2 + 24px));
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    /* A black-based hairline rather than --color-concrete-gray: it all but
+       disappears over the dark hero it initially overlaps, then reads as a
+       normal light separator the moment white content scrolls beneath it —
+       one rule that looks right in both places without any scroll-state JS. */
+    border-bottom: 1px solid rgba(17, 17, 17, 0.08);
 }
 
 .mf-land__brand {
@@ -248,6 +266,50 @@
         0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
+/* The one filled pill that asks for the primary action (Enter campaign) gets
+   a hairline-thin accent edge on hover instead of a plain black shadow — a
+   small tell that this button, specifically, is the one to press. */
+.mf-land__pill--dark:hover {
+    box-shadow:
+        0 0 0 1px var(--color-accent),
+        0 10px 24px rgba(17, 17, 17, 0.14);
+}
+
+/* —— Live indicator dot —— */
+.mf-land__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mf-land__live::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-dim);
+    animation: mf-land-live-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mf-land-live-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.45;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-land__live::before {
+        animation: none !important;
+    }
+}
+
 /* Beat `.mf-land a { color: inherit }` so dark pills stay white-on-obsidian */
 .mf-land__pill--dark {
     background: var(--color-obsidian);
@@ -295,6 +357,7 @@
     width: 100%;
     height: 100%;
     background:
+        radial-gradient(ellipse 60% 55% at 80% 15%, rgba(33, 196, 109, 0.16) 0%, transparent 60%),
         radial-gradient(ellipse 55% 50% at 72% 38%, #2c2c2c 0%, transparent 65%),
         linear-gradient(165deg, #0a0a0a 0%, #111111 55%, #1c1c1c 100%);
 }
@@ -468,33 +531,50 @@
     }
 }
 
+/* The wordmark is a kicker, not the headline — the nav already carries the
+   Mad Fan logo, so here it only needs to orient a reader who scrolled past
+   it, not compete with the actual value proposition below it. */
 .mf-land__hero-brand {
-    margin: 0 0 12px;
-    font-family: var(--font-display);
-    font-size: clamp(2.75rem, 8vw, var(--text-display));
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
     animation-delay: 80ms;
+}
+
+.mf-land__hero-brand::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-dim);
 }
 
 .mf-land__hero-title {
     margin: 0;
-    max-width: 14ch;
-    font-family: var(--font-ui);
-    font-size: clamp(20px, 3.2vw, 24px);
+    max-width: 13ch;
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
     font-weight: 500;
-    line-height: 1.2;
+    line-height: 1.02;
+    letter-spacing: 0.005em;
     animation-delay: 160ms;
 }
 
 .mf-land__hero-lead {
-    margin: 12px 0 20px;
-    max-width: 26rem;
-    font-size: var(--text-body);
-    line-height: 1.75;
-    color: rgba(255, 255, 255, 0.88);
+    margin: 20px 0 28px;
+    max-width: 30rem;
+    font-size: var(--text-body-lg);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.82);
     animation-delay: 240ms;
 }
 
@@ -1151,6 +1231,29 @@
     text-transform: uppercase;
 }
 
+/* A run of numbered cards (the Rewards loop, the Community pillars) reads as
+   a sequence, not a set of unrelated labels — a small accent tick per card
+   makes that connective thread visible instead of implied by copy alone. */
+.mf-land__info-card {
+    position: relative;
+}
+
+.mf-land__info-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 28px;
+    height: 3px;
+    background: var(--color-accent);
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+.mf-land__info-card:hover::before {
+    opacity: 1;
+}
+
 .mf-land__info-card h3,
 .mf-land__week h3,
 .mf-land__page-card h3,
@@ -1235,7 +1338,7 @@
     margin: 0;
     max-width: 16ch;
     font-family: var(--font-display);
-    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-size: var(--text-hero);
     font-weight: 500;
     line-height: 1;
     text-transform: uppercase;
@@ -1287,7 +1390,7 @@
     margin: 0;
     max-width: 18ch;
     font-family: var(--font-display);
-    font-size: clamp(2.5rem, 7vw, 4.5rem);
+    font-size: var(--text-hero);
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.02em;

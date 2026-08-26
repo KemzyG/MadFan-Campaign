@@ -32,7 +32,7 @@ class SocialPostHideController extends Controller
             ],
         );
 
-        return back()->with('success', 'Got it — we’ll show less like this.');
+        return back();
     }
 
     /**
@@ -47,6 +47,6 @@ class SocialPostHideController extends Controller
             ->where('user_id', $request->user()->id)
             ->delete();
 
-        return back()->with('success', 'Marked interested.');
+        return back();
     }
 }

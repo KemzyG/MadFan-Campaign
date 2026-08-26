@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\ChatEncryptedText;
 use App\Enums\MessageType;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,6 +32,7 @@ class Message extends Model
         return [
             'type' => MessageType::class,
             'edited_at' => 'datetime',
+            'body' => ChatEncryptedText::class,
         ];
     }
 
