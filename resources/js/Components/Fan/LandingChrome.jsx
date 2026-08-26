@@ -169,9 +169,15 @@ export function LandingFooter() {
                         </div>
                     ))}
                 </div>
-                <p className="mf-land__legal">
-                    © {new Date().getFullYear()} Mad Fan. Belonging, contribution, and loyalty as identity.
-                </p>
+                <div className="mf-land__legal-row">
+                    <p className="mf-land__legal">
+                        © {new Date().getFullYear()} Mad Fan. Belonging, contribution, and loyalty as identity.
+                    </p>
+                    <div className="mf-land__legal-links">
+                        <Link href="/privacy">Privacy Policy</Link>
+                        <Link href="/terms">Terms & Conditions</Link>
+                    </div>
+                </div>
             </div>
         </footer>
     );

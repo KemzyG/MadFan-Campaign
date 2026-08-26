@@ -135,3 +135,38 @@ test('fan.home and fan.campaign named routes resolve correctly', function () {
     expect(route('fan.home', absolute: false))->toBe('/')
         ->and(route('fan.campaign', absolute: false))->toBe('/campaign');
 });
+
+test('privacy and terms pages are public and render Fan Legal with full content', function () {
+    $this->get('/privacy')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/Legal')
+            ->where('slug', 'privacy')
+            ->where('title', 'Privacy Policy')
+            ->has('effective_date')
+            ->has('intro')
+            ->has('sections'));
+
+    $this->get('/terms')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/Legal')
+            ->where('slug', 'terms')
+            ->where('title', 'Terms & Conditions')
+            ->has('effective_date')
+            ->has('intro')
+            ->has('sections'));
+});
+
+test('the legal controller 404s on any slug other than privacy or terms', function () {
+    // No route exposes an arbitrary slug (only the fixed /privacy and /terms
+    // paths are registered), so this exercises the controller's own guard
+    // directly rather than through routing.
+    expect(fn () => (new App\Http\Controllers\Inertia\Fan\LegalPageController)->show('made-up'))
+        ->toThrow(Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+});
+
+test('fan.privacy and fan.terms named routes resolve correctly', function () {
+    expect(route('fan.privacy', absolute: false))->toBe('/privacy')
+        ->and(route('fan.terms', absolute: false))->toBe('/terms');
+});
