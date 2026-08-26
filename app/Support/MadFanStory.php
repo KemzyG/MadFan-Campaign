@@ -25,6 +25,8 @@ class MadFanStory
             'region' => self::region(),
             'about' => self::about(),
             'team' => self::team(),
+            'community' => self::community(),
+            'rewards' => self::rewards(),
             default => abort(404),
         };
     }
@@ -34,105 +36,44 @@ class MadFanStory
      */
     public static function slugs(): array
     {
-        return ['whitepaper', 'roadmap', 'region', 'team', 'about'];
+        return ['whitepaper', 'roadmap', 'region', 'team', 'about', 'community', 'rewards'];
     }
 
     /**
      * Compact narrative blocks for the public marketing landing (`/`).
      *
+     * Deliberately thin: the homepage introduces the Mad Fan world in a fan's
+     * voice and hands off to dedicated pages for depth (season mechanics on
+     * `/campaign`, the full infrastructure thesis on `/about`, and so on) —
+     * it does not restate their contents. See docs/social/01-product-vision.md
+     * for the "fan comes first" framing this follows.
+     *
      * @return array{
      *     thesis: array{eyebrow: string, title: string, body: string},
-     *     primitives: list<array{label: string, title: string, body: string}>,
-     *     earn: list<array{pts: string, name: string, desc: string}>,
-     *     weeks: list<array{num: string, name: string, desc: string}>,
-     *     roadmap: list<array{label: string, title: string, body: string}>,
-     *     regions: list<array{label: string, title: string, body: string}>,
-     *     team: list<array{name: string, role: string, photo: string|null}>,
      *     pages: list<array{href: string, label: string, title: string, body: string}>
      * }
      */
     public static function landingHighlights(): array
     {
-        $about = self::about();
-        $roadmap = self::roadmap();
-        $region = self::region();
-        $team = self::team();
-
-        $primitiveSection = collect($about['sections'])->firstWhere('title', 'Interconnected Building Blocks');
-        $timelineSection = collect($roadmap['sections'])->firstWhere('title', 'Milestones With Staying Power');
-        $hubSection = collect($region['sections'])->firstWhere('title', 'How Regions Show Up Online');
-
         return [
             'thesis' => [
                 'eyebrow' => 'Why Mad Fan',
-                'title' => 'Loyalty deserves infrastructure',
-                'body' => 'Platforms reward noise. Fans invest time, emotion, and identity — and get almost nothing back. Mad Fan makes loyalty visible, verifiable, and valuable: Season 01 proves it with football, then the Loyalty Layer scales globally.',
+                'title' => 'Your loyalty was never the problem. The scoreboard was.',
+                'body' => 'Feeds reward whoever is loudest today. Mad Fan counts the fan who shows up every matchday — quietly, consistently — and turns that into something real: a score, a standing, a Passport that is actually yours.',
             ],
-            'primitives' => array_values(array_map(
-                static fn (array $card): array => [
-                    'label' => (string) $card['label'],
-                    'title' => (string) $card['title'],
-                    'body' => (string) $card['body'],
-                ],
-                $primitiveSection['cards'] ?? [],
-            )),
-            'earn' => [
-                [
-                    'pts' => '+50–150 / day',
-                    'name' => 'Daily check-in',
-                    'desc' => 'Claim every day. Streaks raise value from 50 to 150 points.',
-                ],
-                [
-                    'pts' => '+500 / referral',
-                    'name' => 'Refer a fan',
-                    'desc' => 'Friends who join and complete a profile earn you uncapped referral points.',
-                ],
-                [
-                    'pts' => '+100–1000',
-                    'name' => 'Season tasks',
-                    'desc' => 'Social proof, club pick, passport share, and weekly challenges.',
-                ],
-                [
-                    'pts' => '+500 bonus',
-                    'name' => '7-day streak',
-                    'desc' => 'Finish a full week to unlock bonus points and a higher multiplier.',
-                ],
-            ],
-            'weeks' => [
-                ['num' => 'W1', 'name' => 'Kickoff', 'desc' => 'Sign up, pick your club, 2× multiplier.'],
-                ['num' => 'W2', 'name' => 'Squad Up', 'desc' => 'First referrals and the referral board.'],
-                ['num' => 'W3', 'name' => 'Daily Grind', 'desc' => '7-day streak bonus unlocked.'],
-                ['num' => 'W4', 'name' => 'Social Proof', 'desc' => 'Share your Fan Passport publicly.'],
-                ['num' => 'W5', 'name' => 'Loyalty Test', 'desc' => 'Knowledge and prediction challenges.'],
-                ['num' => 'W6', 'name' => 'Top 100 Race', 'desc' => 'Leaderboard snapshot for exclusive tiers.'],
-                ['num' => 'W7', 'name' => 'Final Push', 'desc' => 'Bonus drops and 3× referral multiplier.'],
-                ['num' => 'W8', 'name' => 'Judgment Day', 'desc' => 'Final board, early access, rewards.'],
-            ],
-            'roadmap' => array_values(array_map(
-                static fn (array $card): array => [
-                    'label' => (string) $card['label'],
-                    'title' => (string) $card['title'],
-                    'body' => (string) $card['body'],
-                ],
-                $timelineSection['cards'] ?? [],
-            )),
-            'regions' => array_values(array_map(
-                static fn (array $card): array => [
-                    'label' => (string) $card['label'],
-                    'title' => (string) $card['title'],
-                    'body' => (string) $card['body'],
-                ],
-                $hubSection['cards'] ?? [],
-            )),
-            'team' => array_values(array_map(
-                static fn (array $member): array => [
-                    'name' => (string) $member['name'],
-                    'role' => (string) $member['role'],
-                    'photo' => $member['photo'] ?? null,
-                ],
-                array_slice($team['members'] ?? [], 0, 3),
-            )),
             'pages' => [
+                [
+                    'href' => '/community',
+                    'label' => 'Community',
+                    'title' => 'Your club, your terrace',
+                    'body' => 'The feed and chat rooms built around your favourite club.',
+                ],
+                [
+                    'href' => '/rewards',
+                    'label' => 'Rewards',
+                    'title' => 'How loyalty pays off',
+                    'body' => 'Recognition, tiers, and what your Passport unlocks.',
+                ],
                 [
                     'href' => '/about',
                     'label' => 'About',
@@ -523,6 +464,141 @@ class MadFanStory
                         'Email: career.madfan@gmail.com',
                         'Website: madfan.xyz',
                         'Meet the team: /team',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function community(): array
+    {
+        return [
+            'title' => 'Fan Community',
+            'eyebrow' => 'Belong Somewhere',
+            'description' => 'Every club has fans. Not every club has a place for them to show up together. Mad Fan gives yours one — a terrace to post on and a room to talk in, full of people who bleed the same colours.',
+            'sections' => [
+                [
+                    'eyebrow' => 'The Terrace',
+                    'title' => 'A Feed Built Around Your Club',
+                    'bodies' => [
+                        'Pick a favourite club when you join and your terrace opens around it. Post, reply, like, and repost — every action is public to your fellow fans and quietly counts toward your Passport.',
+                        'No algorithm chasing outrage. Your feed stays club-first: the people posting are the people who picked the same colours you did.',
+                    ],
+                ],
+                [
+                    'eyebrow' => 'Club Rooms',
+                    'title' => 'Talk Matchday In Real Time',
+                    'bodies' => [
+                        'Every club gets its own rooms — a general hangout and a live matchday channel — the way a Discord server would, except everyone in it already supports your team.',
+                    ],
+                    'bullets' => [
+                        'Text chat with your club, always on',
+                        'A dedicated matchday room for live reaction',
+                        'Chatting counts toward your loyalty ledger too',
+                    ],
+                ],
+                [
+                    'eyebrow' => 'Why It Feels Different',
+                    'title' => 'Contribution, Not Just Consumption',
+                    'cards' => [
+                        [
+                            'label' => '01',
+                            'title' => 'Club First',
+                            'body' => 'Your feed and rooms are scoped to the club you picked, not a global firehose.',
+                        ],
+                        [
+                            'label' => '02',
+                            'title' => 'Counted, Not Lost',
+                            'body' => 'Posts, replies, likes received, and chat all mint loyalty into one ledger, nothing you do here disappears.',
+                        ],
+                        [
+                            'label' => '03',
+                            'title' => 'Identity, Not Just Activity',
+                            'body' => 'Your standing shows up on your Fan Passport: who you are, not just what you posted today.',
+                        ],
+                    ],
+                ],
+                [
+                    'eyebrow' => "What's Next",
+                    'title' => 'Built In The Open',
+                    'bodies' => [
+                        'The community is live today and still growing. Official club accounts and deeper moderation tools are what we are building toward next.',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function rewards(): array
+    {
+        return [
+            'title' => 'Rewards & Loyalty',
+            'eyebrow' => 'Recognition, Not Redemption',
+            'description' => "This isn't a coupon app. Mad Fan turns showing up — every day, every post, every matchday — into one score that's yours: visible, verifiable, and worth something.",
+            'sections' => [
+                [
+                    'eyebrow' => 'The Loop',
+                    'title' => 'How Participation Becomes Loyalty',
+                    'bodies' => [
+                        'Nothing here is a shortcut. Every step feeds the next, and the ledger behind it never resets on you.',
+                    ],
+                    'cards' => [
+                        [
+                            'label' => '01',
+                            'title' => 'Participation',
+                            'body' => 'Pick a club, check in daily, post on the terrace, talk in your club room.',
+                        ],
+                        [
+                            'label' => '02',
+                            'title' => 'Engagement',
+                            'body' => 'Replies, likes received, referrals, and season tasks all add to the same ledger.',
+                        ],
+                        [
+                            'label' => '03',
+                            'title' => 'Recognition',
+                            'body' => 'Every earn writes a transaction you can see, no silent point bumps, ever.',
+                        ],
+                        [
+                            'label' => '04',
+                            'title' => 'Loyalty',
+                            'body' => 'Your total becomes a score, a tier, and a streak, carried on your Fan Passport.',
+                        ],
+                        [
+                            'label' => '05',
+                            'title' => 'Rewards',
+                            'body' => 'Standing unlocks season prizes now, and priority access and experiences as the Loyalty Marketplace opens.',
+                        ],
+                    ],
+                ],
+                [
+                    'eyebrow' => 'How You Earn',
+                    'title' => 'One Ledger, Many Ways In',
+                    'bullets' => [
+                        'Daily check-ins and streaks',
+                        "Posting, replying, and getting liked on your club's terrace",
+                        "Chatting in your club's rooms",
+                        'Referring fans who stick around',
+                        'Season campaign tasks and challenges',
+                    ],
+                ],
+                [
+                    'eyebrow' => 'Your Passport',
+                    'title' => 'Loyalty You Can Point To',
+                    'bodies' => [
+                        "Your Passport is the one place all of it lives: your score, your tier, your streak, your club, and the full history of how you got there. It's not a leaderboard vanity metric, it's your fan identity.",
+                    ],
+                ],
+                [
+                    'eyebrow' => "What's Ahead",
+                    'title' => 'Where Loyalty Is Headed',
+                    'bodies' => [
+                        'Season rewards are live today. The Loyalty Marketplace, where verified standing unlocks partner perks and experiences, and the Global Loyalty Index, benchmarking loyalty across clubs and leagues, are what we are building toward next.',
                     ],
                 ],
             ],

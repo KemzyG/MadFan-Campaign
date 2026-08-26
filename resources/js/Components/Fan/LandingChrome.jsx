@@ -4,10 +4,10 @@ import FanBrandLogo from './FanBrandLogo';
 
 export const LANDING_NAV = [
     { href: '/campaign', label: 'Campaign' },
-    { href: '/social', label: 'Social' },
+    { href: '/community', label: 'Community' },
+    { href: '/rewards', label: 'Rewards' },
     { href: '/social/shop', label: 'Store' },
     { href: '/about', label: 'About' },
-    { href: '/roadmap', label: 'Roadmap' },
     { href: '/team', label: 'Team' },
 ];
 
@@ -16,7 +16,8 @@ export const LANDING_FOOTER = [
         title: 'Product',
         links: [
             { href: '/campaign', label: 'Campaign' },
-            { href: '/social', label: 'Social' },
+            { href: '/community', label: 'Community' },
+            { href: '/rewards', label: 'Rewards' },
             { href: '/social/shop', label: 'Store' },
             { href: '/social/fixtures', label: 'Fixtures' },
         ],
@@ -31,7 +32,7 @@ export const LANDING_FOOTER = [
         ],
     },
     {
-        title: 'Help',
+        title: 'Get started',
         links: [
             { href: '/login', label: 'Sign in' },
             { href: '/register', label: 'Create account' },
@@ -41,7 +42,7 @@ export const LANDING_FOOTER = [
     {
         title: 'Community',
         links: [
-            { href: '/social', label: 'Global feed' },
+            { href: '/community', label: 'Fan community' },
             { href: '/social/stage', label: 'Live stage' },
             { href: '/social/tickets', label: 'Match tickets' },
         ],
@@ -82,14 +83,16 @@ function HeartIcon() {
 }
 
 export function LandingUtil() {
-    const { auth } = usePage().props;
-    const user = auth?.user;
+    const page = usePage();
+    const user = page.props?.auth?.user;
 
     return (
         <div className="mf-land__util">
-            <Link href="/about">Help</Link>
+            <Link href="/about">About</Link>
             {user ? (
-                <Link href="/dashboard">Dashboard</Link>
+                // Plain anchor: Social is a separate Inertia root/bundle from this
+                // landing page, so it needs a full navigation, not a client visit.
+                <a href={socialPath(page.props)}>Open Mad Fan</a>
             ) : (
                 // Plain anchor: /login renders in the dark Social shell, which
                 // needs a full navigation to load its bundle/styles.

@@ -100,7 +100,7 @@ function IconChat({ active }) {
     );
 }
 
-function IconMenu() {
+export function IconMenu() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path strokeLinecap="round" strokeWidth="1.85" d="M4 7h16M4 12h16M4 17h16" />
@@ -108,7 +108,7 @@ function IconMenu() {
     );
 }
 
-function IconBell() {
+export function IconBell() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -122,7 +122,7 @@ function IconBell() {
     );
 }
 
-function IconCampaign() {
+export function IconCampaign() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -136,7 +136,7 @@ function IconCampaign() {
     );
 }
 
-function IconSport({ active }) {
+export function IconSport({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <circle cx="12" cy="12" r="8.2" strokeWidth={active ? 2.25 : 1.75} />
@@ -150,7 +150,7 @@ function IconSport({ active }) {
     );
 }
 
-function IconShop({ active }) {
+export function IconShop({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <path
@@ -164,7 +164,7 @@ function IconShop({ active }) {
     );
 }
 
-function IconStage({ active }) {
+export function IconStage({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <circle cx="12" cy="12" r="3.1" strokeWidth={active ? 2.25 : 1.75} />
@@ -487,6 +487,7 @@ export default function SocialShell({
     fillViewport = false,
     mobileBare = false,
     wide = false,
+    hideHeaderOnMobile = false,
 }) {
     const page = usePage();
     const { auth, flash, app } = page.props;
@@ -757,6 +758,7 @@ export default function SocialShell({
                         fillViewport ? 'mf-shell--fill' : '',
                         mobileBare ? 'mf-shell--mobile-bare' : '',
                         wide ? 'mf-shell--wide' : '',
+                        hideHeaderOnMobile ? 'mf-shell--custom-header' : '',
                     ]
                         .filter(Boolean)
                         .join(' ')}

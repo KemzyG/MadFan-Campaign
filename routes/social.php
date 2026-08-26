@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
+use App\Http\Controllers\Api\Social\DailyTaskController as ApiSocialDailyTaskController;
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
 use App\Http\Controllers\Api\Social\ChatUnreadController as ApiSocialChatUnreadController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchC
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
 use App\Http\Controllers\Inertia\Social\SocialClubProfileController;
+use App\Http\Controllers\Inertia\Social\SocialDailyTaskController;
 use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
 use App\Http\Controllers\Inertia\Social\SocialEventsController;
 use App\Http\Controllers\Inertia\Social\SocialFeedController;
@@ -94,6 +96,13 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/users/search', [ApiSocialUserSearchController::class, 'index'])
                     ->middleware('throttle:60,1')
                     ->name('users.search');
+
+                Route::get('/tasks', [ApiSocialDailyTaskController::class, 'show'])
+                    ->middleware('throttle:60,1')
+                    ->name('tasks.show');
+                Route::post('/tasks/claim', [ApiSocialDailyTaskController::class, 'claim'])
+                    ->middleware('throttle:10,1')
+                    ->name('tasks.claim');
 
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
@@ -282,6 +291,7 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/shop/{jersey:slug}', [SocialShopController::class, 'show'])->name('shop.show');
 
                 Route::get('/you', SocialYouController::class)->name('you');
+            Route::get('/tasks', SocialDailyTaskController::class)->name('tasks');
                 Route::patch('/you', SocialProfileSettingsController::class)
                     ->middleware('throttle:10,1')
                     ->name('you.update');

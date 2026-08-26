@@ -80,6 +80,8 @@ $registerCampaignRoutes = function (): void {
     Route::get('/region', fn () => app(StaticPageController::class)->show('region'))->name('fan.region');
     Route::get('/team', fn () => app(StaticPageController::class)->show('team'))->name('fan.team');
     Route::get('/about', fn () => app(StaticPageController::class)->show('about'))->name('fan.about');
+    Route::get('/community', fn () => app(StaticPageController::class)->show('community'))->name('fan.community');
+    Route::get('/rewards', fn () => app(StaticPageController::class)->show('rewards'))->name('fan.rewards');
 
     Route::middleware('app.maintenance')->group(function () {
         Route::middleware('guest')->group(function () {

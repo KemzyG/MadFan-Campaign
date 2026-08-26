@@ -10,9 +10,55 @@
     animation: mf-page-in 240ms var(--mf-ease) both;
 }
 
+/* ---- Mobile topbar — replaces the generic SocialShell header on this page
+   only (see `hideHeaderOnMobile` in SocialShell + `.mf-shell--custom-header`
+   in core/shell.css). Desktop keeps the generic bar, so this is hidden ≥768px;
+   the negative margins are inert there, cancelling `.mf-you-page`'s own inset
+   only while the topbar actually renders. */
+.mf-you-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: calc(var(--mf-header-h) + var(--mf-safe-top));
+    margin: -0.85rem -0.85rem 0.85rem;
+    padding: calc(var(--mf-safe-top) + 0.3rem) 0.85rem 0.3rem;
+    background: var(--mf-canvas);
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-you-topbar__title {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-you-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+    .mf-you-topbar {
+        display: none;
+    }
+}
+
 .mf-you-hero__avatar-wrap {
     position: relative;
     flex-shrink: 0;
+}
+
+/* A soft gradient rim behind the avatar — the one spot of chroma on an
+   otherwise monochrome hero, and a quiet "this is you" marker at a glance. */
+.mf-you-hero__avatar-ring {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: var(--mf-radius-full);
+    background: linear-gradient(135deg, var(--mf-pitch), var(--mf-amber));
 }
 
 .mf-you-hero__avatar-img {
@@ -51,15 +97,19 @@
 }
 
 /* Quick links — the former sidebar destinations for wallet, passport and
- * leaderboard, now surfaced from the self profile instead. */
+ * leaderboard, now surfaced from the self profile instead: a 2-up tile grid
+ * for content destinations, plus "Change club" as its own row below (an
+ * account action, not a destination, so it doesn't belong in the grid). */
 .mf-you-links {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.85rem;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
-    background: var(--mf-panel);
+    gap: 0.6rem;
+}
+
+.mf-you-links__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
 }
 
 .mf-you-link {
@@ -70,11 +120,32 @@
     border-radius: var(--mf-radius);
     color: var(--mf-text);
     text-decoration: none;
-    transition: background 120ms var(--mf-ease);
+    transition: background 120ms var(--mf-ease), transform 120ms var(--mf-ease), border-color 120ms var(--mf-ease);
+}
+
+.mf-you-links__grid .mf-you-link {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.9rem 0.85rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: var(--mf-panel);
+}
+
+.mf-you-link--row {
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: var(--mf-panel);
+    padding: 0.7rem 0.85rem;
 }
 
 .mf-you-link:hover {
     background: var(--mf-elevated);
+}
+
+.mf-you-link:active {
+    transform: scale(0.98);
 }
 
 .mf-you-link__icon {
@@ -99,6 +170,10 @@
     flex-direction: column;
     min-width: 0;
     flex: 1;
+}
+
+.mf-you-links__grid .mf-you-link__copy {
+    width: 100%;
 }
 
 .mf-you-link__label {
@@ -222,4 +297,115 @@
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+}
+
+/* Edit profile is the one action worth reaching for; Public profile trails it
+ * as a smaller secondary, instead of the two equal-width buttons every other
+ * profile-actions row uses. Scoped to the self hero only — ProfileHero (visit)
+ * keeps the even split for Follow/Message. */
+.mf-you-hero .mf-profile-actions {
+    grid-template-columns: 1.4fr 1fr;
+}
+
+/* ---- "More" nav sheet — the destinations that don't fit the bottom tab bar,
+ * reached from YouHeader's menu button (see YouNavSheet.jsx). Built on the
+ * shared .mf-sheet bottom-sheet chrome from core/composer.css. */
+.mf-you-nav__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0.35rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-you-nav__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.6rem 0.5rem;
+    border: 0;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    color: var(--mf-text);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 120ms var(--mf-ease);
+}
+
+.mf-you-nav__item:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-you-nav__item.is-danger {
+    color: var(--mf-rival);
+}
+
+.mf-you-nav__item.is-danger:hover {
+    background: color-mix(in srgb, var(--mf-rival) 12%, transparent);
+}
+
+.mf-you-nav__item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    color: var(--mf-pitch);
+}
+
+.mf-you-nav__item.is-danger .mf-you-nav__item-icon {
+    color: var(--mf-rival);
+}
+
+.mf-you-nav__item-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-you-nav__item-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.mf-you-nav__item-label {
+    font-size: var(--mf-text-ui);
+    font-weight: 600;
+}
+
+.mf-you-nav__item-hint {
+    color: var(--mf-muted);
+}
+
+.mf-you-nav__item-badge {
+    flex-shrink: 0;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-bad);
+    color: #fff;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+}
+
+.mf-you-nav__sep {
+    height: 1px;
+    margin: 0.4rem 0.5rem;
+    background: var(--mf-line);
+    border: 0;
+    padding: 0;
+    list-style: none;
 }

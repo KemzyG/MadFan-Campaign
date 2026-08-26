@@ -4,6 +4,7 @@ import SocialShell from '../../../Layouts/SocialShell';
 import SplitView from '../components/SplitView';
 import { ProfileSkeleton } from '../components/Skeletons';
 import ProfileFeed from '../Profile/ProfileFeed';
+import YouHeader from './YouHeader';
 import YouHero from './YouHero';
 import YouQuickLinks from './YouQuickLinks';
 import YouSettingsModal from './YouSettingsModal';
@@ -12,13 +13,15 @@ export default function Index({ identity, loyalty, records, feed }) {
     const [settingsOpen, setSettingsOpen] = useState(false);
 
     return (
-        <SocialShell title="You" backHref="/social" wide>
+        <SocialShell title="You" backHref="/social" wide hideHeaderOnMobile>
             <Head title="You" />
 
-            {identity == null ? (
-                <ProfileSkeleton />
-            ) : (
-                <div className="mf-profile-page mf-you-page">
+            <div className="mf-profile-page mf-you-page">
+                <YouHeader onOpenSettings={() => setSettingsOpen(true)} />
+
+                {identity == null ? (
+                    <ProfileSkeleton />
+                ) : (
                     <SplitView
                         mode="rail"
                         railLabel="Your profile"
@@ -38,8 +41,8 @@ export default function Index({ identity, loyalty, records, feed }) {
                             <ProfileFeed profile={{ name: identity.name }} feed={feed} isVisit={false} />
                         }
                     />
-                </div>
-            )}
+                )}
+            </div>
 
             <YouSettingsModal
                 open={settingsOpen}

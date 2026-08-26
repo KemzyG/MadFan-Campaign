@@ -110,6 +110,18 @@ export default function StaticPage({
                     <LandingStoryCtas />
                 </div>
                 <div className="mf-land__page-grid">
+                    <Link href="/community" className="mf-land__page-card">
+                        <p className="mf-land__info-label">Ecosystem</p>
+                        <h3>Community</h3>
+                        <p>Your club's terrace and chat rooms.</p>
+                        <span>Open</span>
+                    </Link>
+                    <Link href="/rewards" className="mf-land__page-card">
+                        <p className="mf-land__info-label">Ecosystem</p>
+                        <h3>Rewards</h3>
+                        <p>How participation becomes loyalty.</p>
+                        <span>Open</span>
+                    </Link>
                     <Link href="/about" className="mf-land__page-card">
                         <p className="mf-land__info-label">Company</p>
                         <h3>About</h3>

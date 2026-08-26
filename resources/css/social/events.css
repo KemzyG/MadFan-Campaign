@@ -661,6 +661,7 @@
     min-height: 1.95rem;
     padding: 0.3rem 0.9rem;
     border-radius: var(--mf-radius-pill);
+    font-size: var(--mf-text-caption);
     font-weight: 700;
     transition: transform var(--mf-dur-fast) var(--mf-ease), filter var(--mf-dur-fast) var(--mf-ease);
 }

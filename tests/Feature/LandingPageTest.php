@@ -15,12 +15,6 @@ test('site landing page is public at root', function () {
             ->has('images.phones')
             ->has('stats.waitlist_count')
             ->has('story.thesis')
-            ->has('story.primitives')
-            ->has('story.earn')
-            ->has('story.weeks')
-            ->has('story.roadmap')
-            ->has('story.regions')
-            ->has('story.team')
             ->has('story.pages'));
 });
 
@@ -81,7 +75,7 @@ test('campaign app landing lives at /campaign', function () {
 });
 
 test('company story pages remain public', function () {
-    foreach (['/about', '/roadmap', '/region', '/team'] as $path) {
+    foreach (['/about', '/roadmap', '/region', '/team', '/community', '/rewards'] as $path) {
         $this->get($path)->assertSuccessful();
     }
 });
@@ -117,6 +111,24 @@ test('company story pages render Fan StaticPage or Team components', function ()
             ->where('slug', 'team')
             ->has('members')
             ->has('open_roles'));
+
+    $this->get('/community')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/StaticPage')
+            ->where('slug', 'community')
+            ->has('sections')
+            ->has('title')
+            ->has('eyebrow'));
+
+    $this->get('/rewards')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/StaticPage')
+            ->where('slug', 'rewards')
+            ->has('sections')
+            ->has('title')
+            ->has('eyebrow'));
 });
 
 test('fan.home and fan.campaign named routes resolve correctly', function () {
