@@ -1,0 +1,615 @@
+/*
+ * Social — Fandom hub: community/discovery front door for a fandom (today,
+ * just Football). Vibrants light throughout. Aggregates cards/components
+ * that already exist elsewhere (EventCard, PostCard) rather than
+ * reintroducing their styling here.
+ */
+
+.mf-fh {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 34rem;
+    margin-inline: auto;
+    padding-bottom: 2rem;
+}
+
+/* Cover */
+.mf-fh-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    /* Now the very first thing in the column — the generic .mf-header (and
+       its own --mf-safe-top padding) no longer sits above it on this page. */
+    padding: calc(1.5rem + var(--mf-safe-top)) 1rem 1.25rem;
+    text-align: center;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-fh-cover__crest {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 0.4rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
+    font-size: 1.44rem;
+}
+
+.mf-fh-cover__name {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-heading-sm);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-cover__handle {
+    margin: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-fh-cover__count {
+    margin: 0.1rem 0 0.6rem;
+    color: var(--mf-muted);
+    font-weight: 600;
+}
+
+.mf-fh-cover__join {
+    min-width: 9rem;
+}
+
+/* Tab nav — a horizontally sliding strip (swipe/drag left-right), not five
+   equal-width slots. Buttons size to their label so the strip can actually
+   overflow and scroll instead of always fitting the viewport by squeezing. */
+.mf-fh-nav {
+    display: flex;
+    position: sticky;
+    /* The generic .mf-header no longer sits above this page (hideHeader on
+       SocialShell), so there's no header height left to offset for. */
+    top: 0;
+    z-index: 20;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    cursor: grab;
+    /* Dragging with a mouse (see FandomNav's useDragToScroll) would otherwise
+       select the tab labels as text on every drag. */
+    -webkit-user-select: none;
+    user-select: none;
+    border-bottom: 1px solid var(--mf-line-soft);
+    background: var(--mf-canvas);
+}
+
+.mf-fh-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-fh-nav button {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: 0.8rem 0.9rem 0.7rem;
+    border: 0;
+    background: transparent;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+}
+
+.mf-fh-nav button.is-active {
+    color: var(--mf-text);
+}
+
+.mf-fh-nav button.is-active::after {
+    content: '';
+    position: absolute;
+    left: 25%;
+    right: 25%;
+    bottom: 0;
+    height: 3px;
+    border-radius: var(--mf-radius-badge) var(--mf-radius-badge) 0 0;
+    background: var(--mf-pitch);
+}
+
+.mf-fh-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 0.85rem;
+}
+
+/* Pulse */
+.mf-fh-pulse {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-fh-pulse__label {
+    margin: 0 0 0.7rem;
+    font-family: var(--mf-font-label);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-fh-pulse__row {
+    display: flex;
+    gap: 0.7rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mf-fh-pulse__row::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-fh-pulse__stat {
+    flex: 0 0 auto;
+    min-width: 5.5rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.mf-fh-pulse__value {
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-pulse__caption {
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    line-height: 1.3;
+}
+
+/* Generic section */
+.mf-fh-section {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-fh-section:last-child {
+    border-bottom: 0;
+}
+
+.mf-fh-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.mf-fh-section__title {
+    margin: 0 0 0.7rem;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-section__head .mf-fh-section__title {
+    margin-bottom: 0;
+}
+
+.mf-fh-section__more {
+    flex-shrink: 0;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-pitch);
+    text-decoration: none;
+}
+
+/* Activity grid (challenges / predictions / polls) */
+.mf-fh-activity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+    gap: 0.7rem;
+}
+
+.mf-fh-activity-card {
+    padding: 0.9rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mf-fh-activity-card__kicker {
+    margin: 0;
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--mf-pitch);
+}
+
+.mf-fh-activity-card__meta {
+    margin: 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+.mf-fh-activity-card__result {
+    margin: 0.1rem 0 0;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-muted);
+}
+
+.mf-fh-activity-card__result.is-correct {
+    color: var(--mf-pitch);
+}
+
+.mf-fh-activity-card__result.is-wrong {
+    color: var(--mf-danger, #b3382c);
+}
+
+/* Prediction card */
+.mf-fh-prediction-card__matchup {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-prediction-card__choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+    margin-top: 0.2rem;
+}
+
+.mf-fh-prediction-choice {
+    padding: 0.4rem 0.2rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mf-fh-prediction-choice.is-selected {
+    border-color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 12%, var(--mf-elevated));
+    color: var(--mf-pitch);
+}
+
+.mf-fh-prediction-choice.is-correct {
+    border-color: var(--mf-pitch);
+    background: var(--mf-pitch);
+    color: #fff;
+}
+
+.mf-fh-prediction-choice:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+/* Poll card */
+.mf-fh-poll-card__question {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-poll-card__options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mf-fh-poll-option {
+    display: block;
+    width: 100%;
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    text-align: left;
+    cursor: pointer;
+}
+
+.mf-fh-poll-option.is-selected {
+    border-color: var(--mf-pitch);
+}
+
+.mf-fh-poll-option:disabled {
+    cursor: default;
+}
+
+.mf-fh-poll-option__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.mf-fh-poll-option__label {
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-fh-poll-option__percent {
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+.mf-fh-poll-option__track {
+    display: block;
+    margin-top: 0.3rem;
+    height: 0.3rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-line-soft);
+    overflow: hidden;
+}
+
+.mf-fh-poll-option__track > span {
+    display: block;
+    height: 100%;
+    background: var(--mf-pitch);
+    transition: width 320ms var(--mf-ease);
+}
+
+/* Challenge card */
+.mf-fh-challenge-card__name {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-challenge-card__cta {
+    margin-top: 0.2rem;
+    align-self: flex-start;
+    min-height: 1.9rem;
+    padding: 0.3rem 0.75rem;
+}
+
+/* Feed / live streams (reuse PostCard / EventCard, just stack them) */
+.mf-fh-feed-stream,
+.mf-fh-live-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Leaderboard excerpt */
+.mf-fh-lb-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fh-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+}
+
+.mf-fh-lb-row.is-you {
+    border-color: var(--mf-pitch);
+}
+
+.mf-fh-lb-row__rank {
+    flex-shrink: 0;
+    width: 1.4rem;
+    color: var(--mf-muted);
+    font-weight: 700;
+}
+
+.mf-fh-lb-row__handle {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-fh-lb-row__points {
+    flex-shrink: 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+/* Upcoming */
+.mf-fh-upcoming-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fh-upcoming-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+}
+
+.mf-fh-upcoming-row__matchup {
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-fh-upcoming-row__when {
+    flex-shrink: 0;
+}
+
+/* More tab */
+.mf-fh-more {
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-fh-more__links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-fh-more__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    text-decoration: none;
+}
+
+.mf-fh-more__link-label {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-more__about {
+    margin: 0;
+    color: var(--mf-muted);
+}
+
+.mf-fh-more__history-entry {
+    margin-bottom: 0.7rem;
+}
+
+.mf-fh-more__history-entry:last-child {
+    margin-bottom: 0;
+}
+
+.mf-fh-more__history-heading {
+    margin: 0 0 0.15rem;
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fh-more__rules {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--mf-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fh-media-strip {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mf-fh-media-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-fh-media-tile {
+    flex: 0 0 auto;
+    width: 5.5rem;
+    height: 9rem;
+    border-radius: var(--mf-radius);
+    background-color: var(--mf-elevated);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.26rem;
+}
+
+/* Members page */
+.mf-fh-members-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fh-member-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--mf-radius);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    text-decoration: none;
+}
+
+.mf-fh-member-row__avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-weight: 700;
+}
+
+.mf-fh-member-row__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-fh-member-row__name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-fh-member-row__points {
+    flex-shrink: 0;
+    font-size: var(--mf-text-caption);
+    color: var(--mf-muted);
+}
+
+.mf-fh-members-pager {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1rem;
+}

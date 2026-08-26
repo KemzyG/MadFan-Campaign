@@ -25,7 +25,7 @@
     backdrop-filter: blur(18px) saturate(1.25);
     -webkit-backdrop-filter: blur(18px) saturate(1.25);
     display: flex;
-    /* Primary mobile nav: Events · Feed · Ticket · Chat */
+    /* Primary mobile nav: Events · Feed · Fandom · Short · Chat */
 }
 
 /*

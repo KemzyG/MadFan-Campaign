@@ -151,7 +151,7 @@
     font-family: var(--mf-font-display);
     font-weight: 700;
     letter-spacing: var(--mf-tracking-display);
-    font-size: 1.75rem;
+    font-size: 1.575rem;
     color: var(--mf-text);
 }
 
@@ -174,7 +174,7 @@
 .mf-auth-brand span {
     font-family: var(--mf-font-display);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }

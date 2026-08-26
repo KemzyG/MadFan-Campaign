@@ -181,7 +181,7 @@
 
 .mf-shop-hero-kit__price {
     margin: 0.15rem 0 0;
-    font-size: 0.82rem;
+    font-size: 0.738rem;
     letter-spacing: 0.05em;
     color: var(--mf-pitch);
 }
@@ -421,7 +421,7 @@
 
 .mf-shop-featured-card__title {
     margin: 0;
-    font-size: 0.72rem;
+    font-size: 0.648rem;
     line-height: 1.1;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -431,7 +431,7 @@
 
 .mf-shop-featured-card__price {
     margin: 0.08rem 0 0;
-    font-size: 0.68rem;
+    font-size: 0.612rem;
     letter-spacing: 0.03em;
     color: var(--mf-pitch);
 }
@@ -609,7 +609,7 @@
 }
 
 .mf-shop-browse__crest .mf-shop-crest__mark {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
 }
 
 .mf-shop-card--compact .mf-shop-card__media {
@@ -626,7 +626,7 @@
 }
 
 .mf-shop-card--compact .mf-shop-card__club p {
-    font-size: 0.58rem;
+    font-size: 0.522rem;
 }
 
 .mf-shop-card--compact .mf-shop-card__crest {
@@ -644,13 +644,13 @@
 }
 
 .mf-shop-card--compact .mf-shop-card__title {
-    font-size: 0.72rem;
+    font-size: 0.648rem;
     line-height: 1.1;
     -webkit-line-clamp: 2;
 }
 
 .mf-shop-card--compact .mf-shop-card__sizes {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
 }
 
 .mf-shop-card--compact .mf-shop-card__meta {
@@ -660,11 +660,11 @@
 }
 
 .mf-shop-card--compact .mf-shop-card__price {
-    font-size: 0.68rem;
+    font-size: 0.612rem;
 }
 
 .mf-shop-card--compact .mf-ticket-chip {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     padding: 0.1rem 0.24rem;
 }
 
@@ -779,7 +779,7 @@
 }
 
 .mf-shop-crest__mark {
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     letter-spacing: 0.08em;
     color: var(--mf-pitch-dim);
 }
@@ -813,7 +813,7 @@
 }
 
 .mf-shop-card__crest .mf-shop-crest__mark {
-    font-size: 0.65rem;
+    font-size: 0.585rem;
 }
 
 .mf-shop-card__club p {
@@ -825,7 +825,7 @@
 
 .mf-shop-card__title {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.9rem;
     line-height: 1.2;
     letter-spacing: 0.01em;
     display: -webkit-box;
@@ -932,7 +932,7 @@
 
 .mf-shop-detail__price {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     letter-spacing: 0.02em;
 }
 
@@ -1103,7 +1103,7 @@
     color: #fca5a5;
     font: inherit;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
 }
 
 .mf-shop-summary {
@@ -1129,7 +1129,7 @@
     display: flex;
     justify-content: space-between;
     gap: 0.75rem;
-    font-size: 0.9rem;
+    font-size: 0.81rem;
 }
 
 .mf-shop-summary__total {
@@ -1275,7 +1275,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.72rem;
+    font-size: 0.648rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -1302,7 +1302,7 @@
 
 .mf-reel-slide__caption {
     margin: 0;
-    font-size: 0.82rem;
+    font-size: 0.738rem;
     line-height: 1.35;
     color: color-mix(in srgb, #fff 88%, transparent);
     display: -webkit-box;
@@ -1312,7 +1312,7 @@
 }
 
 .mf-reel-slide__author {
-    font-size: 0.78rem;
+    font-size: 0.702rem;
     font-weight: 600;
     color: color-mix(in srgb, #fff 72%, transparent);
     text-decoration: none;

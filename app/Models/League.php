@@ -15,7 +15,7 @@ class League extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sport_id',
+        'fandom_id',
         'name',
         'short',
         'logo',
@@ -28,9 +28,9 @@ class League extends Model
         'logo_url',
     ];
 
-    public function sport(): BelongsTo
+    public function fandom(): BelongsTo
     {
-        return $this->belongsTo(Sport::class);
+        return $this->belongsTo(Fandom::class);
     }
 
     public function clubs(): HasMany

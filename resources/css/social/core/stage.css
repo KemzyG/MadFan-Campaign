@@ -610,7 +610,7 @@
 .mf-stage-hero__title {
     margin: 0;
     font-family: var(--mf-font-display);
-    font-size: 1.75rem;
+    font-size: 1.575rem;
     font-weight: 600;
     line-height: 1.02;
     letter-spacing: -0.01em;
@@ -1452,7 +1452,7 @@
     position: absolute;
     bottom: 1.5rem;
     transform: translateX(-50%);
-    font-size: 1.7rem;
+    font-size: 1.53rem;
     line-height: 1;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
     animation: mf-stage-rx 2.3s var(--mf-ease) forwards;
@@ -1588,7 +1588,7 @@
     border: 0;
     border-radius: var(--mf-radius);
     background: transparent;
-    font-size: 1.35rem;
+    font-size: 1.215rem;
     line-height: 1;
     cursor: pointer;
     transition:
@@ -2691,7 +2691,7 @@
 }
 
 .mf-stage-react-fab__emoji {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     line-height: 1;
 }
 
@@ -2749,7 +2749,7 @@
     border: 1px solid transparent;
     border-radius: var(--mf-radius);
     background: transparent;
-    font-size: 1.35rem;
+    font-size: 1.215rem;
     line-height: 1;
     cursor: pointer;
     transition:
@@ -2826,7 +2826,7 @@
     }
 
     .mf-stage-hero__title {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 }
 

@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { createPortal } from 'react-dom';
 import { useEffect, useId } from 'react';
 import { IconClose } from '../components/post/icons';
-import { IconBell, IconCampaign, IconShop, IconSport, IconStage } from '../../../Layouts/SocialShell';
+import { IconBell, IconCampaign, IconFandom, IconShop, IconStage } from '../../../Layouts/SocialShell';
 
 function IconLogout() {
     return (
@@ -15,7 +15,7 @@ function IconLogout() {
 
 const LINKS = [
     { href: '/social/notifications', label: 'Notifications', hint: 'Mentions, replies & alerts', icon: IconBell, showCount: true },
-    { href: '/social/sport', label: 'Sport', hint: 'Fixtures, table & clubs', icon: IconSport },
+    { href: '/social/fandom', label: 'Fandom', hint: 'Live, predictions & more', icon: IconFandom },
     { href: '/social/shop', label: 'Store', hint: 'Kit & merch', icon: IconShop },
     { href: '/social/stage', label: 'Join stage', hint: 'Live voice rooms', icon: IconStage },
     { href: '/campaign', label: 'Campaign', hint: 'The wider Mad Fan app', icon: IconCampaign },

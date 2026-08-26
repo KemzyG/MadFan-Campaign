@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Inertia\Social;
 use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\ClubMembership;
-use App\Models\Sport;
+use App\Models\Fandom;
+use App\Models\FandomFollow;
 use App\Models\User;
 use App\Services\Social\SocialPassportService;
 use Illuminate\Http\RedirectResponse;
@@ -16,37 +17,42 @@ use Inertia\Response;
 
 class SocialOnboardingController extends Controller
 {
-    public function sport(Request $request): Response|RedirectResponse
+    public function fandom(Request $request): Response|RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
 
-        if ($user->favourite_sport_id !== null) {
+        if ($user->favourite_fandom_id !== null) {
             return redirect()->route('social.onboarding.club');
         }
 
-        $sports = Sport::query()
+        $fandoms = Fandom::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'slug'])
             ->values()
             ->all();
 
-        return Inertia::render('Social/Onboarding/PickSport', [
-            'sports' => $sports,
+        return Inertia::render('Social/Onboarding/PickFandom', [
+            'fandoms' => $fandoms,
         ]);
     }
 
-    public function storeSport(Request $request): RedirectResponse
+    public function storeFandom(Request $request): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
 
         $validated = $request->validate([
-            'sport_id' => ['required', 'integer', 'exists:sports,id'],
+            'fandom_id' => ['required', 'integer', 'exists:fandoms,id'],
         ]);
 
-        $user->forceFill(['favourite_sport_id' => $validated['sport_id']])->save();
+        $user->forceFill(['favourite_fandom_id' => $validated['fandom_id']])->save();
+
+        FandomFollow::query()->firstOrCreate([
+            'user_id' => $user->id,
+            'fandom_id' => $validated['fandom_id'],
+        ]);
 
         return redirect()->route('social.onboarding.club');
     }
@@ -56,8 +62,8 @@ class SocialOnboardingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if ($user->favourite_sport_id === null) {
-            return redirect()->route('social.onboarding.sport');
+        if ($user->favourite_fandom_id === null) {
+            return redirect()->route('social.onboarding.fandom');
         }
 
         if ($user->social_onboarded_at !== null && $user->favourite_club_id !== null) {
@@ -66,7 +72,7 @@ class SocialOnboardingController extends Controller
 
         $clubs = Club::query()
             ->with('league:id,name')
-            ->whereHas('league', fn ($query) => $query->where('sport_id', $user->favourite_sport_id))
+            ->whereHas('league', fn ($query) => $query->where('fandom_id', $user->favourite_fandom_id))
             ->orderBy('name')
             ->get()
             ->map(fn (Club $club) => [

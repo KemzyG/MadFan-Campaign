@@ -6,7 +6,7 @@ import '../css/social/notifications.css';
 import '../css/social/wallet.css';
 import '../css/social/clubs.css';
 import '../css/social/fixtures.css';
-import '../css/social/sport.css';
+import '../css/social/fandom.css';
 import '../css/social/passport.css';
 import '../css/social/daily-tasks.css';
 import '../css/social/tickets.css';

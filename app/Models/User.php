@@ -40,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
     'league',
     'club',
     'favourite_club_id',
-    'favourite_sport_id',
+    'favourite_fandom_id',
     'bio',
     'date_of_birth',
     'banner_path',
@@ -302,14 +302,27 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->belongsTo(Club::class, 'favourite_club_id');
     }
 
-    public function favouriteSport(): BelongsTo
+    public function favouriteFandom(): BelongsTo
     {
-        return $this->belongsTo(Sport::class, 'favourite_sport_id');
+        return $this->belongsTo(Fandom::class, 'favourite_fandom_id');
     }
 
     public function clubMemberships(): HasMany
     {
         return $this->hasMany(ClubMembership::class);
+    }
+
+    public function fandomFollows(): HasMany
+    {
+        return $this->hasMany(FandomFollow::class);
+    }
+
+    public function isFollowingFandom(Fandom $fandom): bool
+    {
+        return FandomFollow::query()
+            ->where('user_id', $this->id)
+            ->where('fandom_id', $fandom->id)
+            ->exists();
     }
 
     public function posts(): HasMany

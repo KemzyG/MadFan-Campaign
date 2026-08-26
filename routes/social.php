@@ -6,9 +6,12 @@ use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessag
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
 use App\Http\Controllers\Api\Social\ChatUnreadController as ApiSocialChatUnreadController;
 use App\Http\Controllers\Api\Social\EventInterestController as ApiSocialEventInterestController;
+use App\Http\Controllers\Api\Social\FandomFollowController as ApiSocialFandomFollowController;
 use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
 use App\Http\Controllers\Api\Social\NotificationController as ApiSocialNotificationController;
+use App\Http\Controllers\Api\Social\PollController as ApiSocialPollController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
+use App\Http\Controllers\Api\Social\PredictionController as ApiSocialPredictionController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
@@ -37,7 +40,8 @@ use App\Http\Controllers\Inertia\Social\SocialShopCartController;
 use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
 use App\Http\Controllers\Inertia\Social\SocialShopController;
 use App\Http\Controllers\Inertia\Social\SocialShopOrderController;
-use App\Http\Controllers\Inertia\Social\SocialSportController;
+use App\Http\Controllers\Inertia\Social\SocialFandomController;
+use App\Http\Controllers\Inertia\Social\SocialFandomMembersController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
 use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
@@ -104,6 +108,21 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:10,1')
                     ->name('tasks.claim');
 
+                Route::post('/fandoms/{fandom}/follow', [ApiSocialFandomFollowController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('fandoms.follow');
+                Route::delete('/fandoms/{fandom}/follow', [ApiSocialFandomFollowController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('fandoms.unfollow');
+
+                Route::post('/predictions/{prediction}/vote', [ApiSocialPredictionController::class, 'vote'])
+                    ->middleware('throttle:60,1')
+                    ->name('predictions.vote');
+
+                Route::post('/polls/{poll}/vote', [ApiSocialPollController::class, 'vote'])
+                    ->middleware('throttle:60,1')
+                    ->name('polls.vote');
+
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
                     ->name('chat.messages.store');
@@ -144,10 +163,10 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
             $pages->name('social.');
         }
         $pages->group(function () use ($pathPrefix) {
-            Route::get('/onboarding/sport', [SocialOnboardingController::class, 'sport'])->name('onboarding.sport');
-            Route::post('/onboarding/sport', [SocialOnboardingController::class, 'storeSport'])
+            Route::get('/onboarding/fandom', [SocialOnboardingController::class, 'fandom'])->name('onboarding.fandom');
+            Route::post('/onboarding/fandom', [SocialOnboardingController::class, 'storeFandom'])
                 ->middleware('throttle:12,1')
-                ->name('onboarding.sport.store');
+                ->name('onboarding.fandom.store');
 
             Route::get('/onboarding/club', [SocialOnboardingController::class, 'create'])->name('onboarding.club');
             Route::post('/onboarding/club', [SocialOnboardingController::class, 'store'])
@@ -257,7 +276,8 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:120,1')
                     ->name('videos.view');
 
-                Route::get('/sport', SocialSportController::class)->name('sport');
+                Route::get('/fandom', SocialFandomController::class)->name('fandom');
+                Route::get('/fandom/members', SocialFandomMembersController::class)->name('fandom.members');
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
                 Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');

@@ -335,7 +335,7 @@
     border: 1px solid var(--mf-line);
     background: var(--mf-elevated);
     color: var(--mf-text);
-    font-size: 1.35rem;
+    font-size: 1.215rem;
     line-height: 1;
     cursor: pointer;
 }
@@ -524,7 +524,7 @@
     padding: 0.2rem 0.4rem;
     border: 1px solid color-mix(in srgb, var(--mf-stk-stamp) 55%, transparent);
     color: var(--mf-stk-stamp);
-    font-size: 0.5625rem;
+    font-size: 0.5063rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     transform: rotate(2deg);
@@ -589,7 +589,7 @@
 }
 
 .mf-stk__vs {
-    font-size: 1.1rem;
+    font-size: 0.99rem;
     color: var(--mf-stk-stamp);
     opacity: 0.85;
 }
@@ -612,7 +612,7 @@
 }
 
 .mf-stk__k {
-    font-size: 0.5625rem;
+    font-size: 0.5063rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--mf-stk-ink-soft);
@@ -708,7 +708,7 @@
 
 .mf-stk__stub-ga {
     margin: 0;
-    font-size: 1.55rem;
+    font-size: 1.395rem;
     letter-spacing: 0.08em;
     color: var(--mf-stk-accent);
     line-height: 1;
@@ -716,7 +716,7 @@
 
 .mf-stk__stub-code {
     margin: 0;
-    font-size: 0.625rem;
+    font-size: 0.5625rem;
     letter-spacing: 0.06em;
     color: var(--mf-stk-ink);
     word-break: break-all;
@@ -739,7 +739,7 @@
 
 .mf-stk__qr-hint {
     margin: 0;
-    font-size: 0.5625rem;
+    font-size: 0.5063rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--mf-stk-ink-soft);
@@ -793,7 +793,7 @@
 }
 
 .mf-stk--wallet .mf-stk__club {
-    font-size: 0.95rem;
+    font-size: 0.855rem;
 }
 
 .mf-stk--wallet .mf-stk__grid {
@@ -806,7 +806,7 @@
 }
 
 .mf-stk--wallet .mf-stk__watermark {
-    font-size: 1.55rem;
+    font-size: 1.395rem;
 }
 
 .mf-stk--fresh {

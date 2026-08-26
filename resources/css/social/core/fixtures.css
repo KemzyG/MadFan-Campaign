@@ -185,7 +185,7 @@
 }
 
 .mf-fixture-crest__mark {
-    font-size: 0.7rem;
+    font-size: 0.63rem;
     letter-spacing: 0.04em;
     color: var(--mf-pitch);
 }
@@ -200,7 +200,7 @@
 }
 
 .mf-fixture-vs {
-    font-size: 0.85rem;
+    font-size: 0.765rem;
     letter-spacing: 0.12em;
     color: var(--mf-muted);
 }
@@ -303,7 +303,7 @@
 
 .mf-standings-meta__title {
     font-family: var(--mf-font-display);
-    font-size: 1.05rem;
+    font-size: 0.945rem;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
@@ -405,7 +405,7 @@
 }
 
 .mf-standings-crest__mark {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     letter-spacing: 0.04em;
 }
 

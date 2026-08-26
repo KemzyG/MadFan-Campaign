@@ -17,8 +17,8 @@ class EnsureSocialOnboarded
             return $next($request);
         }
 
-        if ($user->favourite_sport_id === null) {
-            return redirect()->route('social.onboarding.sport');
+        if ($user->favourite_fandom_id === null) {
+            return redirect()->route('social.onboarding.fandom');
         }
 
         if ($user->social_onboarded_at === null || $user->favourite_club_id === null) {

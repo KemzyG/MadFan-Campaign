@@ -48,7 +48,7 @@ class MadFanLegal
                     ],
                     'bullets' => [
                         'Account information — name, email address, username, handle, date of birth, password (stored as a salted hash, never in plain text), and profile photo.',
-                        'Fan identity data — your favourite club and sport, Fan ID, loyalty points, streaks, tier, and the full history of point-earning activity that makes up your Fan Passport.',
+                        'Fan identity data — your favourite club and fandom, Fan ID, loyalty points, streaks, tier, and the full history of point-earning activity that makes up your Fan Passport.',
                         'Content you create — posts, replies, likes, reposts, chat messages, and any images or media you upload to the terrace or your club\'s rooms.',
                         'Connected social accounts — if you link an X (Twitter), Discord, or Telegram account for task verification, we receive the minimum information that platform provides to confirm the connection (typically your handle or user ID), not your password or private messages.',
                         'Transaction data — records of match ticket purchases, kit/shop orders, and referral activity, including order identifiers and delivery information where relevant. We do not store full payment card numbers; card processing is handled by our payment processor.',
