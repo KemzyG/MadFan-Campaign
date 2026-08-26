@@ -4,20 +4,20 @@ import ToastStack from '../../../Components/Fan/ToastStack';
 import { useToasts } from '../../../lib/useToasts';
 import OnboardStepper from './OnboardStepper';
 
-export default function PickSport({ sports = [] }) {
+export default function PickFandom({ fandoms = [] }) {
     const { data, setData, post, processing } = useForm({
-        sport_id: sports.length === 1 ? sports[0].id : '',
+        fandom_id: fandoms.length === 1 ? fandoms[0].id : '',
     });
     const { toasts, dismissToast } = useToasts();
 
     function submit(e) {
         e.preventDefault();
-        post('/social/onboarding/sport');
+        post('/social/onboarding/fandom');
     }
 
     return (
         <div className="mf-auth-stage">
-            <Head title="Pick your sport" />
+            <Head title="Pick your fandom" />
             <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
             <div className="mf-onboard-panel">
@@ -26,25 +26,25 @@ export default function PickSport({ sports = [] }) {
                         <FanBrandLogo asLink={false} size={30} className="mf-auth-brand-mark" />
                         <span>Mad Fan</span>
                     </div>
-                    <h1 className="mf-auth-title">Choose your sport</h1>
+                    <h1 className="mf-auth-title">Choose your fandom</h1>
                 </div>
 
                 <OnboardStepper currentStep={1} />
 
                 <p className="mf-text-meta text-[var(--mf-muted)]">
-                    More sports are coming — this is the one your club lives in today.
+                    More fandoms are coming — this is the one your club lives in today.
                 </p>
 
                 <form onSubmit={submit}>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                        {sports.map((sport) => {
-                            const selected = String(data.sport_id) === String(sport.id);
+                        {fandoms.map((fandom) => {
+                            const selected = String(data.fandom_id) === String(fandom.id);
 
                             return (
                                 <button
-                                    key={sport.id}
+                                    key={fandom.id}
                                     type="button"
-                                    onClick={() => setData('sport_id', sport.id)}
+                                    onClick={() => setData('fandom_id', fandom.id)}
                                     className={`mf-club-opt${selected ? ' is-selected' : ''}`}
                                     aria-pressed={selected}
                                 >
@@ -53,7 +53,7 @@ export default function PickSport({ sports = [] }) {
                                     </span>
                                     <span className="min-w-0">
                                         <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
-                                            {sport.name}
+                                            {fandom.name}
                                         </span>
                                         <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
                                             Available now
@@ -66,7 +66,7 @@ export default function PickSport({ sports = [] }) {
 
                     <button
                         type="submit"
-                        disabled={processing || !data.sport_id}
+                        disabled={processing || !data.fandom_id}
                         className="mf-btn mf-btn--pitch mf-auth-submit mt-6"
                     >
                         {processing ? 'Saving…' : 'Continue →'}

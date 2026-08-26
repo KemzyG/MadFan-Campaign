@@ -1,10 +1,10 @@
 const STEPS = [
-    { id: 1, label: 'Your Sport' },
+    { id: 1, label: 'Your Fandom' },
     { id: 2, label: 'Your Club' },
 ];
 
 /**
- * Two-step progress indicator for the post-login onboarding fallback (Sport
+ * Two-step progress indicator for the post-login onboarding fallback (Fandom
  * then Club) — the same `.mf-auth-stepper` styling Register.jsx's four-step
  * wizard uses, so the two flows read as one system.
  */

@@ -5,9 +5,9 @@ import LeaderboardRow from './LeaderboardRow';
 import LeaderboardScopeTabs from './LeaderboardScopeTabs';
 import TopFansPodium from './TopFansPodium';
 
-function boardCopy(scope, sport, club) {
-    if (scope === 'sport' && sport) {
-        return { title: `${sport.name} leaderboard`, noun: `${sport.name} fans` };
+function boardCopy(scope, fandom, club) {
+    if (scope === 'fandom' && fandom) {
+        return { title: `${fandom.name} leaderboard`, noun: `${fandom.name} fans` };
     }
 
     if (scope === 'club' && club) {
@@ -19,7 +19,7 @@ function boardCopy(scope, sport, club) {
 
 /**
  * Fan leaderboard — a podium card for the top three, then the rest as a
- * ranked table card. Scoped one of three ways (global / sport / club) via
+ * ranked table card. Scoped one of three ways (global / fandom / club) via
  * {@see LeaderboardScopeTabs}. Capped to a single mobile-width column at
  * every viewport — this is a phone-first surface, not a desktop dashboard.
  */
@@ -28,15 +28,15 @@ export default function LeaderboardIndex({
     current_user: currentUser = null,
     total_fans: totalFans = 0,
     scope = 'global',
-    sport = null,
+    fandom = null,
     club = null,
-    viewer_sport: viewerSport = null,
+    viewer_fandom: viewerFandom = null,
     viewer_club: viewerClub = null,
 }) {
     const podium = entries.slice(0, 3);
     const rest = entries.slice(3);
     const youInBoard = entries.some((entry) => entry.is_you);
-    const copy = boardCopy(scope, sport, club);
+    const copy = boardCopy(scope, fandom, club);
     const viewingOtherClub = scope === 'club' && club && club.id !== viewerClub?.id;
 
     return (
@@ -47,7 +47,7 @@ export default function LeaderboardIndex({
                 <LeaderboardScopeTabs
                     scope={scope}
                     club={club}
-                    viewerSport={viewerSport}
+                    viewerFandom={viewerFandom}
                     viewerClub={viewerClub}
                 />
 

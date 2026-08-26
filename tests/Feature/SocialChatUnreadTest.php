@@ -45,7 +45,7 @@ test('opening a thread marks it read and clears its contribution to the unread c
         ->assertJsonPath('unread_count', 1);
 
     $this->actingAs($member)
-        ->get('/social/chat?channel='.$channel->id)
+        ->get('/social/chat?inbox=club&channel='.$channel->id)
         ->assertSuccessful();
 
     $this->actingAs($member)

@@ -32,7 +32,7 @@ test('onboarded members can send a chat message to their club channel', function
         ->and($message->channel_id)->toBe($channel->id);
 
     $this->actingAs($user)
-        ->get('/social/chat')
+        ->get('/social/chat?inbox=club&channel=general')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Chat/Index')
@@ -131,7 +131,7 @@ test('club membership without favourite still authorizes channel view when membe
     $other = Club::factory()->create();
     $user = createUser([
         'email_verified_at' => now(),
-        'favourite_sport_id' => ensureRegistrationSport()->id,
+        'favourite_fandom_id' => ensureRegistrationFandom()->id,
         'favourite_club_id' => $other->id,
         'social_onboarded_at' => now(),
         'handle' => 'fan'.fake()->unique()->numerify('######'),

@@ -25,7 +25,7 @@ test('unverified fans can open social onboarding when email verification is disa
 
     $user = User::factory()->unverified()->create([
         'social_onboarded_at' => null,
-        'favourite_sport_id' => ensureRegistrationSport()->id,
+        'favourite_fandom_id' => ensureRegistrationFandom()->id,
         'favourite_club_id' => null,
     ]);
 

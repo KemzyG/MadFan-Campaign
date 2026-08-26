@@ -14,16 +14,16 @@
     --font-ui: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-display: "Oswald", Futura, "Trebuchet MS", sans-serif;
 
-    --text-caption: 12px;
-    --text-body-sm: 14px;
-    --text-body: 16px;
-    --text-body-lg: 18px;
-    --text-subheading: 20px;
-    --text-heading-sm: 24px;
+    --text-caption: 11px;
+    --text-body-sm: 13px;
+    --text-body: 15px;
+    --text-body-lg: 16px;
+    --text-subheading: 18px;
+    --text-heading-sm: 21px;
     /* Unified oversized scale: the homepage hero headline, the closing CTA,
        and every story page's H1 all read as the same weight of statement. */
-    --text-hero: clamp(2.75rem, 6.6vw, 5.25rem);
-    --text-display: 76px;
+    --text-hero: clamp(2.5rem, 6vw, 4.75rem);
+    --text-display: 68px;
 
     --spacing-8: 8px;
     --spacing-12: 12px;

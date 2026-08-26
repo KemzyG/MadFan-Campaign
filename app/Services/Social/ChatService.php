@@ -40,10 +40,13 @@ class ChatService
 
     public function normalizeInbox(?string $inbox): string
     {
+        // Friends is the landing segment: opening Chat with no ?inbox= (or an
+        // unrecognised one) lands a fan on their direct messages, not the
+        // club room. Explicit club/groups selections still pass through.
         return match ($inbox) {
-            self::INBOX_FRIENDS => self::INBOX_FRIENDS,
+            self::INBOX_CLUB => self::INBOX_CLUB,
             self::INBOX_GROUPS => self::INBOX_GROUPS,
-            default => self::INBOX_CLUB,
+            default => self::INBOX_FRIENDS,
         };
     }
 

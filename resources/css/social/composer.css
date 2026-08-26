@@ -271,7 +271,7 @@
     border: 0;
     border-radius: var(--mf-radius);
     background: transparent;
-    font-size: 1.15rem;
+    font-size: 1.035rem;
     line-height: 1;
     cursor: pointer;
     transition: background 120ms var(--mf-ease), transform 120ms var(--mf-ease);

@@ -35,14 +35,14 @@ class FanLeaderboardService
     public function present(
         ?User $viewer,
         int $limit = self::DEFAULT_LIMIT,
-        ?int $sportId = null,
+        ?int $fandomId = null,
         ?int $clubId = null,
     ): array {
         $limit = max(1, min($limit, 100));
 
         $scope = fn () => User::query()
             ->fanAccounts()
-            ->when($sportId !== null, fn ($query) => $query->where('favourite_sport_id', $sportId))
+            ->when($fandomId !== null, fn ($query) => $query->where('favourite_fandom_id', $fandomId))
             ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId));
 
         $totalFans = $scope()->count();
@@ -67,7 +67,7 @@ class FanLeaderboardService
             $inBoard = $top->firstWhere('id', $viewer->id);
             $currentUser = $inBoard
                 ? $this->findEntry($entries, $viewer->id)
-                : $this->viewerEntry($viewer, $totalFans, $sportId, $clubId);
+                : $this->viewerEntry($viewer, $totalFans, $fandomId, $clubId);
         }
 
         return [
@@ -111,11 +111,11 @@ class FanLeaderboardService
      *
      * @return array<string, mixed>
      */
-    private function viewerEntry(User $viewer, int $totalFans, ?int $sportId, ?int $clubId): array
+    private function viewerEntry(User $viewer, int $totalFans, ?int $fandomId, ?int $clubId): array
     {
         $ahead = User::query()
             ->fanAccounts()
-            ->when($sportId !== null, fn ($query) => $query->where('favourite_sport_id', $sportId))
+            ->when($fandomId !== null, fn ($query) => $query->where('favourite_fandom_id', $fandomId))
             ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId))
             ->where(function ($query) use ($viewer): void {
                 $query->where('total_points', '>', $viewer->total_points)

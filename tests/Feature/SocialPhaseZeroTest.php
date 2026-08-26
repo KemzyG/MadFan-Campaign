@@ -25,14 +25,14 @@ test('verified fans without a club are sent to social onboarding', function () {
 
     $this->actingAs($user)
         ->get('/social')
-        ->assertRedirect(route('social.onboarding.sport'));
+        ->assertRedirect(route('social.onboarding.fandom'));
 });
 
 test('fans can pick a favourite club and reach social home', function () {
     ApplicationSettings::sync(['social_network_enabled' => 'true']);
 
     $club = Club::factory()->create(['name' => 'Terrace FC']);
-    $user = createUser(['favourite_sport_id' => ensureRegistrationSport()->id]);
+    $user = createUser(['favourite_fandom_id' => ensureRegistrationFandom()->id]);
 
     $this->actingAs($user)
         ->post('/social/onboarding/club', ['club_id' => $club->id])

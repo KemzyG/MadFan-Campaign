@@ -24,7 +24,7 @@ test('onboarded fans can open club chat with default channels', function () {
     $user = socialReadyUser($club);
 
     $this->actingAs($user)
-        ->get('/social/chat')
+        ->get('/social/chat?inbox=club')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Chat/Index')
@@ -44,7 +44,7 @@ test('fans can switch to the matchday channel', function () {
     $user = socialReadyUser($club);
 
     $this->actingAs($user)
-        ->get('/social/chat?channel=matchday')
+        ->get('/social/chat?inbox=club&channel=matchday')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Chat/Index')

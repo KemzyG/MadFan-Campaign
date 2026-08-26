@@ -21,7 +21,7 @@ const POLL_ONLY = [
  * means desktop list → thread navigation never unmounts the stream.
  */
 export default function Chat({
-    inbox = 'club',
+    inbox = 'friends',
     view = 'list',
     club,
     channels = [],

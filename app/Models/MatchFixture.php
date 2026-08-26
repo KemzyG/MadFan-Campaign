@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MatchFixture extends Model
 {
@@ -21,6 +22,8 @@ class MatchFixture extends Model
         'kickoff_at',
         'venue',
         'status',
+        'home_score',
+        'away_score',
         'price',
         'competition',
     ];
@@ -33,6 +36,8 @@ class MatchFixture extends Model
         return [
             'kickoff_at' => 'datetime',
             'status' => MatchStatus::class,
+            'home_score' => 'integer',
+            'away_score' => 'integer',
             'price' => 'decimal:2',
         ];
     }
@@ -50,6 +55,18 @@ class MatchFixture extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(MatchTicket::class);
+    }
+
+    public function prediction(): HasOne
+    {
+        return $this->hasOne(Prediction::class);
+    }
+
+    public function isFinished(): bool
+    {
+        return $this->status === MatchStatus::Finished
+            && $this->home_score !== null
+            && $this->away_score !== null;
     }
 
     /**

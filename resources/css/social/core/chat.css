@@ -212,7 +212,7 @@
     border-radius: var(--mf-radius-panel);
     background: color-mix(in srgb, var(--mf-elevated) 85%, var(--mf-canvas));
     color: var(--mf-pitch-dim);
-    font-size: 1.05rem;
+    font-size: 0.945rem;
     line-height: 1;
 }
 
@@ -304,7 +304,7 @@
 
 .mf-convo-new__plus {
     font-family: var(--mf-font-mono);
-    font-size: 1rem;
+    font-size: 0.9rem;
     line-height: 1;
     color: var(--mf-pitch);
 }
@@ -1410,7 +1410,7 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--mf-radius-panel);
-    font-size: 0.9rem;
+    font-size: 0.81rem;
 }
 
 .mf-chat-rail__ghosts {

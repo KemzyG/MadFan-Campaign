@@ -3,8 +3,9 @@
 use App\Models\AdminOrganization;
 use App\Models\Club;
 use App\Models\ClubMembership;
+use App\Models\Fandom;
+use App\Models\FandomFollow;
 use App\Models\SocialAccount;
-use App\Models\Sport;
 use App\Models\User;
 use App\Services\Fan\FanPageDataService;
 use App\Services\PasetoService;
@@ -57,9 +58,10 @@ function socialReadyUser(?Club $club = null): User
     ApplicationSettings::sync(['social_network_enabled' => 'true']);
 
     $club ??= Club::factory()->create(['name' => 'Terrace FC']);
+    $fandom = ensureRegistrationFandom();
     $user = createUser([
         'email_verified_at' => now(),
-        'favourite_sport_id' => ensureRegistrationSport()->id,
+        'favourite_fandom_id' => $fandom->id,
         'favourite_club_id' => $club->id,
         'club' => $club->name,
         'social_onboarded_at' => now(),
@@ -69,6 +71,14 @@ function socialReadyUser(?Club $club = null): User
     ClubMembership::factory()->primary()->create([
         'user_id' => $user->id,
         'club_id' => $club->id,
+    ]);
+
+    // Mirrors what SocialOnboardingController::storeFandom does for a real
+    // onboarding flow — this helper bypasses that controller, so it has to
+    // create the membership row itself or "is_following" reads false.
+    FandomFollow::query()->firstOrCreate([
+        'user_id' => $user->id,
+        'fandom_id' => $fandom->id,
     ]);
 
     return $user->fresh();
@@ -157,10 +167,10 @@ function ensureRegistrationClub(string $name = 'Liverpool FC'): Club
         ?? Club::factory()->create(['name' => $name]);
 }
 
-function ensureRegistrationSport(): Sport
+function ensureRegistrationFandom(): Fandom
 {
-    return Sport::query()->where('slug', 'football')->first()
-        ?? Sport::query()->create(['name' => 'Football', 'slug' => 'football', 'is_active' => true]);
+    return Fandom::query()->where('slug', 'football')->first()
+        ?? Fandom::query()->create(['name' => 'Football', 'slug' => 'football', 'is_active' => true]);
 }
 
 /**
@@ -183,7 +193,7 @@ function fanRegisterPayload(array $overrides = []): array
         'email' => 'fan-'.uniqid().'@madfan.test',
         'password' => validTestPassword(),
         'password_confirmation' => validTestPassword(),
-        'sport_id' => $overrides['sport_id'] ?? ensureRegistrationSport()->id,
+        'fandom_id' => $overrides['fandom_id'] ?? ensureRegistrationFandom()->id,
         'username' => 'fan'.uniqid(),
         'club' => $clubName,
         'device_fingerprint' => deviceFingerprint('fp-'.uniqid('', true)),

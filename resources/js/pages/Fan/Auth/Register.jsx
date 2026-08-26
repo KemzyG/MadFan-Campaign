@@ -12,7 +12,7 @@ const TOTAL_STEPS = 4;
 const OTHER_CLUB = 'Other';
 const REGISTRATION_STEPS = [
     { id: 1, label: 'Your Details' },
-    { id: 2, label: 'Your Sport' },
+    { id: 2, label: 'Your Fandom' },
     { id: 3, label: 'Your Club' },
     { id: 4, label: 'Your Profile' },
 ];
@@ -26,7 +26,7 @@ function stepForErrors(errors) {
         return 3;
     }
 
-    if (errors.sport_id) {
+    if (errors.fandom_id) {
         return 2;
     }
 
@@ -64,7 +64,7 @@ export default function FanRegister({
     email = '',
     referrer_fan_id = null,
     clubs = [],
-    sports = [],
+    fandoms = [],
     registration_blocked = false,
     registration_blocked_message = null,
 }) {
@@ -79,7 +79,7 @@ export default function FanRegister({
         email: email || '',
         password: '',
         password_confirmation: '',
-        sport_id: '',
+        fandom_id: '',
         club: '',
         username: '',
         bio: '',
@@ -93,16 +93,16 @@ export default function FanRegister({
         setData('device_fingerprint', getDeviceFingerprint());
     }, [setData]);
 
-    // Only one sport exists today, so pre-select it — the step still shows
+    // Only one fandom exists today, so pre-select it — the step still shows
     // (and still has to be explicitly continued past) so the UI is ready the
-    // moment a second sport exists, without making users click a foregone
+    // moment a second fandom exists, without making users click a foregone
     // conclusion.
     useEffect(() => {
-        if (sports.length === 1 && !data.sport_id) {
-            setData('sport_id', sports[0].id);
+        if (fandoms.length === 1 && !data.fandom_id) {
+            setData('fandom_id', fandoms[0].id);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sports]);
+    }, [fandoms]);
 
     useEffect(() => {
         if (email && !data.email) {
@@ -169,7 +169,7 @@ export default function FanRegister({
         }
 
         if (step === 2) {
-            return data.sport_id !== '';
+            return data.fandom_id !== '';
         }
 
         if (step === 3) {
@@ -327,26 +327,26 @@ export default function FanRegister({
                         {step === 2 && (
                             <div>
                                 <p className="mf-text-section font-semibold text-[var(--mf-text)]">
-                                    Choose your sport
+                                    Choose your fandom
                                 </p>
                                 <p className="mf-text-meta mt-1 text-[var(--mf-muted)]">
-                                    More sports are coming — this is the one your club lives in today.
+                                    More fandoms are coming — this is the one your club lives in today.
                                 </p>
 
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                                    {sports.map((sport) => (
+                                    {fandoms.map((fandom) => (
                                         <button
-                                            key={sport.id}
+                                            key={fandom.id}
                                             type="button"
-                                            className={`mf-club-opt${data.sport_id === sport.id ? ' is-selected' : ''}`}
-                                            onClick={() => setData('sport_id', sport.id)}
+                                            className={`mf-club-opt${data.fandom_id === fandom.id ? ' is-selected' : ''}`}
+                                            onClick={() => setData('fandom_id', fandom.id)}
                                         >
                                             <span className="mf-avatar h-10 w-10" aria-hidden>
                                                 ⚽
                                             </span>
                                             <span className="min-w-0">
                                                 <span className="mf-text-ui block truncate font-semibold text-[var(--mf-text)]">
-                                                    {sport.name}
+                                                    {fandom.name}
                                                 </span>
                                                 <span className="mf-text-meta block truncate text-[var(--mf-muted)]">
                                                     Available now

@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Club;
-use App\Models\Sport;
+use App\Models\Fandom;
 use App\Services\Social\FanLeaderboardService;
 
 test('social leaderboard requires authentication', function () {
@@ -78,18 +78,18 @@ test('leaderboard club scope defaults to the viewer own favourite club', functio
             ->where('club.id', $club->id));
 });
 
-test('leaderboard scopes to a sport and excludes fans of other sports', function () {
+test('leaderboard scopes to a fandom and excludes fans of other fandoms', function () {
     $viewer = socialReadyUser();
     $viewer->forceFill(['total_points' => 50])->save();
 
-    $otherSport = Sport::query()->create(['name' => 'Basketball', 'slug' => 'basketball', 'is_active' => true]);
-    $otherSportFan = createUser(['favourite_sport_id' => $otherSport->id, 'total_points' => 999]);
+    $otherFandom = Fandom::query()->create(['name' => 'Basketball', 'slug' => 'basketball', 'is_active' => true]);
+    $otherFandomFan = createUser(['favourite_fandom_id' => $otherFandom->id, 'total_points' => 999]);
 
     $this->actingAs($viewer)
-        ->get('/social/leaderboard?scope=sport&sport_id='.$viewer->favourite_sport_id)
+        ->get('/social/leaderboard?scope=fandom&fandom_id='.$viewer->favourite_fandom_id)
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
-            ->where('scope', 'sport')
+            ->where('scope', 'fandom')
             ->has('entries', 1)
             ->where('entries.0.fan.id', $viewer->id));
 });

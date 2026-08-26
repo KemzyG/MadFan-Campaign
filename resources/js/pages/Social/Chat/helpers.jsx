@@ -8,7 +8,10 @@ export const INBOXES = [
 ];
 
 export function inboxHref(inbox) {
-    return inbox === 'club' ? '/social/chat' : `/social/chat?inbox=${inbox}`;
+    // Friends is the default landing segment (ChatService::normalizeInbox),
+    // so every tab — including Club — needs its inbox spelled out explicitly;
+    // a bare /social/chat would now resolve back to Friends instead.
+    return `/social/chat?inbox=${inbox}`;
 }
 
 export function formatTime(iso) {

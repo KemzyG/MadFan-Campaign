@@ -6,11 +6,26 @@ use App\Models\Club;
 use App\Models\Follow;
 use App\Models\Message;
 
-test('chat page exposes club friends and groups inboxes', function () {
+test('chat page defaults to the friends inbox when none is requested', function () {
     $user = socialReadyUser();
 
     $this->actingAs($user)
         ->get('/social/chat')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Chat/Index')
+            ->where('inbox', 'friends')
+            ->where('channel', null)
+            ->has('friend_candidates')
+            ->has('group_candidates')
+            ->has('threads'));
+});
+
+test('chat page exposes club friends and groups inboxes', function () {
+    $user = socialReadyUser();
+
+    $this->actingAs($user)
+        ->get('/social/chat?inbox=club')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Chat/Index')

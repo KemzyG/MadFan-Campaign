@@ -1,12 +1,12 @@
 import { router } from '@inertiajs/react';
 
 /**
- * Global / Sport / My club switcher. Each tab re-requests the same page with
- * a new `scope` (+ `sport_id`/`club_id`), so every club effectively gets its
+ * Global / Fandom / My club switcher. Each tab re-requests the same page with
+ * a new `scope` (+ `fandom_id`/`club_id`), so every club effectively gets its
  * own board without a dedicated route per club.
  */
-export default function LeaderboardScopeTabs({ scope, club, viewerSport, viewerClub }) {
-    if (!viewerSport && !viewerClub) {
+export default function LeaderboardScopeTabs({ scope, club, viewerFandom, viewerClub }) {
+    if (!viewerFandom && !viewerClub) {
         return null;
     }
 
@@ -20,8 +20,8 @@ export default function LeaderboardScopeTabs({ scope, club, viewerSport, viewerC
 
     const tabs = [
         { key: 'global', label: 'Global', onClick: () => go('global') },
-        viewerSport
-            ? { key: 'sport', label: viewerSport.name, onClick: () => go('sport', { sport_id: viewerSport.id }) }
+        viewerFandom
+            ? { key: 'fandom', label: viewerFandom.name, onClick: () => go('fandom', { fandom_id: viewerFandom.id }) }
             : null,
         viewerClub
             ? {

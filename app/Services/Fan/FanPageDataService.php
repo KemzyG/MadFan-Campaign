@@ -9,8 +9,8 @@ use App\Http\Controllers\TaskController;
 use App\Http\Resources\LeaderboardEntryResource;
 use App\Models\Club;
 use App\Models\League;
+use App\Models\Fandom;
 use App\Models\Season;
-use App\Models\Sport;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Waitlist;
@@ -121,17 +121,17 @@ class FanPageDataService
     /**
      * @return list<array{id: int, name: string, slug: string, is_active: bool}>
      */
-    public function sports(): array
+    public function fandoms(): array
     {
-        return Sport::query()
+        return Fandom::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'is_active'])
-            ->map(fn (Sport $sport): array => [
-                'id' => $sport->id,
-                'name' => $sport->name,
-                'slug' => $sport->slug,
-                'is_active' => $sport->is_active,
+            ->map(fn (Fandom $fandom): array => [
+                'id' => $fandom->id,
+                'name' => $fandom->name,
+                'slug' => $fandom->slug,
+                'is_active' => $fandom->is_active,
             ])
             ->all();
     }
@@ -145,13 +145,13 @@ class FanPageDataService
      *     league: array{id: int, name: string, short: string}
      * }>
      */
-    public function clubs(?int $sportId = null): array
+    public function clubs(?int $fandomId = null): array
     {
         return Club::query()
             ->with('league:id,name,short')
-            ->when($sportId, fn ($query) => $query->whereHas(
+            ->when($fandomId, fn ($query) => $query->whereHas(
                 'league',
-                fn ($leagueQuery) => $leagueQuery->where('sport_id', $sportId),
+                fn ($leagueQuery) => $leagueQuery->where('fandom_id', $fandomId),
             ))
             ->orderBy(
                 League::query()

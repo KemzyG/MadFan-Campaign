@@ -20,12 +20,15 @@ class AwardSocialPoints
 
     public const SOURCE_CHAT = 'social_chat';
 
+    public const SOURCE_POLL_VOTE = 'social_poll';
+
     /** @var array<string, array{points: int, cap: int, min_chars?: int}> */
     public const RULES = [
         self::SOURCE_POST => ['points' => 5, 'cap' => 3],
         self::SOURCE_REPLY => ['points' => 2, 'cap' => 10, 'min_chars' => 20],
         self::SOURCE_LIKE_RECEIVED => ['points' => 1, 'cap' => 50],
         self::SOURCE_CHAT => ['points' => 1, 'cap' => 25, 'min_chars' => 5],
+        self::SOURCE_POLL_VOTE => ['points' => 3, 'cap' => 5],
     ];
 
     public function __construct(
@@ -71,6 +74,11 @@ class AwardSocialPoints
         }
 
         return $this->award($author, self::SOURCE_CHAT, (string) $messageId, 'Club chat message');
+    }
+
+    public function forPollVote(User $user, int $pollId): ?PointTransaction
+    {
+        return $this->award($user, self::SOURCE_POLL_VOTE, (string) $pollId, 'Poll vote cast');
     }
 
     public function award(User $user, string $sourceType, string $sourceId, string $reason): ?PointTransaction

@@ -136,7 +136,7 @@ export function IconCampaign() {
     );
 }
 
-export function IconSport({ active }) {
+export function IconFandom({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
             <circle cx="12" cy="12" r="8.2" strokeWidth={active ? 2.25 : 1.75} />
@@ -488,6 +488,7 @@ export default function SocialShell({
     mobileBare = false,
     wide = false,
     hideHeaderOnMobile = false,
+    hideHeader = false,
 }) {
     const page = usePage();
     const { auth, flash, app } = page.props;
@@ -667,7 +668,7 @@ export default function SocialShell({
         };
     }, [clearNavSkeleton]);
 
-    // Primary destinations shown in the mobile bottom tab bar (exactly these four).
+    // Primary destinations shown in the mobile bottom tab bar (exactly these five).
     const primaryTabs = [
         {
             href: '/social',
@@ -680,6 +681,20 @@ export default function SocialShell({
             label: 'Feed',
             icon: IconFeed,
             active: pathMatches(current, '/social/feed') || pathMatches(current, '/social/posts'),
+        },
+        {
+            href: '/social/fandom',
+            label: 'Fandom',
+            icon: IconFandom,
+            // Fixtures and the League table are fandom-specific pages, so both
+            // live under this one Fandom hub instead of two standalone nav
+            // entries — ticket purchase/wallet is reached from a fixture's own
+            // match detail.
+            active:
+                pathMatches(current, '/social/fandom') ||
+                pathMatches(current, '/social/fixtures') ||
+                pathMatches(current, '/social/clubs') ||
+                pathMatches(current, '/social/tickets'),
         },
         {
             href: '/social/videos',
@@ -697,20 +712,7 @@ export default function SocialShell({
     ];
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
-    // Fixtures and the League table are sport-specific pages, so both now
-    // live under this one Sport hub instead of two standalone nav entries —
-    // ticket purchase/wallet is reached from a fixture's own match detail.
     const secondaryTabs = [
-        {
-            href: '/social/sport',
-            label: 'Sport',
-            icon: IconSport,
-            active:
-                pathMatches(current, '/social/sport') ||
-                pathMatches(current, '/social/fixtures') ||
-                pathMatches(current, '/social/clubs') ||
-                pathMatches(current, '/social/tickets'),
-        },
         {
             href: '/social/shop',
             label: 'Store',
@@ -824,7 +826,7 @@ export default function SocialShell({
                     ) : null}
 
                     <div className={`mf-app ${fillViewport ? 'mf-app--fill' : ''}`}>
-                        {(title || backHref || showTabs) && (
+                        {!hideHeader && (title || backHref || showTabs) && (
                             <header className={`mf-header ${fillViewport ? 'mf-header--compact' : ''}`}>
                                 {showTabs ? (
                                     <SocialHeaderNavMenu tabs={tabs} />
