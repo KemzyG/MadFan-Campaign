@@ -1,0 +1,506 @@
+/*
+ * Social — Fandom discover/browse page: the landing screen for the Fandom
+ * tab, one level above the single-fandom hub (fandom.css). Browse only —
+ * every card/tile here hands off to /social/fandom/{slug}.
+ */
+
+.mf-fd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: calc(1.25rem + var(--mf-safe-top)) 1rem 0.5rem;
+}
+
+.mf-fd-header__title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-heading-sm);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fd-header__subtitle {
+    margin: 0.15rem 0 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-fd-header__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.mf-fd-header__icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: var(--mf-panel);
+    color: var(--mf-text);
+    cursor: pointer;
+}
+
+.mf-fd-header__icon-btn svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+/* Group pills */
+.mf-fd-pills {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 1.1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mf-fd-pills::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-fd-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-pill);
+    background: var(--mf-panel);
+    color: var(--mf-text);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.mf-fd-pill.is-active {
+    background: var(--mf-pitch);
+    border-color: var(--mf-pitch);
+    color: #fff;
+}
+
+/* Sections */
+.mf-fd-section {
+    padding: 1rem;
+}
+
+.mf-fd-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.mf-fd-section__title {
+    margin: 0 0 0.75rem;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-fd-section__head .mf-fd-section__title {
+    margin-bottom: 0;
+}
+
+.mf-fd-section__more {
+    flex-shrink: 0;
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-pitch);
+    text-decoration: none;
+}
+
+/* Horizontal scroll row shared by Popular Fandoms + Trending */
+.mf-fd-row {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+}
+
+.mf-fd-row::-webkit-scrollbar {
+    display: none;
+}
+
+/*
+ * Popular Fandoms only (Trending keeps its horizontal shelf even here — it's
+ * a narrow rail item, not a card grid) switches from swipeable shelf to a
+ * real grid once there's room for more than a couple of cards side by side —
+ * the 3-column rail layout doesn't land until 1024px (see below), so without
+ * this, tablet-width screens sat in the mobile shelf despite having enough
+ * width for a proper grid.
+ */
+@media (min-width: 640px) {
+    .mf-fd-main .mf-fd-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+        overflow-x: visible;
+        margin-inline: 0;
+        padding-inline: 0;
+    }
+
+    .mf-fd-main .mf-fd-card {
+        width: auto;
+    }
+}
+
+/* Fandom card */
+.mf-fd-card {
+    flex: 0 0 auto;
+    width: 9.5rem;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-fd-card__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.mf-fd-card__cover {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--mf-radius-panel);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--mf-elevated);
+    overflow: hidden;
+}
+
+.mf-fd-card__cover--icon {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated)), var(--mf-elevated));
+}
+
+.mf-fd-card__badge {
+    position: absolute;
+    left: 0.5rem;
+    bottom: 0.5rem;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--mf-canvas);
+    box-shadow: 0 0 0 1px var(--mf-line);
+    font-size: 1.15rem;
+}
+
+.mf-fd-card__cover--icon .mf-fd-card__badge {
+    position: static;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.6rem;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
+}
+
+.mf-fd-card__name {
+    margin: 0;
+    font-weight: 700;
+    color: var(--mf-text);
+    font-size: var(--mf-text-ui);
+}
+
+.mf-fd-card__count {
+    margin: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-fd-card__follow {
+    width: 100%;
+    padding: 0.4rem 0;
+    font-size: var(--mf-text-caption);
+}
+
+/* Category grid */
+.mf-fd-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+
+.mf-fd-tile {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    background: var(--mf-panel);
+    color: inherit;
+    text-decoration: none;
+}
+
+.mf-fd-tile__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mf-pitch) 10%, var(--mf-elevated));
+    font-size: 1.2rem;
+}
+
+.mf-fd-tile__name {
+    display: block;
+    font-weight: 700;
+    color: var(--mf-text);
+    font-size: var(--mf-text-ui);
+}
+
+.mf-fd-tile__count {
+    display: block;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+@media (min-width: 640px) {
+    .mf-fd-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* Trending card — same row rhythm as FandomCard, narrower and no follow button */
+.mf-fd-trend-card {
+    flex: 0 0 auto;
+    width: 8.5rem;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.mf-fd-trend-card__cover {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--mf-radius-panel);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--mf-elevated);
+}
+
+.mf-fd-trend-card__cover--icon {
+    display: grid;
+    place-items: center;
+    font-size: 1.8rem;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated)), var(--mf-elevated));
+}
+
+.mf-fd-trend-card__name {
+    margin: 0;
+    font-weight: 700;
+    color: var(--mf-text);
+    font-size: var(--mf-text-caption);
+}
+
+.mf-fd-trend-card__count {
+    margin: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+/* Search overlay */
+.mf-fd-search {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+}
+
+.mf-fd-search__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border: 0;
+    background: var(--mf-scrim);
+    cursor: pointer;
+}
+
+.mf-fd-search__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: 100dvh;
+    margin-top: var(--mf-safe-top);
+    background: var(--mf-canvas);
+}
+
+.mf-fd-search__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-fd-search__glyph {
+    flex-shrink: 0;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--mf-muted);
+}
+
+.mf-fd-search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--mf-text);
+    font-size: var(--mf-text-ui);
+    outline: none;
+}
+
+.mf-fd-search__results {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.5rem 1rem 1.5rem;
+}
+
+.mf-fd-search__hint {
+    padding: 1rem 0;
+    color: var(--mf-muted);
+}
+
+.mf-fd-search__list {
+    list-style: none;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+.mf-fd-search__row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.25rem;
+    color: inherit;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.mf-fd-search__row-name {
+    display: block;
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+/*
+ * ——— lg+ desktop: three real columns ———————————————————————————————
+ * Same 1024px breakpoint as .mf-split and the app shell's own third-track
+ * arrival. Below this everything above is a single mobile column in DOM
+ * order; at 1024px+ it reflows into rail | main | rail without changing
+ * what's rendered, only how mf-fd-shell's three children are placed. This
+ * page also renders inside a `wide` SocialShell (no chat rail competing
+ * for the space) — see Discover.jsx.
+ */
+@media (min-width: 1024px) {
+    .mf-fd {
+        max-width: var(--mf-page-max);
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+    }
+
+    .mf-fd-header {
+        padding-inline: 0;
+    }
+
+    .mf-fd-shell {
+        display: grid;
+        grid-template-columns: 14rem minmax(0, 1fr) 17rem;
+        align-items: start;
+        gap: 1.75rem;
+    }
+
+    /* Column 1 — category rail: pills become a vertical list, not a scroller. */
+    .mf-fd-pills {
+        grid-column: 1;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        overflow: visible;
+        padding: 0.25rem 0 0;
+        position: sticky;
+        top: 1.25rem;
+    }
+
+    .mf-fd-pill {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    /* Column 2 — main: Popular Fandoms becomes a real grid instead of a
+       horizontal shelf, since it no longer needs to conserve width. */
+    .mf-fd-main {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .mf-fd-main .mf-fd-section {
+        padding-inline: 0;
+    }
+
+    .mf-fd-main .mf-fd-row {
+        margin-inline: 0;
+        padding-inline: 0;
+        overflow-x: visible;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    }
+
+    .mf-fd-card {
+        width: auto;
+    }
+
+    /* Column 3 — trending rail: stacks vertically and stays in view while
+       the main column scrolls. */
+    .mf-fd-section--trending {
+        grid-column: 3;
+        position: sticky;
+        top: 1.25rem;
+        padding: 0;
+    }
+
+    .mf-fd-trending-row {
+        margin-inline: 0;
+        padding-inline: 0;
+        overflow-x: visible;
+        flex-direction: column;
+    }
+
+    .mf-fd-trend-card {
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .mf-fd-trend-card__cover {
+        flex-shrink: 0;
+        width: 3.25rem;
+        aspect-ratio: 1;
+    }
+}

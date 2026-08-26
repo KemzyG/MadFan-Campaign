@@ -5,11 +5,15 @@ import { router } from '@inertiajs/react';
  * the rail (ShopFilters) and the page entry (Index) can share the same logic.
  */
 export const CATEGORY_SEGMENTS = {
-    home: { abbr: 'H', aria: 'Home kits' },
-    away: { abbr: 'A', aria: 'Away kits' },
-    third: { abbr: '3', aria: 'Third kits' },
-    training: { abbr: 'TR', aria: 'Training kits' },
-    terrace: { abbr: 'T', aria: 'Terrace tees' },
+    kit: { abbr: 'K', aria: 'Kits' },
+    boots: { abbr: 'B', aria: 'Boots' },
+    training: { abbr: 'TR', aria: 'Training' },
+    socks: { abbr: 'S', aria: 'Socks' },
+    caps: { abbr: 'C', aria: 'Caps' },
+    nft: { abbr: 'NFT', aria: 'Collectible cards' },
+    streaming: { abbr: 'ST', aria: 'Streaming' },
+    gaming: { abbr: 'GC', aria: 'Gaming credits' },
+    music: { abbr: 'M', aria: 'Music' },
 };
 
 export function categoryAbbr(slug) {
@@ -20,12 +24,14 @@ export function categoryAria(category) {
     const hint = CATEGORY_SEGMENTS[category.slug];
 
     return hint
-        ? `${hint.aria}, ${category.count} kits`
-        : `${category.label}, ${category.count} kits`;
+        ? `${hint.aria}, ${category.count} items`
+        : `${category.label}, ${category.count} items`;
 }
 
 export function updateFilters(filters, patch) {
     const next = {
+        type: filters.type || undefined,
+        fandom_id: filters.fandom_id || undefined,
         club_id: filters.club_id || undefined,
         league_id: filters.league_id || undefined,
         category: filters.category || undefined,
@@ -55,7 +61,9 @@ export function toggleFilter(filters, key, value) {
 
 export function hasActiveFilters(filters) {
     return Boolean(
-        filters.club_id ||
+        filters.type ||
+            filters.fandom_id ||
+            filters.club_id ||
             filters.league_id ||
             filters.category ||
             filters.in_stock ||

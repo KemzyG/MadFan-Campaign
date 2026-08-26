@@ -2,15 +2,18 @@
 
 namespace App\Services\Social;
 
+use App\Actions\Social\CreateSocialNotification;
 use App\Actions\Social\CreateSocialPost;
 use App\Enums\StageParticipantRole;
 use App\Enums\StageSignalType;
 use App\Enums\StageStatus;
+use App\Enums\StageType;
 use App\Events\Social\StageMessageCreated;
 use App\Events\Social\StageReactionCreated;
 use App\Events\Social\StageRoomUpdated;
 use App\Events\Social\StageSignalCreated;
 use App\Models\Post;
+use App\Models\SocialNotification;
 use App\Models\Stage;
 use App\Models\StageMessage;
 use App\Models\StageParticipant;
@@ -97,6 +100,7 @@ class StageService
     /**
      * @param  array{
      *     title: string,
+     *     type?: string|null,
      *     description?: string|null,
      *     is_public?: bool,
      *     allow_invite?: bool,
@@ -116,10 +120,15 @@ class StageService
                 $backgroundKey = app(StageMediaService::class)->defaultBackgroundKey();
             }
 
+            $type = filled($data['type'] ?? null)
+                ? (StageType::tryFrom((string) $data['type']) ?? StageType::Voice)
+                : StageType::Voice;
+
             $stage = Stage::query()->create([
                 'host_id' => $host->id,
                 'club_id' => $host->favourite_club_id,
                 'title' => $data['title'],
+                'type' => $type,
                 'description' => filled($data['description'] ?? null) ? trim((string) $data['description']) : null,
                 'is_public' => (bool) ($data['is_public'] ?? true),
                 'allow_invite' => (bool) ($data['allow_invite'] ?? true),
@@ -603,6 +612,85 @@ class StageService
         ]);
     }
 
+    /**
+     * Direct, targeted invites — one notification per recipient, deep-linking
+     * straight into the room (see SocialNotificationService::hrefFor). Unlike
+     * shareToFeed(), this doesn't touch the feed at all.
+     *
+     * @param  list<int>  $recipientIds
+     * @return int number of recipients actually notified
+     */
+    public function invite(Stage $stage, User $inviter, array $recipientIds): int
+    {
+        if (! $stage->allow_invite) {
+            throw ValidationException::withMessages([
+                'stage' => 'Invites are disabled for this Stage.',
+            ]);
+        }
+
+        if (! $stage->isLive()) {
+            throw ValidationException::withMessages([
+                'stage' => 'Only live Stages can be invited to.',
+            ]);
+        }
+
+        if ($this->activeParticipant($stage, $inviter) === null) {
+            throw ValidationException::withMessages([
+                'stage' => 'Join the Stage before inviting people.',
+            ]);
+        }
+
+        $alreadyInRoom = StageParticipant::query()
+            ->where('stage_id', $stage->id)
+            ->whereNull('left_at')
+            ->pluck('user_id');
+
+        $recipients = User::query()
+            ->whereIn('id', $recipientIds)
+            ->whereKeyNot($inviter->id)
+            ->whereNotIn('id', $alreadyInRoom)
+            ->whereNotNull('social_onboarded_at')
+            ->get();
+
+        $notifications = app(CreateSocialNotification::class);
+        $invited = 0;
+
+        foreach ($recipients as $recipient) {
+            $notification = $notifications->notify(
+                $recipient,
+                $inviter,
+                SocialNotification::TYPE_STAGE_INVITE,
+                $stage,
+                ['stage_title' => $stage->title],
+            );
+
+            if ($notification !== null) {
+                $invited++;
+            }
+        }
+
+        return $invited;
+    }
+
+    /**
+     * People the inviter can send a direct Stage invite to — follow
+     * connections, minus whoever is already in the room. Reuses the exact
+     * candidate logic the chat friend/group pickers already use.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function presentInviteCandidates(Stage $stage, User $viewer, int $limit = 60): array
+    {
+        $alreadyInRoom = StageParticipant::query()
+            ->where('stage_id', $stage->id)
+            ->whereNull('left_at')
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return app(ChatService::class)->presentFollowConnections($viewer, $alreadyInRoom, $limit);
+    }
+
     public function heartbeat(Stage $stage, User $user): void
     {
         StageParticipant::query()
@@ -923,6 +1011,7 @@ class StageService
         return [
             'id' => $stage->id,
             'title' => $stage->title,
+            'type' => $stage->type->value,
             'status' => $stage->status->value,
             'is_live' => $stage->isLive(),
             'host' => $this->presentUser($stage->host),
@@ -946,6 +1035,7 @@ class StageService
         $payload = [
             'id' => $stage->id,
             'title' => $stage->title,
+            'type' => $stage->type->value,
             'description' => $stage->description,
             'status' => $stage->status->value,
             'is_public' => (bool) $stage->is_public,

@@ -2,36 +2,39 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
+import { formatPrice, productOptionWord, productTypeLabel } from './productMeta';
 
-export default function Show({ jersey, cart_count = 0 }) {
+export default function Show({ product, cart_count = 0 }) {
     const inStockVariants = useMemo(
-        () => (jersey.variants || []).filter((variant) => variant.in_stock),
-        [jersey.variants],
+        () => (product.variants || []).filter((variant) => variant.in_stock),
+        [product.variants],
     );
     const images = useMemo(() => {
-        if (jersey.images?.length) {
-            return jersey.images;
+        if (product.images?.length) {
+            return product.images;
         }
 
-        return jersey.image_url
-            ? [{ id: 'primary', url: jersey.image_url, alt: jersey.name, title: jersey.name }]
+        return product.image_url
+            ? [{ id: 'primary', url: product.image_url, alt: product.name, title: product.name }]
             : [];
-    }, [jersey]);
+    }, [product]);
 
     const [activeImage, setActiveImage] = useState(0);
-    const [sizeId, setSizeId] = useState(inStockVariants[0]?.id ?? jersey.variants?.[0]?.id ?? '');
+    const [variantId, setVariantId] = useState(inStockVariants[0]?.id ?? product.variants?.[0]?.id ?? '');
     const { data, setData, post, processing, errors } = useForm({
-        variant_id: sizeId,
+        variant_id: variantId,
         quantity: 1,
     });
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
     const current = images[activeImage] ?? null;
-    const selectedVariant = (jersey.variants || []).find((variant) => String(variant.id) === String(sizeId));
-    const canBuy = jersey.purchasable && Boolean(sizeId) && selectedVariant?.in_stock;
+    const selectedVariant = (product.variants || []).find((variant) => String(variant.id) === String(variantId));
+    const canBuy = product.purchasable && Boolean(variantId) && selectedVariant?.in_stock;
+    const optionWord = productOptionWord(product.product_type);
+    const attributeEntries = Object.entries(product.attributes || {});
 
-    function selectSize(id) {
-        setSizeId(id);
+    function selectVariant(id) {
+        setVariantId(id);
         setData('variant_id', id);
     }
 
@@ -41,8 +44,8 @@ export default function Show({ jersey, cart_count = 0 }) {
     }
 
     return (
-        <SocialShell title={jersey.name} backHref="/social/shop">
-            <Head title={`${jersey.name} — Mad Fan Store`} />
+        <SocialShell title={product.name} backHref="/social/shop">
+            <Head title={`${product.name} — Mad Fan Store`} />
 
             <div className="mf-shop mf-shop--detail">
                 <div className="mf-shop-detail">
@@ -51,18 +54,16 @@ export default function Show({ jersey, cart_count = 0 }) {
                             {current ? (
                                 <img
                                     src={current.url}
-                                    alt={current.alt || jersey.name}
+                                    alt={current.alt || product.name}
                                     className="mf-shop-detail__img"
                                     onError={(event) => onImageError(event, fallbackUrl)}
                                 />
                             ) : (
                                 <div className="mf-shop-detail__placeholder mf-display">
-                                    {(jersey.club?.short || 'MF').slice(0, 3)}
+                                    {(product.club?.short || product.brand || 'MF').slice(0, 3)}
                                 </div>
                             )}
-                            {jersey.kit_kind ? (
-                                <span className="mf-shop-detail__kind mf-mono">{jersey.kit_kind}</span>
-                            ) : null}
+                            <span className="mf-shop-detail__kind mf-mono">{productTypeLabel(product.product_type)}</span>
                         </div>
                         {images.length > 1 ? (
                             <div className="mf-shop-thumbs" role="list">
@@ -94,67 +95,79 @@ export default function Show({ jersey, cart_count = 0 }) {
 
                     <div className="mf-shop-detail__info">
                         <div className="mf-shop-detail__price-row">
-                            <p className="mf-mono mf-shop-detail__price">£{jersey.price}</p>
+                            <p className="mf-mono mf-shop-detail__price">
+                                {formatPrice(selectedVariant?.price ?? product.price, product.currency)}
+                            </p>
                             <span
                                 className={[
                                     'mf-ticket-chip',
                                     'mf-mono',
-                                    jersey.purchasable ? 'mf-ticket-chip--owned' : 'mf-shop-chip--out',
+                                    product.purchasable ? 'mf-ticket-chip--owned' : 'mf-shop-chip--out',
                                 ]
                                     .filter(Boolean)
                                     .join(' ')}
                             >
-                                {jersey.purchasable ? 'In stock' : 'Sold out'}
+                                {product.purchasable ? 'In stock' : 'Sold out'}
                             </span>
                         </div>
-                        {jersey.description ? (
-                            <p className="mf-tickets-lead mf-shop-detail__lead">{jersey.description}</p>
-                        ) : (
-                            <p className="mf-tickets-lead mf-shop-detail__lead">
-                                Replica kit for the terrace — pick a size and bag it. Shipping-only
-                                checkout on this pass.
-                            </p>
-                        )}
+                        {product.description ? (
+                            <p className="mf-tickets-lead mf-shop-detail__lead">{product.description}</p>
+                        ) : null}
 
-                        {!jersey.purchasable ? (
+                        {attributeEntries.length > 0 ? (
+                            <dl className="mf-shop-attributes">
+                                {attributeEntries.map(([key, value]) => (
+                                    <div key={key} className="mf-shop-attributes__row">
+                                        <dt className="mf-text-caption text-[var(--mf-muted)]">
+                                            {key.replace(/_/g, ' ')}
+                                        </dt>
+                                        <dd>{value}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        ) : null}
+
+                        {!product.purchasable ? (
                             <div className="mf-shop-detail__notice" role="status">
                                 <p className="mf-empty-title">Sold out</p>
                                 <p className="mf-empty-copy">
-                                    Every size on this kit is gone. Browse the floor for another drop.
+                                    Every option on this item is gone. Browse the store for another drop.
                                 </p>
                                 <Link href="/social/shop" className="mf-btn mf-btn--ghost" prefetch>
-                                    Back to mall
+                                    Back to store
                                 </Link>
                             </div>
                         ) : (
                             <form onSubmit={addToBag} className="mf-shop-buy">
                                 <div className="mf-shop-buy__label-row">
-                                    <p className="mf-text-caption text-[var(--mf-muted)]">Size</p>
+                                    <p className="mf-text-caption text-[var(--mf-muted)]">{optionWord}</p>
                                     {selectedVariant ? (
                                         <p className="mf-shop-buy__stock mf-mono">
                                             {selectedVariant.in_stock
-                                                ? `${selectedVariant.stock} left`
+                                                ? selectedVariant.stock === null
+                                                    ? 'Available'
+                                                    : `${selectedVariant.stock} left`
                                                 : 'Out'}
                                         </p>
                                     ) : null}
                                 </div>
-                                <div className="mf-shop-sizes" role="group" aria-label="Select size">
-                                    {(jersey.variants || []).map((variant) => (
+                                <div className="mf-shop-sizes" role="group" aria-label={`Select ${optionWord.toLowerCase()}`}>
+                                    {(product.variants || []).map((variant) => (
                                         <button
                                             key={variant.id}
                                             type="button"
                                             className={[
                                                 'mf-shop-size',
-                                                String(sizeId) === String(variant.id) ? 'is-active' : '',
+                                                String(variantId) === String(variant.id) ? 'is-active' : '',
                                                 !variant.in_stock ? 'is-disabled' : '',
                                             ]
                                                 .filter(Boolean)
                                                 .join(' ')}
                                             disabled={!variant.in_stock}
-                                            onClick={() => selectSize(variant.id)}
-                                            aria-pressed={String(sizeId) === String(variant.id)}
+                                            onClick={() => selectVariant(variant.id)}
+                                            aria-pressed={String(variantId) === String(variant.id)}
                                         >
-                                            {variant.size}
+                                            {variant.label}
                                         </button>
                                     ))}
                                 </div>

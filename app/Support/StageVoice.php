@@ -2,8 +2,33 @@
 
 namespace App\Support;
 
+use App\Enums\StageType;
+
 class StageVoice
 {
+    /**
+     * LiveKit `canPublishSources` for a participant, keyed off stage type +
+     * host/on-stage status rather than the flat `role` column — this is what
+     * lets a Streaming stage's promoted Speaker talk (mic) without ever being
+     * allowed to appear on video, a distinction the role alone can't express.
+     *
+     * @return list<string>
+     */
+    public static function publishSourcesFor(StageType $type, bool $isHost, bool $isOnStage): array
+    {
+        if (! $isOnStage) {
+            return [];
+        }
+
+        return match ($type) {
+            StageType::Voice => ['microphone'],
+            StageType::Video => ['microphone', 'camera', 'screen_share'],
+            StageType::Streaming => $isHost
+                ? ['microphone', 'camera', 'screen_share']
+                : ['microphone'],
+        };
+    }
+
     public static function credentialsPresent(): bool
     {
         return filled(config('livekit.url'))

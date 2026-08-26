@@ -19,6 +19,9 @@ export function useStageActions() {
         unlockVoicePlayback,
         retryMicAccess,
         pushReaction,
+        videoTracks,
+        toggleCamera: toggleCameraPublish,
+        toggleScreenShare: toggleScreenSharePublish,
     } = useStageSession();
     const { reportError, clearError } = useSocialFlash();
 
@@ -32,6 +35,15 @@ export function useStageActions() {
     const speakRequestsAllowed = stage?.allow_speak_requests !== false;
     const handRaised = Boolean(me?.speak_requested_at);
     const micNeedsRecovery = onStage && voiceEnabled && isLive && isMicBlockedStatus(voiceStatus);
+    // Mirrors StageVoice::publishSourcesFor server-side: Video stages let any
+    // on-stage participant publish camera/screen; Streaming stages reserve it
+    // for the host — a promoted Streaming speaker still only gets voice/chat.
+    // Real enforcement is the LiveKit token's canPublishSources; this is UI gating only.
+    const stageType = stage?.type || 'voice';
+    const canPublishVideo =
+        onStage && isLive && voiceEnabled && stageType !== 'voice' && (stageType === 'video' || isHost);
+    const cameraOn = Boolean(me && videoTracks.get(`${me.user_id}:camera`));
+    const screenShareOn = Boolean(me && videoTracks.get(`${me.user_id}:screen_share`));
 
     const flashVisit = useCallback(
         (options = {}) =>
@@ -127,6 +139,22 @@ export function useStageActions() {
         void retryMicAccess?.();
     }, [retryMicAccess]);
 
+    const toggleCamera = useCallback(() => {
+        if (!canPublishVideo) {
+            return;
+        }
+        unlockVoicePlayback?.();
+        void toggleCameraPublish?.(!cameraOn);
+    }, [canPublishVideo, cameraOn, toggleCameraPublish, unlockVoicePlayback]);
+
+    const toggleScreenShare = useCallback(() => {
+        if (!canPublishVideo) {
+            return;
+        }
+        unlockVoicePlayback?.();
+        void toggleScreenSharePublish?.(!screenShareOn);
+    }, [canPublishVideo, screenShareOn, toggleScreenSharePublish, unlockVoicePlayback]);
+
     const leave = useCallback(() => {
         if (!isLive || !me) {
             return;
@@ -181,12 +209,17 @@ export function useStageActions() {
             canReact: isLive && Boolean(me),
             canLeave: isLive && Boolean(me),
             canEnd: isHost && isLive,
+            canPublishVideo,
+            cameraOn,
+            screenShareOn,
             toggleMute,
             raiseHand,
             react,
             sendReaction,
             startVoice,
             enableMic,
+            toggleCamera,
+            toggleScreenShare,
             leave,
             endStage,
         }),
@@ -201,12 +234,17 @@ export function useStageActions() {
             micNeedsRecovery,
             speakRequestsAllowed,
             room?.reaction_options,
+            canPublishVideo,
+            cameraOn,
+            screenShareOn,
             toggleMute,
             raiseHand,
             react,
             sendReaction,
             startVoice,
             enableMic,
+            toggleCamera,
+            toggleScreenShare,
             leave,
             endStage,
         ],

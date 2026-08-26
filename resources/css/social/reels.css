@@ -564,8 +564,15 @@
     object-fit: cover;
 }
 
+/* A video tile's only visual content (.mf-media__video, positioned below) is
+ * taken out of flow — without an explicit box here, the tile (and, in the
+ * 2-4 item masonry columns, the whole column) collapses to zero height and
+ * the video never becomes visible at all. 16:9 is a reasonable default for a
+ * feed preview since per-video intrinsic dimensions aren't captured server
+ * side (see CreateSocialPost::mediaTypeFor). */
 .mf-media__cell--video {
     position: relative;
+    aspect-ratio: 16 / 9;
 }
 
 .mf-media__video {
@@ -591,6 +598,28 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     pointer-events: none;
+}
+
+.mf-media__mute-btn {
+    position: absolute;
+    right: 0.45rem;
+    bottom: 0.45rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, #000 55%, transparent);
+    color: #fff;
+    cursor: pointer;
+}
+
+.mf-media__mute-btn svg {
+    width: 0.95rem;
+    height: 0.95rem;
 }
 
 .mf-lightbox__video {

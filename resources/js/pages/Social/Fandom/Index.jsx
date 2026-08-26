@@ -13,7 +13,7 @@ import PredictionCard from './PredictionCard';
 import PulseStrip from './PulseStrip';
 import UpcomingList from './UpcomingList';
 
-function HomeTab({ home }) {
+function HomeTab({ home, fandomSlug }) {
     if (!home) {
         return null;
     }
@@ -25,52 +25,62 @@ function HomeTab({ home }) {
     ];
 
     return (
-        <>
-            <PulseStrip pulse={home.pulse} />
+        <div className="mf-split mf-split--rail mf-fh-split">
+            {/*
+             * Below lg (see .mf-split's own breakpoint): stacks in DOM order,
+             * rail after content. At lg+, inside the `wide` shell, this
+             * becomes a real two-column split — standings + fixtures pinned
+             * as a persistent rail while the activity stream scrolls.
+             */}
+            <div className="mf-split__rail mf-split__detail-sticky">
+                <LeaderboardExcerpt leaderboard={home.leaderboard} />
+                <UpcomingList fixtures={home.upcoming} />
+            </div>
 
-            {home.trending ? (
-                <section className="mf-fh-section">
-                    <h2 className="mf-fh-section__title">🔥 Trending now</h2>
-                    <EventCard event={home.trending} />
-                </section>
-            ) : null}
+            <div className="mf-split__content">
+                <PulseStrip pulse={home.pulse} />
 
-            {activities.length > 0 ? (
-                <section className="mf-fh-section">
-                    <h2 className="mf-fh-section__title">⚡ Fan activities</h2>
-                    <div className="mf-fh-activity-grid">
-                        {activities.map((item) => {
-                            if (item.kind === 'prediction') {
-                                return <PredictionCard key={item.key} prediction={item.prediction} />;
-                            }
-                            if (item.kind === 'poll') {
-                                return <PollCard key={item.key} poll={item.poll} />;
-                            }
-                            return <ChallengeCard key={item.key} challenge={item.challenge} />;
-                        })}
-                    </div>
-                </section>
-            ) : null}
+                {home.trending ? (
+                    <section className="mf-fh-section">
+                        <h2 className="mf-fh-section__title">🔥 Trending now</h2>
+                        <EventCard event={home.trending} />
+                    </section>
+                ) : null}
 
-            {home.feed.posts.length > 0 ? (
-                <section className="mf-fh-section">
-                    <div className="mf-fh-section__head">
-                        <h2 className="mf-fh-section__title">💬 Fan feed</h2>
-                        <Link href="/social/fandom?tab=feed" className="mf-fh-section__more">
-                            See all →
-                        </Link>
-                    </div>
-                    <div className="mf-fh-feed-stream">
-                        {home.feed.posts.map((post) => (
-                            <PostCard key={post.id} post={post} />
-                        ))}
-                    </div>
-                </section>
-            ) : null}
+                {activities.length > 0 ? (
+                    <section className="mf-fh-section">
+                        <h2 className="mf-fh-section__title">⚡ Fan activities</h2>
+                        <div className="mf-fh-activity-grid">
+                            {activities.map((item) => {
+                                if (item.kind === 'prediction') {
+                                    return <PredictionCard key={item.key} prediction={item.prediction} />;
+                                }
+                                if (item.kind === 'poll') {
+                                    return <PollCard key={item.key} poll={item.poll} />;
+                                }
+                                return <ChallengeCard key={item.key} challenge={item.challenge} />;
+                            })}
+                        </div>
+                    </section>
+                ) : null}
 
-            <LeaderboardExcerpt leaderboard={home.leaderboard} />
-            <UpcomingList fixtures={home.upcoming} />
-        </>
+                {home.feed.posts.length > 0 ? (
+                    <section className="mf-fh-section">
+                        <div className="mf-fh-section__head">
+                            <h2 className="mf-fh-section__title">💬 Fan feed</h2>
+                            <Link href={`/social/fandom/${fandomSlug}?tab=feed`} className="mf-fh-section__more">
+                                See all →
+                            </Link>
+                        </div>
+                        <div className="mf-fh-feed-stream">
+                            {home.feed.posts.map((post) => (
+                                <PostCard key={post.id} post={post} />
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+            </div>
+        </div>
     );
 }
 
@@ -135,19 +145,19 @@ export default function FandomIndex({
     const [fandom, setFandom] = useState(initialFandom);
 
     return (
-        <SocialShell hideHeader>
+        <SocialShell hideHeader wide>
             <Head title={`${fandom.name} · Fandom`} />
 
             <div className="mf-page mf-fh">
                 <FandomHeader fandom={fandom} onChange={setFandom} />
-                <FandomNav active={tab} />
+                <FandomNav active={tab} fandomSlug={fandom.slug} />
 
                 <div className="mf-fh-body">
-                    {tab === 'home' ? <HomeTab home={home} /> : null}
+                    {tab === 'home' ? <HomeTab home={home} fandomSlug={fandom.slug} /> : null}
                     {tab === 'feed' ? <FeedTab feedFull={feedFull} /> : null}
                     {tab === 'live' ? <LiveTab liveFull={liveFull} /> : null}
                     {tab === 'events' ? <EventsTab eventsFull={eventsFull} predictionsFull={predictionsFull} /> : null}
-                    {tab === 'more' ? <MoreSheet more={more} /> : null}
+                    {tab === 'more' ? <MoreSheet more={more} fandomSlug={fandom.slug} /> : null}
                 </div>
             </div>
         </SocialShell>

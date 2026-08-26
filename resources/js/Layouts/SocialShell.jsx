@@ -139,12 +139,14 @@ export function IconCampaign() {
 export function IconFandom({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <circle cx="12" cy="12" r="8.2" strokeWidth={active ? 2.25 : 1.75} />
+            <path strokeLinecap="round" strokeWidth={active ? 2.25 : 1.75} d="M6 20.5V4" />
             <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={active ? 1.9 : 1.5}
-                d="M12 8.6 15 11l-1.15 3.55h-3.7L9 11l3-2.4ZM12 3.8v2.3M12 20.2v-2.3M4.8 8.8l2.2.9M17 14.3l2.2.9M4.8 15.2l2.2-.9M17 9.7l2.2-.9"
+                strokeWidth={active ? 2.1 : 1.65}
+                fill={active ? 'currentColor' : 'none'}
+                fillOpacity={active ? 0.18 : 0}
+                d="M6 5c2.1-1.3 4-1.3 6 0s3.9 1.3 6 0v8.4c-2.1 1.3-4 1.3-6 0s-3.9-1.3-6 0V5Z"
             />
         </svg>
     );
@@ -191,14 +193,12 @@ export function IconStage({ active }) {
 function IconReels({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <rect x="4" y="4" width="16" height="16" rx="5" strokeWidth={active ? 2.25 : 1.75} />
-            <circle cx="7.4" cy="7.4" r="1.5" strokeWidth={active ? 1.85 : 1.45} />
-            <circle cx="16.6" cy="16.6" r="1.5" strokeWidth={active ? 1.85 : 1.45} />
+            <rect x="7" y="3.5" width="10" height="17" rx="3" strokeWidth={active ? 2.25 : 1.75} />
             <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={active ? 2.1 : 1.65}
-                d="M10.6 9.6 14.7 12l-4.1 2.4V9.6Z"
+                d="M10.4 9.2 15 12l-4.6 2.8V9.2Z"
                 fill="currentColor"
                 stroke="none"
             />

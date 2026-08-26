@@ -66,3 +66,96 @@
         padding-right: 0.15rem;
     }
 }
+
+/*
+ * General store additions — the shop now sells apparel, collectibles and
+ * subscriptions across every fandom, not just football kits. These rules
+ * layer on top of the card/segment/chip visuals above (still shared) rather
+ * than reintroducing them.
+ */
+.mf-shop-type-segment,
+.mf-shop-category-segment {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mf-shop-type-segment button {
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--mf-radius-badge);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        border-color 160ms var(--mf-ease),
+        color 160ms var(--mf-ease),
+        background 160ms var(--mf-ease);
+}
+
+.mf-shop-type-segment button.is-active {
+    border-color: color-mix(in srgb, var(--mf-pitch) 55%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-panel));
+    color: var(--mf-text);
+}
+
+/* Product-type chip on cards/PDP — colour-coded so apparel, collectibles and
+   subscriptions read as different shelves at a glance, even before the
+   fandom icon or brand name registers. */
+.mf-shop-type--apparel {
+    background: color-mix(in srgb, #1f6f3f 62%, transparent);
+    border-color: color-mix(in srgb, #7be3a4 40%, transparent);
+}
+
+.mf-shop-type--collectible {
+    background: color-mix(in srgb, #7a3fb0 62%, transparent);
+    border-color: color-mix(in srgb, #d8b4fe 40%, transparent);
+}
+
+.mf-shop-type--subscription {
+    background: color-mix(in srgb, #1f5f9f 62%, transparent);
+    border-color: color-mix(in srgb, #9cc9ff 40%, transparent);
+}
+
+/* PDP attribute list — collectible edition/rarity, subscription delivery
+   note. Plain definition rows, not a table; keeps the same rhythm as
+   .mf-shop-summary__list beside it. */
+.mf-shop-attributes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+}
+
+.mf-shop-attributes__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: var(--mf-text-caption);
+}
+
+.mf-shop-attributes__row dt {
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.mf-shop-attributes__row dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--mf-text);
+    text-align: right;
+}
+
+.mf-shop-checkout__digital-notice {
+    padding: 1rem;
+    border: 1px dashed var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+}

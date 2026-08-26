@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\Post;
 use App\Models\SocialAnnouncement;
 use App\Models\SocialNotification;
+use App\Models\Stage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
@@ -70,6 +71,8 @@ class SocialNotificationService
             SocialNotification::TYPE_CHAT_MESSAGE => "{$actorName} sent a message in ".
                 ($notification->data['channel_name'] ?? 'a chat'),
             SocialNotification::TYPE_ANNOUNCEMENT => $notification->data['headline'] ?? 'New on the terrace',
+            SocialNotification::TYPE_STAGE_INVITE => "{$actorName} invited you to ".
+                ($notification->data['stage_title'] ?? 'a live Stage'),
             default => 'New notification',
         };
     }
@@ -78,10 +81,9 @@ class SocialNotificationService
     {
         return match ($notification->notifiable_type) {
             (new Post)->getMorphClass() => '/social/posts/'.$notification->notifiable_id,
-            (new Message)->getMorphClass() => isset($notification->data['channel_slug'])
-                ? '/social/chat/thread/'.$notification->data['channel_slug']
-                : '/social/chat',
+            (new Message)->getMorphClass() => $notification->data['channel_href'] ?? '/social/chat',
             (new SocialAnnouncement)->getMorphClass() => $notification->data['link_url'] ?? '/social',
+            (new Stage)->getMorphClass() => '/social/stage/'.$notification->notifiable_id,
             default => null,
         };
     }

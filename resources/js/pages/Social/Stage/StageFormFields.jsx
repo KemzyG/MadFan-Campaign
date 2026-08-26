@@ -2,6 +2,7 @@
  * Shared form primitives for the Stage create + settings sheets, so both keep a
  * single source of truth for switches, backdrop picker and section chrome.
  */
+import { IconBroadcast, IconCamera, IconVoiceWave } from './StageIcons';
 
 export function SectionLabel({ id, children }) {
     return (
@@ -67,6 +68,64 @@ export function SwitchRow({ id, label, hint, checked, onChange, disabled = false
                 <span className="mf-switch__track" aria-hidden />
             </span>
         </label>
+    );
+}
+
+export const STAGE_TYPES = [
+    {
+        key: 'voice',
+        label: 'Voice',
+        hint: 'Audio + chat, no camera',
+        icon: IconVoiceWave,
+    },
+    {
+        key: 'video',
+        label: 'Video',
+        hint: 'Host + speakers on camera',
+        icon: IconCamera,
+    },
+    {
+        key: 'streaming',
+        label: 'Streaming',
+        hint: 'One broadcaster, everyone watches',
+        icon: IconBroadcast,
+    },
+];
+
+/** Segmented control for the stage type, chosen once at creation — an icon
+ *  card per format so the choice reads at a glance, not just as label text. */
+export function TypePicker({ value, onChange, disabled = false, name = 'stage-type' }) {
+    return (
+        <div className="mf-stage-type-picker" role="radiogroup" aria-label="Stage type">
+            {STAGE_TYPES.map((type) => {
+                const selected = value === type.key;
+                const Icon = type.icon;
+
+                return (
+                    <label
+                        key={type.key}
+                        className={`mf-stage-type-picker__option ${selected ? 'is-selected' : ''}`}
+                    >
+                        <input
+                            type="radio"
+                            name={name}
+                            className="sr-only"
+                            value={type.key}
+                            checked={selected}
+                            onChange={() => onChange(type.key)}
+                            disabled={disabled}
+                        />
+                        <span className="mf-stage-type-picker__icon" aria-hidden>
+                            <Icon />
+                        </span>
+                        <span className="mf-stage-type-picker__copy">
+                            <span className="mf-stage-type-picker__label">{type.label}</span>
+                            <span className="mf-stage-type-picker__hint">{type.hint}</span>
+                        </span>
+                    </label>
+                );
+            })}
+        </div>
     );
 }
 

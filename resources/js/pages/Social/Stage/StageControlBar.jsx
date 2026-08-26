@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import StageAudioMenu from './StageAudioMenu';
-import { IconHand, IconMic, IconMicOff, IconVoice, IconVolume, StageIconButton } from './StageIcons';
+import {
+    IconCamera,
+    IconCameraOff,
+    IconHand,
+    IconMic,
+    IconMicOff,
+    IconScreenShare,
+    IconVoice,
+    IconVolume,
+    StageIconButton,
+} from './StageIcons';
 import { useStageActions } from './useStageActions';
 
 /**
@@ -98,6 +108,29 @@ export default function StageControlBar() {
                     </StageIconButton>
                 ) : null}
             </div>
+
+            {actions.canPublishVideo ? (
+                <div className="mf-stage-control-bar__group mf-stage-control-bar__group--media" aria-label="Camera and screen share">
+                    <span className="mf-stage-control-bar__divider" aria-hidden />
+                    <StageIconButton
+                        label={actions.cameraOn ? 'Turn camera off' : 'Turn camera on'}
+                        active={actions.cameraOn}
+                        pitch={actions.cameraOn}
+                        onClick={actions.toggleCamera}
+                    >
+                        {actions.cameraOn ? <IconCamera /> : <IconCameraOff />}
+                    </StageIconButton>
+
+                    <StageIconButton
+                        label={actions.screenShareOn ? 'Stop sharing screen' : 'Share screen'}
+                        active={actions.screenShareOn}
+                        pitch={actions.screenShareOn}
+                        onClick={actions.toggleScreenShare}
+                    >
+                        <IconScreenShare />
+                    </StageIconButton>
+                </div>
+            ) : null}
         </div>
     );
 }

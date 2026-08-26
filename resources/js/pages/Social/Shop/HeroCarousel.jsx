@@ -2,23 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import ShopCrest from './ShopCrest';
+import { formatPrice } from './productMeta';
 
-function HeroKitCard({ jersey, isActive = false }) {
+function HeroProductCard({ product, isActive = false }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
 
     return (
         <Link
-            href={`/social/shop/${jersey.slug}`}
+            href={`/social/shop/${product.slug}`}
             className="mf-shop-hero-kit"
             prefetch
             aria-hidden={!isActive}
             tabIndex={isActive ? 0 : -1}
         >
             <div className="mf-shop-hero-kit__media">
-                {jersey.image_url ? (
+                {product.image_url ? (
                     <img
-                        src={jersey.image_url}
+                        src={product.image_url}
                         alt=""
                         className="mf-shop-hero-kit__img"
                         loading={isActive ? 'eager' : 'lazy'}
@@ -26,37 +27,34 @@ function HeroKitCard({ jersey, isActive = false }) {
                     />
                 ) : (
                     <div className="mf-shop-hero-kit__placeholder">
-                        <ShopCrest club={jersey.club} />
+                        <ShopCrest club={product.club} fallbackLabel={product.brand} />
                     </div>
                 )}
-                {jersey.kit_kind ? (
-                    <span className="mf-shop-hero-kit__kind mf-mono">{jersey.kit_kind}</span>
-                ) : null}
             </div>
             <div className="mf-shop-hero-kit__body">
                 <p className="mf-shop-hero-kit__club mf-text-caption">
-                    {jersey.club?.name || 'Mad Fan kit'}
+                    {product.club?.name || product.brand || 'Mad Fan'}
                 </p>
-                <p className="mf-shop-hero-kit__name mf-display">{jersey.name}</p>
-                <p className="mf-shop-hero-kit__price mf-mono">£{jersey.price}</p>
+                <p className="mf-shop-hero-kit__name mf-display">{product.name}</p>
+                <p className="mf-shop-hero-kit__price mf-mono">{formatPrice(product.price, product.currency)}</p>
             </div>
         </Link>
     );
 }
 
 /**
- * Auto-rotating hero carousel of featured kits, with dots and touch swipe.
+ * Auto-rotating hero carousel of featured products, with dots and touch swipe.
  */
-export default function HeroCarousel({ jerseys = [] }) {
+export default function HeroCarousel({ products = [] }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const touchStartX = useRef(null);
 
     useEffect(() => {
         setActiveIndex(0);
-    }, [jerseys]);
+    }, [products]);
 
     useEffect(() => {
-        if (jerseys.length <= 1) {
+        if (products.length <= 1) {
             return undefined;
         }
 
@@ -67,18 +65,18 @@ export default function HeroCarousel({ jerseys = [] }) {
         }
 
         const timer = window.setInterval(() => {
-            setActiveIndex((current) => (current + 1) % jerseys.length);
+            setActiveIndex((current) => (current + 1) % products.length);
         }, 4500);
 
         return () => window.clearInterval(timer);
-    }, [jerseys.length]);
+    }, [products.length]);
 
     const goTo = (index) => {
-        if (jerseys.length === 0) {
+        if (products.length === 0) {
             return;
         }
 
-        const wrapped = ((index % jerseys.length) + jerseys.length) % jerseys.length;
+        const wrapped = ((index % products.length) + products.length) % products.length;
 
         setActiveIndex(wrapped);
     };
@@ -101,7 +99,7 @@ export default function HeroCarousel({ jerseys = [] }) {
         touchStartX.current = null;
     };
 
-    if (jerseys.length === 0) {
+    if (products.length === 0) {
         return null;
     }
 
@@ -109,7 +107,7 @@ export default function HeroCarousel({ jerseys = [] }) {
         <div
             className="mf-shop-mall-hero__carousel"
             aria-roledescription="carousel"
-            aria-label="Featured kits"
+            aria-label="Featured products"
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
         >
@@ -117,27 +115,27 @@ export default function HeroCarousel({ jerseys = [] }) {
                 className="mf-shop-mall-hero__track"
                 style={{ transform: `translateX(-${activeIndex * 100}%)` }}
             >
-                {jerseys.map((jersey, index) => (
+                {products.map((product, index) => (
                     <div
-                        key={jersey.id}
+                        key={product.id}
                         className="mf-shop-mall-hero__slide"
                         role="group"
                         aria-roledescription="slide"
-                        aria-label={`${index + 1} of ${jerseys.length}`}
+                        aria-label={`${index + 1} of ${products.length}`}
                     >
-                        <HeroKitCard jersey={jersey} isActive={index === activeIndex} />
+                        <HeroProductCard product={product} isActive={index === activeIndex} />
                     </div>
                 ))}
             </div>
-            {jerseys.length > 1 ? (
-                <div className="mf-shop-mall-hero__dots" role="tablist" aria-label="Choose kit">
-                    {jerseys.map((jersey, index) => (
+            {products.length > 1 ? (
+                <div className="mf-shop-mall-hero__dots" role="tablist" aria-label="Choose product">
+                    {products.map((product, index) => (
                         <button
-                            key={jersey.id}
+                            key={product.id}
                             type="button"
                             role="tab"
                             aria-selected={index === activeIndex}
-                            aria-label={`Show ${jersey.name}`}
+                            aria-label={`Show ${product.name}`}
                             className={index === activeIndex ? 'is-active' : ''}
                             onClick={() => goTo(index)}
                         />

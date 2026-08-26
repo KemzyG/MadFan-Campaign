@@ -77,6 +77,9 @@ export function StageSessionProvider({ children }) {
     const [reactions, setReactions] = useState([]);
     const [activeSpeakers, setActiveSpeakers] = useState(() => new Set());
     const [peerStates, setPeerStates] = useState(() => new Map());
+    /** Live `<video>` elements for camera/screen-share tracks, keyed `${userId}:${source}`
+     *  — LiveKit-only (see useStageLiveKitVoice); the mesh driver never calls onVideoTrack. */
+    const [videoTracks, setVideoTracks] = useState(() => new Map());
     const [audioOutputState, setAudioOutputState] = useState(getAudioOutput);
     const [currentPath, setCurrentPath] = useState(() =>
         typeof window !== 'undefined' ? window.location.pathname : '',
@@ -204,6 +207,7 @@ export function StageSessionProvider({ children }) {
         setVoiceStatus('Idle');
         setActiveSpeakers(new Set());
         setPeerStates(new Map());
+        setVideoTracks(new Map());
     }, []);
 
     const handleActiveSpeakers = useCallback((ids) => {
@@ -230,6 +234,43 @@ export function StageSessionProvider({ children }) {
             next.set(id, state);
             return next;
         });
+    }, []);
+
+    // Camera/screen-share track from the active driver (LiveKit only). videoEl === null
+    // removes the entry (track unpublished/unsubscribed).
+    const handleVideoTrack = useCallback((userId, source, videoEl) => {
+        const id = Number(userId);
+        if (!Number.isFinite(id) || !source) {
+            return;
+        }
+        const key = `${id}:${source}`;
+        setVideoTracks((prev) => {
+            if (videoEl == null) {
+                if (!prev.has(key)) {
+                    return prev;
+                }
+                const next = new Map(prev);
+                next.delete(key);
+                return next;
+            }
+            const next = new Map(prev);
+            next.set(key, videoEl);
+            return next;
+        });
+    }, []);
+
+    const toggleCamera = useCallback(async (enabled) => {
+        if (!voiceRef.current?.setCameraEnabled) {
+            return { ok: false };
+        }
+        return voiceRef.current.setCameraEnabled(enabled);
+    }, []);
+
+    const toggleScreenShare = useCallback(async (enabled) => {
+        if (!voiceRef.current?.setScreenShareEnabled) {
+            return { ok: false };
+        }
+        return voiceRef.current.setScreenShareEnabled(enabled);
     }, []);
 
     const clearSession = useCallback(() => {
@@ -649,6 +690,7 @@ export function StageSessionProvider({ children }) {
                 onStatus: setVoiceStatus,
                 onActiveSpeakers: handleActiveSpeakers,
                 onPeerState: handlePeerStates,
+                onVideoTrack: handleVideoTrack,
             });
             session.stageId = stage.id;
             voiceRef.current = session;
@@ -683,6 +725,7 @@ export function StageSessionProvider({ children }) {
         stopVoice,
         handleActiveSpeakers,
         handlePeerStates,
+        handleVideoTrack,
     ]);
 
     // If autoplay is blocked, retry on the next page interaction (not a dedicated button).
@@ -771,6 +814,7 @@ export function StageSessionProvider({ children }) {
             reactions,
             activeSpeakers,
             peerStates,
+            videoTracks,
             voiceConnection,
             audioOutput,
             voiceStatus,
@@ -785,6 +829,8 @@ export function StageSessionProvider({ children }) {
             setLoading,
             unlockVoicePlayback,
             retryMicAccess,
+            toggleCamera,
+            toggleScreenShare,
         }),
         [
             activeStageId,
@@ -795,6 +841,7 @@ export function StageSessionProvider({ children }) {
             reactions,
             activeSpeakers,
             peerStates,
+            videoTracks,
             voiceConnection,
             audioOutput,
             voiceStatus,
@@ -808,6 +855,8 @@ export function StageSessionProvider({ children }) {
             clearSession,
             unlockVoicePlayback,
             retryMicAccess,
+            toggleCamera,
+            toggleScreenShare,
         ],
     );
 

@@ -38,20 +38,31 @@ export default function MediaGrid({ media }) {
                 {items.map((item, index) => {
                     const video = isVideoItem(item);
 
+                    function open(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setViewer(index);
+                    }
+
                     return (
-                        <button
-                            type="button"
+                        // A plain <button> can't contain the video's own mute
+                        // toggle button (nested interactive controls are invalid
+                        // HTML) — a div with button semantics does the same job.
+                        <div
                             key={item.id ?? index}
+                            role="button"
+                            tabIndex={0}
                             className={`mf-media__cell mf-media__cell--${index + 1}${video ? ' mf-media__cell--video' : ''}`}
                             aria-label={video ? 'View video' : 'View media'}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                setViewer(index);
+                            onClick={open}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    open(event);
+                                }
                             }}
                         >
                             {video ? (
-                                <AutoplayVideo src={item.url} className="mf-media__video" />
+                                <AutoplayVideo src={item.url} className="mf-media__video" allowUnmute />
                             ) : (
                                 <img
                                     src={item.url}
@@ -72,7 +83,7 @@ export default function MediaGrid({ media }) {
                                     +{media.length - 4}
                                 </span>
                             ) : null}
-                        </button>
+                        </div>
                     );
                 })}
             </div>

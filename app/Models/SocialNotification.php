@@ -25,6 +25,8 @@ class SocialNotification extends Model
 
     public const TYPE_ANNOUNCEMENT = 'announcement';
 
+    public const TYPE_STAGE_INVITE = 'stage_invite';
+
     protected $fillable = [
         'recipient_id',
         'actor_id',

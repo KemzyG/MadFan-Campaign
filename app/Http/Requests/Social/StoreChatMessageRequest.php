@@ -4,9 +4,12 @@ namespace App\Http\Requests\Social;
 
 use App\Models\Channel;
 use App\Services\Social\ChatService;
+use App\Services\Social\FeedService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreChatMessageRequest extends FormRequest
 {
@@ -31,7 +34,15 @@ class StoreChatMessageRequest extends FormRequest
         $channel = $this->route('channel');
 
         return [
-            'body' => ['required', 'string', 'max:'.ChatService::MAX_BODY_LENGTH],
+            // Not `required` — a message can be attachment-only. withValidator()
+            // below enforces "body or attachment" the same way post creation does.
+            'body' => ['nullable', 'string', 'max:'.ChatService::MAX_BODY_LENGTH],
+            'attachment' => [
+                'nullable',
+                'file',
+                'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm',
+                'max:'.FeedService::MAX_VIDEO_KB,
+            ],
             'reply_to_message_id' => [
                 'nullable',
                 'integer',
@@ -43,14 +54,50 @@ class StoreChatMessageRequest extends FormRequest
         ];
     }
 
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $body = trim((string) $this->input('body', ''));
+            $file = $this->file('attachment');
+
+            if ($body === '' && ! $file instanceof UploadedFile) {
+                $validator->errors()->add('body', 'Say something, or attach a photo or video.');
+
+                return;
+            }
+
+            if (! $file instanceof UploadedFile) {
+                return;
+            }
+
+            $mime = strtolower((string) $file->getMimeType());
+            $isImage = str_starts_with($mime, 'image/');
+            $isVideo = str_starts_with($mime, 'video/');
+
+            if ($isImage && $file->getSize() > FeedService::MAX_IMAGE_KB * 1024) {
+                $validator->errors()->add(
+                    'attachment',
+                    'Images must be under '.(int) (FeedService::MAX_IMAGE_KB / 1024).'MB.',
+                );
+            }
+
+            if ($isVideo && $file->getSize() > FeedService::MAX_VIDEO_KB * 1024) {
+                $validator->errors()->add(
+                    'attachment',
+                    'Videos must be under '.(int) (FeedService::MAX_VIDEO_KB / 1024).'MB.',
+                );
+            }
+        });
+    }
+
     /**
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'body.required' => 'Say something on the terrace.',
             'body.max' => 'Keep it to '.ChatService::MAX_BODY_LENGTH.' characters.',
+            'attachment.mimetypes' => 'Use jpg, png, webp, gif, mp4, or webm.',
         ];
     }
 

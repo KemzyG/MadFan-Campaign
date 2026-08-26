@@ -2,17 +2,18 @@ import { useMemo } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import ShopCrest from './ShopCrest';
+import { formatPrice } from './productMeta';
 
-function FeaturedCard({ jersey }) {
+function FeaturedCard({ product }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
 
     return (
-        <Link href={`/social/shop/${jersey.slug}`} className="mf-shop-featured-card" prefetch>
+        <Link href={`/social/shop/${product.slug}`} className="mf-shop-featured-card" prefetch>
             <div className="mf-shop-featured-card__media">
-                {jersey.image_url ? (
+                {product.image_url ? (
                     <img
-                        src={jersey.image_url}
+                        src={product.image_url}
                         alt=""
                         className="mf-shop-featured-card__img"
                         loading="lazy"
@@ -20,49 +21,46 @@ function FeaturedCard({ jersey }) {
                     />
                 ) : (
                     <div className="mf-shop-featured-card__placeholder">
-                        <ShopCrest club={jersey.club} />
+                        <ShopCrest club={product.club} fallbackLabel={product.brand} />
                     </div>
                 )}
-                {jersey.kit_kind ? (
-                    <span className="mf-shop-featured-card__kind mf-mono">{jersey.kit_kind}</span>
-                ) : null}
             </div>
             <div className="mf-shop-featured-card__body">
                 <p className="mf-text-caption text-[var(--mf-muted)]">
-                    {jersey.club?.name || 'Mad Fan kit'}
+                    {product.club?.name || product.brand || 'Mad Fan'}
                 </p>
-                <p className="mf-shop-featured-card__title mf-display">{jersey.name}</p>
-                <p className="mf-shop-featured-card__price mf-mono">£{jersey.price}</p>
+                <p className="mf-shop-featured-card__title mf-display">{product.name}</p>
+                <p className="mf-shop-featured-card__price mf-mono">{formatPrice(product.price, product.currency)}</p>
             </div>
         </Link>
     );
 }
 
 /**
- * Continuously scrolling ribbon of featured kits (CSS marquee via duplicated
- * track). Renders nothing when there are no featured jerseys.
+ * Continuously scrolling ribbon of featured products (CSS marquee via
+ * duplicated track). Renders nothing when there's nothing featured.
  */
-export default function FeaturedSwiper({ jerseys = [] }) {
+export default function FeaturedSwiper({ products = [] }) {
     const loop = useMemo(() => {
-        if (jerseys.length === 0) {
+        if (products.length === 0) {
             return [];
         }
 
-        const base = jerseys.length < 4 ? [...jerseys, ...jerseys] : jerseys;
+        const base = products.length < 4 ? [...products, ...products] : products;
 
         return [...base, ...base];
-    }, [jerseys]);
+    }, [products]);
 
     if (loop.length === 0) {
         return null;
     }
 
     return (
-        <section className="mf-shop-featured" aria-label="Featured kits">
+        <section className="mf-shop-featured" aria-label="Featured products">
             <div className="mf-shop-swiper">
                 <div className="mf-shop-swiper__track" style={{ '--mf-shop-swiper-count': loop.length }}>
-                    {loop.map((jersey, index) => (
-                        <FeaturedCard key={`${jersey.id}-${index}`} jersey={jersey} />
+                    {loop.map((product, index) => (
+                        <FeaturedCard key={`${product.id}-${index}`} product={product} />
                     ))}
                 </div>
             </div>

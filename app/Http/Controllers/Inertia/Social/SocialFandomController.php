@@ -20,7 +20,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * fandom is, what's live right now, how to participate (challenges,
  * predictions, polls), the fan feed, the leaderboard, and what's coming up.
  * One controller, tab-switched via `?tab=`, mirroring the Chat page's
- * inbox/view param pattern rather than a route per tab.
+ * inbox/view param pattern rather than a route per tab. Browsing which
+ * fandom to open in the first place happens one level up, at
+ * SocialFandomDiscoveryController (/social/fandom).
  */
 class SocialFandomController extends Controller
 {
@@ -28,6 +30,7 @@ class SocialFandomController extends Controller
 
     public function __invoke(
         Request $request,
+        Fandom $fandom,
         FandomHubService $hub,
         PredictionService $predictions,
         PollService $polls,
@@ -36,9 +39,7 @@ class SocialFandomController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $fandom = Fandom::query()->where('is_active', true)->orderBy('name')->first();
-
-        if ($fandom === null) {
+        if (! $fandom->is_active) {
             throw new NotFoundHttpException('No active fandom.');
         }
 

@@ -10,20 +10,21 @@ use App\Models\Prediction;
 use App\Services\Social\PredictionService;
 
 test('fandom hub page requires authentication', function () {
-    $this->get('/social/fandom')->assertRedirect(route('login'));
+    $this->get('/social/fandom/football')->assertRedirect(route('login'));
 });
 
 test('fandom hub home tab renders header, pulse, and every home section', function () {
     $user = socialReadyUser();
 
     $this->actingAs($user)
-        ->get('/social/fandom')
+        ->get('/social/fandom/football')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Fandom/Index')
             ->where('tab', 'home')
             ->has('fandom.name')
             ->has('fandom.fan_count')
+            ->has('fandom.icon')
             ->where('fandom.is_following', true)
             ->has('home.pulse')
             ->has('home.challenges')
@@ -40,7 +41,7 @@ test('fandom hub auto-generates a prediction for every upcoming fixture', functi
 
     expect(Prediction::where('match_fixture_id', $fixture->id)->exists())->toBeFalse();
 
-    $this->actingAs($user)->get('/social/fandom')->assertSuccessful();
+    $this->actingAs($user)->get('/social/fandom/football')->assertSuccessful();
 
     expect(Prediction::where('match_fixture_id', $fixture->id)->exists())->toBeTrue();
 });
@@ -154,7 +155,7 @@ test('fandom members page lists followers ranked by points', function () {
     $user = socialReadyUser();
 
     $this->actingAs($user)
-        ->get('/social/fandom/members')
+        ->get('/social/fandom/football/members')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Fandom/Members')
@@ -167,7 +168,7 @@ test('fandom hub feed, live, events, and more tabs all render', function () {
 
     foreach (['feed', 'live', 'events', 'more'] as $tab) {
         $this->actingAs($user)
-            ->get("/social/fandom?tab={$tab}")
+            ->get("/social/fandom/football?tab={$tab}")
             ->assertSuccessful()
             ->assertInertia(fn ($page) => $page
                 ->component('Social/Fandom/Index')

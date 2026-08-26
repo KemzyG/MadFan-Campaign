@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StageStatus;
+use App\Enums\StageType;
 use Database\Factories\StageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ class Stage extends Model
         'host_id',
         'club_id',
         'title',
+        'type',
         'description',
         'is_public',
         'allow_invite',
@@ -38,6 +40,7 @@ class Stage extends Model
     {
         return [
             'status' => StageStatus::class,
+            'type' => StageType::class,
             'is_public' => 'boolean',
             'allow_invite' => 'boolean',
             'allow_chat' => 'boolean',

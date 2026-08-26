@@ -23,7 +23,10 @@ class SocialChatMessageController extends Controller
         $sendChatMessage->handle(
             $request->user(),
             $channel,
-            $request->validated(),
+            [
+                ...$request->validated(),
+                'attachment' => $request->file('attachment'),
+            ],
         );
 
         $inbox = match ($channel->scope ?? ChannelScope::Club) {

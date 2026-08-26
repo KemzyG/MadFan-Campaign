@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Social;
 
+use App\Enums\StageType;
 use App\Models\Stage;
 use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
@@ -22,6 +23,7 @@ class StoreSocialStageRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'min:3', 'max:'.StageService::MAX_TITLE_LENGTH],
+            'type' => ['sometimes', Rule::enum(StageType::class)],
             'description' => ['nullable', 'string', 'max:'.StageService::MAX_DESCRIPTION_LENGTH],
             'is_public' => ['sometimes', 'boolean'],
             'allow_invite' => ['sometimes', 'boolean'],

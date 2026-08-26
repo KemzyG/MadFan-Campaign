@@ -12,16 +12,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SocialFandomMembersController extends Controller
 {
-    public function __invoke(Request $request, FandomHubService $hub): Response
+    public function __invoke(Request $request, Fandom $fandom, FandomHubService $hub): Response
     {
-        $fandom = Fandom::query()->where('is_active', true)->orderBy('name')->first();
-
-        if ($fandom === null) {
+        if (! $fandom->is_active) {
             throw new NotFoundHttpException('No active fandom.');
         }
 
         return Inertia::render('Social/Fandom/Members', [
-            'fandom' => ['id' => $fandom->id, 'name' => $fandom->name],
+            'fandom' => ['id' => $fandom->id, 'name' => $fandom->name, 'slug' => $fandom->slug],
             'members' => $hub->membersPage($fandom, $request->integer('page', 1)),
         ]);
     }

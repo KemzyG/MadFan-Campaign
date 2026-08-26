@@ -7,7 +7,7 @@ import { useStageSession } from './StageSessionContext';
  * the mic. Active-speaker rings come from the session's `activeSpeakers` set.
  */
 export default function SpeakerDeck({ onSelectSpeaker }) {
-    const { room, activeSpeakers, peerStates } = useStageSession();
+    const { room, activeSpeakers, peerStates, videoTracks } = useStageSession();
 
     const participants = room?.participants || [];
     const me = room?.me;
@@ -40,15 +40,22 @@ export default function SpeakerDeck({ onSelectSpeaker }) {
                 >
                     {speakers.map((participant) => {
                         const mine = isMe(participant, me);
+                        const userId = Number(participant.user_id);
+                        // Screen-share takes the tile over camera when a speaker has both on.
+                        const videoElement =
+                            videoTracks.get(`${userId}:screen_share`) ||
+                            videoTracks.get(`${userId}:camera`) ||
+                            null;
 
                         return (
                             <SpeakerTile
                                 key={participant.id}
                                 participant={participant}
-                                speaking={activeSpeakers.has(Number(participant.user_id))}
+                                speaking={activeSpeakers.has(userId)}
                                 me={mine}
-                                peerState={mine ? null : peerStates.get(Number(participant.user_id)) || null}
+                                peerState={mine ? null : peerStates.get(userId) || null}
                                 onSelect={canManage && !mine ? onSelectSpeaker : undefined}
+                                videoElement={videoElement}
                             />
                         );
                     })}

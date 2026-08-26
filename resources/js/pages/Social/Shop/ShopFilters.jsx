@@ -1,4 +1,5 @@
 import ShopCrest from './ShopCrest';
+import { productTypeLabel } from './productMeta';
 import {
     categoryAbbr,
     categoryAria,
@@ -6,9 +7,41 @@ import {
     updateFilters,
 } from './filters';
 
+function TypeSegment({ types, activeType, onSelect }) {
+    if (types.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mf-shop-type-segment mf-segment" role="tablist" aria-label="Product type">
+            <button
+                type="button"
+                role="tab"
+                aria-selected={!activeType}
+                className={!activeType ? 'is-active' : ''}
+                onClick={() => onSelect(undefined)}
+            >
+                Everything
+            </button>
+            {types.map((type) => (
+                <button
+                    key={type.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeType === type.value}
+                    className={activeType === type.value ? 'is-active' : ''}
+                    onClick={() => onSelect(type.value)}
+                >
+                    {type.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 function CategorySegment({ categories, activeCategory, onSelect }) {
     return (
-        <div className="mf-shop-category-segment mf-segment" role="tablist" aria-label="Kit category">
+        <div className="mf-shop-category-segment mf-segment" role="tablist" aria-label="Category">
             <button
                 type="button"
                 role="tab"
@@ -69,17 +102,21 @@ function BrowseChip({ active, onClick, children, ariaLabel }) {
 }
 
 /**
- * The store's persistent filter rail: category, league and club aisles plus the
- * sort / in-stock toolbar. Stacks above the grid on mobile; sits on the left on
- * desktop via .mf-split--rail.
+ * The store's persistent filter rail: product type, fandom, category, league
+ * and club aisles plus the sort / in-stock toolbar. Stacks above the grid on
+ * mobile; sits on the left on desktop via .mf-split--rail.
  */
 export default function ShopFilters({
     activeFilters,
+    types,
+    fandoms,
     categories,
     leagues,
     clubs,
     favourite_club_id,
-    jerseys,
+    products,
+    selectedType,
+    selectedFandom,
     selectedCategory,
     selectedLeague,
     selectedClub,
@@ -87,9 +124,42 @@ export default function ShopFilters({
     const favouriteClub = favourite_club_id
         ? clubs.find((club) => String(club.id) === String(favourite_club_id))
         : null;
+    const showClubAisles = !activeFilters.type || activeFilters.type === 'apparel';
 
     return (
         <div className="mf-shop-rail">
+            <div className="mf-shop-rail__group">
+                <p className="mf-shop-rail__title mf-text-caption text-[var(--mf-muted)]">Shop</p>
+                <TypeSegment
+                    types={types}
+                    activeType={activeFilters.type || undefined}
+                    onSelect={(type) => updateFilters(activeFilters, { type })}
+                />
+            </div>
+
+            {fandoms.length > 0 ? (
+                <BrowseChips label="By fandom">
+                    <BrowseChip
+                        active={!activeFilters.fandom_id}
+                        onClick={() => updateFilters(activeFilters, { fandom_id: undefined })}
+                        ariaLabel="All fandoms"
+                    >
+                        All fandoms
+                    </BrowseChip>
+                    {fandoms.map((fandom) => (
+                        <BrowseChip
+                            key={fandom.id}
+                            active={String(activeFilters.fandom_id) === String(fandom.id)}
+                            onClick={() => toggleFilter(activeFilters, 'fandom_id', fandom.id)}
+                            ariaLabel={fandom.name}
+                        >
+                            {fandom.icon ? <span aria-hidden>{fandom.icon}</span> : null}
+                            <span className="mf-shop-browse__name">{fandom.name}</span>
+                        </BrowseChip>
+                    ))}
+                </BrowseChips>
+            ) : null}
+
             {categories.length > 0 ? (
                 <div className="mf-shop-rail__group">
                     <p className="mf-shop-rail__title mf-text-caption text-[var(--mf-muted)]">Category</p>
@@ -106,7 +176,7 @@ export default function ShopFilters({
                 </div>
             ) : null}
 
-            {leagues.length > 0 ? (
+            {showClubAisles && leagues.length > 0 ? (
                 <BrowseChips label="By league">
                     <BrowseChip
                         active={!activeFilters.league_id}
@@ -129,7 +199,7 @@ export default function ShopFilters({
                 </BrowseChips>
             ) : null}
 
-            {clubs.length > 0 ? (
+            {showClubAisles && clubs.length > 0 ? (
                 <BrowseChips label="By club">
                     <BrowseChip
                         active={!activeFilters.club_id}
@@ -200,7 +270,9 @@ export default function ShopFilters({
                 </label>
 
                 <p className="mf-shop-toolbar__count mf-mono">
-                    {jerseys.length} {jerseys.length === 1 ? 'kit' : 'kits'}
+                    {products.length} {products.length === 1 ? 'item' : 'items'}
+                    {selectedType ? ` · ${productTypeLabel(selectedType.value)}` : ''}
+                    {selectedFandom ? ` · ${selectedFandom.name}` : ''}
                     {selectedCategory ? ` · ${categoryAbbr(selectedCategory.slug)}` : ''}
                     {selectedLeague ? ` · ${selectedLeague.short || selectedLeague.name}` : ''}
                     {selectedClub ? ` · ${selectedClub.short || selectedClub.name}` : ''}

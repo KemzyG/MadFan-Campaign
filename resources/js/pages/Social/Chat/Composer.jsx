@@ -4,12 +4,36 @@ import { socialApi } from '../../../lib/socialApi';
 import { applyOptimisticProps, useSocialFlash } from '../optimistic';
 import ReplyQuote from './ReplyQuote';
 
+function IconAttach() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.85"
+                d="M17.5 8.5 9.9 16.1a3 3 0 0 1-4.24-4.24l7.6-7.6a5 5 0 0 1 7.07 7.07l-7.6 7.6a1 1 0 0 1-1.42-1.41l7.24-7.25"
+            />
+        </svg>
+    );
+}
+
+function IconClose() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 6l12 12M18 6 6 18" />
+        </svg>
+    );
+}
+
 export default function Composer({ channel, maxBodyLength, inbox, replyTo, onClearReply }) {
     const page = usePage();
     const user = page.props?.auth?.user;
     const { reportError } = useSocialFlash();
     const textareaRef = useRef(null);
+    const fileInputRef = useRef(null);
     const [body, setBody] = useState('');
+    const [attachment, setAttachment] = useState(null);
+    const [attachmentPreview, setAttachmentPreview] = useState(null);
     const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
@@ -28,13 +52,45 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         }
     }, [replyTo?.id]);
 
-    async function submit(e) {
-        e.preventDefault();
-        if (!body.trim() || channel?.is_read_only || processing || !channel?.id) {
+    // The preview is a blob: URL for the locally-picked file — revoke it
+    // whenever it's replaced/cleared so it doesn't leak memory.
+    useEffect(() => () => {
+        if (attachmentPreview) {
+            URL.revokeObjectURL(attachmentPreview);
+        }
+    }, [attachmentPreview]);
+
+    function pickAttachment(event) {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) {
             return;
         }
 
+        if (attachmentPreview) {
+            URL.revokeObjectURL(attachmentPreview);
+        }
+
+        setAttachment(file);
+        setAttachmentPreview(URL.createObjectURL(file));
+    }
+
+    function clearAttachment() {
+        if (attachmentPreview) {
+            URL.revokeObjectURL(attachmentPreview);
+        }
+        setAttachment(null);
+        setAttachmentPreview(null);
+    }
+
+    async function submit(e) {
+        e.preventDefault();
         const text = body.trim();
+        if ((!text && !attachment) || channel?.is_read_only || processing || !channel?.id) {
+            return;
+        }
+
         const replyToId = replyTo?.id ?? null;
         const quoted = replyTo
             ? {
@@ -44,9 +100,17 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
             }
             : null;
         const tempId = `tmp-chat-${Date.now()}`;
+        const pendingMedia = attachment
+            ? {
+                url: attachmentPreview,
+                type: attachment.type.startsWith('video/') ? 'video' : 'image',
+            }
+            : null;
+        const sentAttachment = attachment;
 
         setProcessing(true);
         setBody('');
+        clearAttachment();
         onClearReply?.();
 
         const rollback = applyOptimisticProps((props) => {
@@ -58,8 +122,9 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                         ...items,
                         {
                             id: tempId,
-                            body: text,
-                            type: 'text',
+                            body: text || null,
+                            media: pendingMedia,
+                            type: pendingMedia ? 'attachment' : 'text',
                             created_at: new Date().toISOString(),
                             edited_at: null,
                             is_mine: true,
@@ -80,12 +145,23 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         });
 
         try {
+            let payload;
+            if (sentAttachment) {
+                payload = new FormData();
+                if (text) {
+                    payload.append('body', text);
+                }
+                if (replyToId) {
+                    payload.append('reply_to_message_id', replyToId);
+                }
+                payload.append('attachment', sentAttachment);
+            } else {
+                payload = { body: text, ...(replyToId ? { reply_to_message_id: replyToId } : {}) };
+            }
+
             const data = await socialApi(`/chat/channels/${channel.id}/messages`, {
                 method: 'POST',
-                body: {
-                    body: text,
-                    ...(replyToId ? { reply_to_message_id: replyToId } : {}),
-                },
+                body: payload,
             });
 
             applyOptimisticProps((props) => {
@@ -142,7 +218,42 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                 />
             ) : null}
 
+            {attachmentPreview ? (
+                <div className="mf-chat-composer__attachment">
+                    {attachment?.type.startsWith('video/') ? (
+                        <video src={attachmentPreview} muted />
+                    ) : (
+                        <img src={attachmentPreview} alt="" />
+                    )}
+                    <button
+                        type="button"
+                        className="mf-chat-composer__attachment-remove"
+                        onClick={clearAttachment}
+                        aria-label="Remove attachment"
+                    >
+                        <IconClose />
+                    </button>
+                </div>
+            ) : null}
+
             <div className="mf-chat-composer__shell">
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                    onChange={pickAttachment}
+                    style={{ display: 'none' }}
+                />
+                <button
+                    type="button"
+                    className="mf-chat-composer__attach"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={processing}
+                    aria-label="Attach a photo or video"
+                    title="Attach a photo or video"
+                >
+                    <IconAttach />
+                </button>
                 <textarea
                     ref={textareaRef}
                     className="mf-chat-composer__input"
@@ -168,7 +279,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                 <button
                     type="submit"
                     className="mf-chat-composer__send"
-                    disabled={processing || !body.trim()}
+                    disabled={processing || (!body.trim() && !attachment)}
                     aria-label={processing ? 'Sending' : 'Send message'}
                 >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>

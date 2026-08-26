@@ -2,7 +2,16 @@ import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { formatLiveDuration, StageAvatar } from './helpers';
 import StageConnectionPanel from './StageConnectionPanel';
-import { IconBack, IconEnd, IconLeave, IconSettings, IconShare, IconVoice, StageIconButton } from './StageIcons';
+import {
+    IconBack,
+    IconEnd,
+    IconInvite,
+    IconLeave,
+    IconSettings,
+    IconShare,
+    IconVoice,
+    StageIconButton,
+} from './StageIcons';
 import { useStageActions } from './useStageActions';
 import { useStageSession } from './StageSessionContext';
 import { voiceConnectionLabel } from './stageVoiceConnection';
@@ -26,7 +35,12 @@ function useNowTick(active) {
  * Top band of the room: back link, live pulse + running duration, connection
  * chip, title, host/club, size stats, and (desktop) settings/share buttons.
  */
-export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/social/stage' }) {
+export default function RoomHeader({
+    onOpenSettings,
+    onOpenShare,
+    onOpenInvite,
+    backHref = '/social/stage',
+}) {
     const { room, voiceStatus, voiceConnection } = useStageSession();
     const actions = useStageActions();
 
@@ -168,6 +182,17 @@ export default function RoomHeader({ onOpenSettings, onOpenShare, backHref = '/s
                             onClick={onOpenSettings}
                         >
                             <IconSettings />
+                        </button>
+                    ) : null}
+                    {isLive && me && inviteAllowed ? (
+                        <button
+                            type="button"
+                            className="mf-stage-icon-btn mf-stageroom__invite-btn"
+                            aria-label="Invite people"
+                            title="Invite people"
+                            onClick={onOpenInvite}
+                        >
+                            <IconInvite />
                         </button>
                     ) : null}
                     {isLive && me && inviteAllowed ? (

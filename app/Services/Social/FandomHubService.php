@@ -38,6 +38,8 @@ class FandomHubService
             'name' => $fandom->name,
             'slug' => $fandom->slug,
             'description' => $fandom->description,
+            'icon' => $fandom->icon,
+            'cover_image_url' => $fandom->cover_image_url,
             'fan_count' => FandomFollow::query()->where('fandom_id', $fandom->id)->count(),
             'is_following' => $viewer->isFollowingFandom($fandom),
         ];
