@@ -37,6 +37,7 @@ use App\Http\Controllers\Inertia\Fan\ConnectAccountsPageController;
 use App\Http\Controllers\Inertia\Fan\DailyClaimPageController;
 use App\Http\Controllers\Inertia\Fan\DashboardPageController;
 use App\Http\Controllers\Inertia\Fan\LandingPageController;
+use App\Http\Controllers\Inertia\Fan\LegalPageController;
 use App\Http\Controllers\Inertia\Fan\PassportPageController;
 use App\Http\Controllers\Inertia\Fan\StaticPageController;
 use App\Http\Controllers\Inertia\Fan\TasksPageController as FanTasksPageController;
@@ -82,6 +83,8 @@ $registerCampaignRoutes = function (): void {
     Route::get('/about', fn () => app(StaticPageController::class)->show('about'))->name('fan.about');
     Route::get('/community', fn () => app(StaticPageController::class)->show('community'))->name('fan.community');
     Route::get('/rewards', fn () => app(StaticPageController::class)->show('rewards'))->name('fan.rewards');
+    Route::get('/privacy', fn () => app(LegalPageController::class)->show('privacy'))->name('fan.privacy');
+    Route::get('/terms', fn () => app(LegalPageController::class)->show('terms'))->name('fan.terms');
 
     Route::middleware('app.maintenance')->group(function () {
         Route::middleware('guest')->group(function () {

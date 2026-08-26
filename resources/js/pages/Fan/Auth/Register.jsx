@@ -526,6 +526,16 @@ export default function FanRegister({
                                       : 'Continue →'}
                             </button>
                         </div>
+
+                        <p className="mf-text-meta mt-3 text-[var(--mf-muted)]">
+                            By creating an account you agree to Mad Fan&rsquo;s{' '}
+                            {/* Plain anchors: /terms and /privacy render in the light
+                                marketing shell, a different Inertia root/bundle from
+                                this dark auth page, so they need a full navigation. */}
+                            <a href="/terms" className="mf-auth-link">Terms &amp; Conditions</a>
+                            {' '}and{' '}
+                            <a href="/privacy" className="mf-auth-link">Privacy Policy</a>.
+                        </p>
                     </form>
                 )}
 
