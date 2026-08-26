@@ -76,6 +76,45 @@ class FeedService
     }
 
     /**
+     * "Fans to follow" — a handful of onboarded fans the viewer doesn't
+     * already follow, favouring their own club when there is one. Randomised
+     * per call so the feed's floating suggestion strip doesn't always list
+     * the same faces.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function suggestedFollows(User $viewer, int $limit = 8): array
+    {
+        $followedIds = Follow::query()
+            ->where('follower_id', $viewer->id)
+            ->pluck('following_id');
+
+        $excludedIds = $followedIds->push($viewer->id)->unique()->values();
+
+        $users = User::query()
+            ->whereNotIn('id', $excludedIds)
+            ->whereNotNull('social_onboarded_at')
+            ->with('favouriteClub:id,name,short,logo')
+            ->when($viewer->favourite_club_id, fn (Builder $query) => $query
+                ->orderByRaw('favourite_club_id = ? desc', [$viewer->favourite_club_id]))
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get(['id', 'name', 'handle', 'username', 'fan_id', 'bio', 'favourite_club_id', 'updated_at']);
+
+        return $users->map(fn (User $user): array => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'handle' => $user->handle ?: $user->username ?: $user->fan_id,
+            'avatar_url' => $user->avatar_url,
+            'bio' => $user->bio,
+            'club' => $user->favouriteClub ? [
+                'short' => $user->favouriteClub->short,
+                'logo_url' => $user->favouriteClub->logo_url,
+            ] : null,
+        ])->values()->all();
+    }
+
+    /**
      * @return LengthAwarePaginator<int, Post>
      */
     public function profilePosts(User $profile, User $viewer): LengthAwarePaginator

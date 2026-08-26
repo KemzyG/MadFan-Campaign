@@ -24,7 +24,7 @@ class SocialPostBookmarkController extends Controller
             ],
         );
 
-        return back()->with('success', 'Bookmarked.');
+        return back();
     }
 
     public function destroy(Request $request, Post $post): RedirectResponse
@@ -36,6 +36,6 @@ class SocialPostBookmarkController extends Controller
             ->where('user_id', $request->user()->id)
             ->delete();
 
-        return back()->with('success', 'Bookmark removed.');
+        return back();
     }
 }

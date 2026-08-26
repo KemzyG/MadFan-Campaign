@@ -1,0 +1,310 @@
+/*
+ * Feed discovery — the toolbar's fan-search icon, its search modal, and the
+ * "Fans to follow" horizontal strip dropped between posts. New surface, so it
+ * lives as its own per-feature sheet rather than growing core/post.css.
+ */
+
+.mf-feed-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin-right: 0.35rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-canvas);
+    color: var(--mf-text);
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease), transform 140ms var(--mf-ease);
+}
+
+.mf-feed-search-btn svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.mf-feed-search-btn:hover {
+    background: var(--mf-elevated);
+    border-color: var(--mf-pitch);
+}
+
+.mf-feed-search-btn:active {
+    transform: scale(0.94);
+}
+
+/* Search modal */
+.mf-usersearch-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4rem 1rem 1rem;
+}
+
+.mf-usersearch-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+
+.mf-usersearch-modal__panel {
+    position: relative;
+    width: 100%;
+    max-width: 26rem;
+    max-height: min(32rem, 80vh);
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    overflow: hidden;
+    animation: mf-rise 180ms var(--mf-ease) both;
+}
+
+.mf-usersearch-modal__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 0.9rem;
+    border-bottom: 1px solid var(--mf-line-soft);
+    color: var(--mf-muted);
+}
+
+.mf-usersearch-modal__head svg {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-usersearch-modal__head input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-body);
+    color: var(--mf-text);
+}
+
+.mf-usersearch-modal__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 0;
+    border-radius: var(--mf-radius-full);
+    background: transparent;
+    color: var(--mf-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mf-usersearch-modal__close:hover {
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+}
+
+.mf-usersearch-modal__body {
+    overflow-y: auto;
+}
+
+.mf-usersearch-modal__hint {
+    margin: 0;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--mf-muted);
+}
+
+.mf-usersearch-modal__list {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem;
+}
+
+.mf-usersearch-modal__list li a {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--mf-radius);
+    text-decoration: none;
+    color: inherit;
+    transition: background 120ms var(--mf-ease);
+}
+
+.mf-usersearch-modal__list li a:hover {
+    background: var(--mf-elevated);
+}
+
+.mf-usersearch-modal__avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+}
+
+.mf-usersearch-modal__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-usersearch-modal__who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+}
+
+.mf-usersearch-modal__name {
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-usersearch-modal__tag {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+/* "Fans to follow" horizontal strip — deliberately not pinned to one spot in
+ * the DOM; Feed.jsx picks where in the post stream it lands. */
+.mf-suggest-strip {
+    padding: 0.9rem 0 1.1rem;
+    animation: mf-rise 240ms var(--mf-ease) both;
+}
+
+.mf-suggest-strip__label {
+    margin: 0 0 0.55rem 0.85rem;
+    font-family: var(--mf-font-label);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    color: var(--mf-muted);
+}
+
+.mf-suggest-strip__row {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0 0.85rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.mf-suggest-strip__row::-webkit-scrollbar {
+    display: none;
+}
+
+.mf-suggest-card {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    width: 7.4rem;
+    padding: 0.9rem 0.6rem 0.75rem;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+    transition: border-color 140ms var(--mf-ease), transform 140ms var(--mf-ease);
+}
+
+.mf-suggest-card:hover {
+    border-color: var(--mf-pitch);
+    transform: translateY(-1px);
+}
+
+.mf-suggest-card__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-display);
+    font-weight: 700;
+}
+
+.mf-suggest-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mf-suggest-card__name {
+    width: 100%;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-caption);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-suggest-card__meta {
+    width: 100%;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+}
+
+.mf-suggest-card__follow {
+    width: 100%;
+    margin-top: 0.15rem;
+    padding: 0.3rem 0;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 12%, transparent);
+    color: var(--mf-pitch);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background 140ms var(--mf-ease), border-color 140ms var(--mf-ease);
+}
+
+.mf-suggest-card__follow:hover {
+    background: color-mix(in srgb, var(--mf-pitch) 20%, transparent);
+}
+
+.mf-suggest-card__follow.is-following {
+    background: var(--mf-elevated);
+    border-color: var(--mf-line);
+    color: var(--mf-muted);
+    cursor: default;
+}

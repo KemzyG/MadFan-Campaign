@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowControlle
 use App\Http\Controllers\Api\Social\NotificationController as ApiSocialNotificationController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
+use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
 use App\Http\Controllers\Inertia\Social\SocialClubProfileController;
@@ -90,6 +91,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/following', [ApiSocialFollowController::class, 'following'])
                     ->middleware('throttle:120,1')
                     ->name('following');
+                Route::get('/users/search', [ApiSocialUserSearchController::class, 'index'])
+                    ->middleware('throttle:60,1')
+                    ->name('users.search');
 
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')

@@ -17,7 +17,7 @@ import {
     visitPathname,
 } from '../pages/Social/components/Skeletons';
 import StageChrome from '../pages/Social/Stage/StageChrome';
-import { SocialFlashContext } from '../pages/Social/optimistic';
+import { SocialFlashContext, SocialNotificationsContext } from '../pages/Social/optimistic';
 import { socialApi } from '../lib/socialApi';
 import { getEcho, leaveEchoChannel } from '../echo';
 import ChatRail from './ChatRail';
@@ -607,6 +607,14 @@ export default function SocialShell({
         [reportError, reportSuccess, clearError],
     );
 
+    const notificationsApi = useMemo(
+        () => ({
+            decrementUnread: (by = 1) => setUnreadCount((count) => Math.max(0, count - by)),
+            setUnread: (count) => setUnreadCount(Math.max(0, count)),
+        }),
+        [],
+    );
+
     useEffect(() => {
         if (flash?.success) {
             pushToast('ok', flash.success);
@@ -733,6 +741,7 @@ export default function SocialShell({
 
     return (
         <SocialFlashContext.Provider value={flashApi}>
+            <SocialNotificationsContext.Provider value={notificationsApi}>
             <SocialComposeContext.Provider value={composeApi}>
                 {/*
                   * The wide flag is mirrored onto .mf-stage because the floating
@@ -964,6 +973,7 @@ export default function SocialShell({
                 </div>
             </div>
             </SocialComposeContext.Provider>
+            </SocialNotificationsContext.Provider>
         </SocialFlashContext.Provider>
     );
 }

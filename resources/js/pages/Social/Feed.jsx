@@ -1,9 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import SocialShell, { useSocialCompose } from '../../Layouts/SocialShell';
+import FriendSuggestions from './components/FriendSuggestions';
 import PostCard from './components/PostCard';
 import PullToRefresh from './components/PullToRefresh';
 import { FeedSkeleton } from './components/Skeletons';
+import UserSearch from './components/UserSearch';
 import { useStageSessionOptional } from './Stage/StageSessionContext';
 
 function FeedEmpty({ mode, message, onCompose }) {
@@ -28,14 +30,29 @@ function FeedEmpty({ mode, message, onCompose }) {
     );
 }
 
-function PostStream({ feed }) {
+function PostStream({ feed, suggestions }) {
     const { openCompose, composeOpen } = useSocialCompose();
     const stageSession = useStageSessionOptional();
     const [dismissedIds, setDismissedIds] = useState([]);
+    const [searchOpen, setSearchOpen] = useState(false);
 
     const posts = (feed?.posts || []).filter((post) => !dismissedIds.includes(post.id));
     const mode = feed?.mode || 'global';
-    const ptrDisabled = Boolean(composeOpen || stageSession?.modalOpen || stageSession?.chatOpen);
+    const ptrDisabled = Boolean(composeOpen || stageSession?.modalOpen || stageSession?.chatOpen || searchOpen);
+
+    // Stable per-load, not per-render: reshuffling on every like/optimistic
+    // patch would make the strip jump around instead of just "living somewhere
+    // in the terrace." Reseeded whenever the actual post set changes (new page,
+    // new mode, a refresh).
+    const suggestSlot = useMemo(() => {
+        if (!suggestions?.length || posts.length < 2) {
+            return null;
+        }
+
+        const seed = posts.reduce((total, post) => total + (Number(post.id) || 0), 0);
+
+        return 1 + (seed % (posts.length - 1));
+    }, [posts, suggestions]);
 
     function dismissPost(id) {
         setDismissedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -79,10 +96,14 @@ function PostStream({ feed }) {
 
                     <button
                         type="button"
-                        className="mf-compose-chip"
-                        onClick={openCompose}
+                        className="mf-feed-search-btn"
+                        onClick={() => setSearchOpen(true)}
+                        aria-label="Search fans"
                     >
-                        Post
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                            <circle cx="11" cy="11" r="6.5" strokeWidth="1.75" />
+                            <path strokeLinecap="round" strokeWidth="1.75" d="m16 16 3.5 3.5" />
+                        </svg>
                     </button>
                 </div>
 
@@ -91,13 +112,15 @@ function PostStream({ feed }) {
                 ) : (
                     <div className="mf-feed-stream" role="feed" aria-label={mode === 'global' ? 'Global feed' : 'Following feed'}>
                         {posts.map((post, index) => (
-                            <div
-                                key={post.id}
-                                className="mf-feed-item"
-                                style={{ '--mf-stagger': `${Math.min(index, 8) * 28}ms` }}
-                            >
-                                <PostCard post={post} onDismiss={dismissPost} />
-                            </div>
+                            <Fragment key={post.id}>
+                                {index === suggestSlot ? <FriendSuggestions suggestions={suggestions} /> : null}
+                                <div
+                                    className="mf-feed-item"
+                                    style={{ '--mf-stagger': `${Math.min(index, 8) * 28}ms` }}
+                                >
+                                    <PostCard post={post} onDismiss={dismissPost} />
+                                </div>
+                            </Fragment>
                         ))}
                         {feed?.links?.next ? (
                             <div className="mf-feed-more">
@@ -127,16 +150,18 @@ function PostStream({ feed }) {
                         <path strokeLinecap="round" strokeWidth="2.25" d="M12 5v14M5 12h14" />
                     </svg>
                 </button>
+
+                <UserSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
             </div>
         </PullToRefresh>
     );
 }
 
-export default function Feed({ feed }) {
+export default function Feed({ feed, suggestions }) {
     return (
         <SocialShell title="Feed">
             <Head title="Feed" />
-            {feed == null ? <FeedSkeleton /> : <PostStream feed={feed} />}
+            {feed == null ? <FeedSkeleton /> : <PostStream feed={feed} suggestions={suggestions} />}
         </SocialShell>
     );
 }

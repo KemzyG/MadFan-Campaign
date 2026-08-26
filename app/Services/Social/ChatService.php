@@ -10,6 +10,7 @@ use App\Models\Club;
 use App\Models\ClubServer;
 use App\Models\Follow;
 use App\Models\Message;
+use App\Models\SocialNotification;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -346,6 +347,18 @@ class ChatService
 
         $member->last_read_at = now();
         $member->save();
+
+        // Reading the thread itself doesn't touch the separate SocialNotification
+        // row created per message (that's what feeds the bell badge) — without
+        // this, a chat message the viewer has already read here would sit
+        // "unread" in the bell forever, since nothing else ever clears it.
+        SocialNotification::query()
+            ->where('recipient_id', $viewer->id)
+            ->where('type', SocialNotification::TYPE_CHAT_MESSAGE)
+            ->where('notifiable_type', Message::class)
+            ->whereIn('notifiable_id', Message::query()->where('channel_id', $channel->id)->pluck('id'))
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
     }
 
     /**

@@ -16,6 +16,7 @@ import '../css/social/post.css';
 import '../css/social/composer.css';
 import '../css/social/stage-card.css';
 import '../css/social/reels.css';
+import '../css/social/feed-discovery.css';
 // Events feed: shared card chrome, then one sheet per family of templates.
 import '../css/social/events.css';
 import '../css/social/event-live.css';
