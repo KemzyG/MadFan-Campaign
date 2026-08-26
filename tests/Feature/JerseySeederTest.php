@@ -5,6 +5,7 @@ use App\Models\Jersey;
 use App\Models\JerseyVariant;
 use Database\Seeders\ClubSeeder;
 use Database\Seeders\JerseySeeder;
+use Database\Seeders\ProductCatalogSeeder;
 
 test('jersey seeder creates at least 100 kits across every club', function () {
     $this->seed(ClubSeeder::class);
@@ -38,9 +39,10 @@ test('jersey seeder is idempotent on repeat runs', function () {
         ->and(JerseyVariant::query()->count())->toBe($variantCount);
 });
 
-test('shop listing shows seeded kits for onboarded fans', function () {
+test('shop listing shows the seeded product catalog (migrated from jerseys) for onboarded fans', function () {
     $this->seed(ClubSeeder::class);
     $this->seed(JerseySeeder::class);
+    $this->seed(ProductCatalogSeeder::class);
 
     $club = Club::query()->orderBy('id')->firstOrFail();
     $user = socialReadyUser($club);
@@ -50,8 +52,8 @@ test('shop listing shows seeded kits for onboarded fans', function () {
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Shop/Index')
-            ->has('jerseys')
-            ->where('jerseys', fn ($jerseys) => count($jerseys) >= 100)
-            ->where('jerseys.0.kit_kind', fn ($kind) => is_string($kind) && $kind !== '')
-            ->has('jerseys.0.sizes_available'));
+            ->has('products')
+            ->where('products', fn ($products) => count($products) >= 100)
+            ->where('products.0.category', fn ($category) => is_string($category) && $category !== '')
+            ->has('products.0.options_available'));
 });

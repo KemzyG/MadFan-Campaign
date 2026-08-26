@@ -74,7 +74,7 @@ function useDragToScroll() {
     return { ref, onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerLeave: endDrag, onClickCapture };
 }
 
-export default function FandomNav({ active }) {
+export default function FandomNav({ active, fandomSlug }) {
     const dragProps = useDragToScroll();
 
     function go(tab) {
@@ -82,7 +82,7 @@ export default function FandomNav({ active }) {
             return;
         }
 
-        router.get('/social/fandom', { tab }, { preserveScroll: true, preserveState: true });
+        router.get(`/social/fandom/${fandomSlug}`, { tab }, { preserveScroll: true, preserveState: true });
     }
 
     return (

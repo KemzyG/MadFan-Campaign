@@ -204,6 +204,12 @@ class ChatService
             'id' => $message->id,
             'body' => $message->body,
             'type' => $message->type?->value ?? (string) $message->type,
+            'media' => $message->media_path ? [
+                'url' => $message->media_url,
+                'type' => $message->media_type,
+                'width' => $message->media_width,
+                'height' => $message->media_height,
+            ] : null,
             'created_at' => $message->created_at?->toIso8601String(),
             'edited_at' => $message->edited_at?->toIso8601String(),
             'is_mine' => $viewer !== null && (int) $message->author_id === (int) $viewer->id,
@@ -475,10 +481,14 @@ class ChatService
     }
 
     /**
+     * Shared with StageService for its own invite-candidate picker — anywhere
+     * that needs "people the viewer is follow-connected to" reuses this
+     * rather than re-deriving the union/exclude/onboarded-only logic.
+     *
      * @param  list<int>  $excludeIds
      * @return list<array<string, mixed>>
      */
-    private function presentFollowConnections(User $viewer, array $excludeIds, int $limit): array
+    public function presentFollowConnections(User $viewer, array $excludeIds, int $limit): array
     {
         $followingIds = Follow::query()
             ->where('follower_id', $viewer->id)

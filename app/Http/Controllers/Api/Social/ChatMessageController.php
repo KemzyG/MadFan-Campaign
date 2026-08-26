@@ -19,10 +19,15 @@ class ChatMessageController extends Controller
     ): JsonResponse {
         $this->authorize('sendMessage', $channel);
 
+        $validated = $request->validated();
+
         $message = $sendChatMessage->handle(
             $request->user(),
             $channel,
-            $request->validated(),
+            [
+                ...$validated,
+                'attachment' => $request->file('attachment'),
+            ],
         );
 
         return response()->json([

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\Club;
 use App\Models\Follow;
@@ -94,6 +95,53 @@ test('a chat message notifies other channel members but not the sender', functio
         ->where('type', SocialNotification::TYPE_CHAT_MESSAGE)
         ->exists())->toBeTrue()
         ->and(SocialNotification::query()->where('recipient_id', $sender->id)->exists())->toBeFalse();
+});
+
+test('a club chat notification deep-links to the slug-based thread route', function () {
+    $club = Club::factory()->create();
+    $sender = socialReadyUser($club);
+    $member = socialReadyUser($club);
+
+    $this->actingAs($sender)->get('/social/chat')->assertSuccessful();
+    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+
+    $this->actingAs($sender)
+        ->postJson(route('api.social.chat.messages.store', $channel), ['body' => 'Kickoff soon.'])
+        ->assertCreated();
+
+    $this->actingAs($member)
+        ->get('/social/notifications')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('notifications.data.0.href', '/social/chat/thread/general'));
+});
+
+test('a direct-message notification deep-links to the numeric thread route, not a broken slug', function () {
+    $club = Club::factory()->create();
+    $viewer = socialReadyUser($club);
+    $peer = socialReadyUser($club);
+
+    Follow::factory()->create([
+        'follower_id' => $peer->id,
+        'following_id' => $viewer->id,
+        'created_at' => now(),
+    ]);
+
+    $this->actingAs($peer)
+        ->post(route('social.chat.direct.store'), ['user_id' => $viewer->id])
+        ->assertRedirect();
+
+    $channel = Channel::query()->where('scope', ChannelScope::Direct)->firstOrFail();
+
+    $this->actingAs($peer)
+        ->post(route('social.chat.messages.store', $channel), ['body' => 'Hey, joining?'])
+        ->assertRedirect();
+
+    $this->actingAs($viewer)
+        ->get('/social/notifications')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('notifications.data.0.href', '/social/chat/thread/'.$channel->id));
 });
 
 test('a published announcement notifies every fan', function () {

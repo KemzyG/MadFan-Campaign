@@ -189,7 +189,7 @@ export default function Index({
     }
 
     return (
-        <SocialShell title="Stage" showTabs>
+        <SocialShell title="Stage" showTabs wide>
             <Head title="Stage · Mad Fan Social" />
 
             {stages == null ? (

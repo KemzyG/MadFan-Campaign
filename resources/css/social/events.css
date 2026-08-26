@@ -16,6 +16,19 @@
     background: var(--mf-canvas);
 }
 
+/*
+ * lg+: .mf-app defaults to --mf-app-width (a deliberate phone-narrow column
+ * on most pages — Feed, Leaderboard, etc. are phone-first by design), but
+ * Events is a rich, card-based feed meant to read as a live stadium, not a
+ * timeline — same fix as Shorts (.mf-app:has(.mf-reels-page)) and Profile's
+ * split, just without needing the `wide` shell flag, so the chat rail stays.
+ */
+@media (min-width: 1024px) {
+    .mf-app:has(.mf-events) {
+        max-width: var(--mf-page-max);
+    }
+}
+
 /* ---- Accent --------------------------------------------------------------- */
 .mf-events {
     /* Pulled back from purple to the normal Social theme colour (Deep Navy) —
@@ -322,10 +335,35 @@
 
 /* ---- Stream ------------------------------------------------------------- */
 .mf-ev-stream {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 0.6rem;
     padding: 0.15rem 0 0;
+    align-items: start;
+}
+
+/* .mf-app only actually has room for more than one column once it widens
+ * (see the :has(.mf-events) rule above, min-width: 1024px) — below that the
+ * feed stays the single phone-width column every other page uses. */
+@media (min-width: 1024px) {
+    .mf-ev-stream {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+}
+
+@media (min-width: 1440px) {
+    .mf-ev-stream {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* "Load more" / "That's everything" sit inside the same grid as the cards —
+ * without this they'd land in a single column cell instead of spanning
+ * beneath the last row. */
+.mf-ev-stream > .mf-feed-more,
+.mf-ev-stream > .mf-feed-end {
+    grid-column: 1 / -1;
 }
 
 .mf-ev-item {

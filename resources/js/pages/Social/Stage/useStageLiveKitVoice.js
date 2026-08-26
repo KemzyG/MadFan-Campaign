@@ -36,10 +36,16 @@ export function createStageLiveKitVoiceSession({
     onStatus,
     onActiveSpeakers,
     onPeerState,
+    onVideoTrack,
 }) {
     let room = null;
     /** Per remote speaker: last emitted connection state, keyed by numeric identity (user_id). */
     const peers = new Map();
+    /** Live `<video>` elements for camera/screen-share tracks, keyed `${identity}:${source}`
+     *  — kept alive here (not React state) since a raw MediaStreamTrack needs a real DOM
+     *  element to attach to; components pull them out via `getVideoElement()` and mount
+     *  into their own tile via a ref, same interop pattern as the hidden `<audio>` elements. */
+    const videoElements = new Map();
     let stopped = false;
     let connecting = false;
     let reconnectTimer = null;
@@ -199,6 +205,49 @@ export function createStageLiveKitVoiceSession({
         return [...document.querySelectorAll('audio[id^="stage-remote-audio-"]')];
     }
 
+    function videoKey(identity, source) {
+        return `${identity}:${source}`;
+    }
+
+    function trackSource(publication) {
+        return publication?.source === Track.Source.ScreenShare ? 'screen_share' : 'camera';
+    }
+
+    /** Attach a camera/screen-share track to a (possibly reused) `<video>` element. */
+    function attachVideoTrack(identity, source, track) {
+        const key = videoKey(identity, source);
+        let video = videoElements.get(key);
+        if (!video) {
+            video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            video.setAttribute('playsinline', '');
+            // Mute my own tiles so a local camera/screen preview never echoes
+            // back through the room's own audio track.
+            video.muted = isMe(identity);
+            videoElements.set(key, video);
+        }
+        track.attach(video);
+        return video;
+    }
+
+    function detachVideoTrack(identity, source) {
+        const key = videoKey(identity, source);
+        const video = videoElements.get(key);
+        if (video) {
+            video.srcObject = null;
+            videoElements.delete(key);
+        }
+        if (typeof onVideoTrack === 'function') {
+            onVideoTrack(Number(identity), source, null);
+        }
+    }
+
+    /** Look up a live video element for a participant's camera or screen-share. */
+    function getVideoElement(identity, source) {
+        return videoElements.get(videoKey(identity, source)) || null;
+    }
+
     /** Re-apply the listener's chosen output volume to every remote element. */
     function applyOutputVolume() {
         const volume = effectiveVolume();
@@ -316,6 +365,14 @@ export function createStageLiveKitVoiceSession({
                 }
             })
             .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                if (track.kind === Track.Kind.Video) {
+                    const source = trackSource(publication);
+                    const video = attachVideoTrack(participant.identity, source, track);
+                    if (typeof onVideoTrack === 'function') {
+                        onVideoTrack(Number(participant.identity), source, video);
+                    }
+                    return;
+                }
                 if (track.kind !== Track.Kind.Audio) {
                     return;
                 }
@@ -334,12 +391,33 @@ export function createStageLiveKitVoiceSession({
                     }
                 });
             })
-            .on(RoomEvent.TrackUnsubscribed, (track, _publication, participant) => {
+            .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
                 track.detach();
+                if (track.kind === Track.Kind.Video) {
+                    detachVideoTrack(participant.identity, trackSource(publication));
+                    return;
+                }
                 if (track.kind === Track.Kind.Audio) {
                     detachRemote(participant.identity);
                     pushPeer(participant.identity, { phase: 'connected', rx: false });
                 }
+            })
+            .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
+                const track = publication?.track;
+                if (!track || track.kind !== Track.Kind.Video) {
+                    return;
+                }
+                const source = trackSource(publication);
+                const video = attachVideoTrack(participant.identity, source, track);
+                if (typeof onVideoTrack === 'function') {
+                    onVideoTrack(Number(participant.identity), source, video);
+                }
+            })
+            .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
+                if (publication?.kind !== Track.Kind.Video) {
+                    return;
+                }
+                detachVideoTrack(participant.identity, trackSource(publication));
             })
             .on(RoomEvent.TrackMuted, (_publication, participant) => {
                 if (isMe(participant.identity)) {
@@ -448,6 +526,14 @@ export function createStageLiveKitVoiceSession({
             audio.srcObject = null;
             audio.remove();
         });
+        for (const [key, video] of videoElements) {
+            video.srcObject = null;
+            const [identity, source] = key.split(':');
+            if (typeof onVideoTrack === 'function') {
+                onVideoTrack(Number(identity), source, null);
+            }
+        }
+        videoElements.clear();
         emitActiveSpeakers([]);
         resetPeers();
         lastCanPublish = null;
@@ -589,6 +675,34 @@ export function createStageLiveKitVoiceSession({
         return { ok: true };
     }
 
+    /** Toggle my own camera publish. No-op (fails closed) if the token doesn't grant it. */
+    async function setCameraEnabled(enabled) {
+        if (!room || stopped) {
+            return { ok: false };
+        }
+        try {
+            await room.localParticipant.setCameraEnabled(enabled);
+            return { ok: true };
+        } catch (err) {
+            console.warn('livekit camera', err);
+            return { ok: false, error: err };
+        }
+    }
+
+    /** Toggle my own screen-share publish (browser's own picker UI, via getDisplayMedia). */
+    async function setScreenShareEnabled(enabled) {
+        if (!room || stopped) {
+            return { ok: false };
+        }
+        try {
+            await room.localParticipant.setScreenShareEnabled(enabled);
+            return { ok: true };
+        } catch (err) {
+            console.warn('livekit screen share', err);
+            return { ok: false, error: err };
+        }
+    }
+
     // Mesh API surface compatibility (signals unused for LiveKit).
     async function ingestSignals() {}
 
@@ -600,6 +714,9 @@ export function createStageLiveKitVoiceSession({
         ingestSignals,
         unlockPlayback,
         retryMicAccess,
+        getVideoElement,
+        setCameraEnabled,
+        setScreenShareEnabled,
         driver: 'livekit',
     };
 }

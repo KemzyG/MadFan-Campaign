@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { StageRoomSkeleton } from '../components/Skeletons';
 import { partitionParticipants } from './helpers';
+import InviteStageSheet from './InviteStageSheet';
 import ListenerStrip from './ListenerStrip';
 import PinnedMessage from './PinnedMessage';
 import ReactionLayer from './ReactionLayer';
@@ -10,6 +11,7 @@ import RoomHeader from './RoomHeader';
 import ShareStageSheet from './ShareStageSheet';
 import SpeakerDeck from './SpeakerDeck';
 import StageControlBar from './StageControlBar';
+import StageStreamingHero from './StageStreamingHero';
 import StageReactionFab from './StageReactionFab';
 import StageSettingsSheet from './StageSettingsSheet';
 import { ChatPanel, PeopleInfoPanel } from './StageSidePanels';
@@ -74,6 +76,7 @@ export default function Show(props) {
     const [focusUserId, setFocusUserId] = useState(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
+    const [inviteOpen, setInviteOpen] = useState(false);
 
     const stageBackgrounds = props.stage_backgrounds || [];
 
@@ -182,12 +185,20 @@ export default function Show(props) {
                     />
 
                     <section className="mf-stageroom__main">
-                        <RoomHeader onOpenSettings={() => setSettingsOpen(true)} onOpenShare={() => setShareOpen(true)} />
+                        <RoomHeader
+                            onOpenSettings={() => setSettingsOpen(true)}
+                            onOpenShare={() => setShareOpen(true)}
+                            onOpenInvite={() => setInviteOpen(true)}
+                        />
 
                         <div className="mf-stageroom__deck">
                             <ReactionLayer />
                             <PinnedMessage compact />
-                            <SpeakerDeck onSelectSpeaker={selectSpeaker} />
+                            {roomStage?.type === 'streaming' ? (
+                                <StageStreamingHero onSelectSpeaker={selectSpeaker} />
+                            ) : (
+                                <SpeakerDeck onSelectSpeaker={selectSpeaker} />
+                            )}
                             <ListenerStrip onSeeAll={() => openPeople('people')} />
                         </div>
 
@@ -223,6 +234,7 @@ export default function Show(props) {
                 maxDescriptionLength={props.max_description_length}
             />
             <ShareStageSheet open={shareOpen} onClose={() => setShareOpen(false)} />
+            <InviteStageSheet open={inviteOpen} onClose={() => setInviteOpen(false)} />
         </SocialShell>
     );
 }

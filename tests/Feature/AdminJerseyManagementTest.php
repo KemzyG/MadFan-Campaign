@@ -6,7 +6,6 @@ use App\Enums\JerseySize;
 use App\Models\Club;
 use App\Models\Jersey;
 use App\Models\JerseyOrder;
-use App\Models\JerseyVariant;
 use Spatie\Permission\Models\Permission;
 
 test('admins can manage jerseys via the admin api', function () {
@@ -74,29 +73,7 @@ test('support staff can view jersey orders but cannot manage listings', function
         ->assertForbidden();
 });
 
-test('stock is reduced when a variant is sold', function () {
-    $club = Club::factory()->create();
-    $user = socialReadyUser($club);
-    $jersey = Jersey::factory()->create(['club_id' => $club->id, 'price' => '40.00']);
-    $variant = JerseyVariant::factory()->size(JerseySize::S)->create([
-        'jersey_id' => $jersey->id,
-        'stock' => 3,
-    ]);
-
-    $this->actingAs($user)
-        ->post(route('social.shop.cart.store'), [
-            'variant_id' => $variant->id,
-            'quantity' => 2,
-        ]);
-
-    $this->actingAs($user)
-        ->post(route('social.shop.checkout.store'), [
-            'shipping_name' => 'Fan',
-            'shipping_line1' => '1 Road',
-            'shipping_city' => 'City',
-            'shipping_postcode' => 'AB1 2CD',
-        ])
-        ->assertRedirect();
-
-    expect($variant->fresh()->stock)->toBe(1);
-});
+// Customer checkout no longer touches Jersey/JerseyVariant at all — the
+// storefront (cart, checkout, stock decrement) runs entirely on the
+// Product/ProductVariant tables now. That coverage lives in
+// ProductMarketplaceTest; this file stays scoped to admin jersey CRUD.

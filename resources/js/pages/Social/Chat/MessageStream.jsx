@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { linkifyText } from '../../../lib/linkify';
 import { useSocialFlash } from '../optimistic';
 import {
     AuthorAvatar,
@@ -94,7 +95,18 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
                             onJump={() => onJump?.(message.reply_to.id)}
                         />
                     ) : null}
-                    <p className="mf-chat-bubble__text">{message.body}</p>
+                    {message.media ? (
+                        <div className="mf-chat-bubble__media">
+                            {message.media.type === 'video' ? (
+                                <video src={message.media.url} controls playsInline />
+                            ) : (
+                                <img src={message.media.url} alt="" loading="lazy" />
+                            )}
+                        </div>
+                    ) : null}
+                    {message.body ? (
+                        <p className="mf-chat-bubble__text">{linkifyText(message.body)}</p>
+                    ) : null}
                     <div className="mf-chat-bubble__meta">
                         <time dateTime={message.created_at}>{formatTime(message.created_at)}</time>
                         {message._optimistic ? <span>sending…</span> : null}

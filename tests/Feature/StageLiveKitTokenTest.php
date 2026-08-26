@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\StageParticipantRole;
+use App\Enums\StageType;
 use App\Models\Club;
 use App\Models\Stage;
 use App\Models\StageParticipant;
@@ -156,6 +157,90 @@ test('livekit token endpoint is unavailable without credentials', function () {
     $this->actingAs($host)
         ->getJson(route('social.stage.livekit-token', $stage))
         ->assertStatus(503);
+});
+
+test('publish sources matrix covers every type/host/on-stage combination', function () {
+    expect(StageVoice::publishSourcesFor(StageType::Voice, isHost: false, isOnStage: false))->toBe([])
+        ->and(StageVoice::publishSourcesFor(StageType::Voice, isHost: true, isOnStage: false))->toBe([])
+        ->and(StageVoice::publishSourcesFor(StageType::Voice, isHost: false, isOnStage: true))->toBe(['microphone'])
+        ->and(StageVoice::publishSourcesFor(StageType::Voice, isHost: true, isOnStage: true))->toBe(['microphone'])
+        ->and(StageVoice::publishSourcesFor(StageType::Video, isHost: false, isOnStage: false))->toBe([])
+        ->and(StageVoice::publishSourcesFor(StageType::Video, isHost: false, isOnStage: true))
+        ->toBe(['microphone', 'camera', 'screen_share'])
+        ->and(StageVoice::publishSourcesFor(StageType::Video, isHost: true, isOnStage: true))
+        ->toBe(['microphone', 'camera', 'screen_share'])
+        ->and(StageVoice::publishSourcesFor(StageType::Streaming, isHost: false, isOnStage: false))->toBe([])
+        ->and(StageVoice::publishSourcesFor(StageType::Streaming, isHost: false, isOnStage: true))->toBe(['microphone'])
+        ->and(StageVoice::publishSourcesFor(StageType::Streaming, isHost: true, isOnStage: false))->toBe([])
+        ->and(StageVoice::publishSourcesFor(StageType::Streaming, isHost: true, isOnStage: true))
+        ->toBe(['microphone', 'camera', 'screen_share']);
+});
+
+test('livekit token grants camera and screen share on a video stage but mic only for a streaming speaker', function () {
+    config([
+        'livekit.url' => 'wss://example.livekit.cloud',
+        'livekit.api_key' => 'APItest',
+        'livekit.api_secret' => 'livekit-test-secret-at-least-32-bytes!',
+    ]);
+
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $speaker = socialReadyUser($club);
+
+    $videoStage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => StageType::Video,
+        'voice_enabled' => true,
+    ]);
+    StageParticipant::factory()->host()->create(['stage_id' => $videoStage->id, 'user_id' => $host->id]);
+    StageParticipant::factory()->create([
+        'stage_id' => $videoStage->id,
+        'user_id' => $speaker->id,
+        'role' => StageParticipantRole::Speaker,
+    ]);
+
+    $this->actingAs($speaker)
+        ->getJson(route('social.stage.livekit-token', $videoStage))
+        ->assertSuccessful()
+        ->assertJsonPath('can_publish', true)
+        ->assertJsonPath('can_publish_video', true);
+
+    $streamingStage = Stage::factory()->live()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => StageType::Streaming,
+        'voice_enabled' => true,
+    ]);
+    StageParticipant::factory()->host()->create(['stage_id' => $streamingStage->id, 'user_id' => $host->id]);
+    StageParticipant::factory()->create([
+        'stage_id' => $streamingStage->id,
+        'user_id' => $speaker->id,
+        'role' => StageParticipantRole::Speaker,
+    ]);
+
+    $speakerResponse = $this->actingAs($speaker)
+        ->getJson(route('social.stage.livekit-token', $streamingStage))
+        ->assertSuccessful()
+        ->assertJsonPath('can_publish', true)
+        ->assertJsonPath('can_publish_video', false);
+
+    $speakerClaims = JWT::decode(
+        $speakerResponse->json('token'),
+        new Key('livekit-test-secret-at-least-32-bytes!', 'HS256'),
+    );
+    expect($speakerClaims->video->canPublishSources)->toBe(['microphone']);
+
+    $hostResponse = $this->actingAs($host)
+        ->getJson(route('social.stage.livekit-token', $streamingStage))
+        ->assertSuccessful()
+        ->assertJsonPath('can_publish_video', true);
+
+    $hostClaims = JWT::decode(
+        $hostResponse->json('token'),
+        new Key('livekit-test-secret-at-least-32-bytes!', 'HS256'),
+    );
+    expect($hostClaims->video->canPublishSources)->toBe(['microphone', 'camera', 'screen_share']);
 });
 
 test('stage room reports livekit voice mode when configured', function () {

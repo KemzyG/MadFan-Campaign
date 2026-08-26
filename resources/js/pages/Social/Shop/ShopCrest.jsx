@@ -3,10 +3,10 @@ import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage'
 
 /**
  * Club crest used across the store — cards, placeholders and the browse chips.
- * Keeps the shop's own .mf-shop-crest__* classes (distinct sizing from the
- * shared .mf-crest badge).
+ * Falls back to a brand/fandom initial mark when there's no club (most
+ * boots/caps/collectibles/subscriptions aren't club-branded).
  */
-export default function ShopCrest({ club, className = '' }) {
+export default function ShopCrest({ club, fallbackLabel, className = '' }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
 
@@ -26,7 +26,7 @@ export default function ShopCrest({ club, className = '' }) {
             className={['mf-shop-crest__mark mf-display', className].filter(Boolean).join(' ')}
             aria-hidden
         >
-            {(club?.short || club?.name || 'MF').slice(0, 3)}
+            {(club?.short || club?.name || fallbackLabel || 'MF').slice(0, 3)}
         </span>
     );
 }

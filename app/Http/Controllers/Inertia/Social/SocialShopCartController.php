@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Inertia\Social;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Shop\AddJerseyToCartRequest;
-use App\Http\Requests\Shop\UpdateJerseyCartRequest;
-use App\Models\JerseyOrder;
-use App\Models\JerseyVariant;
-use App\Services\Shop\JerseyCart;
-use App\Services\Shop\JerseyCatalogService;
+use App\Http\Requests\Shop\AddProductToCartRequest;
+use App\Http\Requests\Shop\UpdateProductCartRequest;
+use App\Models\ProductOrder;
+use App\Models\ProductVariant;
+use App\Services\Shop\ProductCart;
+use App\Services\Shop\ProductCatalogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,18 +16,18 @@ use Inertia\Response;
 
 class SocialShopCartController extends Controller
 {
-    public function show(Request $request, JerseyCatalogService $catalog): Response
+    public function show(Request $request, ProductCatalogService $catalog): Response
     {
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         return Inertia::render('Social/Shop/Cart', [
             'cart' => $catalog->presentCart(),
         ]);
     }
 
-    public function store(AddJerseyToCartRequest $request, JerseyCart $cart): RedirectResponse
+    public function store(AddProductToCartRequest $request, ProductCart $cart): RedirectResponse
     {
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         $cart->add(
             (int) $request->validated('variant_id'),
@@ -38,20 +38,20 @@ class SocialShopCartController extends Controller
     }
 
     public function update(
-        UpdateJerseyCartRequest $request,
-        JerseyVariant $variant,
-        JerseyCart $cart,
+        UpdateProductCartRequest $request,
+        ProductVariant $variant,
+        ProductCart $cart,
     ): RedirectResponse {
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         $cart->update($variant->id, (int) $request->validated('quantity'));
 
         return back()->with('success', 'Bag updated.');
     }
 
-    public function destroy(Request $request, JerseyVariant $variant, JerseyCart $cart): RedirectResponse
+    public function destroy(Request $request, ProductVariant $variant, ProductCart $cart): RedirectResponse
     {
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         $cart->remove($variant->id);
 

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import PostHeader from './post/PostHeader';
 import PostText from './post/PostText';
 import MediaGrid from './post/MediaGrid';
@@ -29,6 +29,24 @@ export default function PostCard({ post, compact = false, variant = 'feed', maxB
     const isPending = Boolean(post._optimistic);
     const isDetail = variant === 'detail';
 
+    // A plain <Link> here would wrap post text in an <a>, and linkified URLs
+    // inside that text render their own <a> — nested anchors are invalid
+    // HTML with unreliable click behaviour. A div that navigates on click
+    // (except when the click came from one of those inner links) avoids it.
+    function openThread(event) {
+        if (event.target.closest('a')) {
+            return;
+        }
+        router.visit(`/social/posts/${post.id}`);
+    }
+
+    function openThreadOnKey(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            router.visit(`/social/posts/${post.id}`);
+        }
+    }
+
     const textNode = (
         <PostText
             text={post.body}
@@ -57,9 +75,15 @@ export default function PostCard({ post, compact = false, variant = 'feed', maxB
                     isDetail ? (
                         <div className="mf-post__content mf-post__content--detail">{textNode}</div>
                     ) : (
-                        <Link href={`/social/posts/${post.id}`} className="mf-post__content">
+                        <div
+                            className="mf-post__content"
+                            role="link"
+                            tabIndex={0}
+                            onClick={openThread}
+                            onKeyDown={openThreadOnKey}
+                        >
                             {textNode}
-                        </Link>
+                        </div>
                     )
                 ) : null}
 

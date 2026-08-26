@@ -5,9 +5,11 @@ import {
     BackgroundPicker,
     FieldGroup,
     SectionLabel,
+    STAGE_TYPES,
     SwitchRow,
     TextAreaField,
     TextField,
+    TypePicker,
 } from './StageFormFields';
 import { IconLive } from './StageIcons';
 import StageSheet from './StageSheet';
@@ -32,6 +34,7 @@ export default function CreateStageSheet({
 
     const { data, setData, post, processing, errors, reset, optimistic } = useForm({
         title: '',
+        type: 'voice',
         description: '',
         is_public: true,
         allow_invite: true,
@@ -60,6 +63,7 @@ export default function CreateStageSheet({
                 {
                     id: tempId,
                     title,
+                    type: data.type,
                     description: data.description.trim() || null,
                     status: 'live',
                     is_public: data.is_public,
@@ -100,6 +104,8 @@ export default function CreateStageSheet({
     const descriptionRemaining = maxDescriptionLength - data.description.length;
     const canGoLive = data.title.trim().length >= 3 && !processing;
     const previewBg = stageBackgrounds.find((bg) => bg.key === data.background_key) ?? stageBackgrounds[0];
+    const selectedType = STAGE_TYPES.find((type) => type.key === data.type) ?? STAGE_TYPES[0];
+    const TypeIcon = selectedType.icon;
 
     return (
         <StageSheet
@@ -120,15 +126,31 @@ export default function CreateStageSheet({
                             style={{ backgroundImage: `url('${previewBg.url}')` }}
                             aria-hidden
                         >
-                            <span className="mf-stage-form__preview-chip mf-mono">
-                                <span className="mf-stage-live-dot" />
-                                Live preview
+                            <span className="mf-stage-form__preview-top">
+                                <span className="mf-stage-form__preview-chip mf-mono">
+                                    <span className="mf-stage-live-dot" />
+                                    Live preview
+                                </span>
+                                <span className="mf-stage-form__preview-type mf-mono">
+                                    <TypeIcon />
+                                    {selectedType.label}
+                                </span>
                             </span>
                             <span className="mf-stage-form__preview-title truncate">
                                 {data.title.trim() || 'Your stage title'}
                             </span>
                         </div>
                     ) : null}
+
+                    <section className="mf-stage-form__section">
+                        <SectionLabel id={`${labelId}-type`}>Stage type</SectionLabel>
+                        <TypePicker
+                            value={data.type}
+                            onChange={(key) => setData('type', key)}
+                            disabled={processing}
+                            name={`${labelId}-type`}
+                        />
+                    </section>
 
                     <section className="mf-stage-form__section">
                         <SectionLabel id={`${labelId}-details`}>Stage details</SectionLabel>

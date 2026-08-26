@@ -18,8 +18,8 @@
     border-radius: var(--mf-radius);
 }
 
-/* Cap the reading measure of the feed and centre it in the wider content
- * column so posts don't stretch uncomfortably on desktop. */
+/* Cap the reading measure of the feed and centre it below the identity rail
+ * on mobile, where the split is a single stacked column. */
 .mf-profile-feed {
     display: flex;
     flex-direction: column;
@@ -29,15 +29,36 @@
     margin-inline: auto;
 }
 
+/*
+ * ——— lg+ desktop, inside a `wide` SocialShell ———————————————————————
+ * Without a cap here, .mf-app (max-width:none when wide) lets the whole
+ * split stretch edge to edge: the rail holds at its own clamp, but the feed
+ * still capped at 40rem, and everything past it was empty page — the
+ * "wasted space on large screens" this fixes. Bind the page to the same
+ * --mf-page-max other wide pages (shop, clubs, fixtures, the Fandom hub)
+ * use, and let the feed fill its actual column instead of re-capping
+ * itself narrower than that column.
+ */
 @media (min-width: 1024px) {
+    .mf-shell--wide .mf-profile-page {
+        max-width: var(--mf-page-max);
+        margin-inline: auto;
+    }
+
     /* Hold the identity rail in view while the feed scrolls. */
     .mf-profile-rail {
         position: sticky;
         top: calc(var(--mf-header-h) + 0.85rem);
     }
 
-    /* Left-align the feed under its column once the rail carries the identity. */
+    .mf-profile-page .mf-split__rail {
+        max-width: none;
+    }
+
+    /* Left-align and fill the content column under its own rail, rather than
+     * staying pinned to the narrow mobile reading width. */
     .mf-profile-feed {
+        max-width: none;
         margin-inline: 0;
     }
 }

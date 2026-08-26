@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Inertia\Social;
 
+use App\Enums\ProductType;
 use App\Http\Controllers\Controller;
-use App\Models\Jersey;
-use App\Models\JerseyOrder;
+use App\Models\Product;
+use App\Models\ProductOrder;
 use App\Models\User;
-use App\Services\Shop\JerseyCatalogService;
+use App\Services\Shop\ProductCatalogService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -14,22 +15,26 @@ use Inertia\Response;
 
 class SocialShopController extends Controller
 {
-    public function index(Request $request, JerseyCatalogService $catalog): Response
+    public function index(Request $request, ProductCatalogService $catalog): Response
     {
         /** @var User $user */
         $user = $request->user();
-        $this->authorize('viewAny', JerseyOrder::class);
+        $this->authorize('viewAny', ProductOrder::class);
 
         $validated = $request->validate([
+            'type' => ['nullable', 'string', Rule::in(ProductType::values())],
+            'fandom_id' => ['nullable', 'integer', 'exists:fandoms,id'],
             'club_id' => ['nullable', 'integer', 'exists:clubs,id'],
             'club' => ['nullable', 'integer', 'exists:clubs,id'],
             'league_id' => ['nullable', 'integer', 'exists:leagues,id'],
             'league' => ['nullable', 'integer', 'exists:leagues,id'],
-            'category' => ['nullable', 'string', Rule::in(['home', 'away', 'third', 'training', 'terrace'])],
+            'category' => ['nullable', 'string'],
             'sort' => ['nullable', 'string', Rule::in(['name', 'price_asc', 'price_desc', 'newest'])],
             'in_stock' => ['nullable', 'boolean'],
         ]);
 
+        $type = isset($validated['type']) ? ProductType::from($validated['type']) : null;
+        $fandomId = isset($validated['fandom_id']) ? (int) $validated['fandom_id'] : null;
         $clubId = isset($validated['club_id']) || isset($validated['club'])
             ? (int) ($validated['club_id'] ?? $validated['club'])
             : null;
@@ -43,13 +48,17 @@ class SocialShopController extends Controller
             : null;
 
         return Inertia::render('Social/Shop/Index', [
-            'jerseys' => $catalog->presentCatalog($clubId, $sort, $inStockOnly, $category, $leagueId),
-            'featured' => $catalog->presentFeaturedJerseys(),
+            'products' => $catalog->presentCatalog($type, $fandomId, $clubId, $leagueId, $category, $sort, $inStockOnly),
+            'featured' => $catalog->presentFeatured(),
+            'types' => $catalog->presentTypes(),
+            'fandoms' => $catalog->presentFandomsWithStock(),
             'clubs' => $catalog->presentClubsWithStock(),
             'leagues' => $catalog->presentLeaguesWithStock(),
-            'categories' => $catalog->presentCategories(),
+            'categories' => $catalog->presentCategories($type),
             'cart_count' => $catalog->presentCart()['count'],
             'filters' => [
+                'type' => $type?->value,
+                'fandom_id' => $fandomId,
                 'club_id' => $clubId,
                 'league_id' => $leagueId,
                 'category' => $category,
@@ -60,14 +69,14 @@ class SocialShopController extends Controller
         ]);
     }
 
-    public function show(Request $request, Jersey $jersey, JerseyCatalogService $catalog): Response
+    public function show(Request $request, Product $product, ProductCatalogService $catalog): Response
     {
-        $this->authorize('viewAny', JerseyOrder::class);
+        $this->authorize('viewAny', ProductOrder::class);
 
-        abort_unless($jersey->is_active, 404);
+        abort_unless($product->is_active, 404);
 
         return Inertia::render('Social/Shop/Show', [
-            'jersey' => $catalog->presentJersey($jersey),
+            'product' => $catalog->presentProduct($product),
             'cart_count' => $catalog->presentCart()['count'],
         ]);
     }

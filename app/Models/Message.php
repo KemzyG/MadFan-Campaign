@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\ChatEncryptedText;
 use App\Enums\MessageType;
+use App\Support\PublicStorageUrl;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,10 @@ class Message extends Model
         'author_id',
         'type',
         'body',
+        'media_path',
+        'media_type',
+        'media_width',
+        'media_height',
         'reply_to_message_id',
         'edited_at',
     ];
@@ -33,7 +38,18 @@ class Message extends Model
             'type' => MessageType::class,
             'edited_at' => 'datetime',
             'body' => ChatEncryptedText::class,
+            'media_width' => 'integer',
+            'media_height' => 'integer',
         ];
+    }
+
+    public function getMediaUrlAttribute(): ?string
+    {
+        if ($this->media_path === null) {
+            return null;
+        }
+
+        return PublicStorageUrl::path($this->media_path);
     }
 
     public function channel(): BelongsTo

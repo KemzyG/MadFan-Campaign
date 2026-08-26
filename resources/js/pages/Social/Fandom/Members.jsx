@@ -8,7 +8,7 @@ export default function FandomMembers({ fandom, members }) {
     const rows = members?.data ?? [];
 
     return (
-        <SocialShell title="Fandom members" backHref="/social/fandom">
+        <SocialShell title="Fandom members" backHref={`/social/fandom/${fandom.slug}`}>
             <Head title={`${fandom.name} members`} />
 
             <div className="mf-page mf-fh">
@@ -45,7 +45,7 @@ export default function FandomMembers({ fandom, members }) {
                     <div className="mf-fh-members-pager">
                         {members.meta.current_page > 1 ? (
                             <Link
-                                href={`/social/fandom/members?page=${members.meta.current_page - 1}`}
+                                href={`/social/fandom/${fandom.slug}/members?page=${members.meta.current_page - 1}`}
                                 className="mf-btn mf-btn--ghost"
                             >
                                 ← Prev
@@ -53,7 +53,7 @@ export default function FandomMembers({ fandom, members }) {
                         ) : null}
                         {members.meta.current_page < members.meta.last_page ? (
                             <Link
-                                href={`/social/fandom/members?page=${members.meta.current_page + 1}`}
+                                href={`/social/fandom/${fandom.slug}/members?page=${members.meta.current_page + 1}`}
                                 className="mf-btn mf-btn--ghost"
                             >
                                 Next →

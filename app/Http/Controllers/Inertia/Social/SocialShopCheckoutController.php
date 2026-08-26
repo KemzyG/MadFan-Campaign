@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Inertia\Social;
 
-use App\Actions\Shop\PlaceJerseyOrder;
+use App\Actions\Shop\PlaceProductOrder;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Shop\CheckoutJerseyCartRequest;
-use App\Models\JerseyOrder;
+use App\Http\Requests\Shop\CheckoutProductCartRequest;
+use App\Models\ProductOrder;
 use App\Models\User;
-use App\Services\Shop\JerseyCatalogService;
+use App\Services\Shop\ProductCatalogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,9 +15,9 @@ use Inertia\Response;
 
 class SocialShopCheckoutController extends Controller
 {
-    public function create(Request $request, JerseyCatalogService $catalog): Response|RedirectResponse
+    public function create(Request $request, ProductCatalogService $catalog): Response|RedirectResponse
     {
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         $cart = $catalog->presentCart();
 
@@ -44,13 +44,13 @@ class SocialShopCheckoutController extends Controller
     }
 
     public function store(
-        CheckoutJerseyCartRequest $request,
-        PlaceJerseyOrder $placeOrder,
+        CheckoutProductCartRequest $request,
+        PlaceProductOrder $placeOrder,
     ): RedirectResponse {
         /** @var User $user */
         $user = $request->user();
 
-        $this->authorize('create', JerseyOrder::class);
+        $this->authorize('create', ProductOrder::class);
 
         $order = $placeOrder->handle($user, $request->shipping());
 

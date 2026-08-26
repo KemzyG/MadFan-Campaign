@@ -5,8 +5,9 @@ use App\Enums\JerseySize;
 use App\Enums\MediaAssetSource;
 use App\Models\Club;
 use App\Models\Jersey;
-use App\Models\JerseyVariant;
 use App\Models\MediaAsset;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Support\CloudinaryImageStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -128,33 +129,28 @@ test('admins can attach gallery assets to a jersey', function () {
     expect($jersey->mediaAssets)->toHaveCount(2);
 });
 
-test('shop product detail exposes attached gallery images', function () {
+test('shop product detail exposes its gallery images', function () {
     $club = Club::factory()->create();
     $user = socialReadyUser($club);
-    $jersey = Jersey::factory()->create([
+    $product = Product::factory()->create([
         'club_id' => $club->id,
         'name' => 'Gallery Away',
         'slug' => 'gallery-away',
         'is_active' => true,
+        'gallery' => ['https://res.cloudinary.com/mad-fan/gallery-away-1.jpg', 'https://res.cloudinary.com/mad-fan/gallery-away-2.jpg'],
     ]);
-    JerseyVariant::factory()->size(JerseySize::L)->create([
-        'jersey_id' => $jersey->id,
+    ProductVariant::factory()->label('L')->create([
+        'product_id' => $product->id,
         'stock' => 3,
     ]);
 
-    $assets = MediaAsset::factory()->remote()->count(2)->create();
-    $jersey->mediaAssets()->sync([
-        $assets[0]->id => ['sort_order' => 0],
-        $assets[1]->id => ['sort_order' => 1],
-    ]);
-
     $this->actingAs($user)
-        ->get(route('social.shop.show', $jersey))
+        ->get(route('social.shop.show', $product))
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Shop/Show')
-            ->has('jersey.images', 2)
-            ->where('jersey.images.0.url', $assets[0]->url));
+            ->has('product.images', 2)
+            ->where('product.images.0.url', 'https://res.cloudinary.com/mad-fan/gallery-away-1.jpg'));
 });
 
 test('shop catalog supports club filter and price sort', function () {
@@ -162,29 +158,29 @@ test('shop catalog supports club filter and price sort', function () {
     $clubB = Club::factory()->create(['name' => 'Beta United']);
     $user = socialReadyUser($clubA);
 
-    $cheap = Jersey::factory()->create([
+    $cheap = Product::factory()->create([
         'club_id' => $clubA->id,
         'name' => 'Cheap Kit',
         'price' => '39.99',
         'is_active' => true,
     ]);
-    JerseyVariant::factory()->create(['jersey_id' => $cheap->id, 'stock' => 2]);
+    ProductVariant::factory()->create(['product_id' => $cheap->id, 'stock' => 2]);
 
-    $pricey = Jersey::factory()->create([
+    $pricey = Product::factory()->create([
         'club_id' => $clubA->id,
         'name' => 'Pricey Kit',
         'price' => '99.99',
         'is_active' => true,
     ]);
-    JerseyVariant::factory()->create(['jersey_id' => $pricey->id, 'stock' => 2]);
+    ProductVariant::factory()->create(['product_id' => $pricey->id, 'stock' => 2]);
 
-    $other = Jersey::factory()->create([
+    $other = Product::factory()->create([
         'club_id' => $clubB->id,
         'name' => 'Other Club Kit',
         'price' => '49.99',
         'is_active' => true,
     ]);
-    JerseyVariant::factory()->create(['jersey_id' => $other->id, 'stock' => 2]);
+    ProductVariant::factory()->create(['product_id' => $other->id, 'stock' => 2]);
 
     $this->actingAs($user)
         ->get(route('social.shop.index', [
@@ -194,8 +190,8 @@ test('shop catalog supports club filter and price sort', function () {
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Shop/Index')
-            ->has('jerseys', 2)
-            ->where('jerseys.0.name', 'Pricey Kit')
-            ->where('jerseys.1.name', 'Cheap Kit')
+            ->has('products', 2)
+            ->where('products.0.name', 'Pricey Kit')
+            ->where('products.1.name', 'Cheap Kit')
             ->where('filters.sort', 'price_desc'));
 });

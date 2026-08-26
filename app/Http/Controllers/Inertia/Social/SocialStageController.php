@@ -182,6 +182,29 @@ class SocialStageController extends Controller
         return back()->with('success', 'Shared to the terrace feed.');
     }
 
+    public function invite(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('invite', $stage);
+
+        $validated = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1', 'max:20'],
+            'user_ids.*' => ['integer', 'exists:users,id'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $invited = $stages->invite($stage, $user, $validated['user_ids']);
+
+        return back()->with(
+            $invited > 0 ? 'success' : 'error',
+            match (true) {
+                $invited === 0 => 'Nobody new to invite — they may already be in the room.',
+                $invited === 1 => 'Invite sent.',
+                default => "{$invited} invites sent.",
+            },
+        );
+    }
+
     /**
      * Pin (or, with a null message_id, unpin) a room message.
      */

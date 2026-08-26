@@ -36,6 +36,62 @@ export function IconMicOff({ className }) {
     );
 }
 
+export function IconVoiceWave({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M4 12v1.5" />
+            <path d="M8 9v7.5" />
+            <path d="M12 5.5v13" />
+            <path d="M16 9v7.5" />
+            <path d="M20 12v1.5" />
+        </svg>
+    );
+}
+
+export function IconBroadcast({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <circle cx="12" cy="13" r="2.1" fill="currentColor" stroke="none" />
+            <path d="M8.3 16.7a5.2 5.2 0 0 1 0-7.4" />
+            <path d="M15.7 9.3a5.2 5.2 0 0 1 0 7.4" />
+            <path d="M5.3 19.7a9.6 9.6 0 0 1 0-13.4" />
+            <path d="M18.7 6.3a9.6 9.6 0 0 1 0 13.4" />
+        </svg>
+    );
+}
+
+export function IconCamera({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <rect x="3" y="6.5" width="13" height="11" rx="2.2" />
+            <path d="m16 10.2 4.2-2.6a.7.7 0 0 1 1.05.6v7.6a.7.7 0 0 1-1.05.6L16 13.8" />
+        </svg>
+    );
+}
+
+export function IconCameraOff({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M10.5 6.5H14a2.2 2.2 0 0 1 2.2 2.2v.9" />
+            <path d="M16 13.8v1.5A2.2 2.2 0 0 1 13.8 17.5H5.2A2.2 2.2 0 0 1 3 15.3v-6.6a2.2 2.2 0 0 1 1.9-2.18" />
+            <path d="m16 10.2 4.2-2.6a.7.7 0 0 1 1.05.6v7.6a.7.7 0 0 1-1.05.6L16 13.8" />
+            <path d="m2 2 20 20" />
+        </svg>
+    );
+}
+
+export function IconScreenShare({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <rect x="2.5" y="4.5" width="19" height="13" rx="2" />
+            <path d="M9 21h6" />
+            <path d="M12 17v4" />
+            <path d="M12 8v5.5" />
+            <path d="m9.2 10.8 2.8-2.8 2.8 2.8" />
+        </svg>
+    );
+}
+
 export function IconChat({ className }) {
     return (
         <svg {...IconProps({ className })}>

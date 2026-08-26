@@ -1,24 +1,24 @@
 import { Link } from '@inertiajs/react';
 
-const LINKS = [
-    { href: '/social/fandom/members', label: 'Members', hint: 'Everyone in this fandom' },
-    { href: '/social/leaderboard?scope=fandom', label: 'Leaderboard', hint: 'Top fans, ranked' },
-    { href: '/campaign', label: 'Challenges', hint: 'The full task board' },
-    { href: '/social/wallet', label: 'Rewards', hint: 'Points, streaks & balance' },
-];
-
 /**
  * "More" tab: everything that doesn't fit the primary Home/Feed/Live/Events
  * bar — links, static About/History/Rules copy, and a media strip — so the
  * hub itself stays uncluttered.
  */
-export default function MoreSheet({ more }) {
+export default function MoreSheet({ more, fandomSlug }) {
     const media = more?.media ?? [];
+
+    const links = [
+        { href: `/social/fandom/${fandomSlug}/members`, label: 'Members', hint: 'Everyone in this fandom' },
+        { href: '/social/leaderboard?scope=fandom', label: 'Leaderboard', hint: 'Top fans, ranked' },
+        { href: '/campaign', label: 'Challenges', hint: 'The full task board' },
+        { href: '/social/wallet', label: 'Rewards', hint: 'Points, streaks & balance' },
+    ];
 
     return (
         <div className="mf-fh-more">
             <nav className="mf-fh-more__links">
-                {LINKS.map((link) => (
+                {links.map((link) => (
                     <Link key={link.href} href={link.href} className="mf-fh-more__link">
                         <span className="mf-fh-more__link-label">{link.label}</span>
                         <span className="mf-fh-more__link-hint mf-text-meta">{link.hint}</span>

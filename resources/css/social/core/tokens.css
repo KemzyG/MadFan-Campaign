@@ -237,3 +237,20 @@
             color-mix(in srgb, #021422 46%, transparent) 100%
         );
 }
+
+/*
+ * Dark island (docs/social/02-ux-ui.md "Dark islands"): flips the surface
+ * and ink tokens on a scoping class so a component (Stage, Passport, auth
+ * pages, a themed Fandom cover) can sit on Deep Navy without every child
+ * rule needing its own light/dark override — anything already written in
+ * terms of --mf-text/--mf-muted/--mf-line/--mf-canvas etc. resolves to the
+ * light variant automatically inside .mf-invert.
+ */
+.mf-invert {
+    --mf-canvas: #021422;
+    --mf-panel: #001f38;
+    --mf-elevated: color-mix(in srgb, #ffffff 6%, #001f38);
+    --mf-text: #ffffff;
+    --mf-muted: color-mix(in srgb, #ffffff 72%, transparent);
+    --mf-line: color-mix(in srgb, #ffffff 14%, transparent);
+}

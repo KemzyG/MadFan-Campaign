@@ -89,6 +89,18 @@
     word-break: break-word;
 }
 
+/* Shared by post/reply text and chat bubbles — anywhere linkifyText() runs. */
+.mf-inline-link {
+    color: var(--mf-pitch);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--mf-pitch) 40%, transparent);
+    text-underline-offset: 0.12em;
+}
+
+.mf-inline-link:hover {
+    text-decoration-color: var(--mf-pitch);
+}
+
 .mf-club-flake {
     display: inline-flex;
     align-items: center;

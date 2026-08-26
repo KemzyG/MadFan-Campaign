@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { formatPrice, productOptionWord } from './productMeta';
 
 function CartLine({ item }) {
     const { data, setData, put, processing, delete: destroy } = useForm({
@@ -18,7 +19,7 @@ function CartLine({ item }) {
                     {item.name}
                 </Link>
                 <p className="mf-text-meta text-[var(--mf-muted)]">
-                    Size {item.size}
+                    {productOptionWord(item.product_type)} {item.variant_label}
                     {item.club?.name ? ` · ${item.club.name}` : ''}
                 </p>
             </div>
@@ -35,7 +36,7 @@ function CartLine({ item }) {
                     Update
                 </button>
             </form>
-            <p className="mf-mono mf-shop-line__total">£{item.line_total}</p>
+            <p className="mf-mono mf-shop-line__total">{formatPrice(item.line_total)}</p>
             <button
                 type="button"
                 className="mf-shop-line__remove"
@@ -59,7 +60,7 @@ export default function Cart({ cart }) {
                     <div className="mf-shop-empty">
                         <p className="mf-empty-copy">Bag is empty.</p>
                         <Link href="/social/shop" className="mf-btn mf-btn--pitch" prefetch>
-                            Browse jerseys
+                            Browse the store
                         </Link>
                     </div>
                 ) : (
@@ -71,14 +72,14 @@ export default function Cart({ cart }) {
                         </div>
                         <div className="mf-shop-summary">
                             <p className="mf-mono">
-                                Total <strong>£{cart.total}</strong>
+                                Total <strong>{formatPrice(cart.total)}</strong>
                             </p>
                             <button
                                 type="button"
                                 className="mf-btn mf-btn--pitch"
                                 onClick={() => router.visit('/social/shop/checkout')}
                             >
-                                Continue to shipping
+                                {cart.requires_shipping ? 'Continue to shipping' : 'Confirm order'}
                             </button>
                         </div>
                     </>

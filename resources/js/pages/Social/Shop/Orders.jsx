@@ -1,14 +1,15 @@
 import { Head, Link } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { formatPrice } from './productMeta';
 
 export default function Orders({ orders = [] }) {
     return (
         <SocialShell title="Orders" backHref="/social/shop">
-            <Head title="My jersey orders — Mad Fan Store" />
+            <Head title="My orders — Mad Fan Store" />
 
             <div className="mf-shop">
                 {orders.length === 0 ? (
-                    <p className="mf-empty-copy">No jersey orders yet.</p>
+                    <p className="mf-empty-copy">No orders yet.</p>
                 ) : (
                     <div className="mf-shop-orders">
                         {orders.map((order) => (
@@ -25,7 +26,7 @@ export default function Orders({ orders = [] }) {
                                         {order.items.length === 1 ? '' : 's'}
                                     </p>
                                 </div>
-                                <p className="mf-mono">£{order.total}</p>
+                                <p className="mf-mono">{formatPrice(order.total)}</p>
                             </Link>
                         ))}
                     </div>

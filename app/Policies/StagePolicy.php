@@ -155,6 +155,15 @@ class StagePolicy
         return $this->sendMessage($user, $stage) && $stage->allow_invite;
     }
 
+    /**
+     * Direct, targeted invites use the same gate as the share-to-feed
+     * broadcast — an active participant, room live, invites not disabled.
+     */
+    public function invite(User $user, Stage $stage): bool
+    {
+        return $this->share($user, $stage);
+    }
+
     private function activeParticipant(Stage $stage, User $user): ?StageParticipant
     {
         return StageParticipant::query()

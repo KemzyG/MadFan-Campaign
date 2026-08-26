@@ -2,6 +2,7 @@
 
 namespace App\Services\Social;
 
+use App\Enums\StageParticipantRole;
 use App\Models\Stage;
 use App\Models\StageParticipant;
 use App\Models\User;
@@ -15,7 +16,7 @@ class LiveKitTokenService
      * Mint a LiveKit participant access token (HS256 JWT).
      * Uses firebase/php-jwt already in the app — no LiveKit PHP SDK (protobuf conflict).
      *
-     * @return array{token: string, url: string, room: string, identity: string, can_publish: bool, expires_at: int}
+     * @return array{token: string, url: string, room: string, identity: string, can_publish: bool, can_publish_video: bool, expires_at: int}
      */
     public function issue(Stage $stage, User $user, StageParticipant $participant): array
     {
@@ -29,7 +30,10 @@ class LiveKitTokenService
         $ttl = max(60, (int) config('livekit.token_ttl', 3600));
         $now = time();
         $exp = $now + $ttl;
-        $canPublish = $participant->isOnStage();
+        $isOnStage = $participant->isOnStage();
+        $isHost = $participant->role === StageParticipantRole::Host;
+        $sources = StageVoice::publishSourcesFor($stage->type, $isHost, $isOnStage);
+        $canPublish = $sources !== [];
         $room = StageVoice::roomName((int) $stage->id);
         $identity = (string) $user->id;
         $name = filled($user->handle) ? (string) $user->handle : (string) $user->name;
@@ -43,7 +47,7 @@ class LiveKitTokenService
         ];
 
         if ($canPublish) {
-            $video['canPublishSources'] = ['microphone'];
+            $video['canPublishSources'] = $sources;
         }
 
         $payload = [
@@ -55,8 +59,10 @@ class LiveKitTokenService
             'video' => $video,
             'metadata' => json_encode([
                 'stage_id' => $stage->id,
+                'type' => $stage->type->value,
                 'role' => $participant->role->value,
-                'on_stage' => $canPublish,
+                'on_stage' => $isOnStage,
+                'can_publish_video' => in_array('camera', $sources, true) || in_array('screen_share', $sources, true),
             ], JSON_THROW_ON_ERROR),
         ];
 
@@ -66,6 +72,7 @@ class LiveKitTokenService
             'room' => $room,
             'identity' => $identity,
             'can_publish' => $canPublish,
+            'can_publish_video' => in_array('camera', $sources, true) || in_array('screen_share', $sources, true),
             'expires_at' => $exp,
         ];
     }

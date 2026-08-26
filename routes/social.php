@@ -1,17 +1,19 @@
 <?php
 
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
-use App\Http\Controllers\Api\Social\DailyTaskController as ApiSocialDailyTaskController;
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
 use App\Http\Controllers\Api\Social\ChatUnreadController as ApiSocialChatUnreadController;
+use App\Http\Controllers\Api\Social\DailyTaskController as ApiSocialDailyTaskController;
 use App\Http\Controllers\Api\Social\EventInterestController as ApiSocialEventInterestController;
 use App\Http\Controllers\Api\Social\FandomFollowController as ApiSocialFandomFollowController;
+use App\Http\Controllers\Api\Social\FandomSearchController as ApiSocialFandomSearchController;
 use App\Http\Controllers\Api\Social\FollowController as ApiSocialFollowController;
 use App\Http\Controllers\Api\Social\NotificationController as ApiSocialNotificationController;
 use App\Http\Controllers\Api\Social\PollController as ApiSocialPollController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\PredictionController as ApiSocialPredictionController;
+use App\Http\Controllers\Api\Social\StageInviteCandidatesController as ApiSocialStageInviteCandidatesController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
@@ -20,6 +22,9 @@ use App\Http\Controllers\Inertia\Social\SocialClubProfileController;
 use App\Http\Controllers\Inertia\Social\SocialDailyTaskController;
 use App\Http\Controllers\Inertia\Social\SocialDirectChatController;
 use App\Http\Controllers\Inertia\Social\SocialEventsController;
+use App\Http\Controllers\Inertia\Social\SocialFandomController;
+use App\Http\Controllers\Inertia\Social\SocialFandomDiscoveryController;
+use App\Http\Controllers\Inertia\Social\SocialFandomMembersController;
 use App\Http\Controllers\Inertia\Social\SocialFeedController;
 use App\Http\Controllers\Inertia\Social\SocialFixtureController;
 use App\Http\Controllers\Inertia\Social\SocialFollowController;
@@ -40,8 +45,6 @@ use App\Http\Controllers\Inertia\Social\SocialShopCartController;
 use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
 use App\Http\Controllers\Inertia\Social\SocialShopController;
 use App\Http\Controllers\Inertia\Social\SocialShopOrderController;
-use App\Http\Controllers\Inertia\Social\SocialFandomController;
-use App\Http\Controllers\Inertia\Social\SocialFandomMembersController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
 use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
@@ -108,6 +111,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:10,1')
                     ->name('tasks.claim');
 
+                Route::get('/fandom/search', ApiSocialFandomSearchController::class)
+                    ->middleware('throttle:60,1')
+                    ->name('fandom.search');
                 Route::post('/fandoms/{fandom}/follow', [ApiSocialFandomFollowController::class, 'store'])
                     ->middleware('throttle:30,1')
                     ->name('fandoms.follow');
@@ -145,6 +151,10 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/notifications/read-all', [ApiSocialNotificationController::class, 'readAll'])
                     ->middleware('throttle:20,1')
                     ->name('notifications.read-all');
+
+                Route::get('/stage/{stage}/invite-candidates', ApiSocialStageInviteCandidatesController::class)
+                    ->middleware('throttle:60,1')
+                    ->name('stage.invite-candidates');
 
                 Route::get('/tickets/{ticket}', [ApiSocialTicketController::class, 'show'])
                     ->middleware('throttle:60,1')
@@ -249,6 +259,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/stage/{stage}/share', [SocialStageController::class, 'share'])
                     ->middleware('throttle:10,1')
                     ->name('stage.share');
+                Route::post('/stage/{stage}/invite', [SocialStageController::class, 'invite'])
+                    ->middleware('throttle:10,1')
+                    ->name('stage.invite');
                 Route::post('/stage/{stage}/pin', [SocialStageController::class, 'pin'])
                     ->middleware('throttle:30,1')
                     ->name('stage.pin');
@@ -276,8 +289,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:120,1')
                     ->name('videos.view');
 
-                Route::get('/fandom', SocialFandomController::class)->name('fandom');
-                Route::get('/fandom/members', SocialFandomMembersController::class)->name('fandom.members');
+                Route::get('/fandom', SocialFandomDiscoveryController::class)->name('fandom');
+                Route::get('/fandom/{fandom:slug}', SocialFandomController::class)->name('fandom.show');
+                Route::get('/fandom/{fandom:slug}/members', SocialFandomMembersController::class)->name('fandom.members');
                 Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
                 Route::get('/clubs', SocialStandingsController::class)->name('clubs');
                 Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
@@ -308,10 +322,10 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->name('shop.checkout.store');
                 Route::get('/shop/orders', [SocialShopOrderController::class, 'index'])->name('shop.orders.index');
                 Route::get('/shop/orders/{order}', [SocialShopOrderController::class, 'show'])->name('shop.orders.show');
-                Route::get('/shop/{jersey:slug}', [SocialShopController::class, 'show'])->name('shop.show');
+                Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');
 
                 Route::get('/you', SocialYouController::class)->name('you');
-            Route::get('/tasks', SocialDailyTaskController::class)->name('tasks');
+                Route::get('/tasks', SocialDailyTaskController::class)->name('tasks');
                 Route::patch('/you', SocialProfileSettingsController::class)
                     ->middleware('throttle:10,1')
                     ->name('you.update');
