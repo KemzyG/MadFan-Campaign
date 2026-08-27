@@ -3793,6 +3793,8 @@
 }
 
 .mf-stageroom--viewer .mf-stage-monitor {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     min-height: 62vh;
     border: 0;
@@ -3802,6 +3804,37 @@
 
 .mf-stageroom--viewer .mf-stage-monitor__tag {
     display: none;
+}
+
+/* The boxed 16:9 tile (Program-monitor styling — right for the host's Studio
+   preview) otherwise leaves the monitor's stadium backdrop visible above/
+   below it here. Stretch the whole hero chain to fill the monitor edge to
+   edge instead — object-fit:cover on .mf-stage-tile__video-el (see its own
+   rule) then crops the actual video to match, so the backdrop image never
+   shows through on a viewer's full-bleed screen. */
+.mf-stageroom--viewer .mf-stage-hero-deck {
+    flex: 1;
+    min-height: 0;
+}
+
+.mf-stageroom--viewer .mf-stage-hero-deck__stage {
+    flex: 1;
+    min-height: 0;
+}
+
+.mf-stageroom--viewer .mf-stage-hero-deck__stage .mf-stage-tile {
+    height: 100%;
+}
+
+.mf-stageroom--viewer .mf-stage-hero-deck__stage .mf-stage-tile__avatar-wrap {
+    height: 100%;
+}
+
+.mf-stageroom--viewer .mf-stage-hero-deck__stage .mf-stage-tile__video {
+    aspect-ratio: auto;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
 }
 
 .mf-stageroom--viewer .mf-stageroom__header {
