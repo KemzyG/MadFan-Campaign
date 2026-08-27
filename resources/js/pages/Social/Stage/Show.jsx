@@ -1,8 +1,7 @@
 import { Head } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { StageRoomSkeleton } from '../components/Skeletons';
-import { partitionParticipants } from './helpers';
 import InviteStageSheet from './InviteStageSheet';
 import ListenerStrip from './ListenerStrip';
 import PinnedMessage from './PinnedMessage';
@@ -11,6 +10,9 @@ import RoomHeader from './RoomHeader';
 import ShareStageSheet from './ShareStageSheet';
 import SpeakerDeck from './SpeakerDeck';
 import StageControlBar from './StageControlBar';
+import StagePresentationControls from './StagePresentationControls';
+import StageSelfPreview from './StageSelfPreview';
+import StageSourcesBar from './StageSourcesBar';
 import StageStreamingHero from './StageStreamingHero';
 import StageReactionFab from './StageReactionFab';
 import StageSettingsSheet from './StageSettingsSheet';
@@ -21,55 +23,26 @@ import { useStageSession } from './StageSessionContext';
 
 const REACTION_FALLBACK = '🔥';
 
-/** Mobile-only segmented control: Stage (deck) / Chat / People. */
-function MobileSegmented({ view, chatAllowed, chatUnread, handCount, onStage, onChat, onPeople }) {
-    const Seg = ({ label, active, onClick, badge }) => (
-        <button
-            type="button"
-            role="tab"
-            aria-selected={active}
-            className={`mf-stageroom__seg ${active ? 'is-active' : ''}`.trim()}
-            onClick={onClick}
-        >
-            {label}
-            {badge != null ? <span className="mf-stageroom__seg-badge mf-mono">{badge}</span> : null}
-        </button>
-    );
-
-    return (
-        <div className="mf-stageroom__segmented" role="tablist" aria-label="Room view">
-            <Seg label="Stage" active={view === 'stage'} onClick={onStage} />
-            {chatAllowed ? (
-                <Seg
-                    label="Chat"
-                    active={view === 'chat'}
-                    onClick={onChat}
-                    badge={chatUnread > 0 ? (chatUnread > 99 ? '99+' : chatUnread) : null}
-                />
-            ) : null}
-            <Seg
-                label="People"
-                active={view === 'people'}
-                onClick={() => onPeople('people')}
-                badge={handCount > 0 ? handCount : null}
-            />
-        </div>
-    );
-}
+/** Pane order for the mobile swipe carousel — must match the CSS `order` values
+ *  in stage.css (chat: -1, stage: 0, people: 1). */
+const PANE_ORDER = ['chat', 'stage', 'people'];
 
 /**
  * The Stage room as a real route. The room reads as up to four panels — the
  * shell nav sidebar, the main room (header + deck + controls), a Chat column and
- * a People+Info column. On phones a segmented control swaps a single full-screen
- * panel; at ≥1024px Chat is its own column; at ≥1280px People+Info joins as a
- * permanent fourth panel (below that it's an overlay). No modal at any breakpoint.
+ * a People+Info column. Below 1024px these become a horizontal swipe carousel
+ * (chat left, stage centre, people right — TikTok/Reels-style live layout, see
+ * stage.css §16 mobile carousel); at ≥1024px Chat is its own column; at ≥1280px
+ * People+Info joins as a permanent fourth panel (below that it's an overlay).
  */
 export default function Show(props) {
     const { stage } = props;
-    const { enterFromPage, syncFromPage, activeStageId, room, loading, chatUnread } = useStageSession();
+    const { enterFromPage, syncFromPage, activeStageId, room, loading } = useStageSession();
     const actions = useStageActions();
 
-    // mobileView drives the phone segmented control + the responsive show/hide.
+    // mobileView drives which pane the swipe carousel is centred on (and the
+    // laptop overlay's reveal state below). It used to also drive a tap-tab
+    // segmented control; that's gone in favour of swiping the carousel itself.
     const [mobileView, setMobileView] = useState('stage'); // stage | chat | people
     const [peopleTab, setPeopleTab] = useState('people'); // people | info
     const [peopleOpen, setPeopleOpen] = useState(false); // laptop overlay reveal
@@ -77,6 +50,9 @@ export default function Show(props) {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const carouselRef = useRef(null);
+    const carouselSyncingRef = useRef(false);
+    const carouselCenteredRef = useRef(false);
 
     const stageBackgrounds = props.stage_backgrounds || [];
 
@@ -103,7 +79,6 @@ export default function Show(props) {
         activeStageId,
     ]);
 
-    const goStage = useCallback(() => setMobileView('stage'), []);
     const goChat = useCallback(() => setMobileView('chat'), []);
     const openPeople = useCallback((subTab = 'people') => {
         setPeopleTab(subTab === 'info' ? 'info' : 'people');
@@ -150,16 +125,68 @@ export default function Show(props) {
 
     const roomStage = room?.stage;
     const chatAllowed = roomStage?.allow_chat !== false;
-    const { handRaised } = useMemo(
-        () => partitionParticipants(room?.participants || []),
-        [room?.participants],
-    );
-
     const ready = Boolean(roomStage) && !loading;
 
+    // Which panes actually exist, in swipe order (chat is skipped entirely
+    // when the host has turned room chat off) — matches the CSS `order` in
+    // stage.css so index math here lines up with what's visually adjacent.
+    const panes = useMemo(() => PANE_ORDER.filter((p) => p !== 'chat' || chatAllowed), [chatAllowed]);
+
+    // mobileView changing programmatically (unread-badge taps, "select a
+    // speaker" opening People, keyboard shortcuts) scrolls the carousel to
+    // match — the first time, instantly (no animated scroll on page load);
+    // after that, smoothly, since it's a deliberate navigation.
+    useEffect(() => {
+        const node = carouselRef.current;
+        if (!node || !ready) {
+            return;
+        }
+        const index = panes.indexOf(mobileView);
+        if (index === -1) {
+            return;
+        }
+        const behavior = carouselCenteredRef.current ? 'smooth' : 'auto';
+        carouselCenteredRef.current = true;
+        carouselSyncingRef.current = true;
+        node.scrollTo({ left: index * node.clientWidth, behavior });
+        const timer = window.setTimeout(() => {
+            carouselSyncingRef.current = false;
+        }, 400);
+        return () => window.clearTimeout(timer);
+    }, [mobileView, panes, ready]);
+
+    // Swiping the carousel itself is the primary interaction on mobile — sync
+    // mobileView (and the laptop overlay's reveal flag) to whichever pane is
+    // nearest once the user's own scroll settles, skipped while the effect
+    // above is driving the scroll to avoid feedback-looping against itself.
+    const handleCarouselScroll = useCallback(() => {
+        if (carouselSyncingRef.current) {
+            return;
+        }
+        const node = carouselRef.current;
+        if (!node || !node.clientWidth) {
+            return;
+        }
+        const index = Math.round(node.scrollLeft / node.clientWidth);
+        const next = panes[index];
+        if (!next || next === mobileView) {
+            return;
+        }
+        setMobileView(next);
+        setPeopleOpen(next === 'people');
+    }, [panes, mobileView]);
+
+    // The host gets the studio (Program monitor frame, docked control bar,
+    // Sources strip — desktop especially) for Video/Streaming stages; everyone
+    // else — listeners and promoted speakers alike — gets the full-bleed Reels
+    // screen: the video itself, with transparent overlay chrome, is the whole
+    // point of their view. Voice stages keep the legacy multi-speaker layout
+    // (see stage-studio.css and stage-reels.css for the Kickoff redesign).
+    const isStudio = actions.isHost && roomStage?.type !== 'voice';
     const roomClass = [
         'mf-stageroom',
-        `mf-stageroom--view-${mobileView}`,
+        actions.isHost ? 'mf-stageroom--host' : 'mf-stageroom--viewer',
+        isStudio ? 'mf-stageroom--studio' : 'mf-stageroom--reels',
         peopleOpen ? 'is-people-open' : '',
         chatAllowed ? '' : 'is-no-chat',
     ]
@@ -173,17 +200,7 @@ export default function Show(props) {
             {!ready ? (
                 <StageRoomSkeleton />
             ) : (
-                <div className={roomClass}>
-                    <MobileSegmented
-                        view={mobileView}
-                        chatAllowed={chatAllowed}
-                        chatUnread={chatUnread}
-                        handCount={handRaised.length}
-                        onStage={goStage}
-                        onChat={goChat}
-                        onPeople={openPeople}
-                    />
-
+                <div className={roomClass} ref={carouselRef} onScroll={handleCarouselScroll}>
                     <section className="mf-stageroom__main">
                         <RoomHeader
                             onOpenSettings={() => setSettingsOpen(true)}
@@ -194,16 +211,35 @@ export default function Show(props) {
                         <div className="mf-stageroom__deck">
                             <ReactionLayer />
                             <PinnedMessage compact />
-                            {roomStage?.type === 'streaming' ? (
-                                <StageStreamingHero onSelectSpeaker={selectSpeaker} />
-                            ) : (
-                                <SpeakerDeck onSelectSpeaker={selectSpeaker} />
-                            )}
-                            <ListenerStrip onSeeAll={() => openPeople('people')} />
+
+                            <div className="mf-stage-monitor">
+                                <span className="mf-stage-monitor__tag mf-mono">
+                                    <span className="mf-stage-monitor__tag-dot" aria-hidden />
+                                    Program
+                                </span>
+                                {roomStage?.type === 'streaming' ? (
+                                    <StageStreamingHero onSelectSpeaker={selectSpeaker} />
+                                ) : (
+                                    <SpeakerDeck onSelectSpeaker={selectSpeaker} />
+                                )}
+                            </div>
+
+                            <StageSourcesBar />
+
+                            {/* Video/Streaming stages let the camera/screen tiles carry the
+                                deck — a text roster of "who's just listening" is leftover
+                                voice-room UI once there's real video to look at. The count
+                                itself stays visible (header stats, the Streaming hero's own
+                                "watching" overlay); only the avatar-chip roster drops here.
+                                Raised hands are still reachable via the People panel. */}
+                            {roomStage?.type === 'voice' ? (
+                                <ListenerStrip onSeeAll={() => openPeople('people')} />
+                            ) : null}
                         </div>
 
                         <StageReactionFab />
 
+                        <StagePresentationControls />
                         <StageControlBar />
                     </section>
 
@@ -223,6 +259,8 @@ export default function Show(props) {
                         tabIndex={-1}
                         onClick={closePeople}
                     />
+
+                    <StageSelfPreview />
                 </div>
             )}
 

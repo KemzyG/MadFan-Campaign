@@ -1,0 +1,254 @@
+/*
+ * Stage "Kickoff" redesign — Host Studio register.
+ *
+ * The host's console view: instant, hardware-feeling, never idles. The Studio
+ * is a docked control panel with a Program monitor (hero/streaming view in
+ * the center), Sources strip (OBS-style input status), and Presentation controls
+ * (for uploading/annotating videos). This file lays out the host-specific frame
+ * and adjusts existing components for this register's dark steel aesthetic.
+ *
+ * Loaded after stage-kickoff.css in social.css. Uses the Kickoff token system
+ * (--kf-* variables) exclusively; no cross-pollution with legacy .mf-stage* rules.
+ */
+
+/* —— Studio shell: console layout ————————————————————————————————————— */
+
+/* Host view shifts to a docked-control aesthetic: a central Program
+   monitor flanked or stacked with control surfaces, all on dark steel
+   (a raised platform surface within the ink background). The Reels
+   viewer's glass-over-video layout is completely separate — this only
+   applies when the host is on stage. */
+.mf-stageroom--host.mf-stageroom--studio {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr auto;
+    min-height: 100vh;
+    background: var(--kf-ink);
+    gap: 0;
+}
+
+.mf-stageroom--studio .mf-stageroom__main {
+    grid-column: 1 / 2;
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    background: var(--kf-steel);
+    min-width: 0;
+}
+
+/* Right dock: sources + presentation, stacked on desktop. */
+.mf-stageroom--studio .mf-stage-sources,
+.mf-stageroom--studio .mf-stage-presentation {
+    grid-column: 2 / 3;
+    background: var(--kf-steel);
+    border: 1px solid var(--kf-line-strong);
+    border-top: none;
+}
+
+.mf-stageroom--studio .mf-stage-sources {
+    grid-row: 1 / 2;
+    border-bottom: none;
+}
+
+.mf-stageroom--studio .mf-stage-presentation {
+    grid-row: 2 / 3;
+}
+
+/* Program monitor: the central video frame with corner viewfinder brackets. */
+.mf-stageroom--studio .mf-stage-monitor {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-height: 0;
+    background: var(--kf-ink);
+    border: 2px solid var(--kf-line-strong);
+    border-radius: 0;
+}
+
+/* Viewfinder corner brackets appear when live (see stage-kickoff.css). */
+.mf-stage-monitor.is-live {
+    border-color: var(--kf-amber);
+}
+
+.mf-stage-monitor.is-live.is-conversation {
+    border-color: var(--kf-green);
+}
+
+/* Video/hero content fills the monitor; tap the monitor to select speakers
+   or interact with the stream. */
+.mf-stageroom--studio .mf-stage-hero-deck {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+}
+
+.mf-stageroom--studio .mf-stage-hero-deck__stage {
+    width: 100%;
+    height: 100%;
+}
+
+/* —— Studio controls: sources strip ————————————————————————————— */
+
+/* Sources strip in the Studio lives in the right dock, compact vertical layout.
+   The components themselves (mf-stage-sources) are unchanged; we're just
+   repositioning them into the console layout and adjusting spacing. */
+.mf-stageroom--studio .mf-stage-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.5rem;
+    min-width: 11rem;
+}
+
+.mf-stageroom--studio .mf-stage-sources__label {
+    font-size: 0.65rem;
+    line-height: 1;
+}
+
+.mf-stageroom--studio .mf-stage-sources__row {
+    gap: 0.3rem;
+}
+
+.mf-stageroom--studio .mf-stage-sources__chip {
+    flex: 1 1 auto;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+/* —— Studio controls: presentation panel ————————————————————————— */
+
+/* Presentation panel (video upload, playback, drawing) fills the lower-right
+   dock when active; styled as a console surface matching Sources above. */
+.mf-stageroom--studio .mf-stage-presentation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    background: var(--kf-steel);
+}
+
+.mf-stageroom--studio .mf-stage-presentation__head {
+    gap: 0.3rem;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__label {
+    font-size: 0.65rem;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__stop {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex-shrink: 0;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__stop svg {
+    width: 0.7rem;
+    height: 0.7rem;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__stage {
+    max-height: 20vh;
+    aspect-ratio: 16 / 9;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__bar {
+    gap: 0.3rem;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+.mf-stageroom--studio .mf-stage-presentation__time {
+    font-size: 0.65rem;
+}
+
+/* —— Studio control bar ———————————————————————————————————————— */
+
+/* The primary control bar (mute, camera, screen, react, etc.) is
+   docked at the bottom of the monitor in the Studio, not floating. */
+.mf-stageroom--studio .mf-stage-control-bar {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    width: 100%;
+    flex: 0 0 auto;
+    border-radius: 0;
+}
+
+/* —— Studio self-preview ——————————————————————————————————————— */
+
+/* The self-preview (floating camera/screen monitor) moves into the
+   Program frame as a PiP (picture-in-picture) corner badge in the Studio.
+   Visible in the lower-right corner of the monitor. */
+.mf-stageroom--studio .mf-stage-self-preview {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    z-index: 35;
+    width: 6.5rem;
+    top: auto;
+}
+
+.mf-stageroom--studio .mf-stage-self-preview__video {
+    border: 2px solid var(--kf-line-strong);
+    aspect-ratio: 4 / 3;
+}
+
+/* —— Mobile: Studio collapses to single-column ———————————————— */
+
+@media (max-width: 1279.98px) {
+    .mf-stageroom--host.mf-stageroom--studio {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto auto;
+    }
+
+    .mf-stageroom--studio .mf-stage-sources {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4;
+        flex-direction: row;
+        border-bottom: 1px solid var(--kf-line-strong);
+        border-right: none;
+    }
+
+    .mf-stageroom--studio .mf-stage-presentation {
+        grid-column: 1 / 2;
+        grid-row: 4 / 5;
+        border-top: 1px solid var(--kf-line-strong);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mf-stageroom--studio .mf-stageroom__main {
+        gap: 0.3rem;
+        padding: 0.5rem;
+    }
+
+    .mf-stageroom--studio .mf-stage-monitor {
+        border-width: 1px;
+        min-height: 40vw;
+    }
+
+    .mf-stageroom--studio .mf-stage-self-preview {
+        width: 5rem;
+        bottom: 0.3rem;
+        right: 0.3rem;
+    }
+
+    .mf-stageroom--studio .mf-stage-sources,
+    .mf-stageroom--studio .mf-stage-presentation {
+        padding: 0.4rem;
+    }
+
+    .mf-stageroom--studio .mf-stage-presentation__stage {
+        max-height: 15vh;
+    }
+}
