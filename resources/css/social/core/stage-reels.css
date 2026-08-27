@@ -1,0 +1,324 @@
+/*
+ * Stage "Kickoff" redesign — Viewer/Listener Reels register.
+ *
+ * The Reels screen is the broadcast viewer experience: springy, alive, always
+ * breathing. Glass over video/backdrop, never a flat panel. The video (whether
+ * a host's camera, a screen share, or a presentation) dominates the viewport,
+ * and UI chrome (viewer count, reactions, co-speakers) floats over it as
+ * transparent overlay elements.
+ *
+ * Loaded after stage-kickoff.css in social.css. Viewer-only; never combined
+ * with --host. Uses the Kickoff token system (--kf-* variables) exclusively.
+ */
+
+/* —— Reels shell: full-bleed video experience ————————————————— */
+
+/* Viewer layout: the video/hero fills the screen, UI floats over. Glass/
+   transparency is the key aesthetic — no solid panel backgrounds, only the
+   live feed and transparent overlays. */
+.mf-stageroom--viewer.mf-stageroom--reels {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #000000;
+}
+
+.mf-stageroom--reels .mf-stageroom__main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* No background override — the base .mf-stageroom__main rule in stage.css
+       already sets pure black (var(--mf-canvas)), which is what should show
+       here (this element mostly sits behind the absolutely-positioned
+       .mf-stage-monitor anyway, so it's rarely visible on its own). */
+}
+
+/* —— Main video frame ——————————————————————————————————————— */
+
+/* The hero or speaker deck fills the viewport; the component itself
+   is unchanged, just positioned for full-bleed viewing. */
+/* Pure black by default (broadcast "no signal" — see the base rule in
+   stage.css); the selected stadium backdrop image, if any, is the one thing
+   allowed to override that. Layered here (not left to the stage.css rule
+   alone) since this selector's extra specificity would otherwise shadow it. */
+.mf-stageroom--reels .mf-stage-monitor {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-canvas) 78%, transparent) 0%,
+            color-mix(in srgb, var(--mf-canvas) 90%, transparent) 55%,
+            var(--mf-canvas) 100%
+        ),
+        var(--mf-stage-bg-image, none) center / cover no-repeat,
+        var(--mf-canvas);
+    z-index: 10;
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__stage {
+    width: 100%;
+    height: 100%;
+}
+
+/* —— Overlay chrome: header badges ——————————————————————————— */
+
+/* Live badge and viewer count float above the video in the top-left corner
+   on a glass surface (semi-transparent, blurred background). */
+.mf-stageroom--reels .mf-stage-hero-deck__overlay--top {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-steel) 18%, transparent);
+    border: 1px solid var(--kf-line-strong);
+    backdrop-filter: blur(8px);
+}
+
+.mf-stageroom--reels .mf-stage-live-chip {
+    background: transparent;
+    border: 1px solid var(--kf-amber);
+    color: var(--kf-amber);
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__watching {
+    color: var(--kf-white);
+    font-size: 0.8rem;
+}
+
+/* —— Overlay chrome: co-speakers row ——————————————————————— */
+
+/* "Also on mic" co-speakers appear as a floating pill row below the video,
+   on glass surfaces. On large screens they're visible; on mobile they may
+   collapse or reflow. */
+.mf-stageroom--reels .mf-stage-hero-deck__cospeakers {
+    position: absolute;
+    bottom: 5.5rem;
+    left: 0.8rem;
+    right: 0.8rem;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__cospeakers-label {
+    font-size: 0.65rem;
+    color: var(--kf-muted);
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__cospeakers-row {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+    /* Fade right edge to indicate scroll */
+    mask-image: linear-gradient(90deg, black 85%, transparent 100%);
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__cochip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-steel) 22%, transparent);
+    border: 1px solid var(--kf-line);
+    color: var(--kf-white);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    backdrop-filter: blur(6px);
+    transition: all var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__cochip.is-clickable {
+    cursor: pointer;
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__cochip.is-clickable:hover {
+    background: color-mix(in srgb, var(--kf-steel) 35%, transparent);
+    border-color: var(--kf-line-strong);
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__coname {
+    max-width: 8ch;
+}
+
+.mf-stageroom--reels .mf-stage-hero-deck__live-dot {
+    flex-shrink: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kf-amber);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--kf-amber) 25%, transparent);
+}
+
+/* —— Control bar: repositioned for Reels ———————————————— */
+
+/* The control bar (reactions, mute, camera, etc.) docks at the bottom
+   of the screen on a glass surface in Reels, just above the safe area. */
+.mf-stageroom--reels .mf-stage-control-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    width: 100%;
+    height: auto;
+    padding: 0.6rem 0.8rem calc(0.8rem + var(--mf-safe-bottom));
+    background: color-mix(in srgb, var(--kf-steel) 20%, transparent);
+    border-top: 1px solid var(--kf-line);
+    border-radius: 0;
+    backdrop-filter: blur(8px);
+}
+
+/* —— Reaction FAB ————————————————————————————————————————— */
+
+/* The reaction floating button sits above the control bar on the right,
+   on glass. Viewers tap to react with animated emojis that float up. */
+.mf-stageroom--reels .mf-stage-react-fab {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(var(--mf-stage-footer-h, 3rem) + 1rem + var(--mf-safe-bottom));
+    z-index: 45;
+}
+
+.mf-stageroom--reels .mf-stage-react-fab__btn {
+    padding: 0.6rem;
+    border: 1px solid var(--kf-line-strong);
+    background: color-mix(in srgb, var(--kf-steel) 25%, transparent);
+    border-radius: var(--kf-radius-full);
+    backdrop-filter: blur(6px);
+    transition: all var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.mf-stageroom--reels .mf-stage-react-fab__btn:hover {
+    background: color-mix(in srgb, var(--kf-steel) 40%, transparent);
+    border-color: var(--kf-line-strong);
+}
+
+/* —— Self-preview in Reels ———————————————————————————— */
+
+/* The self-preview (your camera or screen) docks in the lower-right
+   corner as a PiP bubble on glass, stacked above the reaction FAB.
+   Same compact fixed positioning as the host Studio, but glass-styled. */
+.mf-stageroom--reels .mf-stage-self-preview {
+    position: fixed;
+    bottom: calc(var(--mf-stage-footer-h, 3rem) + 6.5rem + 1rem + var(--mf-safe-bottom));
+    right: 1rem;
+    z-index: 40;
+    width: 7rem;
+    top: auto;
+    gap: 0.2rem;
+}
+
+.mf-stageroom--reels .mf-stage-self-preview__frame {
+    position: relative;
+    border-radius: var(--kf-radius-md);
+    overflow: hidden;
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px var(--kf-line-strong);
+}
+
+.mf-stageroom--reels .mf-stage-self-preview__video {
+    border: 1px solid var(--kf-line-strong);
+    background: #000000;
+}
+
+.mf-stageroom--reels .mf-stage-self-preview__label {
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-steel) 28%, transparent);
+    border: 1px solid var(--kf-line);
+    backdrop-filter: blur(4px);
+    color: var(--kf-white);
+    font-size: 0.65rem;
+}
+
+.mf-stageroom--reels .mf-stage-self-preview__close {
+    background: color-mix(in srgb, var(--kf-steel) 35%, transparent);
+    border: 1px solid var(--kf-line);
+}
+
+/* —— Hidden elements: no visible sources/presentation in Reels ——— */
+
+/* Viewers never see the sources strip or presentation controls — those
+   are host-only. Hide them completely (not just display:none, so they
+   don't mount in the DOM at all if the component is smart about it). */
+.mf-stageroom--reels .mf-stage-sources {
+    display: none;
+}
+
+.mf-stageroom--reels .mf-stage-presentation {
+    display: none;
+}
+
+/* —— Mobile adjustments ————————————————————————————————— */
+
+@media (max-width: 767.98px) {
+    .mf-stageroom--reels .mf-stage-hero-deck__overlay--top {
+        top: 0.6rem;
+        left: 0.6rem;
+        padding: 0.4rem 0.7rem;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .mf-stageroom--reels .mf-stage-hero-deck__cospeakers {
+        bottom: 4.5rem;
+        left: 0.6rem;
+        right: 0.6rem;
+    }
+
+    .mf-stageroom--reels .mf-stage-control-bar {
+        padding: 0.5rem 0.6rem calc(0.6rem + var(--mf-safe-bottom));
+    }
+
+    .mf-stageroom--reels .mf-stage-react-fab {
+        right: 0.8rem;
+        bottom: calc(3.5rem + 0.8rem + var(--mf-safe-bottom));
+    }
+
+    .mf-stageroom--reels .mf-stage-self-preview {
+        width: 6rem;
+        bottom: calc(3.5rem + 6rem + 0.8rem + var(--mf-safe-bottom));
+        right: 0.8rem;
+    }
+}
+
+/* —— Reduced motion ————————————————————————————————————— */
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-stageroom--reels .mf-stage-hero-deck__cochip {
+        transition: none;
+    }
+
+    .mf-stageroom--reels .mf-stage-react-fab__btn {
+        transition: none;
+    }
+}

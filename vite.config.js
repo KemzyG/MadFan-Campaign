@@ -22,6 +22,22 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                // Stage "Kickoff" redesign — condensed broadcast-graphics display
+                // face plus its body/mono pairing (see stage-kickoff.css). Every
+                // other family named in tokens.css (Fraunces, Bebas Neue,
+                // Montserrat) is declared only as a CSS fallback chain and was
+                // never actually registered here, so it silently renders as the
+                // fallback (Georgia/sans-serif/etc) today — these three are
+                // registered for real so Kickoff's type identity actually loads.
+                bunny('Big Shoulders Display', {
+                    weights: [600, 700],
+                }),
+                bunny('IBM Plex Sans', {
+                    weights: [400, 500, 600],
+                }),
+                bunny('IBM Plex Mono', {
+                    weights: [400, 500],
+                }),
             ],
         }),
         react(),

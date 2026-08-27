@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Contracts\LiveStage\MediaProvider;
 use App\Enums\AdminPermission;
 use App\Listeners\LogFailedAuthentication;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
 use App\Services\Admin\AdminOrganizationContext;
+use App\Services\LiveStage\Media\LiveKitMediaProvider;
 use App\Services\Security\ChatMessageCipher;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AdminOrganizationContext::class);
         $this->app->singleton(ChatMessageCipher::class);
+
+        // Live Stage media plane. Swapping providers later (or A/B-ing two)
+        // means rebinding this line — nothing else in the app names LiveKit.
+        $this->app->singleton(MediaProvider::class, LiveKitMediaProvider::class);
     }
 
     public function boot(): void
@@ -109,6 +115,23 @@ class AppServiceProvider extends ServiceProvider
         // never competes with the room poll; generous enough for a couple of tabs.
         RateLimiter::for('stage-heartbeat', fn ($request) => Limit::perMinute(240)->by(
             'stage-heartbeat|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        // Live Stage — same per-bucket-per-user shape as the Stage limiters above.
+        RateLimiter::for('live-stage-poll', fn ($request) => Limit::perMinute(240)->by(
+            'live-stage-poll|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        RateLimiter::for('live-stage-heartbeat', fn ($request) => Limit::perMinute(240)->by(
+            'live-stage-heartbeat|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        RateLimiter::for('live-stage-comment', fn ($request) => Limit::perMinute(30)->by(
+            'live-stage-comment|'.($request->user()?->id ?: $request->ip()),
+        ));
+
+        RateLimiter::for('live-stage-reaction', fn ($request) => Limit::perMinute(120)->by(
+            'live-stage-reaction|'.($request->user()?->id ?: $request->ip()),
         ));
 
         Event::listen(Failed::class, LogFailedAuthentication::class);

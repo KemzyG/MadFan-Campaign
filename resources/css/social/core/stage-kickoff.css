@@ -1,0 +1,267 @@
+/*
+ * "Kickoff" — the from-scratch Stage redesign's design system.
+ *
+ * Two registers share one palette: the Studio (host) is a console — instant,
+ * hardware-feeling, never idles — and the Reels screen (viewer/listener) is a
+ * feed — springy, alive, always breathing a little. --kf-steel exists only
+ * for the Studio register; the Reels screen is always glass over video/backdrop,
+ * never a flat panel. --kf-amber marks "a broadcast is happening" (Streaming
+ * and Voice, single-channel), --kf-green marks "a conversation is happening"
+ * (Video, multi-cam) — that color split is itself a piece of information, not
+ * decoration, so don't reuse them interchangeably.
+ *
+ * Loaded after stage.css in social.css. New, disjoint class namespace (`kf-`)
+ * — nothing here overrides `.mf-stage*`; the redesigned components use these
+ * classes exclusively and the old `.mf-stage*` studio/reels rules become dead
+ * weight once Show.jsx stops mounting the old components (left for a later
+ * cleanup pass rather than deleted mid-redesign).
+ */
+
+:root {
+    --kf-ink: #0e1912; /* Pitch Ink — base ground, everywhere */
+    --kf-steel: #1c2723; /* Console Steel — Studio-only elevated surface */
+    --kf-white: #f4f6ef; /* Floodlight White — primary text/glyphs, both registers */
+    --kf-muted: color-mix(in srgb, #f4f6ef 62%, transparent);
+    --kf-muted-strong: color-mix(in srgb, #f4f6ef 78%, transparent);
+    --kf-line: color-mix(in srgb, #f4f6ef 14%, transparent);
+    --kf-line-strong: color-mix(in srgb, #f4f6ef 24%, transparent);
+    --kf-amber: #ffb020; /* Kit Amber — broadcast register: Voice + Streaming, LIVE, GO LIVE, presentation ink */
+    --kf-amber-dim: color-mix(in srgb, #ffb020 55%, transparent);
+    --kf-green: #33c97a; /* Pitch Green — conversation register: Video, mic-live, raise-hand granted */
+    --kf-green-dim: color-mix(in srgb, #33c97a 55%, transparent);
+    --kf-red: #e8433a; /* Card Red — alerts/end-stage only, never decorative */
+
+    /* Registered for real via bunny() in vite.config.js (unlike tokens.css's
+       Fraunces/Bebas Neue/Montserrat, which are fallback-only chains that
+       silently render as Georgia/sans-serif today) — var(--font-*) is the
+       vite-plugin-generated variable, already paired with its own
+       metric-matched "…fallback" face, so these load for real. */
+    --kf-font-display: var(--font-big-shoulders-display, "Big Shoulders Display"), "Oswald", sans-serif;
+    --kf-font-body: var(--font-ibm-plex-sans, "IBM Plex Sans"), "Inter", ui-sans-serif, sans-serif;
+    --kf-font-mono: var(--font-ibm-plex-mono, "IBM Plex Mono"), ui-monospace, monospace;
+
+    --kf-radius-xs: 4px; /* studio controls/chips */
+    --kf-radius-sm: 8px; /* studio panels */
+    --kf-radius-md: 14px; /* viewer overlay pills, reaction buttons */
+    --kf-radius-full: 999px; /* avatars, Kickoff Ring, LIVE badge, form toggles */
+
+    --kf-ease-console: cubic-bezier(0.2, 0, 0.2, 1); /* instant, no bounce */
+    --kf-ease-feed: cubic-bezier(0.34, 1.56, 0.64, 1); /* slight spring overshoot */
+    --kf-dur-console: 120ms;
+    --kf-dur-console-panel: 160ms;
+    --kf-dur-feed: 220ms;
+}
+
+@media (prefers-color-scheme: light) {
+    /* Kickoff is a deliberately fixed dark broadcast palette in both app
+       themes — a lit stage in a dark room reads as a stage regardless of the
+       viewer's OS theme preference, the same reasoning the stadium-hero and
+       Stage studio-shell surfaces already use elsewhere in this file's family. */
+    :root {
+        color-scheme: dark;
+    }
+}
+
+/* —— Kickoff Ring — the signature motif ————————————————————————————— */
+.kf-ring {
+    display: block;
+    overflow: visible;
+    flex-shrink: 0;
+}
+
+.kf-ring__base {
+    stroke: var(--kf-line-strong);
+}
+
+.kf-ring__arc {
+    stroke: var(--kf-muted);
+    stroke-linecap: round;
+    transform-origin: center;
+    transition: stroke var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.kf-ring--live .kf-ring__arc {
+    stroke: var(--kf-amber);
+    animation: kf-comet-spin 1.6s linear infinite;
+}
+
+.kf-ring--live.kf-ring--conversation .kf-ring__arc {
+    stroke: var(--kf-green);
+}
+
+.kf-ring--raised .kf-ring__arc {
+    stroke: var(--kf-green);
+    animation: kf-ring-pulse 1.4s var(--kf-ease-feed) infinite;
+}
+
+.kf-ring--reduced .kf-ring__arc {
+    animation: none !important;
+}
+
+@keyframes kf-comet-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes kf-ring-pulse {
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Studio register: the same split-arc idea squared into viewfinder corner
+   brackets around the main monitor, instead of a full ring. */
+.kf-viewfinder {
+    position: relative;
+}
+
+.kf-viewfinder::before,
+.kf-viewfinder::after,
+.kf-viewfinder__tl,
+.kf-viewfinder__tr,
+.kf-viewfinder__bl,
+.kf-viewfinder__br {
+    content: '';
+    position: absolute;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-color: var(--kf-muted);
+    border-style: solid;
+    border-width: 0;
+    transition: border-color var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-viewfinder__tl {
+    top: -1px;
+    left: -1px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+}
+
+.kf-viewfinder__tr {
+    top: -1px;
+    right: -1px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+}
+
+.kf-viewfinder__bl {
+    bottom: -1px;
+    left: -1px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+}
+
+.kf-viewfinder__br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+}
+
+.kf-viewfinder--live .kf-viewfinder__tl,
+.kf-viewfinder--live .kf-viewfinder__tr,
+.kf-viewfinder--live .kf-viewfinder__bl,
+.kf-viewfinder--live .kf-viewfinder__br {
+    border-color: var(--kf-amber);
+}
+
+.kf-viewfinder--conversation.kf-viewfinder--live .kf-viewfinder__tl,
+.kf-viewfinder--conversation.kf-viewfinder--live .kf-viewfinder__tr,
+.kf-viewfinder--conversation.kf-viewfinder--live .kf-viewfinder__bl,
+.kf-viewfinder--conversation.kf-viewfinder--live .kf-viewfinder__br {
+    border-color: var(--kf-green);
+}
+
+/* —— Shared broadcast chrome atoms ——————————————————————————————————— */
+
+/* LIVE badge: the capsule glows (ambient, 2s ease-in-out); the dot inside it
+   blinks on a steady ~1s rec-light cadence — two different rhythms, on
+   purpose, so the badge always reads "on" while the dot reads "recording". */
+.kf-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.5rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-amber) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--kf-amber) 45%, transparent);
+    color: var(--kf-amber);
+    font-family: var(--kf-font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: kf-badge-glow 2s ease-in-out infinite;
+}
+
+.kf-live-badge__dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kf-amber);
+    animation: kf-rec-blink 1s steps(1, end) infinite;
+}
+
+@keyframes kf-badge-glow {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--kf-amber) 0%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0.6rem 0 color-mix(in srgb, var(--kf-amber) 35%, transparent);
+    }
+}
+
+@keyframes kf-rec-blink {
+    0%,
+    49% {
+        opacity: 1;
+    }
+    50%,
+    100% {
+        opacity: 0.25;
+    }
+}
+
+/* Odometer-style digit roll for viewer counts / stage timer — each changed
+   digit spins vertically rather than cross-fading. Component-driven (a key
+   change per digit remounts this wrapper), CSS only supplies the motion. */
+.kf-odometer {
+    display: inline-flex;
+    font-family: var(--kf-font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.kf-odometer__digit {
+    display: inline-block;
+    animation: kf-digit-roll 260ms var(--kf-ease-console) both;
+}
+
+@keyframes kf-digit-roll {
+    from {
+        transform: translateY(-40%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-ring__arc,
+    .kf-live-badge,
+    .kf-live-badge__dot,
+    .kf-odometer__digit {
+        animation: none !important;
+    }
+}

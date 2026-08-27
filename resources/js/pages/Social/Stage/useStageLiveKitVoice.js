@@ -37,6 +37,7 @@ export function createStageLiveKitVoiceSession({
     onActiveSpeakers,
     onPeerState,
     onVideoTrack,
+    onPresentationState,
 }) {
     let room = null;
     /** Per remote speaker: last emitted connection state, keyed by numeric identity (user_id). */
@@ -46,6 +47,17 @@ export function createStageLiveKitVoiceSession({
      *  element to attach to; components pull them out via `getVideoElement()` and mount
      *  into their own tile via a ref, same interop pattern as the hidden `<audio>` elements. */
     const videoElements = new Map();
+    /**
+     * Presentation mode ("upload a video and share it, with drawing"): a hidden
+     * `<video>` plays the host's local file (never uploaded anywhere — the file
+     * never needs to leave their browser), a `<canvas>` redraws it every frame
+     * plus any annotation strokes on top, and canvas.captureStream() is what
+     * actually gets published — so drawing and playback state need no separate
+     * sync channel at all: viewers are just watching the composited canvas as
+     * an ordinary screen-share video track, frame for frame, already in sync.
+     * `points` holds committed strokes as arrays of {x,y} in canvas pixel space.
+     */
+    let presentation = null;
     let stopped = false;
     let connecting = false;
     let reconnectTimer = null;
@@ -514,6 +526,8 @@ export function createStageLiveKitVoiceSession({
     }
 
     async function disconnectRoom() {
+        await stopPresentationInternal();
+        emitPresentationState();
         if (room) {
             try {
                 room.disconnect();
@@ -703,6 +717,236 @@ export function createStageLiveKitVoiceSession({
         }
     }
 
+    function emitPresentationState() {
+        if (typeof onPresentationState !== 'function') {
+            return;
+        }
+        if (!presentation) {
+            onPresentationState(null);
+            return;
+        }
+        const { video, drawing } = presentation;
+        onPresentationState({
+            playing: !video.paused && !video.ended,
+            currentTime: video.currentTime || 0,
+            duration: Number.isFinite(video.duration) ? video.duration : 0,
+            drawing,
+        });
+    }
+
+    function drawArrowhead(ctx, from, to, size) {
+        const angle = Math.atan2(to.y - from.y, to.x - from.x);
+        ctx.beginPath();
+        ctx.moveTo(to.x, to.y);
+        ctx.lineTo(to.x - size * Math.cos(angle - Math.PI / 6), to.y - size * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(to.x, to.y);
+        ctx.lineTo(to.x - size * Math.cos(angle + Math.PI / 6), to.y - size * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+    }
+
+    function presentationDrawFrame() {
+        if (!presentation) {
+            return;
+        }
+        const { video, canvas, ctx, points } = presentation;
+        if (video.readyState >= 2) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#ff5470';
+        ctx.lineWidth = Math.max(3, canvas.width * 0.004);
+        for (const stroke of points) {
+            if (stroke.length < 2) {
+                continue;
+            }
+            ctx.beginPath();
+            ctx.moveTo(stroke[0].x, stroke[0].y);
+            for (let i = 1; i < stroke.length; i += 1) {
+                ctx.lineTo(stroke[i].x, stroke[i].y);
+            }
+            ctx.stroke();
+            drawArrowhead(ctx, stroke[stroke.length - 2], stroke[stroke.length - 1], canvas.width * 0.018);
+        }
+
+        presentation.rafId = window.requestAnimationFrame(presentationDrawFrame);
+    }
+
+    async function stopPresentationInternal() {
+        if (!presentation) {
+            return;
+        }
+        const { video, rafId, videoPublication, audioPublication } = presentation;
+        presentation = null;
+        if (rafId) {
+            window.cancelAnimationFrame(rafId);
+        }
+        try {
+            if (videoPublication) {
+                await room?.localParticipant.unpublishTrack(videoPublication.track);
+            }
+        } catch (err) {
+            console.warn('presentation unpublish video', err);
+        }
+        try {
+            if (audioPublication) {
+                await room?.localParticipant.unpublishTrack(audioPublication.track);
+            }
+        } catch (err) {
+            console.warn('presentation unpublish audio', err);
+        }
+        video.pause();
+        const src = video.src;
+        video.removeAttribute('src');
+        video.load();
+        if (src) {
+            URL.revokeObjectURL(src);
+        }
+        video.remove();
+    }
+
+    /** Host picks a local video file — it's never uploaded, only played+redrawn locally and streamed live. */
+    async function startPresentation(file) {
+        if (!room || stopped || !file) {
+            return { ok: false };
+        }
+        await stopPresentationInternal();
+
+        const video = document.createElement('video');
+        video.muted = false;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.src = URL.createObjectURL(file);
+        video.style.position = 'fixed';
+        video.style.width = '0';
+        video.style.height = '0';
+        video.style.opacity = '0';
+        video.style.pointerEvents = 'none';
+        document.body.appendChild(video);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 1280;
+        canvas.height = 720;
+        const ctx = canvas.getContext('2d');
+
+        presentation = { video, canvas, ctx, rafId: null, drawing: false, points: [], videoPublication: null, audioPublication: null };
+
+        await new Promise((resolve) => {
+            video.addEventListener(
+                'loadedmetadata',
+                () => {
+                    if (video.videoWidth && video.videoHeight) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                    }
+                    resolve();
+                },
+                { once: true },
+            );
+        });
+
+        if (!presentation) {
+            // Stopped while waiting on metadata.
+            return { ok: false };
+        }
+
+        try {
+            await video.play();
+        } catch (err) {
+            console.warn('presentation video play', err);
+        }
+
+        presentation.rafId = window.requestAnimationFrame(presentationDrawFrame);
+
+        try {
+            const canvasStream = canvas.captureStream(30);
+            const videoTrack = canvasStream.getVideoTracks()[0];
+            presentation.videoPublication = await room.localParticipant.publishTrack(videoTrack, {
+                source: Track.Source.ScreenShare,
+                name: 'presentation',
+            });
+        } catch (err) {
+            console.warn('presentation publish video', err);
+        }
+
+        try {
+            const mediaStream = video.captureStream ? video.captureStream() : video.mozCaptureStream?.();
+            const audioTrack = mediaStream?.getAudioTracks?.()[0];
+            if (audioTrack && presentation) {
+                presentation.audioPublication = await room.localParticipant.publishTrack(audioTrack, {
+                    source: Track.Source.ScreenShareAudio,
+                    name: 'presentation-audio',
+                });
+            }
+        } catch (err) {
+            console.warn('presentation publish audio', err);
+        }
+
+        video.addEventListener('timeupdate', emitPresentationState);
+        video.addEventListener('play', emitPresentationState);
+        video.addEventListener('pause', emitPresentationState);
+        video.addEventListener('ended', emitPresentationState);
+        emitPresentationState();
+
+        return { ok: true };
+    }
+
+    async function stopPresentation() {
+        await stopPresentationInternal();
+        emitPresentationState();
+    }
+
+    function presentationPlay() {
+        presentation?.video.play().catch(() => {});
+    }
+
+    function presentationPause() {
+        presentation?.video.pause();
+    }
+
+    function presentationSeek(seconds) {
+        if (presentation) {
+            presentation.video.currentTime = Math.max(0, seconds);
+        }
+    }
+
+    function getPresentationCanvas() {
+        return presentation?.canvas || null;
+    }
+
+    function setPresentationDrawing(enabled) {
+        if (presentation) {
+            presentation.drawing = Boolean(enabled);
+        }
+    }
+
+    function presentationClearDrawing() {
+        if (presentation) {
+            presentation.points = [];
+        }
+    }
+
+    function presentationPointerDown(x, y) {
+        if (!presentation?.drawing) {
+            return;
+        }
+        presentation.points.push([{ x, y }]);
+    }
+
+    function presentationPointerMove(x, y) {
+        if (!presentation?.drawing) {
+            return;
+        }
+        const stroke = presentation.points[presentation.points.length - 1];
+        if (stroke) {
+            stroke.push({ x, y });
+        }
+    }
+
     // Mesh API surface compatibility (signals unused for LiveKit).
     async function ingestSignals() {}
 
@@ -717,6 +961,16 @@ export function createStageLiveKitVoiceSession({
         getVideoElement,
         setCameraEnabled,
         setScreenShareEnabled,
+        startPresentation,
+        stopPresentation,
+        presentationPlay,
+        presentationPause,
+        presentationSeek,
+        getPresentationCanvas,
+        setPresentationDrawing,
+        presentationClearDrawing,
+        presentationPointerDown,
+        presentationPointerMove,
         driver: 'livekit',
     };
 }
