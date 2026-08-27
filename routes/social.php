@@ -16,6 +16,13 @@ use App\Http\Controllers\Api\Social\PredictionController as ApiSocialPredictionC
 use App\Http\Controllers\Api\Social\StageInviteCandidatesController as ApiSocialStageInviteCandidatesController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageCommentController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageLifecycleController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageMediaTokenController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageModerationController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageReactionController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageViewerController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
 use App\Http\Controllers\Inertia\Social\SocialClubProfileController;
@@ -277,6 +284,49 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/stage/{stage}/livekit-token', SocialStageLiveKitTokenController::class)
                     ->middleware('throttle:60,1')
                     ->name('stage.livekit-token');
+
+                // Live Stage — new ground-up rebuild (see LiveStageService). A
+                // separate namespace/table set from the Stage voice room above:
+                // that feature keeps running untouched while Live Stage is
+                // built out and reviewed, per the rebuild plan's Phase 1.
+                Route::get('/live', [LiveStageController::class, 'index'])->name('live.index');
+                Route::post('/live', [LiveStageController::class, 'store'])
+                    ->middleware('throttle:10,1')
+                    ->name('live.store');
+                Route::get('/live/{liveStage}', [LiveStageController::class, 'show'])->name('live.show');
+                Route::get('/live/{liveStage}/state', [LiveStageController::class, 'state'])
+                    ->middleware('throttle:live-stage-poll')
+                    ->name('live.state');
+                Route::post('/live/{liveStage}/start', [LiveStageLifecycleController::class, 'start'])
+                    ->middleware('throttle:20,1')
+                    ->name('live.start');
+                Route::post('/live/{liveStage}/end', [LiveStageLifecycleController::class, 'end'])
+                    ->middleware('throttle:20,1')
+                    ->name('live.end');
+                Route::post('/live/{liveStage}/leave', [LiveStageViewerController::class, 'leave'])
+                    ->middleware('throttle:30,1')
+                    ->name('live.leave');
+                Route::post('/live/{liveStage}/heartbeat', [LiveStageViewerController::class, 'heartbeat'])
+                    ->middleware('throttle:live-stage-heartbeat')
+                    ->name('live.heartbeat');
+                Route::post('/live/{liveStage}/comments', [LiveStageCommentController::class, 'store'])
+                    ->middleware('throttle:live-stage-comment')
+                    ->name('live.comments.store');
+                Route::delete('/live/{liveStage}/comments/{comment}', [LiveStageCommentController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('live.comments.destroy');
+                Route::post('/live/{liveStage}/reactions', [LiveStageReactionController::class, 'store'])
+                    ->middleware('throttle:live-stage-reaction')
+                    ->name('live.reactions.store');
+                Route::get('/live/{liveStage}/media-token', LiveStageMediaTokenController::class)
+                    ->middleware('throttle:60,1')
+                    ->name('live.media-token');
+                Route::post('/live/{liveStage}/viewers/{user}/mute', [LiveStageModerationController::class, 'mute'])
+                    ->middleware('throttle:30,1')
+                    ->name('live.viewers.mute');
+                Route::post('/live/{liveStage}/viewers/{user}/remove', [LiveStageModerationController::class, 'remove'])
+                    ->middleware('throttle:30,1')
+                    ->name('live.viewers.remove');
 
                 Route::get('/videos', [SocialVideoController::class, 'index'])->name('videos.index');
                 Route::post('/videos', [SocialVideoController::class, 'store'])

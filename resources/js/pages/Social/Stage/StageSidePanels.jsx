@@ -8,7 +8,10 @@ import { useStageSession } from './StageSessionContext';
 /**
  * Chat becomes its own column (≥1024px) instead of a rail tab. On laptops
  * (1024–1279px) the People+Info column is an overlay opened from the toggle in
- * this header; at ≥1280px both side columns are always visible.
+ * this header; at ≥1280px both side columns are always visible. `onOpenPeople`
+ * is omitted entirely on a Reels viewer screen (see Show.jsx's
+ * `showPeoplePanel`) — there's no panel behind it to open, so the toggle drops
+ * rather than opening nothing.
  */
 export function ChatPanel({ onOpenPeople }) {
     const { chatUnread } = useStageSession();
@@ -24,15 +27,17 @@ export function ChatPanel({ onOpenPeople }) {
                         </span>
                     ) : null}
                 </p>
-                <button
-                    type="button"
-                    className="mf-stage-icon-btn mf-stage-icon-btn--sm mf-stage-panel__people-toggle"
-                    aria-label="People & info"
-                    title="People & info"
-                    onClick={onOpenPeople}
-                >
-                    <IconUsers />
-                </button>
+                {onOpenPeople ? (
+                    <button
+                        type="button"
+                        className="mf-stage-icon-btn mf-stage-icon-btn--sm mf-stage-panel__people-toggle"
+                        aria-label="People & info"
+                        title="People & info"
+                        onClick={onOpenPeople}
+                    >
+                        <IconUsers />
+                    </button>
+                ) : null}
             </header>
             <div className="mf-stage-panel__body">
                 <StageChatPane />

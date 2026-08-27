@@ -23,7 +23,7 @@
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr auto;
     min-height: 100vh;
-    background: var(--kf-ink);
+    background: #000000;
     gap: 0;
 }
 
@@ -56,7 +56,12 @@
     grid-row: 2 / 3;
 }
 
-/* Program monitor: the central video frame with corner viewfinder brackets. */
+/* Program monitor: the central video frame with corner viewfinder brackets.
+   Pure black by default (broadcast "no signal" — see the base rule in
+   stage.css); the selected stadium backdrop image, if any, is the one thing
+   allowed to override that. Layered here rather than left to the stage.css
+   rule alone since this selector's extra specificity would otherwise shadow
+   it for the host's own Studio view. */
 .mf-stageroom--studio .mf-stage-monitor {
     position: relative;
     flex: 1 1 auto;
@@ -65,7 +70,15 @@
     justify-content: center;
     gap: 0;
     min-height: 0;
-    background: var(--kf-ink);
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-canvas) 78%, transparent) 0%,
+            color-mix(in srgb, var(--mf-canvas) 90%, transparent) 55%,
+            var(--mf-canvas) 100%
+        ),
+        var(--mf-stage-bg-image, none) center / cover no-repeat,
+        var(--mf-canvas);
     border: 2px solid var(--kf-line-strong);
     border-radius: 0;
 }

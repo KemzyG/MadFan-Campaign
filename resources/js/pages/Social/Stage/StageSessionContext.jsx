@@ -80,6 +80,8 @@ export function StageSessionProvider({ children }) {
     /** Live `<video>` elements for camera/screen-share tracks, keyed `${userId}:${source}`
      *  — LiveKit-only (see useStageLiveKitVoice); the mesh driver never calls onVideoTrack. */
     const [videoTracks, setVideoTracks] = useState(() => new Map());
+    /** { playing, currentTime, duration, drawing } while I'm presenting, else null. LiveKit-only. */
+    const [presentationState, setPresentationState] = useState(null);
     const [audioOutputState, setAudioOutputState] = useState(getAudioOutput);
     const [currentPath, setCurrentPath] = useState(() =>
         typeof window !== 'undefined' ? window.location.pathname : '',
@@ -208,6 +210,7 @@ export function StageSessionProvider({ children }) {
         setActiveSpeakers(new Set());
         setPeerStates(new Map());
         setVideoTracks(new Map());
+        setPresentationState(null);
     }, []);
 
     const handleActiveSpeakers = useCallback((ids) => {
@@ -270,7 +273,67 @@ export function StageSessionProvider({ children }) {
         if (!voiceRef.current?.setScreenShareEnabled) {
             return { ok: false };
         }
+        // A real screen share and a presentation both publish under the same
+        // ScreenShare source — starting one while the other is live would
+        // fight over that slot, so switching to a real share ends any active
+        // presentation first.
+        if (enabled && voiceRef.current?.stopPresentation) {
+            await voiceRef.current.stopPresentation();
+        }
         return voiceRef.current.setScreenShareEnabled(enabled);
+    }, []);
+
+    // Presentation ("upload a video, present it, draw on it") — LiveKit-only.
+    const handlePresentationState = useCallback((state) => {
+        setPresentationState(state);
+    }, []);
+
+    const startPresentation = useCallback(async (file) => {
+        if (!voiceRef.current?.startPresentation) {
+            return { ok: false };
+        }
+        // Mutual exclusion with a real screen share, same reasoning as above.
+        if (voiceRef.current?.setScreenShareEnabled) {
+            await voiceRef.current.setScreenShareEnabled(false).catch(() => {});
+        }
+        return voiceRef.current.startPresentation(file);
+    }, []);
+
+    const stopPresentation = useCallback(async () => {
+        if (!voiceRef.current?.stopPresentation) {
+            return { ok: false };
+        }
+        return voiceRef.current.stopPresentation();
+    }, []);
+
+    const presentationPlay = useCallback(() => {
+        voiceRef.current?.presentationPlay?.();
+    }, []);
+
+    const presentationPause = useCallback(() => {
+        voiceRef.current?.presentationPause?.();
+    }, []);
+
+    const presentationSeek = useCallback((seconds) => {
+        voiceRef.current?.presentationSeek?.(seconds);
+    }, []);
+
+    const getPresentationCanvas = useCallback(() => voiceRef.current?.getPresentationCanvas?.() ?? null, []);
+
+    const setPresentationDrawing = useCallback((enabled) => {
+        voiceRef.current?.setPresentationDrawing?.(enabled);
+    }, []);
+
+    const presentationClearDrawing = useCallback(() => {
+        voiceRef.current?.presentationClearDrawing?.();
+    }, []);
+
+    const presentationPointerDown = useCallback((x, y) => {
+        voiceRef.current?.presentationPointerDown?.(x, y);
+    }, []);
+
+    const presentationPointerMove = useCallback((x, y) => {
+        voiceRef.current?.presentationPointerMove?.(x, y);
     }, []);
 
     const clearSession = useCallback(() => {
@@ -691,6 +754,7 @@ export function StageSessionProvider({ children }) {
                 onActiveSpeakers: handleActiveSpeakers,
                 onPeerState: handlePeerStates,
                 onVideoTrack: handleVideoTrack,
+                onPresentationState: handlePresentationState,
             });
             session.stageId = stage.id;
             voiceRef.current = session;
@@ -726,6 +790,7 @@ export function StageSessionProvider({ children }) {
         handleActiveSpeakers,
         handlePeerStates,
         handleVideoTrack,
+        handlePresentationState,
     ]);
 
     // If autoplay is blocked, retry on the next page interaction (not a dedicated button).
@@ -815,6 +880,7 @@ export function StageSessionProvider({ children }) {
             activeSpeakers,
             peerStates,
             videoTracks,
+            presentationState,
             voiceConnection,
             audioOutput,
             voiceStatus,
@@ -831,6 +897,16 @@ export function StageSessionProvider({ children }) {
             retryMicAccess,
             toggleCamera,
             toggleScreenShare,
+            startPresentation,
+            stopPresentation,
+            presentationPlay,
+            presentationPause,
+            presentationSeek,
+            getPresentationCanvas,
+            setPresentationDrawing,
+            presentationClearDrawing,
+            presentationPointerDown,
+            presentationPointerMove,
         }),
         [
             activeStageId,
@@ -842,6 +918,7 @@ export function StageSessionProvider({ children }) {
             activeSpeakers,
             peerStates,
             videoTracks,
+            presentationState,
             voiceConnection,
             audioOutput,
             voiceStatus,
@@ -857,6 +934,16 @@ export function StageSessionProvider({ children }) {
             retryMicAccess,
             toggleCamera,
             toggleScreenShare,
+            startPresentation,
+            stopPresentation,
+            presentationPlay,
+            presentationPause,
+            presentationSeek,
+            getPresentationCanvas,
+            setPresentationDrawing,
+            presentationClearDrawing,
+            presentationPointerDown,
+            presentationPointerMove,
         ],
     );
 

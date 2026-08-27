@@ -80,6 +80,34 @@ export function IconCameraOff({ className }) {
     );
 }
 
+export function IconPlay({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M7 5.3v13.4a1 1 0 0 0 1.53.85l10.6-6.7a1 1 0 0 0 0-1.7L8.53 4.45A1 1 0 0 0 7 5.3Z" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
+export function IconPause({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none" />
+            <rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
+export function IconUploadVideo({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <rect x="2.5" y="5.5" width="13" height="13" rx="2.5" />
+            <path d="m15.5 10.5 5-3v9l-5-3" />
+            <path d="M9 8.5v5" />
+            <path d="m6.7 10.8 2.3-2.3 2.3 2.3" />
+        </svg>
+    );
+}
+
 export function IconScreenShare({ className }) {
     return (
         <svg {...IconProps({ className })}>
@@ -388,6 +416,23 @@ export function IconBack({ className }) {
         <svg {...IconProps({ className })}>
             <path d="M19 12H5" />
             <path d="m12 19-7-7 7-7" />
+        </svg>
+    );
+}
+
+export function IconEye({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+    );
+}
+
+export function IconHeart({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
         </svg>
     );
 }

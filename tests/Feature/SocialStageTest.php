@@ -84,6 +84,43 @@ test('onboarded fans can list and create a live stage', function () {
             ->where('voice.driver', 'mesh'));
 });
 
+test('creating a stage defaults to voice type with the media session off', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->post('/social/stage', ['title' => 'Classic terrace chat'])
+        ->assertRedirect();
+
+    $stage = Stage::query()->first();
+
+    expect($stage->type)->toBe(App\Enums\StageType::Voice)
+        ->and($stage->voice_enabled)->toBeFalse();
+});
+
+test('a video or streaming stage starts with its media session already on', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)->post('/social/stage', [
+        'title' => 'Match day co-stream',
+        'type' => 'video',
+    ])->assertRedirect();
+
+    $video = Stage::query()->where('title', 'Match day co-stream')->firstOrFail();
+    expect($video->type)->toBe(App\Enums\StageType::Video)
+        ->and($video->voice_enabled)->toBeTrue();
+
+    $this->actingAs($user)->post('/social/stage', [
+        'title' => 'Solo broadcast',
+        'type' => 'streaming',
+    ])->assertRedirect();
+
+    $streaming = Stage::query()->where('title', 'Solo broadcast')->firstOrFail();
+    expect($streaming->type)->toBe(App\Enums\StageType::Streaming)
+        ->and($streaming->voice_enabled)->toBeTrue();
+});
+
 test('fans can join leave and chat inside a live stage', function () {
     $club = Club::factory()->create();
     $host = socialReadyUser($club);

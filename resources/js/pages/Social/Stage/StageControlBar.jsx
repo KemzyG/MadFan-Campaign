@@ -3,10 +3,12 @@ import StageAudioMenu from './StageAudioMenu';
 import {
     IconCamera,
     IconCameraOff,
+    IconClose,
     IconHand,
     IconMic,
     IconMicOff,
     IconScreenShare,
+    IconUploadVideo,
     IconVoice,
     IconVolume,
     StageIconButton,
@@ -23,6 +25,15 @@ export default function StageControlBar() {
     const actions = useStageActions();
     const [audioMenu, setAudioMenu] = useState(false);
     const audioRef = useRef(null);
+    const presentFileRef = useRef(null);
+
+    function onPresentFileChosen(event) {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (file) {
+            actions.startPresentation(file);
+        }
+    }
 
     useEffect(() => {
         if (!audioMenu) {
@@ -129,6 +140,31 @@ export default function StageControlBar() {
                     >
                         <IconScreenShare />
                     </StageIconButton>
+
+                    {actions.canPresent ? (
+                        <>
+                            <input
+                                ref={presentFileRef}
+                                type="file"
+                                accept="video/*"
+                                className="sr-only"
+                                tabIndex={-1}
+                                onChange={onPresentFileChosen}
+                            />
+                            <StageIconButton
+                                label={actions.presenting ? 'Stop presenting' : 'Present a video'}
+                                active={actions.presenting}
+                                pitch={actions.presenting}
+                                onClick={() =>
+                                    actions.presenting
+                                        ? actions.stopPresentation()
+                                        : presentFileRef.current?.click()
+                                }
+                            >
+                                {actions.presenting ? <IconClose /> : <IconUploadVideo />}
+                            </StageIconButton>
+                        </>
+                    ) : null}
                 </div>
             ) : null}
         </div>

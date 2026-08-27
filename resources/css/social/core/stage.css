@@ -1042,67 +1042,38 @@
     animation: mf-page-in var(--mf-dur) var(--mf-ease) both;
 }
 
-/* Mobile segmented control (Stage / Chat / People). Desktop hides it. */
-.mf-stageroom__segmented {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    gap: 0.2rem;
-    flex-shrink: 0;
-    margin: 0.5rem 0.6rem 0;
-    padding: 0.22rem;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius-panel);
-    background: var(--mf-recess);
-}
+/* Mobile swipe carousel (Chat / Stage / People) replaces a tap-tab segmented
+   control — see the §16 responsive block for the scroll-snap mechanics and
+   Show.jsx for the scroll<->mobileView sync. Base rule is a no-op above
+   1023.98px, where .mf-stageroom becomes a CSS grid instead (§16). */
 
-.mf-stageroom__seg {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding: 0.5rem 0.35rem;
-    border: 0;
-    border-radius: var(--mf-radius);
-    background: transparent;
-    color: var(--mf-muted);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-caption);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    transition:
-        color var(--mf-dur-fast) var(--mf-ease),
-        background var(--mf-dur-fast) var(--mf-ease);
-}
-
-.mf-stageroom__seg.is-active {
-    background: var(--mf-pitch);
-    color: var(--mf-on-fill);
-}
-
-.mf-stageroom__seg-badge {
-    min-width: 1.05rem;
-    height: 1.05rem;
-    padding: 0 0.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-recess-deep);
-    color: inherit;
-    font-size: var(--mf-text-micro);
-    line-height: 1;
-}
-
-/* On the filled segment the count sits on navy, so its chip is a Snow tint. */
-.mf-stageroom__seg.is-active .mf-stageroom__seg-badge {
-    background: color-mix(in srgb, var(--mf-on-fill) 22%, transparent);
-    color: var(--mf-on-fill);
-}
-
-/* Main column: header + scrolling deck + control bar. */
+/*
+ * Main column: header + scrolling deck + control bar — a broadcast studio
+ * console, not a themed page panel. Redefining the surface/ink tokens here
+ * (rather than a manual override on every child selector) re-themes the whole
+ * subtree at once, the same "dark island" technique tokens.css documents for
+ * .mf-invert — but tuned to pure black (the "no signal" broadcast default —
+ * see .mf-stage-monitor for the one thing allowed to override it, a selected
+ * stadium backdrop image) rather than brand navy, and with --mf-pitch swapped
+ * for the dark-context accent .mf-stage-hero already established (#ff5470) so
+ * "on air" affordances (live dot, active mic/camera/screen toggles) actually
+ * read against black instead of nearly disappearing into it. This covers
+ * every token the header/deck/control-bar consume — anything already written
+ * in terms of var(--mf-text) / var(--mf-panel) / var(--mf-recess) /
+ * var(--mf-pitch) etc. picks it up with no per-selector changes needed, the
+ * same guarantee .mf-invert relies on.
+ */
 .mf-stageroom__main {
+    --mf-canvas: #000000;
+    --mf-panel: #0d1613;
+    --mf-elevated: #16211d;
+    --mf-recess: #101a17;
+    --mf-line: color-mix(in srgb, #f4fff8 14%, transparent);
+    --mf-text: #f4fff8;
+    --mf-muted: color-mix(in srgb, #f4fff8 68%, transparent);
+    --mf-pitch: #ff5470;
+    --mf-pitch-dim: color-mix(in srgb, #ff5470 55%, transparent);
+    --mf-rival: #ff6b6b;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1110,6 +1081,8 @@
     min-width: 0;
     min-height: 0;
     overflow: hidden;
+    background: var(--mf-canvas);
+    color: var(--mf-text);
 }
 
 .mf-stageroom__deck {
@@ -1187,44 +1160,8 @@
     text-overflow: ellipsis;
 }
 
-.mf-stageroom__host {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-width: 0;
-}
-
-.mf-stageroom__host-copy {
-    margin: 0;
-    font-size: var(--mf-text-meta);
-    color: var(--mf-muted);
-}
-
-.mf-stageroom__host-role {
-    margin-right: 0.35rem;
-    padding: 0.05rem 0.35rem;
-    border-radius: var(--mf-radius);
-    background: var(--mf-recess-deep);
-    color: var(--mf-muted);
-    font-family: var(--mf-font-mono);
-    font-size: var(--mf-text-micro);
-    letter-spacing: var(--mf-tracking-label);
-    text-transform: uppercase;
-}
-
-.mf-stageroom__club {
-    color: var(--mf-muted);
-}
-
-.mf-stageroom__header-side {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-shrink: 0;
-}
-
 .mf-stageroom__stats {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 0.9rem;
 }
@@ -1252,6 +1189,132 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+/* Reels viewer header — host avatar + title + live badge on the left, watch/
+   like counters on the right (see RoomHeader.jsx's `isReelsViewer` branch).
+   Sits on the same absolute glass-overlay header as every other room (see
+   `.mf-stageroom--viewer .mf-stageroom__header` above); light, fixed-tone
+   text/icon colors here since it's always over video, never the app's panel
+   background — same reasoning as `.mf-stage-hero .mf-stage-hero__title`. */
+.mf-stageroom__host-avatar {
+    flex-shrink: 0;
+}
+
+.mf-stageroom__identity--viewer {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mf-stageroom__title--compact {
+    font-size: var(--mf-text-title);
+    color: #f4fff8;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.mf-stageroom__identity--viewer .mf-stage-live-chip,
+.mf-stageroom__identity--viewer .mf-stage-voice-chip {
+    flex-shrink: 0;
+}
+
+.mf-stageroom__header-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.22rem 0.5rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid rgba(244, 255, 248, 0.22);
+    background: rgba(6, 14, 9, 0.4);
+    color: #f4fff8;
+    font-size: var(--mf-text-micro);
+}
+
+.mf-stageroom__header-stat svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* Stage details sheet — houses what the header used to show inline. */
+.mf-stage-room-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.9rem 1rem 1.1rem;
+    overflow-y: auto;
+}
+
+.mf-stage-room-info__host {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.mf-stage-room-info__host-name {
+    margin: 0;
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-stage-room-info__host-meta {
+    margin: 0;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-stage-room-info__stats {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--mf-line);
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-stage-room-info__chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mf-stage-room-info__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.mf-stage-room-info__action {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-recess);
+    color: var(--mf-text);
+    font-size: var(--mf-text-meta);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s var(--mf-ease), background 0.15s var(--mf-ease);
+}
+
+.mf-stage-room-info__action:hover {
+    border-color: color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
+    background: var(--mf-elevated);
+}
+
+.mf-stage-room-info__action svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    color: var(--mf-muted);
 }
 
 /* —— 5. Speaker deck + tiles ———————————————————————————————————————— */
@@ -1310,6 +1373,267 @@
     font-size: var(--mf-text-section);
     font-weight: 600;
     color: var(--mf-text);
+}
+
+/* Program monitor — frames whatever the deck is showing (hero or grid) as a
+   distinct housed screen inside the studio shell, the way OBS's own preview
+   window sits as a bordered rectangle inside its dark app chrome rather than
+   the whole window being "the monitor." Depth comes from the --mf-panel /
+   --mf-canvas surface-tint step, not a shadow, matching this sheet's own
+   "shape from surface, never shadow" rule (see tokens.css). */
+/* Pure black by default (the "no signal" state of a broadcast frame, not a
+   themed panel) — the selected stadium backdrop image, if any, is the one
+   thing allowed to override that (see --mf-stage-bg-image, set by
+   StageSessionContext.jsx from the host's chosen background_url; falls back
+   to `none` — i.e. just the black — when nothing's selected). Actual video
+   content never shows this: .mf-stage-tile__video and
+   .mf-stage-presentation__stage are opaque pure-black boxes that sit on top
+   and cover it regardless of what backdrop is behind them. */
+.mf-stage-monitor {
+    position: relative;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-panel);
+    /* The scrim is inlined here rather than reused via --mf-stadium-scrim —
+       that token's own definition nests var(--mf-canvas) one level deep, and
+       resolving it through a second custom-property hop doesn't reliably
+       pick up this element's redefined (black) --mf-canvas in every engine.
+       Direct use at this level does. */
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-canvas) 78%, transparent) 0%,
+            color-mix(in srgb, var(--mf-canvas) 90%, transparent) 55%,
+            var(--mf-canvas) 100%
+        ),
+        var(--mf-stage-bg-image, none) center / cover no-repeat,
+        var(--mf-canvas);
+    padding: 1.9rem 0.75rem 0.75rem;
+}
+
+.mf-stage-monitor__tag {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-stage-monitor__tag-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-pitch);
+    animation: mf-stage-pulse 2s var(--mf-ease) infinite;
+}
+
+/* Sources strip — an OBS-style status readout of what you're actually
+   sending, host/speaker-only (a listener has nothing to show here). */
+.mf-stage-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-recess);
+}
+
+.mf-stage-sources__label {
+    color: var(--mf-muted);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    font-size: var(--mf-text-micro);
+}
+
+.mf-stage-sources__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mf-stage-sources__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-stage-sources__chip svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.mf-stage-sources__chip:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.mf-stage-sources__dot {
+    flex-shrink: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-muted);
+}
+
+.mf-stage-sources__chip.is-live {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 14%, var(--mf-elevated));
+    color: var(--mf-pitch);
+}
+
+.mf-stage-sources__chip.is-live .mf-stage-sources__dot {
+    background: var(--mf-pitch);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mf-pitch) 25%, transparent);
+}
+
+/* Presentation mode — host-only. The canvas mounted here is the exact element
+   being captured and streamed (see StagePresentationControls.jsx), so this is
+   both the host's preview monitor and their drawing surface — no separate
+   proxy element, no coordinate remapping beyond CSS-vs-internal-resolution
+   scaling. No playback/annotation sync channel exists because there isn't one
+   needed: viewers watch this same canvas live, frame for frame. */
+.mf-stage-presentation {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 0.7rem;
+    border-top: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 92%, transparent);
+}
+
+/* Presenting takes the Program monitor spot outright (see Show.jsx) instead
+   of docking as a small panel elsewhere — drop the panel chrome (border/bg)
+   so it reads as the monitor's own content, and let the canvas claim the
+   monitor's real height instead of a capped 40vh strip. */
+.mf-stage-monitor > .mf-stage-presentation {
+    padding: 0;
+    border-top: none;
+    background: transparent;
+}
+
+.mf-stage-monitor > .mf-stage-presentation .mf-stage-presentation__stage {
+    max-height: none;
+    min-height: 16rem;
+    flex: 1 1 auto;
+}
+
+.mf-stage-presentation__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mf-stage-presentation__label {
+    color: var(--mf-muted);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+    font-size: var(--mf-text-micro);
+}
+
+.mf-stage-presentation__stop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-recess);
+    color: var(--mf-muted);
+    cursor: pointer;
+}
+
+.mf-stage-presentation__stop svg {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.mf-stage-presentation__stage {
+    position: relative;
+    width: 100%;
+    max-height: 40vh;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-canvas);
+    overflow: hidden;
+    touch-action: none;
+}
+
+.mf-stage-presentation__stage.is-drawing {
+    cursor: crosshair;
+}
+
+.mf-stage-presentation__canvas-el {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.mf-stage-presentation__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mf-stage-presentation__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-recess);
+    color: var(--mf-text);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mf-stage-presentation__btn svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.mf-stage-presentation__btn.is-active {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    background: color-mix(in srgb, var(--mf-pitch) 16%, var(--mf-recess));
+    color: var(--mf-pitch);
+}
+
+.mf-stage-presentation__time {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    white-space: nowrap;
+}
+
+.mf-stage-presentation__seek {
+    flex: 1 1 8rem;
+    min-width: 5rem;
+    accent-color: var(--mf-pitch);
 }
 
 .mf-stage-deck__grid {
@@ -1394,7 +1718,10 @@
     aspect-ratio: 4 / 3;
     border-radius: var(--mf-radius);
     overflow: hidden;
-    background: #0b0f0d;
+    /* Always pure black, never the stadium backdrop — this box is opaque and
+       sits on top of .mf-stage-monitor's background regardless of what's
+       selected there, so actual video content is never tinted by it. */
+    background: #000000;
     border: 1px solid var(--mf-line);
 }
 
@@ -2760,14 +3087,18 @@
     min-width: 0;
 }
 
-/* Create sheet: live backdrop preview. */
+/* Create sheet: live backdrop preview. Fixed flex-shrink: 0 because its
+   overflow:hidden made it the one item __scroll's flex layout was willing to
+   crush down to ~0 to fit everything else — a plain `height` alone can't win
+   against that. */
 .mf-stage-form__preview {
     position: relative;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     justify-content: flex-end;
     gap: 0.4rem;
-    height: 7rem;
+    height: 10rem;
     padding: 0.65rem;
     border: 1px solid var(--mf-line);
     border-radius: var(--mf-radius);
@@ -3055,7 +3386,92 @@
     cursor: pointer;
 }
 
-/* —— 15c. Reaction FAB ————————————————————————————————————————————— */
+/* —— 15c. Self-preview monitor ———————————————————————————————————————
+   A floating "what am I actually sending" check — fixed to the viewport (not
+   the tab-switched .mf-stageroom__main) so it survives Stage/Chat/People on
+   mobile. The video frame itself has no fill colour behind it: only the live
+   feed and a thin ring, so nothing but your actual camera/screen ever shows. */
+.mf-stage-self-preview {
+    position: fixed;
+    z-index: 45;
+    top: calc(var(--mf-header-h) + 0.75rem);
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    width: 8rem;
+    animation: mf-page-in var(--mf-dur-fast) var(--mf-ease) both;
+}
+
+.mf-stage-self-preview__frame {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.mf-stage-self-preview__video {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--mf-radius);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--mf-text) 20%, transparent);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+.mf-stage-self-preview__video-el {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: transparent;
+}
+
+.mf-stage-self-preview__label {
+    padding: 0.14rem 0.5rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-panel) 88%, transparent);
+    border: 1px solid var(--mf-line);
+    color: var(--mf-text);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
+.mf-stage-self-preview__close {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+    cursor: pointer;
+}
+
+.mf-stage-self-preview__close svg {
+    width: 0.65rem;
+    height: 0.65rem;
+}
+
+@media (max-width: 480px) {
+    .mf-stage-self-preview {
+        width: 6rem;
+        top: calc(var(--mf-header-h) + 0.5rem);
+        right: 0.5rem;
+    }
+}
+
+/* —— 15d. Reaction FAB ————————————————————————————————————————————— */
 .mf-stage-react-fab {
     position: absolute;
     right: 1rem;
@@ -3065,6 +3481,103 @@
     flex-direction: column-reverse;
     align-items: center;
     gap: 0.55rem;
+}
+
+/* —— 15e. Reels viewer FAB stack ——————————————————————————————————————
+   A plain viewer has at most audio output (plus mute/unmute once the host
+   promotes them to speaker) and the reaction button — too few to earn a
+   docked control bar, so they're floated as one vertical list of circular
+   buttons instead (see StageViewerFabs + Show.jsx's `isReelsViewer`
+   branch). Sized down from the old control-bar buttons and given generous
+   breathing room between them so the list reads as a deliberate, evenly
+   spaced rail rather than a cluster. Anchors this whole list where the
+   reaction FAB used to sit alone; nesting it inside means
+   .mf-stage-react-fab drops its own absolute positioning to take its place
+   in the stack instead. */
+.mf-stage-fab-stack {
+    position: absolute;
+    right: 1rem;
+    bottom: calc(0.7rem + var(--mf-safe-bottom));
+    z-index: 25;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.mf-stage-fab-stack .mf-stage-react-fab {
+    position: static;
+    inset: auto;
+}
+
+.mf-stage-fab-stack__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-elevated) 92%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+    box-shadow: 0 1px 3px color-mix(in srgb, black 18%, transparent);
+    color: var(--mf-text);
+    cursor: pointer;
+    transition:
+        transform var(--mf-dur-fast) var(--mf-ease),
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        color var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-stage-fab-stack__btn svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-stage-fab-stack__btn:hover {
+    border-color: var(--mf-pitch-dim);
+}
+
+.mf-stage-fab-stack__btn:active {
+    transform: scale(0.92);
+}
+
+.mf-stage-fab-stack__btn.is-active {
+    border-color: color-mix(in srgb, var(--mf-pitch) 45%, var(--mf-line));
+    color: var(--mf-pitch);
+}
+
+.mf-stage-fab-stack__btn:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.mf-stage-fab-stack .mf-stage-popover-anchor {
+    display: inline-flex;
+}
+
+/* The reaction FAB is shared with the host's Studio console (where it stays
+   at its original 3.25rem size) — scoped down here to match the smaller
+   viewer FAB list it now sits in. */
+.mf-stage-fab-stack .mf-stage-react-fab__btn {
+    width: 2.6rem;
+    height: 2.6rem;
+    box-shadow: 0 1px 3px color-mix(in srgb, black 18%, transparent);
+}
+
+.mf-stage-fab-stack .mf-stage-react-fab__emoji {
+    font-size: 1.1rem;
+}
+
+.mf-stage-fab-stack .mf-stage-react-fab__glyph {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.mf-stage-fab-stack .mf-stage-react-fab__glyph svg {
+    width: 0.7rem;
+    height: 0.7rem;
 }
 
 .mf-stage-react-fab__btn {
@@ -3173,22 +3686,290 @@
 
 /* —— 16. Responsive ————————————————————————————————————————————————— */
 
-/* Panel visibility — below 1024px the room is a single full-screen panel chosen
-   by the segmented control; `mf-stageroom--view-*` says which one shows. */
+/* Mobile swipe carousel — Chat / Stage / People as three full-width panes in
+   one horizontal scroll-snap row (TikTok/Reels-style: swipe instead of
+   tapping tabs; see Show.jsx for the scroll<->mobileView sync). `order` does
+   the visual arranging so Show.jsx doesn't need to reorder its markup —
+   Chat sorts first, People last, Stage stays put in the middle. */
 @media (max-width: 1023.98px) {
-    .mf-stageroom__main,
-    .mf-stage-panel {
+    .mf-stageroom {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .mf-stageroom::-webkit-scrollbar {
         display: none;
     }
 
-    .mf-stageroom--view-stage .mf-stageroom__main,
-    .mf-stageroom--view-chat .mf-stage-panel--chat,
-    .mf-stageroom--view-people .mf-stage-panel--people {
-        display: flex;
-        flex: 1;
+    .mf-stageroom__main,
+    .mf-stage-panel {
+        flex: 0 0 100%;
+        width: 100%;
+        min-width: 0;
         min-height: 0;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+
+    .mf-stage-panel--chat {
+        order: -1;
+    }
+
+    .mf-stageroom__main {
+        order: 0;
+    }
+
+    .mf-stage-panel--people {
+        order: 1;
+    }
+
+    /* The host still gets the studio's floating-tools treatment on a phone —
+       there's no room for the full desktop dashboard, so this mobile-only
+       block gives the host the same full-bleed-with-floating-chrome layout
+       viewers get everywhere (see the unconditional .mf-stageroom--viewer
+       rules below) purely as a screen-size adaptation, not a role change. */
+    .mf-stageroom--host .mf-stageroom__deck {
+        padding: 0;
+        gap: 0;
+    }
+
+    .mf-stageroom--host .mf-stage-monitor {
+        flex: 1;
+        min-height: 62vh;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+    }
+
+    .mf-stageroom--host .mf-stage-monitor__tag {
+        display: none;
+    }
+
+    .mf-stageroom--host .mf-stageroom__header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+        border-bottom: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .mf-stageroom--host .mf-stage-control-bar {
+        position: absolute;
+        left: 0.6rem;
+        right: 0.6rem;
+        bottom: calc(0.6rem + var(--mf-safe-bottom));
+        z-index: 5;
+        min-height: auto;
+        padding: 0.5rem 0.7rem;
+        border-top: 0;
+        border-radius: var(--mf-radius-pill);
+        border: 1px solid var(--mf-line);
+        background: color-mix(in srgb, var(--mf-panel) 74%, transparent);
     }
 }
+
+/*
+ * Viewer/listener screen — full-bleed live video with transparent overlay
+ * chrome, the same treatment the host gets on a phone (above), except a
+ * viewer gets it at every width, including desktop: whatever the host is
+ * sharing (camera, screen, presentation) is the whole point of the screen,
+ * so nothing sits in a boxed "console" between the viewer and it. The host's
+ * studio (Program monitor frame, docked control bar, Sources strip) stays a
+ * host-only, desktop-native thing — see .mf-stageroom--host and the
+ * `@media (min-width: 1024px)` grid rules elsewhere in this file, both
+ * untouched by this block since neither selector matches a viewer's room.
+ */
+.mf-stageroom--viewer .mf-stageroom__deck {
+    padding: 0;
+    gap: 0;
+}
+
+.mf-stageroom--viewer .mf-stage-monitor {
+    flex: 1;
+    min-height: 62vh;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+.mf-stageroom--viewer .mf-stage-monitor__tag {
+    display: none;
+}
+
+.mf-stageroom--viewer .mf-stageroom__header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    border-bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.mf-stageroom--viewer .mf-stage-control-bar {
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: calc(0.6rem + var(--mf-safe-bottom));
+    z-index: 5;
+    min-height: auto;
+    padding: 0.5rem 0.7rem;
+    border-top: 0;
+    border-radius: var(--mf-radius-pill);
+    border: 1px solid var(--mf-line);
+    background: color-mix(in srgb, var(--mf-panel) 74%, transparent);
+}
+
+/* —— Reels viewer: front/chat swipe layers ————————————————————————
+   Two transparent panes stacked over the fixed video in .mf-stageroom__deck
+   (z-index:0 — see its own rule) — see Show.jsx's `isReelsViewer` branch and
+   useSwipeLayer for the drag mechanics. Neither pane is ever opaque; the
+   video underneath keeps playing through both. */
+.mf-stageroom__swipe-layers {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.mf-stageroom__swipe-layer {
+    position: absolute;
+    inset: 0;
+    transition: transform var(--mf-dur) var(--mf-ease);
+    will-change: transform;
+}
+
+/* Kill the transition while a drag is live so the pane tracks the finger
+   1:1 — it only animates for the post-release snap. */
+.mf-stageroom__swipe-layers.is-dragging .mf-stageroom__swipe-layer {
+    transition: none;
+}
+
+/* RoomHeader / .mf-stage-fab-stack already position themselves absolutely
+   (see their own rules above/below) — this pane just needs to BE their
+   positioned ancestor, one level deeper than before. Pinned message +
+   Sources strip aren't self-positioning, so they get explicit placement
+   just below the header. */
+.mf-stageroom__swipe-layer--front .mf-stage-pinned,
+.mf-stageroom__swipe-layer--front .mf-stage-sources {
+    position: absolute;
+    left: 0.7rem;
+    right: 0.7rem;
+    top: calc(3.4rem + var(--mf-safe-top, 0px));
+    z-index: 4;
+}
+
+.mf-stageroom__swipe-layer--front .mf-stage-sources {
+    top: calc(3.4rem + var(--mf-safe-top, 0px) + 3rem);
+}
+
+.mf-stageroom__chat-toggle {
+    position: absolute;
+    left: 1rem;
+    /* No docked control bar in this layer (see .mf-stage-fab-stack) — sit
+       just above the safe area instead of reserving the old bar's height. */
+    bottom: calc(0.7rem + var(--mf-safe-bottom));
+    z-index: 25;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    cursor: pointer;
+}
+
+.mf-stageroom__chat-toggle svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+.mf-stageroom__chat-toggle-count {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-pitch);
+    color: var(--mf-on-fill);
+    font-size: var(--mf-text-micro);
+    line-height: 1;
+}
+
+/* Chat pane — explicitly transparent, no matter what .mf-stage-panel's own
+   (opaque, side-column-oriented) rule says. The point of this pane is that
+   the video keeps showing through it while it's swiped into view. */
+.mf-stageroom__swipe-layer--chat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    padding-top: calc(0.7rem + var(--mf-safe-top, 0px));
+    padding-bottom: calc(0.7rem + var(--mf-safe-bottom, 0px));
+}
+
+.mf-stageroom__swipe-layer--chat .mf-stage-panel {
+    flex: 1;
+    min-height: 0;
+    background: transparent;
+    border: 0;
+}
+
+.mf-stageroom__swipe-layer--chat .mf-stage-panel__head {
+    display: none;
+}
+
+.mf-stageroom__chat-layer-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mf-stageroom__chat-back {
+    width: 2.1rem;
+    height: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-elevated);
+    color: var(--mf-text);
+    cursor: pointer;
+}
+
+.mf-stageroom__chat-back svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-stageroom__chat-layer-label {
+    color: var(--mf-text);
+    font-size: var(--mf-text-micro);
+    letter-spacing: var(--mf-tracking-label);
+    text-transform: uppercase;
+}
+
 
 /* Phone: the app header (which owns the top safe-area inset) is hidden here, so
    the room pads its own top to clear the notch / status bar. Scoped to phones,
@@ -3204,22 +3985,12 @@
         padding: 0.5rem 0.6rem;
     }
 
-    .mf-stageroom__net-chip,
-    .mf-stageroom__timer,
-    .mf-stageroom__side-voice,
-    .mf-stageroom__club {
+    .mf-stageroom__timer {
         display: none;
     }
 
     .mf-stageroom__title {
         font-size: var(--mf-text-title);
-    }
-}
-
-/* Show the room-size stats once there's room in the header. */
-@media (min-width: 480px) {
-    .mf-stageroom__stats {
-        display: flex;
     }
 }
 
@@ -3244,10 +4015,6 @@
 
     .mf-stageroom.is-no-chat {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .mf-stageroom__segmented {
-        display: none;
     }
 
     .mf-stage-panel--chat {
@@ -3296,6 +4063,17 @@
 
     .mf-stageroom.is-no-chat {
         grid-template-columns: minmax(0, 1fr) var(--mf-people-rail-w);
+    }
+
+    /* Reels viewers (see Show.jsx's `showPeoplePanel`) never render the
+       People+Info panel at all — without this, the grid would still reserve
+       its column as dead space at this breakpoint. */
+    .mf-stageroom.is-no-people {
+        grid-template-columns: minmax(0, 1fr) var(--mf-chat-rail-w);
+    }
+
+    .mf-stageroom.is-no-chat.is-no-people {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .mf-stage-panel--people {

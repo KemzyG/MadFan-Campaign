@@ -136,7 +136,11 @@ class StageService
                 'allow_speak_requests' => (bool) ($data['allow_speak_requests'] ?? true),
                 'background_key' => $backgroundKey,
                 'status' => StageStatus::Live,
-                'voice_enabled' => false,
+                // Voice stays the classic two-step flow (host taps "Start voice" once
+                // ready) — but a Video/Streaming room's entire point is the camera/
+                // screen, so its LiveKit session comes up live immediately instead of
+                // making the host find a hidden "start" action before they can publish.
+                'voice_enabled' => $type !== StageType::Voice,
                 'started_at' => now(),
             ]);
 
@@ -892,6 +896,9 @@ class StageService
         $stagePayload['speaker_count'] = $onStage;
         $stagePayload['participant_count'] = $participants->count();
         $stagePayload['listener_count'] = $participants->count() - $onStage;
+        // Running total, not the ephemeral last-20s replay `reactions` carries below —
+        // the Reels viewer header's "like count" reads this one.
+        $stagePayload['reaction_count'] = $stage->reactions()->count();
 
         return [
             'stage' => $stagePayload,

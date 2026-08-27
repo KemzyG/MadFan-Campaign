@@ -20,8 +20,19 @@ export function useStageActions() {
         retryMicAccess,
         pushReaction,
         videoTracks,
+        presentationState,
         toggleCamera: toggleCameraPublish,
         toggleScreenShare: toggleScreenSharePublish,
+        startPresentation: startPresentationSession,
+        stopPresentation: stopPresentationSession,
+        presentationPlay: presentationPlaySession,
+        presentationPause: presentationPauseSession,
+        presentationSeek: presentationSeekSession,
+        getPresentationCanvas,
+        setPresentationDrawing,
+        presentationClearDrawing,
+        presentationPointerDown,
+        presentationPointerMove,
     } = useStageSession();
     const { reportError, clearError } = useSocialFlash();
 
@@ -44,6 +55,11 @@ export function useStageActions() {
         onStage && isLive && voiceEnabled && stageType !== 'voice' && (stageType === 'video' || isHost);
     const cameraOn = Boolean(me && videoTracks.get(`${me.user_id}:camera`));
     const screenShareOn = Boolean(me && videoTracks.get(`${me.user_id}:screen_share`));
+    // Host-only for v1 — presenting is a single-broadcaster affordance (like
+    // handing round one shared screen), so it doesn't extend to Video-type
+    // co-speakers the way camera/screen does, even though they can go on camera.
+    const canPresent = isHost && canPublishVideo;
+    const presenting = Boolean(presentationState);
 
     const flashVisit = useCallback(
         (options = {}) =>
@@ -155,6 +171,36 @@ export function useStageActions() {
         void toggleScreenSharePublish?.(!screenShareOn);
     }, [canPublishVideo, screenShareOn, toggleScreenSharePublish, unlockVoicePlayback]);
 
+    const startPresentation = useCallback(
+        (file) => {
+            if (!canPresent || !file) {
+                return;
+            }
+            unlockVoicePlayback?.();
+            void startPresentationSession?.(file);
+        },
+        [canPresent, startPresentationSession, unlockVoicePlayback],
+    );
+
+    const stopPresentation = useCallback(() => {
+        void stopPresentationSession?.();
+    }, [stopPresentationSession]);
+
+    const presentationPlay = useCallback(() => {
+        presentationPlaySession?.();
+    }, [presentationPlaySession]);
+
+    const presentationPause = useCallback(() => {
+        presentationPauseSession?.();
+    }, [presentationPauseSession]);
+
+    const presentationSeek = useCallback(
+        (seconds) => {
+            presentationSeekSession?.(seconds);
+        },
+        [presentationSeekSession],
+    );
+
     const leave = useCallback(() => {
         if (!isLive || !me) {
             return;
@@ -212,6 +258,14 @@ export function useStageActions() {
             canPublishVideo,
             cameraOn,
             screenShareOn,
+            canPresent,
+            presenting,
+            presentationState,
+            getPresentationCanvas,
+            setPresentationDrawing,
+            presentationClearDrawing,
+            presentationPointerDown,
+            presentationPointerMove,
             toggleMute,
             raiseHand,
             react,
@@ -220,6 +274,11 @@ export function useStageActions() {
             enableMic,
             toggleCamera,
             toggleScreenShare,
+            startPresentation,
+            stopPresentation,
+            presentationPlay,
+            presentationPause,
+            presentationSeek,
             leave,
             endStage,
         }),
@@ -237,6 +296,14 @@ export function useStageActions() {
             canPublishVideo,
             cameraOn,
             screenShareOn,
+            canPresent,
+            presenting,
+            presentationState,
+            getPresentationCanvas,
+            setPresentationDrawing,
+            presentationClearDrawing,
+            presentationPointerDown,
+            presentationPointerMove,
             toggleMute,
             raiseHand,
             react,
@@ -245,6 +312,11 @@ export function useStageActions() {
             enableMic,
             toggleCamera,
             toggleScreenShare,
+            startPresentation,
+            stopPresentation,
+            presentationPlay,
+            presentationPause,
+            presentationSeek,
             leave,
             endStage,
         ],

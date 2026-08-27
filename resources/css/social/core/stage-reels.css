@@ -21,7 +21,7 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: var(--kf-ink);
+    background: #000000;
 }
 
 .mf-stageroom--reels .mf-stageroom__main {
@@ -32,13 +32,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: var(--kf-ink);
+    /* No background override — the base .mf-stageroom__main rule in stage.css
+       already sets pure black (var(--mf-canvas)), which is what should show
+       here (this element mostly sits behind the absolutely-positioned
+       .mf-stage-monitor anyway, so it's rarely visible on its own). */
 }
 
 /* —— Main video frame ——————————————————————————————————————— */
 
 /* The hero or speaker deck fills the viewport; the component itself
    is unchanged, just positioned for full-bleed viewing. */
+/* Pure black by default (broadcast "no signal" — see the base rule in
+   stage.css); the selected stadium backdrop image, if any, is the one thing
+   allowed to override that. Layered here (not left to the stage.css rule
+   alone) since this selector's extra specificity would otherwise shadow it. */
 .mf-stageroom--reels .mf-stage-monitor {
     position: absolute;
     inset: 0;
@@ -48,7 +55,15 @@
     align-items: center;
     justify-content: center;
     border: none;
-    background: var(--kf-ink);
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--mf-canvas) 78%, transparent) 0%,
+            color-mix(in srgb, var(--mf-canvas) 90%, transparent) 55%,
+            var(--mf-canvas) 100%
+        ),
+        var(--mf-stage-bg-image, none) center / cover no-repeat,
+        var(--mf-canvas);
     z-index: 10;
 }
 
@@ -232,7 +247,7 @@
 
 .mf-stageroom--reels .mf-stage-self-preview__video {
     border: 1px solid var(--kf-line-strong);
-    background: var(--kf-ink);
+    background: #000000;
 }
 
 .mf-stageroom--reels .mf-stage-self-preview__label {

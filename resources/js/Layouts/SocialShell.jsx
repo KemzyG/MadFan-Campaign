@@ -166,6 +166,16 @@ export function IconShop({ active }) {
     );
 }
 
+export function IconLiveStage({ active }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="3" y="6" width="14" height="12" rx="2.2" strokeWidth={active ? 2.1 : 1.7} />
+            <path d="M17 10.2 21 7.5v9l-4-2.7" strokeWidth={active ? 2.1 : 1.7} strokeLinejoin="round" />
+            <circle cx="7.2" cy="9.6" r="1" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
 export function IconStage({ active }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
@@ -724,6 +734,12 @@ export default function SocialShell({
             label: 'Join stage',
             icon: IconStage,
             active: pathMatches(current, '/social/stage'),
+        },
+        {
+            href: '/social/live',
+            label: 'Live',
+            icon: IconLiveStage,
+            active: pathMatches(current, '/social/live'),
         },
         {
             href: profileHref,
