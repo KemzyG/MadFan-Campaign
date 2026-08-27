@@ -572,7 +572,15 @@ export function createStageLiveKitVoiceSession({
 
             if (!room) {
                 room = new Room({
-                    adaptiveStream: true,
+                    // adaptiveStream pauses a video subscription until it sees its
+                    // attached element as visible/non-zero-size. Our video elements
+                    // are created detached (in `videoElements`, a plain Map) and only
+                    // get inserted into the real DOM afterwards by SpeakerTile's ref —
+                    // so adaptiveStream reads them as invisible at attach() time and
+                    // never requests layers, leaving viewers with audio but no video
+                    // and no error. dynacast (server-side unused-layer skipping) has
+                    // no such attach-timing dependency, so it stays on.
+                    adaptiveStream: false,
                     dynacast: true,
                     audioCaptureDefaults: STAGE_AUDIO_CONSTRAINTS,
                 });
