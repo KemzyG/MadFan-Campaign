@@ -120,6 +120,7 @@ export function LiveStageSessionProvider({ initialStage, initialComments, childr
                 window.setTimeout(() => {
                     setReactions((prev) => prev.filter((r) => r.id !== id2));
                 }, REACTION_TTL_MS);
+                setStage((prev) => (prev ? { ...prev, reaction_count: (prev.reaction_count || 0) + 1 } : prev));
             })
             .listen('.viewer.moderated', (payload) => {
                 window.dispatchEvent(

@@ -7,10 +7,11 @@ const NAV_ITEMS = [
 ];
 
 /**
- * Mobile-only launcher for the Messages/Viewers/Settings panels. Below the
- * ≥1024px breakpoint there's no room to dock the side panel next to the
- * camera monitor (see live-creator.css), so tapping one of these opens that
- * panel as a bottom-sheet overlay instead (see StudioSidePanel's
+ * Mobile-only launcher for the Messages/Viewers/Settings panels — icon-only
+ * circular FABs floating over the video, same register as the mic/camera
+ * FABs. Below the ≥1024px breakpoint there's no room to dock the side panel
+ * next to the camera monitor (see live-creator.css), so tapping one of these
+ * opens that panel as a bottom-sheet overlay instead (see StudioSidePanel's
  * `mobileOpen` prop). This whole bar is CSS-hidden above the docked
  * breakpoint (.kf-studio__mobile-nav), so it always renders — no JS media
  * query needed.
@@ -37,9 +38,9 @@ export default function MobilePanelNav({ commentCount, viewerCount, onOpen }) {
                         type="button"
                         className="kf-studio__mobile-nav-btn"
                         onClick={() => onOpen(item.key)}
+                        aria-label={item.label}
                     >
                         <Icon className="kf-studio__mobile-nav-icon" />
-                        <span>{item.label}</span>
                         {count ? <span className="kf-studio__mobile-nav-count mf-mono">{count}</span> : null}
                     </button>
                 );

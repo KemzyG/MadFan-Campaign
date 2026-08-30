@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import ConnectionStateScreen from '../components/ConnectionStateScreen';
 import CommentComposer from '../components/CommentComposer';
 import CommentsFeed from '../components/CommentsFeed';
+import LikesCountBadge from '../components/LikesCountBadge';
 import LiveBadge from '../components/LiveBadge';
 import ReactionFab from '../components/ReactionFab';
 import ReactionsLayer from '../components/ReactionsLayer';
@@ -129,6 +130,7 @@ export default function CreatorViewer() {
                         <div className="kf-reels__stats">
                             <LiveBadge />
                             <ViewerCountBadge count={stage.viewer_count} />
+                            <LikesCountBadge count={stage.reaction_count} />
                         </div>
                     </div>
 

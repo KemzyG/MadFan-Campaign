@@ -161,6 +161,11 @@ test('fans can join a live stage, comment, and react', function () {
         ->where('live_stage_id', $stage->id)
         ->where('emoji', '🔥')
         ->value('total'))->toBe(1);
+
+    $this->actingAs($host)
+        ->getJson("/social/live/{$stage->id}/state")
+        ->assertSuccessful()
+        ->assertJsonPath('stage.reaction_count', 1);
 });
 
 test('a viewer cannot comment on a stage with comments disabled', function () {

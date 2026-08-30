@@ -664,14 +664,24 @@
 .kf-studio--setup {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
     height: 100dvh;
-    padding: 0.8rem;
     /* A rig lit from one corner, not a flat panel — echoes the broadcast
        accent without competing with the monitor itself. */
     background:
         radial-gradient(ellipse 65% 50% at 12% -8%, color-mix(in srgb, var(--kfl-accent) 8%, transparent), transparent 65%),
         linear-gradient(175deg, var(--kfl-panel), color-mix(in srgb, var(--kfl-black) 60%, var(--kfl-panel)) 85%);
+}
+
+.kf-studio--setup {
+    gap: 0.6rem;
+    padding: 0.8rem;
+}
+
+/* The live console is one full-bleed view, edge to edge, never a padded
+   card — see MirrorPanel: the monitor fills this completely and every
+   control floats over it, so there's nothing here to scroll. */
+.kf-studio:not(.kf-studio--setup) {
+    overflow: hidden;
 }
 
 @media (min-width: 1024px) {
@@ -684,12 +694,10 @@
 .kf-studio__main {
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
     display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
 }
 
-.kf-studio__monitor,
 .kf-studio__preview-frame {
     position: relative;
     flex: 1 1 auto;
@@ -704,6 +712,23 @@
     box-shadow:
         0 1px 0 0 color-mix(in srgb, var(--kf-white) 6%, transparent) inset,
         0 1.5rem 2.5rem -1.5rem rgba(0, 0, 0, 0.75);
+}
+
+/* The live monitor — full-bleed, no frame, no border: the video itself is
+   the whole view (100% of .kf-studio__main, which is itself the entire
+   viewport on mobile since the side panel is out-of-flow there — see the
+   bottom-sheet rules below). Every control is an absolutely-positioned
+   child of this, floating over the video rather than boxed beside it. */
+.kf-studio__monitor {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--kfl-black);
+    overflow: hidden;
 }
 
 /* A single soft highlight across the top edge — glass-over-hardware, not a
@@ -742,30 +767,43 @@
     gap: 0.5rem;
 }
 
-.kf-studio__controls {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem;
-    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--kfl-glass-line);
-    border-radius: var(--kf-radius-sm);
-    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--kf-white) 5%, transparent) inset, 0 0.5rem 1rem -0.6rem rgba(0, 0, 0, 0.7);
+/* Viewer count and likes float directly on the video now (no boxed monitor
+   behind them to lean on), so they need the same glass-pill legibility the
+   Reels viewer overlay already gives its own odometers. */
+.kf-studio__monitor-overlay .kf-odometer {
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kfl-panel) 45%, transparent);
+    border: 1px solid var(--kf-line);
+    backdrop-filter: blur(10px);
+    color: var(--kf-white);
+    font-size: 0.78rem;
 }
 
-.kf-studio__control-btn {
+.kf-odometer--likes {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.55rem 0.9rem;
-    border: 1px solid var(--kf-line-strong);
+    gap: 0.25rem;
+}
+
+.kf-odometer__icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: var(--kf-red);
+    fill: var(--kf-red);
+}
+
+/* Mic + camera float directly over the video as bare FABs — no bar, no
+   labels, no background box; see MirrorPanel. The camera FAB doubles as the
+   end-live control (tap once to arm, again to confirm) instead of a
+   separate "End Live" button. */
+.kf-studio__fab {
+    position: absolute;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-black) 35%, transparent);
-    color: var(--kf-muted-strong);
-    font-size: 0.85rem;
-    font-weight: 500;
     cursor: pointer;
     transition:
         border-color var(--kf-dur-console) var(--kf-ease-console),
@@ -774,68 +812,123 @@
         transform var(--kf-dur-console) var(--kf-ease-console);
 }
 
-.kf-studio__control-btn:active {
-    transform: scale(0.96);
+.kf-studio__fab:active {
+    transform: scale(0.94);
 }
 
-.kf-studio__control-btn svg {
-    width: 1rem;
-    height: 1rem;
+.kf-studio__fab--mic {
+    bottom: 4rem;
+    left: 1.1rem;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--kfl-glass-line);
+    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    backdrop-filter: blur(20px);
+    color: var(--kf-muted-strong);
 }
 
-.kf-studio__control-btn.is-live {
+.kf-studio__fab--mic svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+.kf-studio__fab--mic.is-live {
     border-color: color-mix(in srgb, var(--kfl-accent) 55%, transparent);
     background: color-mix(in srgb, var(--kfl-accent) 16%, transparent);
     color: var(--kfl-accent);
 }
 
-.kf-studio__control-btn--danger {
-    margin-left: auto;
-    border-color: color-mix(in srgb, var(--kf-red) 45%, transparent);
-    color: var(--kf-red);
+/* The camera FAB is always red while live — a record light, not a toggle —
+   because there's no "camera off but still live" state in Creator Live;
+   tapping it is how the host ends the stream. */
+.kf-studio__fab--camera {
+    bottom: 4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4.4rem;
+    height: 4.4rem;
+    border: 3px solid color-mix(in srgb, var(--kf-white) 25%, transparent);
+    background: var(--kf-red);
+    color: var(--kf-white);
 }
 
-.kf-studio__control-btn--danger:hover {
-    border-color: var(--kf-red);
-    background: color-mix(in srgb, var(--kf-red) 15%, transparent);
+.kf-studio__fab--camera:active {
+    transform: translateX(-50%) scale(0.94);
+}
+
+.kf-studio__fab--camera svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.kf-studio__fab--camera.is-confirm {
+    background: color-mix(in srgb, var(--kf-red) 85%, black);
+    animation: kf-fab-pulse 1s ease-in-out infinite;
+}
+
+@keyframes kf-fab-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--kf-red) 55%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 0.6rem color-mix(in srgb, var(--kf-red) 0%, transparent);
+    }
 }
 
 /* Launcher for Messages/Viewers/Settings on mobile, where the side panel
-   has nowhere to dock (see StudioSidePanel's bottom-sheet mode below).
-   Hidden by default; shown only under the 1024px docked breakpoint. */
+   has nowhere to dock (see StudioSidePanel's bottom-sheet mode below) —
+   icon-only circular FABs floating over the video, same register as the
+   mic/camera FABs above. Hidden by default; shown only under the 1024px
+   docked breakpoint (see the mobile media query near the end of this file). */
 .kf-studio__mobile-nav {
     display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.7rem;
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
 }
 
 .kf-studio__mobile-nav-btn {
-    flex: 1 1 0;
+    position: relative;
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    padding: 0.5rem 0.4rem;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
     border: 1px solid var(--kf-line-strong);
-    border-radius: var(--kf-radius-sm);
+    border-radius: var(--kf-radius-full);
     background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
     backdrop-filter: blur(20px);
     color: var(--kf-muted-strong);
-    font-size: 0.7rem;
-    font-weight: 500;
     cursor: pointer;
 }
 
 .kf-studio__mobile-nav-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.94);
 }
 
 .kf-studio__mobile-nav-icon {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.2rem;
+    height: 1.2rem;
 }
 
 .kf-studio__mobile-nav-count {
-    color: var(--kfl-accent);
-    font-size: 0.65rem;
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    min-width: 1.1rem;
+    padding: 0 0.25rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kfl-accent);
+    color: var(--kf-white);
+    font-size: 0.6rem;
+    line-height: 1.1rem;
+    text-align: center;
 }
 
 .kf-studio__side {
@@ -1484,7 +1577,6 @@
 @media (max-width: 1023.98px) {
     .kf-studio__mobile-nav {
         display: flex;
-        gap: 0.4rem;
     }
 
     .kf-studio__side-close {

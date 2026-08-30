@@ -532,6 +532,19 @@ class LiveStageService
             ->count();
     }
 
+    /**
+     * Total "likes" — every reaction ever thrown on this stage, across all
+     * emoji. The baseline for a fresh page load; the client increments it by
+     * one per `.reaction.created` broadcast for the realtime count in between
+     * reads, same split as viewer_count/`.viewer-count.updated`.
+     */
+    public function reactionCount(LiveStage $stage): int
+    {
+        return (int) LiveStageReactionTotal::query()
+            ->where('live_stage_id', $stage->id)
+            ->sum('total');
+    }
+
     private function broadcastViewerCount(LiveStage $stage): void
     {
         SocialBroadcast::try(fn () => LiveStageViewerCountUpdated::dispatch($stage, $this->viewerCount($stage)));
@@ -643,6 +656,7 @@ class LiveStageService
                 'allow_reactions' => (bool) ($stage->settings['allow_reactions'] ?? true),
             ],
             'viewer_count' => $stage->isLive() ? $this->viewerCount($stage) : 0,
+            'reaction_count' => $this->reactionCount($stage),
             'reaction_options' => self::REACTIONS,
             'me' => $session ? [
                 'is_muted_by_host' => (bool) $session->is_muted_by_host,
