@@ -34,7 +34,13 @@ export function useLiveStageMedia({ stageId, isHost, isLive }) {
         }
 
         let cancelled = false;
-        const room = new Room({ adaptiveStream: true, dynacast: true });
+        // adaptiveStream pauses a video subscription until it sees its attached
+        // element as visible/non-zero-size. VideoMount attaches LiveKit's
+        // track.attach() element to the DOM only after React mounts it, so
+        // adaptiveStream reads it as invisible at attach() time and never
+        // requests layers — viewers get audio but no video, silently (same
+        // root cause fixed for Stage voice in useStageLiveKitVoice.js).
+        const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
 
         room.on(RoomEvent.ConnectionStateChanged, (state) => {
