@@ -1,75 +1,55 @@
 /*
  * Stage "Kickoff" redesign — Host Studio register.
  *
- * The host's console view: instant, hardware-feeling, never idles. The Studio
- * is a docked control panel with a Program monitor (hero/streaming view in
- * the center), Sources strip (OBS-style input status), and Presentation controls
- * (for uploading/annotating videos). This file lays out the host-specific frame
- * and adjusts existing components for this register's dark steel aesthetic.
+ * The host's console view: instant, hardware-feeling, never idles. The
+ * Program monitor is the entire view, edge to edge — Sources (OBS-style
+ * input status), the control bar, and the self-preview PiP all float as
+ * transparent overlays on top of it, the same "video is the one fixed
+ * thing, everything else is a glass layer over it" register the Reels
+ * viewer already uses (stage-reels.css), just for the host. This file lays
+ * out that frame and adjusts existing components for it.
  *
- * Loaded after stage-kickoff.css in social.css. Uses the Kickoff token system
- * (--kf-* variables) exclusively; no cross-pollution with legacy .mf-stage* rules.
+ * Loaded after stage-kickoff.css in social.css. Uses the Kickoff token
+ * system (--kf-* variables) exclusively; no cross-pollution with legacy
+ * .mf-stage* rules.
  */
 
-/* —— Studio shell: console layout ————————————————————————————————————— */
+/* —— Studio shell: full-bleed monitor ——————————————————————————— */
 
-/* Host view shifts to a docked-control aesthetic: a central Program
-   monitor flanked or stacked with control surfaces, all on dark steel
-   (a raised platform surface within the ink background). The Reels
-   viewer's glass-over-video layout is completely separate — this only
-   applies when the host is on stage. */
+/* No grid override here on purpose — .mf-stageroom's own base grid (see
+   stage.css) already handles the Chat/People rail columns at wider
+   breakpoints; Studio only needs to change what's *inside* .mf-stageroom__main,
+   not the outer room layout. */
 .mf-stageroom--host.mf-stageroom--studio {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr auto;
-    min-height: 100vh;
     background: #000000;
-    gap: 0;
 }
 
 .mf-stageroom--studio .mf-stageroom__main {
-    grid-column: 1 / 2;
-    grid-row: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.8rem;
-    background: var(--kf-steel);
-    min-width: 0;
+    padding: 0;
+    background: var(--kf-ink);
 }
 
-/* Right dock: sources + presentation, stacked on desktop. */
-.mf-stageroom--studio .mf-stage-sources,
-.mf-stageroom--studio .mf-stage-presentation {
-    grid-column: 2 / 3;
-    background: var(--kf-steel);
-    border: 1px solid var(--kf-line-strong);
-    border-top: none;
-}
-
-.mf-stageroom--studio .mf-stage-sources {
-    grid-row: 1 / 2;
-    border-bottom: none;
-}
-
-.mf-stageroom--studio .mf-stage-presentation {
-    grid-row: 2 / 3;
-}
-
-/* Program monitor: the central video frame with corner viewfinder brackets.
-   Pure black by default (broadcast "no signal" — see the base rule in
-   stage.css); the selected stadium backdrop image, if any, is the one thing
-   allowed to override that. Layered here rather than left to the stage.css
-   rule alone since this selector's extra specificity would otherwise shadow
-   it for the host's own Studio view. */
-.mf-stageroom--studio .mf-stage-monitor {
+.mf-stageroom--studio .mf-stageroom__deck {
     position: relative;
-    flex: 1 1 auto;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+}
+
+/* Program monitor: the entire deck, not a bordered box inside it. Pure
+   black by default (broadcast "no signal" — see the base rule in
+   stage.css); the selected stadium backdrop image, if any, is the one
+   thing allowed to override that. Layered here rather than left to the
+   stage.css rule alone since this selector's extra specificity would
+   otherwise shadow it for the host's own Studio view. */
+.mf-stageroom--studio .mf-stage-monitor {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
-    min-height: 0;
+    padding: 0;
     background:
         linear-gradient(
             180deg,
@@ -79,17 +59,22 @@
         ),
         var(--mf-stage-bg-image, none) center / cover no-repeat,
         var(--mf-canvas);
-    border: 2px solid var(--kf-line-strong);
+    border: none;
     border-radius: 0;
 }
 
-/* Viewfinder corner brackets appear when live (see stage-kickoff.css). */
+/* A live/on-air cue that doesn't eat into the frame the way a border did —
+   an inset ring instead, same amber/green split as before. */
 .mf-stage-monitor.is-live {
-    border-color: var(--kf-amber);
+    box-shadow: inset 0 0 0 3px var(--kf-amber);
 }
 
 .mf-stage-monitor.is-live.is-conversation {
-    border-color: var(--kf-green);
+    box-shadow: inset 0 0 0 3px var(--kf-green);
+}
+
+.mf-stageroom--studio .mf-stage-monitor__tag {
+    z-index: 2;
 }
 
 /* Video/hero content fills the monitor; tap the monitor to select speakers
@@ -107,17 +92,44 @@
     height: 100%;
 }
 
-/* —— Studio controls: sources strip ————————————————————————————— */
+/* Presentation mode already fills the monitor completely once mounted
+   inside it (see .mf-stage-monitor > .mf-stage-presentation in stage.css)
+   — the rules below are its console-register skin, not its sizing. */
+.mf-stageroom--studio .mf-stage-presentation__stage {
+    max-height: none;
+}
 
-/* Sources strip in the Studio lives in the right dock, compact vertical layout.
-   The components themselves (mf-stage-sources) are unchanged; we're just
-   repositioning them into the console layout and adjusting spacing. */
+/* —— Floating chrome ————————————————————————————————————————— */
+/* Everything below sits on top of the monitor as an absolutely-positioned
+   glass layer, anchored to .mf-stageroom__deck (position:relative, set
+   above) rather than the monitor itself, since these are DOM siblings of
+   the monitor, not its children. */
+
+.mf-stageroom--studio .mf-stage-pinned {
+    position: absolute;
+    top: 0.6rem;
+    left: 3.2rem;
+    right: 0.6rem;
+    z-index: 3;
+}
+
+/* Sources strip: a compact vertical stack of status chips floating in the
+   monitor's top-right corner — the studio's equivalent of the Live Stage
+   feature's viewer/likes badges. */
 .mf-stageroom--studio .mf-stage-sources {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.5rem;
-    min-width: 11rem;
+    width: 10rem;
+    border: 1px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-sm);
+    background: color-mix(in srgb, var(--kf-steel) 55%, transparent);
+    backdrop-filter: blur(16px);
 }
 
 .mf-stageroom--studio .mf-stage-sources__label {
@@ -135,78 +147,36 @@
     font-size: 0.7rem;
 }
 
-/* —— Studio controls: presentation panel ————————————————————————— */
+/* —— Studio control bar: floating pill, not a docked footer ———————— */
 
-/* Presentation panel (video upload, playback, drawing) fills the lower-right
-   dock when active; styled as a console surface matching Sources above. */
-.mf-stageroom--studio .mf-stage-presentation {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding: 0.5rem;
-    background: var(--kf-steel);
-}
-
-.mf-stageroom--studio .mf-stage-presentation__head {
-    gap: 0.3rem;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__label {
-    font-size: 0.65rem;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__stop {
-    width: 1.4rem;
-    height: 1.4rem;
-    flex-shrink: 0;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__stop svg {
-    width: 0.7rem;
-    height: 0.7rem;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__stage {
-    max-height: 20vh;
-    aspect-ratio: 16 / 9;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__bar {
-    gap: 0.3rem;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.7rem;
-}
-
-.mf-stageroom--studio .mf-stage-presentation__time {
-    font-size: 0.65rem;
-}
-
-/* —— Studio control bar ———————————————————————————————————————— */
-
-/* The primary control bar (mute, camera, screen, react, etc.) is
-   docked at the bottom of the monitor in the Studio, not floating. */
 .mf-stageroom--studio .mf-stage-control-bar {
-    position: relative;
-    inset: auto;
-    z-index: auto;
-    width: 100%;
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    z-index: 4;
+    min-height: auto;
     flex: 0 0 auto;
-    border-radius: 0;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--kf-line-strong);
+    border-top: none;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-steel) 65%, transparent);
+    backdrop-filter: blur(20px);
 }
 
 /* —— Studio self-preview ——————————————————————————————————————— */
 
-/* The self-preview (floating camera/screen monitor) moves into the
-   Program frame as a PiP (picture-in-picture) corner badge in the Studio.
-   Visible in the lower-right corner of the monitor. */
+/* The self-preview (floating camera/screen monitor) is a PiP
+   (picture-in-picture) corner badge, above the control bar so the two
+   never overlap — bottom-left, since the reaction FAB (.mf-stage-react-fab,
+   already absolutely positioned by default) owns the bottom-right corner. */
 .mf-stageroom--studio .mf-stage-self-preview {
     position: absolute;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    z-index: 35;
+    bottom: 4.4rem;
+    left: 0.6rem;
+    right: auto;
+    z-index: 3;
     width: 6.5rem;
     top: auto;
 }
@@ -216,52 +186,47 @@
     aspect-ratio: 4 / 3;
 }
 
-/* —— Mobile: Studio collapses to single-column ———————————————— */
+/* The reaction FAB's default bottom offset assumes a docked footer bar's
+   height (--mf-stage-footer-h); the floating pill control bar sits a bit
+   differently, so pin it explicitly clear of the pill instead of relying
+   on that approximation. */
+.mf-stageroom--studio .mf-stage-react-fab {
+    bottom: 4.4rem;
+}
 
-@media (max-width: 1279.98px) {
-    .mf-stageroom--host.mf-stageroom--studio {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto auto;
+/* —— Mobile/tablet ———————————————————————————————————————————— */
+
+/* Below 1024px the room header itself becomes an absolute scrim overlay
+   (see .mf-stageroom--host .mf-stageroom__header in stage.css) rather than
+   a docked bar taking its own flex row — Sources and the pinned banner
+   need to clear it explicitly instead of assuming the deck starts below it. */
+@media (max-width: 1023.98px) {
+    .mf-stageroom--studio .mf-stage-pinned {
+        top: 3.6rem;
     }
 
     .mf-stageroom--studio .mf-stage-sources {
-        grid-column: 1 / 2;
-        grid-row: 3 / 4;
-        flex-direction: row;
-        border-bottom: 1px solid var(--kf-line-strong);
-        border-right: none;
-    }
-
-    .mf-stageroom--studio .mf-stage-presentation {
-        grid-column: 1 / 2;
-        grid-row: 4 / 5;
-        border-top: 1px solid var(--kf-line-strong);
+        top: 3.6rem;
     }
 }
 
 @media (max-width: 767.98px) {
-    .mf-stageroom--studio .mf-stageroom__main {
-        gap: 0.3rem;
-        padding: 0.5rem;
+    .mf-stageroom--studio .mf-stage-monitor__tag {
+        display: none;
     }
 
-    .mf-stageroom--studio .mf-stage-monitor {
-        border-width: 1px;
-        min-height: 40vw;
+    .mf-stageroom--studio .mf-stage-pinned {
+        left: 0.6rem;
+    }
+
+    .mf-stageroom--studio .mf-stage-sources {
+        width: 8.5rem;
+        padding: 0.4rem;
     }
 
     .mf-stageroom--studio .mf-stage-self-preview {
         width: 5rem;
-        bottom: 0.3rem;
-        right: 0.3rem;
-    }
-
-    .mf-stageroom--studio .mf-stage-sources,
-    .mf-stageroom--studio .mf-stage-presentation {
-        padding: 0.4rem;
-    }
-
-    .mf-stageroom--studio .mf-stage-presentation__stage {
-        max-height: 15vh;
+        bottom: 4rem;
+        right: 0.4rem;
     }
 }
