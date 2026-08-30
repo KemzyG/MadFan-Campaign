@@ -134,6 +134,18 @@
 }
 
 /*
+ * A full-bleed page (fillViewport on SocialShell — Live's Studio/Reels/Go
+ * Live) manages its own edge-to-edge layout and safe-area insets, so it
+ * needs none of .mf-main's usual bottom padding (reserved for the mobile
+ * tab bar or, at desktop widths, shell-chrome.css's own `max(1rem, ...)`
+ * floor). The compound selector's higher specificity is what lets this win
+ * over both of those without fighting source order or !important.
+ */
+.mf-main.mf-main--fill {
+    padding-bottom: 0;
+}
+
+/*
  * The Go Live page (Social/Live/Create.jsx) is full-bleed dark, same
  * register as the Studio/Reels pages it leads into — capping it to the
  * feed/app-width column would leave Snow showing at the edges and through

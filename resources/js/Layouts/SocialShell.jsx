@@ -934,7 +934,10 @@ export default function SocialShell({
                             className={[
                                 'mf-main',
                                 fillViewport ? 'mf-main--fill' : '',
-                                showTabs ? '' : 'pb-[max(1rem,var(--mf-safe-bottom))]',
+                                // Full-bleed pages (Live's Studio/Reels/Go Live) manage their own
+                                // edge-to-edge layout and safe-area insets — this bottom padding
+                                // is for the ordinary custom-header pages that still need one.
+                                !showTabs && !fillViewport ? 'pb-[max(1rem,var(--mf-safe-bottom))]' : '',
                             ]
                                 .filter(Boolean)
                                 .join(' ')}
