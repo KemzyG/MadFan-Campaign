@@ -8,6 +8,12 @@ function slugify(heading) {
         .replace(/(^-|-$)/g, '');
 }
 
+const LEGAL_DOCS = [
+    { slug: 'privacy', href: '/privacy', label: 'Privacy Policy' },
+    { slug: 'terms', href: '/terms', label: 'Terms & Conditions' },
+    { slug: 'guidelines', href: '/guidelines', label: 'Community Guidelines' },
+];
+
 /**
  * @param {{
  *   slug: string,
@@ -19,9 +25,7 @@ function slugify(heading) {
  */
 export default function Legal({ slug, title, effective_date: effectiveDate, intro = [], sections = [] }) {
     const activeHref = slug ? `/${slug}` : undefined;
-    const sibling = slug === 'privacy'
-        ? { href: '/terms', label: 'Terms & Conditions' }
-        : { href: '/privacy', label: 'Privacy Policy' };
+    const siblings = LEGAL_DOCS.filter((doc) => doc.slug !== slug);
 
     return (
         <LandingChrome title={title} activeHref={activeHref}>
@@ -46,9 +50,13 @@ export default function Legal({ slug, title, effective_date: effectiveDate, intr
                                 </li>
                             ))}
                         </ol>
-                        <Link href={sibling.href} className="mf-land__text-link">
-                            Read {sibling.label} →
-                        </Link>
+                        <div className="mf-land__legal-siblings">
+                            {siblings.map((doc) => (
+                                <Link key={doc.slug} href={doc.href} className="mf-land__text-link">
+                                    Read {doc.label} →
+                                </Link>
+                            ))}
+                        </div>
                     </aside>
 
                     <div className="mf-land__legal-doc">

@@ -85,6 +85,7 @@ $registerCampaignRoutes = function (): void {
     Route::get('/rewards', fn () => app(StaticPageController::class)->show('rewards'))->name('fan.rewards');
     Route::get('/privacy', fn () => app(LegalPageController::class)->show('privacy'))->name('fan.privacy');
     Route::get('/terms', fn () => app(LegalPageController::class)->show('terms'))->name('fan.terms');
+    Route::get('/guidelines', fn () => app(LegalPageController::class)->show('guidelines'))->name('fan.guidelines');
 
     Route::middleware('app.maintenance')->group(function () {
         Route::middleware('guest')->group(function () {

@@ -3,8 +3,8 @@
 use App\Http\Controllers\Inertia\Fan\LegalPageController;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-test('privacy and terms pages are public', function () {
-    foreach (['/privacy', '/terms'] as $path) {
+test('privacy, terms, and guidelines pages are public', function () {
+    foreach (['/privacy', '/terms', '/guidelines'] as $path) {
         $this->get($path)->assertSuccessful();
     }
 });
@@ -35,6 +35,20 @@ test('terms and conditions renders Fan Legal with full section content', functio
             ->has('sections', 18)
             ->where('sections.0.heading', 'Eligibility')
             ->where('sections.3.heading', 'Loyalty Points, Passport & Rewards'));
+});
+
+test('community guidelines renders Fan Legal with full section content', function () {
+    $this->get('/guidelines')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/Legal')
+            ->where('slug', 'guidelines')
+            ->where('title', 'Community Guidelines')
+            ->has('effective_date')
+            ->has('intro')
+            ->has('sections', 9)
+            ->where('sections.0.heading', 'Nudity and Pornography')
+            ->has('sections.0.bullets'));
 });
 
 test('an unknown legal doc slug 404s', function () {

@@ -1644,6 +1644,11 @@
     counter-reset: none;
 }
 
+.mf-land__legal-siblings {
+    display: grid;
+    gap: 10px;
+}
+
 .mf-land__legal-toc a {
     display: block;
     color: var(--color-steel);

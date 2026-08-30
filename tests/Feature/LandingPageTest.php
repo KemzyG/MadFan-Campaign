@@ -136,7 +136,7 @@ test('fan.home and fan.campaign named routes resolve correctly', function () {
         ->and(route('fan.campaign', absolute: false))->toBe('/campaign');
 });
 
-test('privacy and terms pages are public and render Fan Legal with full content', function () {
+test('privacy, terms, and guidelines pages are public and render Fan Legal with full content', function () {
     $this->get('/privacy')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
@@ -156,17 +156,28 @@ test('privacy and terms pages are public and render Fan Legal with full content'
             ->has('effective_date')
             ->has('intro')
             ->has('sections'));
+
+    $this->get('/guidelines')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Fan/Legal')
+            ->where('slug', 'guidelines')
+            ->where('title', 'Community Guidelines')
+            ->has('effective_date')
+            ->has('intro')
+            ->has('sections'));
 });
 
-test('the legal controller 404s on any slug other than privacy or terms', function () {
-    // No route exposes an arbitrary slug (only the fixed /privacy and /terms
-    // paths are registered), so this exercises the controller's own guard
-    // directly rather than through routing.
+test('the legal controller 404s on any slug other than privacy, terms, or guidelines', function () {
+    // No route exposes an arbitrary slug (only the fixed /privacy, /terms, and
+    // /guidelines paths are registered), so this exercises the controller's
+    // own guard directly rather than through routing.
     expect(fn () => (new App\Http\Controllers\Inertia\Fan\LegalPageController)->show('made-up'))
         ->toThrow(Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
 });
 
-test('fan.privacy and fan.terms named routes resolve correctly', function () {
+test('fan.privacy, fan.terms, and fan.guidelines named routes resolve correctly', function () {
     expect(route('fan.privacy', absolute: false))->toBe('/privacy')
-        ->and(route('fan.terms', absolute: false))->toBe('/terms');
+        ->and(route('fan.terms', absolute: false))->toBe('/terms')
+        ->and(route('fan.guidelines', absolute: false))->toBe('/guidelines');
 });
