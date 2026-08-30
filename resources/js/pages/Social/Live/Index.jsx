@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
-import KickoffRing from '../../Stage/KickoffRing';
+import KickoffRing from '../Stage/KickoffRing';
 import LiveCreateSheet from './LiveCreateSheet';
 
 function LiveCard({ stage }) {
