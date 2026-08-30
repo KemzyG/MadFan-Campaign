@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { socialApi } from '../../../../lib/socialApi';
+import { useAuthGate } from '../../authGate';
 import {
     applyOptimisticProps,
     patchPostInProps,
@@ -30,6 +31,7 @@ export default function PostActions({ post, maxBodyLength = 280, onReply }) {
     const [quoting, setQuoting] = useState(false);
     const [likePop, setLikePop] = useState(false);
     const { reportError, reportSuccess } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const page = usePage();
     const viewer = page.props?.auth?.user;
 
@@ -48,7 +50,7 @@ export default function PostActions({ post, maxBodyLength = 280, onReply }) {
         event.preventDefault();
         event.stopPropagation();
 
-        if (isPending) {
+        if (isPending || !requireAuth('like this post')) {
             return;
         }
 
@@ -88,7 +90,7 @@ export default function PostActions({ post, maxBodyLength = 280, onReply }) {
     }
 
     function repost() {
-        if (isPending) {
+        if (isPending || !requireAuth('repost this')) {
             return;
         }
 

@@ -31,7 +31,7 @@ class FandomHubService
     /**
      * @return array<string, mixed>
      */
-    public function header(Fandom $fandom, User $viewer): array
+    public function header(Fandom $fandom, ?User $viewer): array
     {
         return [
             'id' => $fandom->id,
@@ -41,7 +41,7 @@ class FandomHubService
             'icon' => $fandom->icon,
             'cover_image_url' => $fandom->cover_image_url,
             'fan_count' => FandomFollow::query()->where('fandom_id', $fandom->id)->count(),
-            'is_following' => $viewer->isFollowingFandom($fandom),
+            'is_following' => $viewer !== null && $viewer->isFollowingFandom($fandom),
         ];
     }
 
@@ -80,7 +80,7 @@ class FandomHubService
      *
      * @return array<string, mixed>|null
      */
-    public function trending(User $viewer): ?array
+    public function trending(?User $viewer): ?array
     {
         $cards = $this->events->cards($viewer);
 
@@ -93,7 +93,7 @@ class FandomHubService
     /**
      * @return list<array<string, mixed>>
      */
-    public function liveFeed(User $viewer, int $limit = 20): array
+    public function liveFeed(?User $viewer, int $limit = 20): array
     {
         return $this->events->cards($viewer)
             ->take($limit)
@@ -130,7 +130,7 @@ class FandomHubService
     /**
      * @return array<string, mixed>
      */
-    public function feedExcerpt(User $viewer, int $limit = 5): array
+    public function feedExcerpt(?User $viewer, int $limit = 5): array
     {
         $paginator = $this->feed->globalFeed($viewer);
         $presented = $this->feed->presentPaginator($paginator, $viewer);
@@ -143,7 +143,7 @@ class FandomHubService
     /**
      * @return array<string, mixed>
      */
-    public function leaderboardExcerpt(Fandom $fandom, User $viewer, int $limit = 5): array
+    public function leaderboardExcerpt(Fandom $fandom, ?User $viewer, int $limit = 5): array
     {
         return $this->leaderboard->present($viewer, $limit, $fandom->id);
     }

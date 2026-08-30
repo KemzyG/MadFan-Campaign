@@ -17,7 +17,7 @@ class SocialShopController extends Controller
 {
     public function index(Request $request, ProductCatalogService $catalog): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
         $this->authorize('viewAny', ProductOrder::class);
 
@@ -65,7 +65,7 @@ class SocialShopController extends Controller
                 'sort' => $sort,
                 'in_stock' => $inStockOnly,
             ],
-            'favourite_club_id' => $user->favourite_club_id,
+            'favourite_club_id' => $user?->favourite_club_id,
         ]);
     }
 

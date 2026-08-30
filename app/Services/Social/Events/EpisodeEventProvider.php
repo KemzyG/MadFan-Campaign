@@ -19,7 +19,7 @@ class EpisodeEventProvider implements EventProvider
 {
     private const LIMIT = 6;
 
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         $episodes = VideoHighlight::query()
             ->published()

@@ -32,7 +32,7 @@ class FeedService
      *
      * @return LengthAwarePaginator<int, Post>
      */
-    public function globalFeed(User $viewer): LengthAwarePaginator
+    public function globalFeed(?User $viewer): LengthAwarePaginator
     {
         return $this->baseFeedQuery($viewer)
             ->paginate(self::PER_PAGE)
@@ -83,19 +83,22 @@ class FeedService
      *
      * @return list<array<string, mixed>>
      */
-    public function suggestedFollows(User $viewer, int $limit = 8): array
+    public function suggestedFollows(?User $viewer, int $limit = 8): array
     {
-        $followedIds = Follow::query()
+        // A guest follows no one and has no club to prioritise — the query
+        // degrades to "a handful of onboarded fans", no exclusion/ordering.
+        $excludedIds = $viewer === null ? collect() : Follow::query()
             ->where('follower_id', $viewer->id)
-            ->pluck('following_id');
-
-        $excludedIds = $followedIds->push($viewer->id)->unique()->values();
+            ->pluck('following_id')
+            ->push($viewer->id)
+            ->unique()
+            ->values();
 
         $users = User::query()
             ->whereNotIn('id', $excludedIds)
             ->whereNotNull('social_onboarded_at')
             ->with('favouriteClub:id,name,short,logo')
-            ->when($viewer->favourite_club_id, fn (Builder $query) => $query
+            ->when($viewer?->favourite_club_id, fn (Builder $query) => $query
                 ->orderByRaw('favourite_club_id = ? desc', [$viewer->favourite_club_id]))
             ->inRandomOrder()
             ->limit($limit)
@@ -117,7 +120,7 @@ class FeedService
     /**
      * @return LengthAwarePaginator<int, Post>
      */
-    public function profilePosts(User $profile, User $viewer): LengthAwarePaginator
+    public function profilePosts(User $profile, ?User $viewer): LengthAwarePaginator
     {
         return $this->baseFeedQuery($viewer)
             ->where('author_id', $profile->id)
@@ -128,18 +131,18 @@ class FeedService
     /**
      * @return Builder<Post>
      */
-    protected function baseFeedQuery(User $viewer): Builder
+    protected function baseFeedQuery(?User $viewer): Builder
     {
-        $reportedIds = SocialReport::query()
+        // A guest has never reported or hidden anything — nothing to exclude.
+        $excludedIds = $viewer === null ? collect() : SocialReport::query()
             ->where('reporter_id', $viewer->id)
             ->where('target_type', SocialReportTarget::Post)
-            ->pluck('target_id');
-
-        $hiddenIds = PostHide::query()
-            ->where('user_id', $viewer->id)
-            ->pluck('post_id');
-
-        $excludedIds = $reportedIds->merge($hiddenIds)->unique()->values();
+            ->pluck('target_id')
+            ->merge(
+                PostHide::query()->where('user_id', $viewer->id)->pluck('post_id')
+            )
+            ->unique()
+            ->values();
 
         return Post::query()
             ->visible()
@@ -158,8 +161,14 @@ class FeedService
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
-    public function applyVisibilityScope(Builder $query, User $viewer): Builder
+    public function applyVisibilityScope(Builder $query, ?User $viewer): Builder
     {
+        // A guest has no posts of their own and belongs to no club — only
+        // Public-visibility posts are theirs to see.
+        if ($viewer === null) {
+            return $query->where('visibility', PostVisibility::Public->value);
+        }
+
         $clubIds = $this->viewerClubIds($viewer);
 
         return $query->where(function (Builder $inner) use ($viewer, $clubIds): void {
@@ -192,13 +201,15 @@ class FeedService
      * Whether a single post is visible to the viewer (mirrors applyVisibilityScope
      * for the single-post / thread route via PostPolicy::view).
      */
-    public function canView(User $viewer, Post $post): bool
+    public function canView(?User $viewer, Post $post): bool
     {
         return match ($post->visibility) {
             PostVisibility::Public => true,
-            PostVisibility::OnlyMe => $post->author_id === $viewer->id,
-            PostVisibility::Club => $post->author_id === $viewer->id
-                || in_array((int) $post->club_id, $this->viewerClubIds($viewer), true),
+            PostVisibility::OnlyMe => $viewer !== null && $post->author_id === $viewer->id,
+            PostVisibility::Club => $viewer !== null && (
+                $post->author_id === $viewer->id
+                || in_array((int) $post->club_id, $this->viewerClubIds($viewer), true)
+            ),
         };
     }
 
@@ -207,39 +218,38 @@ class FeedService
      * Everyone → anyone; Following → only people the root author follows;
      * Tagged → only users tagged on the root. The author can always reply.
      */
-    public function viewerCanReply(User $viewer, Post $post): bool
+    public function viewerCanReply(?User $viewer, Post $post): bool
     {
         $rootId = $post->root_id ?? $post->id;
         $root = $rootId === $post->id ? $post : (Post::query()->find($rootId) ?? $post);
 
-        if ($root->author_id === $viewer->id) {
+        if ($viewer !== null && $root->author_id === $viewer->id) {
             return true;
         }
 
         return match ($root->reply_scope) {
             ReplyScope::Everyone => true,
-            ReplyScope::Following => Follow::query()
+            // A guest follows and is tagged on nothing — deterministically
+            // excluded from both restricted scopes, not just "unknown yet".
+            ReplyScope::Following => $viewer !== null && Follow::query()
                 ->where('follower_id', $root->author_id)
                 ->where('following_id', $viewer->id)
                 ->exists(),
-            ReplyScope::Tagged => $root->taggedUsers()->whereKey($viewer->id)->exists(),
+            ReplyScope::Tagged => $viewer !== null && $root->taggedUsers()->whereKey($viewer->id)->exists(),
         };
     }
 
     /**
      * @return array<int, mixed>
      */
-    protected function feedWith(User $viewer): array
+    protected function feedWith(?User $viewer): array
     {
-        return [
+        $with = [
             'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
             'club:id,name,short,logo',
             'media',
             'stage.host:id,name,handle,username,fan_id,avatar_path,avatar_emoji,updated_at',
             'taggedUsers:id,name,handle,username,fan_id,avatar_path,updated_at',
-            'likes' => fn ($query) => $query->where('user_id', $viewer->id),
-            'bookmarks' => fn ($query) => $query->where('user_id', $viewer->id),
-            'hides' => fn ($query) => $query->where('user_id', $viewer->id),
             'quoteOf.author:id,name,handle,username,fan_id',
             'quoteOf.club:id,name,short,logo',
             'quoteOf.media',
@@ -247,12 +257,23 @@ class FeedService
             'repostOf.club:id,name,short,logo',
             'repostOf.media',
         ];
+
+        // A guest has no likes/bookmarks/hides to load — Post::isLikedBy() and
+        // friends already return false on a null viewer without needing the
+        // relation loaded at all, so skip these three queries entirely.
+        if ($viewer !== null) {
+            $with['likes'] = fn ($query) => $query->where('user_id', $viewer->id);
+            $with['bookmarks'] = fn ($query) => $query->where('user_id', $viewer->id);
+            $with['hides'] = fn ($query) => $query->where('user_id', $viewer->id);
+        }
+
+        return $with;
     }
 
     /**
      * @return Collection<int, Post>
      */
-    public function threadReplies(Post $root, User $viewer): Collection
+    public function threadReplies(Post $root, ?User $viewer): Collection
     {
         $threadRootId = $root->root_id ?? $root->id;
 
@@ -275,8 +296,12 @@ class FeedService
      * @param  Collection<int, Post>|list<Post>  $posts
      * @return array<int, bool>
      */
-    public function followingMapForPosts(iterable $posts, User $viewer): array
+    public function followingMapForPosts(iterable $posts, ?User $viewer): array
     {
+        if ($viewer === null) {
+            return [];
+        }
+
         $authorIds = collect($posts)
             ->pluck('author_id')
             ->filter(fn ($id) => $id && $id !== $viewer->id)
@@ -300,11 +325,11 @@ class FeedService
      * @param  array<int, bool>  $followingMap
      * @return array<string, mixed>
      */
-    public function presentPost(Post $post, User $viewer, array $followingMap = []): array
+    public function presentPost(Post $post, ?User $viewer, array $followingMap = []): array
     {
         $author = $post->author;
-        $isOwn = $viewer->id === $post->author_id;
-        $viewerFollowsAuthor = $isOwn
+        $isOwn = $viewer !== null && $viewer->id === $post->author_id;
+        $viewerFollowsAuthor = $isOwn || $viewer === null
             ? false
             : (bool) ($followingMap[$post->author_id] ?? Follow::query()
                 ->where('follower_id', $viewer->id)
@@ -367,9 +392,9 @@ class FeedService
                     'avatar_url' => $user->avatar_url,
                 ])->values()->all()
                 : [],
-            'can_delete' => $viewer->can('delete', $post),
-            'can_repost' => $viewer->id !== $post->author_id && $post->reply_to_id === null,
-            'can_hide' => $viewer->can('hide', $post),
+            'can_delete' => $viewer !== null && $viewer->can('delete', $post),
+            'can_repost' => ! $isOwn && $post->reply_to_id === null,
+            'can_hide' => $viewer !== null && $viewer->can('hide', $post),
             'can_follow_author' => ! $isOwn && $author !== null,
             'viewer_can_reply' => $this->viewerCanReply($viewer, $post),
         ];
@@ -409,7 +434,7 @@ class FeedService
      * @param  LengthAwarePaginator<int, Post>  $paginator
      * @return array{data: list<array<string, mixed>>, meta: array<string, mixed>, links: array<string, string|null>}
      */
-    public function presentPaginator(LengthAwarePaginator $paginator, User $viewer): array
+    public function presentPaginator(LengthAwarePaginator $paginator, ?User $viewer): array
     {
         $items = collect($paginator->items());
         $followingMap = $this->followingMapForPosts($items, $viewer);

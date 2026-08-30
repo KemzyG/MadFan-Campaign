@@ -18,7 +18,7 @@ class SocialFixtureController extends Controller
         FixtureService $fixtures,
         MatchTicketService $tickets,
     ): Response {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         $this->authorize('viewAny', MatchTicket::class);

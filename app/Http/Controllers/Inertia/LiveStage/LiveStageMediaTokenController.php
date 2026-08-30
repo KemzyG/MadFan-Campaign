@@ -28,13 +28,17 @@ class LiveStageMediaTokenController extends Controller
             );
         }
 
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
-        if (! $liveStage->isHost($user)) {
+        if ($user !== null && ! $liveStage->isHost($user)) {
             $stages->heartbeat($liveStage, $user);
         }
 
-        return response()->json($stages->issueMediaToken($liveStage, $user));
+        // Stable per-browser-session identity so a guest's LiveKit participant
+        // doesn't churn on every reload — see MediaProvider::createGuestViewerToken.
+        $guestId = $user === null ? substr($request->session()->getId(), 0, 16) : null;
+
+        return response()->json($stages->issueMediaToken($liveStage, $user, $guestId));
     }
 }

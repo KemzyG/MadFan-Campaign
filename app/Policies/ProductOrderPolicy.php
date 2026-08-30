@@ -7,8 +7,16 @@ use App\Models\User;
 
 class ProductOrderPolicy
 {
-    public function viewAny(User $user): bool
+    /**
+     * Browsing the shop (which reuses this ability as its page-view gate) is
+     * guest-viewable; viewing/placing an actual order still isn't.
+     */
+    public function viewAny(?User $user): bool
     {
+        if ($user === null) {
+            return true;
+        }
+
         return $this->isSocialReady($user);
     }
 

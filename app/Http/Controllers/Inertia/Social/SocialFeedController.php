@@ -20,20 +20,27 @@ class SocialFeedController extends Controller
 {
     public function __invoke(Request $request, FeedService $feedService, RecordPostView $recordPostView): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
-        $user->loadMissing('favouriteClub.league');
+        $user?->loadMissing('favouriteClub.league');
 
+        // A guest has nobody to follow — always the global stream, and the
+        // "Following" tab simply isn't reachable without an account (the
+        // frontend hides the toggle for guests; this is the server-side
+        // backstop for a hand-crafted ?mode=following request).
         $requestedMode = $request->string('mode')->toString();
-        $mode = $requestedMode === 'following' ? 'following' : 'global';
-        $club = $user->favouriteClub;
+        $mode = $requestedMode === 'following' && $user !== null ? 'following' : 'global';
+        $club = $user?->favouriteClub;
 
         $paginator = $mode === 'following'
             ? $feedService->followingFeed($user)
             : $feedService->globalFeed($user);
 
-        // Once-per-user feed impression (unique post_views); does not re-increment on reloads.
-        $recordPostView->forFeed($paginator->items(), $user);
+        // Once-per-user feed impression (unique post_views); guests have no
+        // user row to key a view against, so their reads simply aren't counted.
+        if ($user !== null) {
+            $recordPostView->forFeed($paginator->items(), $user);
+        }
 
         $presented = $feedService->presentPaginator($paginator, $user);
 

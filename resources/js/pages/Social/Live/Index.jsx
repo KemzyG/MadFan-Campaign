@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
+import { useAuthGate } from '../authGate';
 import KickoffRing from '../Stage/KickoffRing';
 import LiveCreateSheet from './LiveCreateSheet';
 
@@ -30,6 +31,13 @@ function LiveCard({ stage }) {
 
 export default function Index({ stages, stage_types: stageTypes, max_title_length: maxTitleLength, max_description_length: maxDescriptionLength }) {
     const [createOpen, setCreateOpen] = useState(false);
+    const { requireAuth } = useAuthGate();
+
+    const openCreate = () => {
+        if (requireAuth('go live')) {
+            setCreateOpen(true);
+        }
+    };
 
     return (
         <SocialShell title="Live">
@@ -48,7 +56,7 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                     <button
                         type="button"
                         className="kf-form__btn kf-form__btn--primary"
-                        onClick={() => setCreateOpen(true)}
+                        onClick={openCreate}
                     >
                         Go Live
                     </button>
@@ -71,7 +79,7 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                             <button
                                 type="button"
                                 className="kf-form__btn kf-form__btn--primary"
-                                onClick={() => setCreateOpen(true)}
+                                onClick={openCreate}
                             >
                                 Go Live
                             </button>

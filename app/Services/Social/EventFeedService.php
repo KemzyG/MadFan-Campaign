@@ -41,7 +41,7 @@ class EventFeedService
      *
      * @return Collection<int, EventCard>
      */
-    public function cards(User $viewer): Collection
+    public function cards(?User $viewer): Collection
     {
         $cards = collect(self::PROVIDERS)
             ->flatMap(fn (string $provider): array => iterator_to_array(
@@ -91,7 +91,7 @@ class EventFeedService
      * @param  Collection<int, EventCard>  $cards
      * @return Collection<int, EventCard>
      */
-    protected function withInterest(Collection $cards, User $viewer): Collection
+    protected function withInterest(Collection $cards, ?User $viewer): Collection
     {
         if ($cards->isEmpty()) {
             return $cards;
@@ -105,7 +105,9 @@ class EventFeedService
             ->selectRaw('event_key, COUNT(*) as aggregate')
             ->pluck('aggregate', 'event_key');
 
-        $mine = SocialEventInterest::query()
+        // A guest has never marked interest in anything — skip the query
+        // rather than run it against a null user_id.
+        $mine = $viewer === null ? collect() : SocialEventInterest::query()
             ->where('user_id', $viewer->id)
             ->whereIn('event_key', $keys)
             ->pluck('event_key')

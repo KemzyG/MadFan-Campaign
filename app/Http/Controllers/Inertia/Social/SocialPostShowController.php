@@ -21,36 +21,36 @@ class SocialPostShowController extends Controller
     ): Response {
         $this->authorize('view', $post);
 
-        /** @var User $viewer */
+        /** @var User|null $viewer */
         $viewer = $request->user();
 
-        $root = $post->root_id
-            ? Post::query()->visible()->with([
-                'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
-                'club:id,name,short,logo',
-                'media',
-                'likes' => fn ($query) => $query->where('user_id', $viewer->id),
-                'bookmarks' => fn ($query) => $query->where('user_id', $viewer->id),
-                'hides' => fn ($query) => $query->where('user_id', $viewer->id),
-                'quoteOf.author:id,name,handle,username,fan_id',
-                'quoteOf.media',
-                'repostOf.author:id,name,handle,username,fan_id',
-                'repostOf.media',
-            ])->findOrFail($post->root_id)
-            : $post->loadMissing([
-                'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
-                'club:id,name,short,logo',
-                'media',
-                'likes' => fn ($query) => $query->where('user_id', $viewer->id),
-                'bookmarks' => fn ($query) => $query->where('user_id', $viewer->id),
-                'hides' => fn ($query) => $query->where('user_id', $viewer->id),
-                'quoteOf.author:id,name,handle,username,fan_id',
-                'quoteOf.media',
-                'repostOf.author:id,name,handle,username,fan_id',
-                'repostOf.media',
-            ]);
+        // A guest has no likes/bookmarks/hides to load — Post::isLikedBy() and
+        // friends already return false on a null viewer, so skip these three
+        // eager-load constraints entirely rather than querying user_id = null.
+        $viewerScoped = $viewer !== null ? [
+            'likes' => fn ($query) => $query->where('user_id', $viewer->id),
+            'bookmarks' => fn ($query) => $query->where('user_id', $viewer->id),
+            'hides' => fn ($query) => $query->where('user_id', $viewer->id),
+        ] : [];
 
-        $recordPostView->handle($root, $viewer);
+        $with = [
+            'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
+            'club:id,name,short,logo',
+            'media',
+            ...$viewerScoped,
+            'quoteOf.author:id,name,handle,username,fan_id',
+            'quoteOf.media',
+            'repostOf.author:id,name,handle,username,fan_id',
+            'repostOf.media',
+        ];
+
+        $root = $post->root_id
+            ? Post::query()->visible()->with($with)->findOrFail($post->root_id)
+            : $post->loadMissing($with);
+
+        if ($viewer !== null) {
+            $recordPostView->handle($root, $viewer);
+        }
         $root->refresh();
 
         $replies = $feedService->threadReplies($root, $viewer);

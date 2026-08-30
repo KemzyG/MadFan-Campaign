@@ -8,13 +8,26 @@ use App\Services\LiveStage\LiveStageService;
 
 class LiveStagePolicy
 {
-    public function viewAny(User $user): bool
+    /**
+     * Live Now discovery is guest-viewable (matches TikTok/X/Facebook: browse
+     * without an account, sign in only to act). Every other ability below
+     * this one is unchanged and still requires a real, onboarded account.
+     */
+    public function viewAny(?User $user): bool
     {
+        if ($user === null) {
+            return true;
+        }
+
         return $this->canAccessLiveNetwork($user);
     }
 
-    public function view(User $user, LiveStage $stage): bool
+    public function view(?User $user, LiveStage $stage): bool
     {
+        if ($user === null) {
+            return $stage->is_public;
+        }
+
         return $this->canAccessLiveNetwork($user);
     }
 
@@ -69,8 +82,17 @@ class LiveStagePolicy
         return $stage->staff()->where('user_id', $user->id)->exists();
     }
 
-    public function mediaToken(User $user, LiveStage $stage): bool
+    /**
+     * A guest gets a real (subscribe-only) LiveKit token too — watching the
+     * stream is content, not interaction, same boundary as everything else
+     * in this policy: comment/react/moderate all still require a real session.
+     */
+    public function mediaToken(?User $user, LiveStage $stage): bool
     {
+        if ($user === null) {
+            return $stage->isLive() && $stage->is_public;
+        }
+
         return $this->canAccessLiveNetwork($user)
             && $stage->isLive()
             && ($stage->isHost($user) || app(LiveStageService::class)->activeSession($stage, $user) !== null);

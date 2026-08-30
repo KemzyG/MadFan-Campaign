@@ -18,7 +18,7 @@ class SecurityHeaders
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN', false);
         $response->headers->set('X-Content-Type-Options', 'nosniff', false);
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin', false);
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()', false);
+        $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()', false);
         $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy(), false);
 
         if ($request->secure() && app()->environment('production')) {

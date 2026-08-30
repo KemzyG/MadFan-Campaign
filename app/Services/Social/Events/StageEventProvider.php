@@ -24,7 +24,7 @@ class StageEventProvider implements EventProvider
 
     public function __construct(private readonly StageService $stageService) {}
 
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         $stages = Stage::query()
             ->where('status', StageStatus::Live)
