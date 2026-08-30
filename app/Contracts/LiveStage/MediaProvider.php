@@ -47,6 +47,18 @@ interface MediaProvider
     public function createViewerToken(LiveStage $stage, User $viewer): array;
 
     /**
+     * A subscribe-only token for a viewer with no account — watching a live
+     * stream is content, not interaction, so guests get real media access the
+     * same as anyone else; only comments/reactions/moderation stay
+     * account-gated. `$guestId` has no DB row behind it (no LiveStageViewerSession
+     * exists for a guest) — it only needs to be stable enough that one guest's
+     * browser session maps to one LiveKit participant identity across reloads.
+     *
+     * @return array{token: string, url: string, room: string, identity: string, expires_at: int}
+     */
+    public function createGuestViewerToken(LiveStage $stage, string $guestId): array;
+
+    /**
      * Tear down the room. Best-effort — a stage must still be able to end even
      * if the media server is unreachable (see LiveStageService::end).
      */

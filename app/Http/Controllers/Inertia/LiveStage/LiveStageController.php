@@ -52,10 +52,12 @@ class LiveStageController extends Controller
     {
         $this->authorize('view', $liveStage);
 
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
-        if ($liveStage->isLive() && ! $liveStage->isHost($user)) {
+        // A guest is never joined as a tracked viewer session — there's no
+        // user_id to key the row on (see LiveStageService::activeSession).
+        if ($liveStage->isLive() && $user !== null && ! $liveStage->isHost($user)) {
             $stages->join($liveStage, $user);
         }
 
@@ -79,7 +81,7 @@ class LiveStageController extends Controller
     {
         $this->authorize('view', $liveStage);
 
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         if ($liveStage->isLive()) {

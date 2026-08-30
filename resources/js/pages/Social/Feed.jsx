@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import SocialShell, { useSocialCompose } from '../../Layouts/SocialShell';
+import { useAuthGate } from './authGate';
 import FriendSuggestions from './components/FriendSuggestions';
 import PostCard from './components/PostCard';
 import PullToRefresh from './components/PullToRefresh';
@@ -32,6 +33,7 @@ function FeedEmpty({ mode, message, onCompose }) {
 
 function PostStream({ feed, suggestions }) {
     const { openCompose, composeOpen } = useSocialCompose();
+    const { requireAuth } = useAuthGate();
     const stageSession = useStageSessionOptional();
     const [dismissedIds, setDismissedIds] = useState([]);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -89,6 +91,15 @@ function PostStream({ feed, suggestions }) {
                             className={mode === 'following' ? 'is-active' : ''}
                             preserveScroll
                             prefetch
+                            onClick={(event) => {
+                                // A guest follows no one — the server forces
+                                // this back to global anyway; ask them to sign
+                                // in instead of navigating to a page that
+                                // silently doesn't change.
+                                if (!requireAuth('see who you follow')) {
+                                    event.preventDefault();
+                                }
+                            }}
                         >
                             Following
                         </Link>

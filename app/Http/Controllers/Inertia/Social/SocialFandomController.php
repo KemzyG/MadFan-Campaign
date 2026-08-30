@@ -36,7 +36,7 @@ class SocialFandomController extends Controller
         PollService $polls,
         VideoHighlightService $videos,
     ): Response {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         if (! $fandom->is_active) {

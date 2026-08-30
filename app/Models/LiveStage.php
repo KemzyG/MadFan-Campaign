@@ -83,8 +83,8 @@ class LiveStage extends Model
         return $this->status === LiveStageStatus::Live;
     }
 
-    public function isHost(User $user): bool
+    public function isHost(?User $user): bool
     {
-        return (int) $this->host_id === (int) $user->id;
+        return $user !== null && (int) $this->host_id === (int) $user->id;
     }
 }

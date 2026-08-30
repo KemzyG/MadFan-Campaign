@@ -81,7 +81,7 @@ test('security headers are present on web responses', function () {
 
     $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
     $response->assertHeader('X-Content-Type-Options', 'nosniff');
-    $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
+    $response->assertHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
     $response->assertHeader('Content-Security-Policy');
     expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'");
     expect($response->headers->get('Content-Security-Policy'))
@@ -89,8 +89,11 @@ test('security headers are present on web responses', function () {
         ->and($response->headers->get('Content-Security-Policy'))->toMatch('/connect-src[^;]*wss:/');
     expect($response->headers->get('Permissions-Policy'))
         ->toContain('microphone=(self)')
+        ->and($response->headers->get('Permissions-Policy'))->toContain('camera=(self)')
         ->and($response->headers->get('Permissions-Policy'))->not->toContain('microphone=*')
-        ->and($response->headers->get('Permissions-Policy'))->not->toContain('microphone=()');
+        ->and($response->headers->get('Permissions-Policy'))->not->toContain('microphone=()')
+        ->and($response->headers->get('Permissions-Policy'))->not->toContain('camera=*')
+        ->and($response->headers->get('Permissions-Policy'))->not->toContain('camera=()');
 });
 
 test('non-local CSP does not allow vite development origins', function () {

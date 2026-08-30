@@ -55,7 +55,7 @@ class FandomDiscoveryService
     /**
      * @return list<array<string, mixed>>
      */
-    public function presentPopular(User $viewer, ?string $group, int $limit = 8): array
+    public function presentPopular(?User $viewer, ?string $group, int $limit = 8): array
     {
         return $this->scopedFandoms($group)
             ->orderByDesc(
@@ -150,7 +150,7 @@ class FandomDiscoveryService
     /**
      * @return array<string, mixed>
      */
-    private function presentFandomCard(Fandom $fandom, User $viewer): array
+    private function presentFandomCard(Fandom $fandom, ?User $viewer): array
     {
         return [
             'id' => $fandom->id,
@@ -159,7 +159,7 @@ class FandomDiscoveryService
             'icon' => $fandom->icon,
             'cover_image_url' => $fandom->cover_image_url,
             'fan_count' => FandomFollow::query()->where('fandom_id', $fandom->id)->count(),
-            'is_following' => $viewer->isFollowingFandom($fandom),
+            'is_following' => $viewer !== null && $viewer->isFollowingFandom($fandom),
         ];
     }
 

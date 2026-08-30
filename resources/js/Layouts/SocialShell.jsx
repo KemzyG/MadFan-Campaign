@@ -17,6 +17,8 @@ import {
     visitPathname,
 } from '../pages/Social/components/Skeletons';
 import StageChrome from '../pages/Social/Stage/StageChrome';
+import { AuthGateContext } from '../pages/Social/authGate';
+import SignInGate from '../pages/Social/components/SignInGate';
 import { SocialFlashContext, SocialNotificationsContext } from '../pages/Social/optimistic';
 import { socialApi } from '../lib/socialApi';
 import { getEcho, leaveEchoChannel } from '../echo';
@@ -563,6 +565,25 @@ export default function SocialShell({
         return () => window.clearInterval(timer);
     }, [user?.id]);
 
+    // "Guest can see it, sign in to do it" — see resources/js/pages/Social/authGate.js.
+    const isGuest = !user;
+    const [gateAction, setGateAction] = useState(null);
+    const closeGate = useCallback(() => setGateAction(null), []);
+    const requireAuth = useCallback(
+        (action) => {
+            if (!isGuest) {
+                return true;
+            }
+            setGateAction(action || true);
+            return false;
+        },
+        [isGuest],
+    );
+    const authGateApi = useMemo(
+        () => ({ isGuest, requireAuth }),
+        [isGuest, requireAuth],
+    );
+
     const [composeOpen, setComposeOpen] = useState(false);
     const [toasts, setToasts] = useState([]);
     const [navSkeletonKind, setNavSkeletonKind] = useState(null);
@@ -759,6 +780,7 @@ export default function SocialShell({
     const showChatRail = showTabs && !wide && !pathMatches(current, '/social/chat');
 
     return (
+        <AuthGateContext.Provider value={authGateApi}>
         <SocialFlashContext.Provider value={flashApi}>
             <SocialNotificationsContext.Provider value={notificationsApi}>
             <SocialComposeContext.Provider value={composeApi}>
@@ -969,6 +991,8 @@ export default function SocialShell({
 
                 <StageChrome />
 
+                <SignInGate action={gateAction} onClose={closeGate} />
+
                 <div className="mf-toast-stack" aria-live="polite" aria-relevant="additions">
                     {toasts.map((toast) => (
                         <div
@@ -995,5 +1019,6 @@ export default function SocialShell({
             </SocialComposeContext.Provider>
             </SocialNotificationsContext.Provider>
         </SocialFlashContext.Provider>
+        </AuthGateContext.Provider>
     );
 }

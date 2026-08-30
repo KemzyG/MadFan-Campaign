@@ -1,5 +1,6 @@
 import '../css/social.css';
 // Per-feature Social stylesheets (kept out of the monolithic social.css).
+import '../css/social/auth-gate.css';
 import '../css/social/split.css';
 import '../css/social/leaderboard.css';
 import '../css/social/notifications.css';

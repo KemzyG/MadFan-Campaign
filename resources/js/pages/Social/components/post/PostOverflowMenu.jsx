@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { socialApi } from '../../../../lib/socialApi';
+import { useAuthGate } from '../../authGate';
 import {
     patchPostInProps,
     removePostFromProps,
@@ -21,6 +22,7 @@ export default function PostOverflowMenu({ post, onDismiss }) {
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
     const { reportError, reportSuccess } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const isOwn = Boolean(post.is_own || post.can_delete);
     const bookmarked = Boolean(post.bookmarked_by_viewer);
     const hidden = Boolean(post.hidden_by_viewer);
@@ -52,8 +54,11 @@ export default function PostOverflowMenu({ post, onDismiss }) {
         };
     }, [open]);
 
-    function run(action) {
+    function run(action, gateAction) {
         setOpen(false);
+        if (gateAction && !requireAuth(gateAction)) {
+            return;
+        }
         action();
     }
 
@@ -107,7 +112,7 @@ export default function PostOverflowMenu({ post, onDismiss }) {
                                         return;
                                     }
                                     visit.post(`/social/posts/${post.id}/bookmark`, {}, opts);
-                                })
+                                }, 'bookmark this post')
                             }
                         >
                             {bookmarked ? 'Remove bookmark' : 'Bookmark'}
@@ -147,7 +152,7 @@ export default function PostOverflowMenu({ post, onDismiss }) {
                                                     : 'Follow failed — rolled back.',
                                             },
                                         );
-                                    })
+                                    }, following ? 'unfollow this fan' : 'follow this fan')
                                 }
                             >
                                 {following

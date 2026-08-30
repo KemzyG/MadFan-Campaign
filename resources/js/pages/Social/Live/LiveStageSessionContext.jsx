@@ -147,10 +147,14 @@ export function LiveStageSessionProvider({ initialStage, initialComments, childr
         return () => window.clearInterval(timer);
     }, [echoConnected, refreshState]);
 
-    // Foreground heartbeat — keeps this viewer's presence session alive.
+    // Foreground heartbeat — keeps this viewer's presence session alive. A
+    // guest never gets a tracked session (see LiveStageController::show), so
+    // `stage.me` is null for them the same way it is pre-join — reuse that
+    // rather than a 401 retry loop against an auth-only route every
+    // HEARTBEAT_MS.
     useEffect(() => {
         const id = initialStage?.id;
-        if (!id || initialStage?.is_host) {
+        if (!id || initialStage?.is_host || !initialStage?.me) {
             return undefined;
         }
         const timer = window.setInterval(() => {

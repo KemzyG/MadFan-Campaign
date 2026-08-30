@@ -22,7 +22,7 @@ class SocialLeaderboardController extends Controller
 {
     public function __invoke(Request $request, FanLeaderboardService $leaderboard): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         $scope = $request->string('scope')->toString();
@@ -31,14 +31,17 @@ class SocialLeaderboardController extends Controller
         $fandom = null;
         $club = null;
 
+        // A guest has no favourite fandom/club to default a scoped board to —
+        // an explicit ?fandom_id=/?club_id= still works, it just never falls
+        // back to "mine" the way it does for a signed-in viewer.
         if ($scope === 'fandom') {
-            $fandomId = $request->integer('fandom_id') ?: $user->favourite_fandom_id;
+            $fandomId = $request->integer('fandom_id') ?: $user?->favourite_fandom_id;
             $fandom = $fandomId ? Fandom::query()->find($fandomId, ['id', 'name', 'slug']) : null;
             $scope = $fandom ? 'fandom' : 'global';
         }
 
         if ($scope === 'club') {
-            $clubId = $request->integer('club_id') ?: $user->favourite_club_id;
+            $clubId = $request->integer('club_id') ?: $user?->favourite_club_id;
             $club = $clubId ? Club::query()->with('league:id,name')->find($clubId) : null;
             $scope = $club ? 'club' : 'global';
         }
@@ -50,10 +53,10 @@ class SocialLeaderboardController extends Controller
             $club?->id,
         );
 
-        $viewerFandom = $user->favourite_fandom_id
+        $viewerFandom = $user?->favourite_fandom_id
             ? Fandom::query()->find($user->favourite_fandom_id, ['id', 'name', 'slug'])
             : null;
-        $viewerClub = $user->favourite_club_id
+        $viewerClub = $user?->favourite_club_id
             ? Club::query()->find($user->favourite_club_id, ['id', 'name', 'short', 'logo'])
             : null;
 

@@ -19,7 +19,7 @@ class SocialFandomDiscoveryController extends Controller
 {
     public function __invoke(Request $request, FandomDiscoveryService $discovery): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         $group = $request->string('group')->toString() ?: null;

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { onImageError, resolveDefaultImageUrl } from '../../../../lib/defaultImage';
+import { useAuthGate } from '../../authGate';
 import { prependFeedPost, useSocialFlash, withRollbackFlash } from '../../optimistic';
 import { IconImage } from '../post/icons';
 import PostSettingsBar from './PostSettingsBar';
@@ -29,6 +30,7 @@ export default function FeedComposer({
     const fallbackUrl = resolveDefaultImageUrl(page.props);
     const inputId = useId();
     const { reportError } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const textareaRef = useRef(null);
 
     const { data, setData, errors } = useForm({
@@ -85,7 +87,7 @@ export default function FeedComposer({
 
     function submit(event) {
         event.preventDefault();
-        if (!canPost || busy) {
+        if (!canPost || busy || !requireAuth('post')) {
             return;
         }
 

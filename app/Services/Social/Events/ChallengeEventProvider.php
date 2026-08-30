@@ -21,7 +21,7 @@ class ChallengeEventProvider implements EventProvider
 {
     private const LIMIT = 6;
 
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         $tasks = Task::query()
             ->forFans()

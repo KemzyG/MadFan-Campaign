@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { socialApi } from '../../../lib/socialApi';
+import { useAuthGate } from '../authGate';
 import { runSocialMutation, setAuthorFollowInProps, useSocialFlash } from '../optimistic';
 
 export function formatCount(value) {
@@ -34,13 +35,14 @@ function StatCell({ label, value }) {
  */
 export default function ProfileHero({ profile, isVisit }) {
     const { reportError, reportSuccess } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
     const [messaging, setMessaging] = useState(false);
     const canMessage = Boolean(profile.is_following || profile.is_followed_by);
 
     function messageUser() {
-        if (messaging || !canMessage) {
+        if (messaging || !canMessage || !requireAuth('message this fan')) {
             return;
         }
         setMessaging(true);
@@ -59,6 +61,10 @@ export default function ProfileHero({ profile, isVisit }) {
     }
 
     function toggleFollow() {
+        if (!requireAuth(profile.is_following ? 'unfollow this fan' : 'follow this fan')) {
+            return;
+        }
+
         const next = !profile.is_following;
         void runSocialMutation(
             (props) => setAuthorFollowInProps(props, profile.id, next),

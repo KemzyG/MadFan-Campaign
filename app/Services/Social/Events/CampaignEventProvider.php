@@ -17,7 +17,7 @@ use App\Support\Social\EventWindow;
  */
 class CampaignEventProvider implements EventProvider
 {
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         $season = Season::query()
             ->where('status', 'active')

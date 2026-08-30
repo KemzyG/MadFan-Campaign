@@ -134,8 +134,12 @@ class MatchTicketService
         ];
     }
 
-    public function ticketCountForUser(User $user): int
+    public function ticketCountForUser(?User $user): int
     {
+        if ($user === null) {
+            return 0;
+        }
+
         return MatchTicket::query()
             ->where('user_id', $user->id)
             ->where('status', '!=', MatchTicketStatus::Cancelled)

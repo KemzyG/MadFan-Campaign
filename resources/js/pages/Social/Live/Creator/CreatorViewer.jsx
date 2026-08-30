@@ -8,6 +8,7 @@ import ReactionFab from '../components/ReactionFab';
 import ReactionsLayer from '../components/ReactionsLayer';
 import ViewerCountBadge from '../components/ViewerCountBadge';
 import VideoMount from '../components/VideoMount';
+import { useAuthGate } from '../../authGate';
 import { useLiveStageSession } from '../LiveStageSessionContext';
 import { useLiveStageMedia } from '../useLiveStageMedia';
 import { useSwipeLayer } from '../../../../lib/useSwipeLayer';
@@ -30,6 +31,7 @@ import { IconBack, IconChat } from '../../Stage/StageIcons';
 export default function CreatorViewer() {
     const { stage, comments, reactions, connection, error, postComment, react } = useLiveStageSession();
     const meId = usePage().props.auth?.user?.id;
+    const { requireAuth } = useAuthGate();
     const swipe = useSwipeLayer();
 
     const { remoteVideoEl, remoteAudioEl, mediaState, mediaError } = useLiveStageMedia({
@@ -52,7 +54,24 @@ export default function CreatorViewer() {
         return () => window.removeEventListener('live-stage:moderated', handler);
     }, [meId]);
 
-    const leave = () => router.post(`/social/live/${stage.id}/leave`);
+    // A guest was never joined as a tracked viewer session (see
+    // LiveStageController::show) — there's nothing server-side to leave, so
+    // just navigate away instead of POSTing to an auth-only route.
+    const leave = () => (meId ? router.post(`/social/live/${stage.id}/leave`) : router.visit('/social/live'));
+
+    const postCommentGated = (body) => {
+        if (!requireAuth('comment')) {
+            return Promise.resolve();
+        }
+        return postComment(body);
+    };
+
+    const reactGated = (emoji) => {
+        if (!requireAuth('react')) {
+            return;
+        }
+        react(emoji);
+    };
 
     if (connection !== 'live') {
         return (
@@ -131,7 +150,7 @@ export default function CreatorViewer() {
                         </button>
                         <ReactionFab
                             options={stage.reaction_options}
-                            onReact={react}
+                            onReact={reactGated}
                             disabled={!stage.settings.allow_reactions}
                         />
                     </div>
@@ -155,7 +174,7 @@ export default function CreatorViewer() {
                     </div>
                     <CommentsFeed comments={comments} canModerate={false} />
                     <CommentComposer
-                        onSubmit={postComment}
+                        onSubmit={postCommentGated}
                         disabled={!stage.settings.allow_comments}
                         maxLength={stage.max_comment_length}
                     />

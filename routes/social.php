@@ -74,6 +74,55 @@ use Illuminate\Support\Facades\Route;
  * @param  bool  $withNames  Whether to register named routes (only once per app boot).
  */
 return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
+    // Guest-viewable surface — no `auth`, no `verified`: a visitor with no
+    // session at all can read these pages, same shape as X/TikTok/Facebook
+    // ("see the content, sign in to act on it"). `social.onboarded` stays in
+    // this stack even though guests never hit it (it no-ops on a null user —
+    // see EnsureSocialOnboarded) because a *logged-in* user who hasn't picked
+    // a club yet must still be funnelled through onboarding same as before;
+    // only the guest case is new here. Every controller reachable from this
+    // group must tolerate `$request->user() === null` — see each controller's
+    // own null-guards rather than re-deriving that contract here.
+    $guest = Route::middleware(['app.maintenance', 'social.enabled', 'social.onboarded', TouchLastSeen::class]);
+    if ($pathPrefix !== '') {
+        $guest->prefix($pathPrefix);
+    }
+    if ($withNames) {
+        $guest->name('social.');
+    }
+    $guest->group(function () {
+        Route::get('/', SocialEventsController::class)->name('home');
+        Route::get('/feed', SocialFeedController::class)->name('feed');
+
+        Route::get('/live', [LiveStageController::class, 'index'])->name('live.index');
+        Route::get('/live/{liveStage}', [LiveStageController::class, 'show'])->name('live.show');
+        Route::get('/live/{liveStage}/state', [LiveStageController::class, 'state'])
+            ->middleware('throttle:live-stage-poll')
+            ->name('live.state');
+        // Video is content, not interaction — a guest gets a real subscribe-only
+        // LiveKit token here too (see LiveStagePolicy::mediaToken / issueMediaToken).
+        Route::get('/live/{liveStage}/media-token', LiveStageMediaTokenController::class)
+            ->middleware('throttle:60,1')
+            ->name('live.media-token');
+
+        Route::get('/fandom', SocialFandomDiscoveryController::class)->name('fandom');
+        Route::get('/fandom/{fandom:slug}', SocialFandomController::class)->name('fandom.show');
+        Route::get('/fandom/{fandom:slug}/members', SocialFandomMembersController::class)->name('fandom.members');
+        Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
+        Route::get('/clubs', SocialStandingsController::class)->name('clubs');
+        Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
+        Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
+
+        Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
+        Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');
+
+        Route::get('/u/{handle}', SocialProfileController::class)
+            ->where('handle', '[A-Za-z0-9._\\-]+')
+            ->name('profile');
+
+        Route::get('/posts/{post}', SocialPostShowController::class)->name('posts.show');
+    });
+
     Route::middleware(['app.maintenance', 'auth', TouchLastSeen::class])->group(function () use ($pathPrefix, $apiPrefix, $withNames): void {
         // Only register once per domain: apiPrefix doesn't vary between the canonical
         // and legacy-path page mounts, so a second pass would just clobber these names.
@@ -191,10 +240,8 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 ->name('onboarding.club.store');
 
             Route::middleware('social.onboarded')->group(function () use ($pathPrefix) {
-                Route::get('/', SocialEventsController::class)->name('home');
                 $homeTarget = $pathPrefix === '' ? '/' : '/'.trim($pathPrefix, '/');
                 Route::redirect('/home', $homeTarget);
-                Route::get('/feed', SocialFeedController::class)->name('feed');
                 Route::get('/passport', SocialPassportController::class)->name('passport');
                 Route::get('/chat', [SocialChatController::class, 'index'])->name('chat');
                 Route::get('/chat/thread/{channelKey}', [SocialChatController::class, 'show'])
@@ -289,14 +336,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 // separate namespace/table set from the Stage voice room above:
                 // that feature keeps running untouched while Live Stage is
                 // built out and reviewed, per the rebuild plan's Phase 1.
-                Route::get('/live', [LiveStageController::class, 'index'])->name('live.index');
                 Route::post('/live', [LiveStageController::class, 'store'])
                     ->middleware('throttle:10,1')
                     ->name('live.store');
-                Route::get('/live/{liveStage}', [LiveStageController::class, 'show'])->name('live.show');
-                Route::get('/live/{liveStage}/state', [LiveStageController::class, 'state'])
-                    ->middleware('throttle:live-stage-poll')
-                    ->name('live.state');
                 Route::post('/live/{liveStage}/start', [LiveStageLifecycleController::class, 'start'])
                     ->middleware('throttle:20,1')
                     ->name('live.start');
@@ -318,9 +360,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/live/{liveStage}/reactions', [LiveStageReactionController::class, 'store'])
                     ->middleware('throttle:live-stage-reaction')
                     ->name('live.reactions.store');
-                Route::get('/live/{liveStage}/media-token', LiveStageMediaTokenController::class)
-                    ->middleware('throttle:60,1')
-                    ->name('live.media-token');
                 Route::post('/live/{liveStage}/viewers/{user}/mute', [LiveStageModerationController::class, 'mute'])
                     ->middleware('throttle:30,1')
                     ->name('live.viewers.mute');
@@ -339,13 +378,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:120,1')
                     ->name('videos.view');
 
-                Route::get('/fandom', SocialFandomDiscoveryController::class)->name('fandom');
-                Route::get('/fandom/{fandom:slug}', SocialFandomController::class)->name('fandom.show');
-                Route::get('/fandom/{fandom:slug}/members', SocialFandomMembersController::class)->name('fandom.members');
-                Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
-                Route::get('/clubs', SocialStandingsController::class)->name('clubs');
-                Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
-                Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
                 Route::get('/notifications', SocialNotificationController::class)->name('notifications');
                 Route::get('/wallet', SocialWalletController::class)->name('wallet');
                 Route::get('/tickets', [SocialTicketController::class, 'index'])->name('tickets.index');
@@ -355,7 +387,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->middleware('throttle:20,1')
                     ->name('tickets.purchase');
 
-                Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
                 Route::get('/shop/cart', [SocialShopCartController::class, 'show'])->name('shop.cart');
                 Route::post('/shop/cart', [SocialShopCartController::class, 'store'])
                     ->middleware('throttle:30,1')
@@ -372,17 +403,12 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                     ->name('shop.checkout.store');
                 Route::get('/shop/orders', [SocialShopOrderController::class, 'index'])->name('shop.orders.index');
                 Route::get('/shop/orders/{order}', [SocialShopOrderController::class, 'show'])->name('shop.orders.show');
-                Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');
 
                 Route::get('/you', SocialYouController::class)->name('you');
                 Route::get('/tasks', SocialDailyTaskController::class)->name('tasks');
                 Route::patch('/you', SocialProfileSettingsController::class)
                     ->middleware('throttle:10,1')
                     ->name('you.update');
-
-                Route::get('/u/{handle}', SocialProfileController::class)
-                    ->where('handle', '[A-Za-z0-9._\\-]+')
-                    ->name('profile');
 
                 Route::post('/users/{user}/follow', [SocialFollowController::class, 'store'])
                     ->middleware('throttle:60,1')
@@ -394,7 +420,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/posts', [SocialPostController::class, 'store'])
                     ->middleware('throttle:30,1')
                     ->name('posts.store');
-                Route::get('/posts/{post}', SocialPostShowController::class)->name('posts.show');
                 Route::delete('/posts/{post}', [SocialPostController::class, 'destroy'])
                     ->middleware('throttle:30,1')
                     ->name('posts.destroy');

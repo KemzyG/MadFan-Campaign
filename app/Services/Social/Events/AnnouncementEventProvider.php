@@ -19,7 +19,7 @@ class AnnouncementEventProvider implements EventProvider
 {
     private const LIMIT = 12;
 
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         $announcements = SocialAnnouncement::query()
             ->published()

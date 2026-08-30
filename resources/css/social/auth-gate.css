@@ -1,0 +1,174 @@
+/*
+ * Sign-in gate — the "guest can see it, sign in to do it" prompt shared by
+ * every interactive Social/Live control (see resources/js/pages/Social/
+ * authGate.js). Its own small fixed dark palette, deliberately independent
+ * of both the light Vibrants tokens (--mf-*) and the dark Kickoff Live
+ * tokens (--kf-*): this overlay can appear on top of either, so it carries
+ * one consistent identity rather than reskinning per host page.
+ */
+
+:root {
+    --ag-ink: #0b1220;
+    --ag-card: #131c2e;
+    --ag-line: rgba(255, 255, 255, 0.12);
+    --ag-white: #f5f7fb;
+    --ag-muted: rgba(245, 247, 251, 0.68);
+    --ag-gold: #f2b134;
+    --ag-gold-ink: #241a03;
+}
+
+.mf-authgate {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.2rem;
+}
+
+.mf-authgate__backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    background: color-mix(in srgb, var(--ag-ink) 72%, transparent);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+}
+
+.mf-authgate__card {
+    position: relative;
+    width: 100%;
+    max-width: 22rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.8rem 1.6rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(175deg, color-mix(in srgb, var(--ag-card) 100%, white 4%), var(--ag-card) 60%);
+    border: 1px solid var(--ag-line);
+    border-radius: 18px;
+    box-shadow: 0 2rem 4rem -1.5rem rgba(0, 0, 0, 0.7);
+    animation: mf-authgate-in 180ms cubic-bezier(0.2, 0, 0.2, 1) both;
+}
+
+@keyframes mf-authgate-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.mf-authgate__close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    width: 1.9rem;
+    height: 1.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--ag-muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mf-authgate__close:hover {
+    color: var(--ag-white);
+}
+
+.mf-authgate__mark {
+    font-size: 2rem;
+    line-height: 1;
+    margin-top: 0.2rem;
+}
+
+.mf-authgate__title {
+    margin: 0;
+    color: var(--ag-white);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.mf-authgate__body {
+    margin: 0;
+    color: var(--ag-muted);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    max-width: 26ch;
+}
+
+.mf-authgate__actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-top: 0.5rem;
+}
+
+.mf-authgate__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 120ms ease, filter 120ms ease;
+}
+
+.mf-authgate__btn:active {
+    transform: scale(0.97);
+}
+
+.mf-authgate__btn--primary {
+    background: var(--ag-gold);
+    color: var(--ag-gold-ink);
+}
+
+.mf-authgate__btn--primary:hover {
+    filter: brightness(1.06);
+}
+
+.mf-authgate__btn--secondary {
+    background: transparent;
+    border: 1px solid var(--ag-line);
+    color: var(--ag-white);
+}
+
+.mf-authgate__btn--secondary:hover {
+    background: color-mix(in srgb, var(--ag-white) 8%, transparent);
+}
+
+.mf-authgate__dismiss {
+    margin-top: 0.2rem;
+    padding: 0.3rem;
+    border: none;
+    background: transparent;
+    color: var(--ag-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.mf-authgate__dismiss:hover {
+    color: var(--ag-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mf-authgate__card {
+        animation: none;
+    }
+}

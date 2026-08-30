@@ -1,4 +1,5 @@
 import { Form, usePage } from '@inertiajs/react';
+import { useAuthGate } from '../../authGate';
 import { patchPostInProps, useSocialFlash } from '../../optimistic';
 
 /**
@@ -28,6 +29,7 @@ export default function ReplyComposer({
     const page = usePage();
     const viewer = page.props?.auth?.user;
     const { reportError } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const inline = variant === 'inline';
 
     return (
@@ -36,6 +38,7 @@ export default function ReplyComposer({
             method="post"
             resetOnSuccess
             className={`mf-composer mf-composer--reply${inline ? ' mf-composer--reply-inline' : ''}`}
+            onBefore={() => requireAuth('reply')}
             onSuccess={() => onDone?.()}
             onError={(errors) => {
                 reportError(

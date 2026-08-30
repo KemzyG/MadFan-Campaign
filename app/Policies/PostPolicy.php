@@ -13,9 +13,9 @@ class PostPolicy
         return $this->isSocialReady($user);
     }
 
-    public function view(User $user, Post $post): bool
+    public function view(?User $user, Post $post): bool
     {
-        if (! $this->isSocialReady($user)) {
+        if ($user !== null && ! $this->isSocialReady($user)) {
             return false;
         }
 
@@ -23,6 +23,8 @@ class PostPolicy
             return false;
         }
 
+        // A guest can only ever see Public posts — FeedService::canView already
+        // encodes that (OnlyMe/Club both require a real, matching viewer).
         return app(FeedService::class)->canView($user, $post);
     }
 

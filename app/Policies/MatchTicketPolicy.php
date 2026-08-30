@@ -7,8 +7,16 @@ use App\Models\User;
 
 class MatchTicketPolicy
 {
-    public function viewAny(User $user): bool
+    /**
+     * Browsing fixtures/standings (which reuse this ability as their page-view
+     * gate) is guest-viewable; buying/viewing an actual ticket still isn't.
+     */
+    public function viewAny(?User $user): bool
     {
+        if ($user === null) {
+            return true;
+        }
+
         return $this->isSocialReady($user);
     }
 

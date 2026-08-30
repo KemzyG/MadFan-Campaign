@@ -25,9 +25,10 @@ class FixtureService
      *     counts: array{live: int, today: int, coming: int, past: int}
      * }
      */
-    public function boardFor(User $user): array
+    public function boardFor(?User $user): array
     {
-        $ownedMatchIds = MatchTicket::query()
+        // A guest owns no tickets — nothing to mark as "owned" on the board.
+        $ownedMatchIds = $user === null ? [] : MatchTicket::query()
             ->where('user_id', $user->id)
             ->where('status', '!=', MatchTicketStatus::Cancelled)
             ->pluck('match_fixture_id')

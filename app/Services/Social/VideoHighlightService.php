@@ -34,7 +34,7 @@ class VideoHighlightService
      * @param  Collection<int, VideoHighlight>|array<int, VideoHighlight>  $highlights
      * @return list<array<string, mixed>>
      */
-    public function presentMany(Collection|array $highlights, User $viewer): array
+    public function presentMany(Collection|array $highlights, ?User $viewer): array
     {
         $items = $highlights instanceof Collection ? $highlights->all() : $highlights;
 
@@ -42,7 +42,7 @@ class VideoHighlightService
             return [];
         }
 
-        $likedIds = VideoHighlightLike::query()
+        $likedIds = $viewer === null ? [] : VideoHighlightLike::query()
             ->where('user_id', $viewer->id)
             ->whereIn('video_highlight_id', collect($items)->pluck('id'))
             ->pluck('video_highlight_id')
@@ -60,7 +60,7 @@ class VideoHighlightService
      * @param  array<int, true>  $likedMap
      * @return array<string, mixed>
      */
-    public function present(VideoHighlight $highlight, User $viewer, array $likedMap = []): array
+    public function present(VideoHighlight $highlight, ?User $viewer, array $likedMap = []): array
     {
         $author = $highlight->author;
         $club = $highlight->club;

@@ -38,12 +38,38 @@ class LiveKitMediaProvider implements MediaProvider
     {
         $sources = $this->publishSourcesFor($stage->type);
 
-        return $this->issue($stage, $host, canPublish: true, sources: $sources);
+        return $this->issue(
+            $stage,
+            identity: (string) $host->id,
+            name: filled($host->handle) ? (string) $host->handle : (string) $host->name,
+            isHost: true,
+            canPublish: true,
+            sources: $sources,
+        );
     }
 
     public function createViewerToken(LiveStage $stage, User $viewer): array
     {
-        return $this->issue($stage, $viewer, canPublish: false, sources: []);
+        return $this->issue(
+            $stage,
+            identity: (string) $viewer->id,
+            name: filled($viewer->handle) ? (string) $viewer->handle : (string) $viewer->name,
+            isHost: false,
+            canPublish: false,
+            sources: [],
+        );
+    }
+
+    public function createGuestViewerToken(LiveStage $stage, string $guestId): array
+    {
+        return $this->issue(
+            $stage,
+            identity: 'guest-'.$guestId,
+            name: 'Guest',
+            isHost: false,
+            canPublish: false,
+            sources: [],
+        );
     }
 
     public function endRoom(LiveStage $stage): void
@@ -80,7 +106,7 @@ class LiveKitMediaProvider implements MediaProvider
      * @param  list<string>  $sources
      * @return array{token: string, url: string, room: string, identity: string, expires_at: int}
      */
-    private function issue(LiveStage $stage, User $user, bool $canPublish, array $sources): array
+    private function issue(LiveStage $stage, string $identity, string $name, bool $isHost, bool $canPublish, array $sources): array
     {
         if (! $this->credentialsPresent()) {
             throw new RuntimeException('LiveKit credentials are not configured.');
@@ -93,8 +119,6 @@ class LiveKitMediaProvider implements MediaProvider
         $now = time();
         $exp = $now + $ttl;
         $room = 'madfan-live-'.$stage->id;
-        $identity = (string) $user->id;
-        $name = filled($user->handle) ? (string) $user->handle : (string) $user->name;
 
         $video = [
             'roomJoin' => true,
@@ -118,7 +142,7 @@ class LiveKitMediaProvider implements MediaProvider
             'metadata' => json_encode([
                 'live_stage_id' => $stage->id,
                 'type' => $stage->type->value,
-                'is_host' => $stage->isHost($user),
+                'is_host' => $isHost,
             ], JSON_THROW_ON_ERROR),
         ];
 

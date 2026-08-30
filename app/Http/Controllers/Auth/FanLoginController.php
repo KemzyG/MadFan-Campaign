@@ -29,6 +29,21 @@ class FanLoginController extends Controller
             return $this->redirectAuthenticatedFan($request);
         }
 
+        // A guest who hit the sign-in gate on a page they were already
+        // reading (see resources/js/pages/Social/components/SignInGate.jsx)
+        // arrives here with `?redirect=` — seed the same session key
+        // SurfaceRedirect::intended() reads after a server-enforced auth
+        // redirect, so both paths land the fan back where they were.
+        $redirect = $request->string('redirect')->toString();
+        if (
+            $redirect !== ''
+            && str_starts_with($redirect, '/')
+            && ! str_starts_with($redirect, '//')
+            && ! str_contains($redirect, '://')
+        ) {
+            $request->session()->put('url.intended', $redirect);
+        }
+
         return Inertia::render('Fan/Auth/Login');
     }
 

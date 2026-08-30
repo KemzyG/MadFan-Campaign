@@ -35,7 +35,7 @@ class MatchEventProvider implements EventProvider
     /** Fixtures still to play before a competition reads as a live tournament. */
     private const TOURNAMENT_MIN_FIXTURES = 2;
 
-    public function cards(User $viewer): iterable
+    public function cards(?User $viewer): iterable
     {
         yield from $this->fixtureCards();
         yield from $this->tournamentCards();

@@ -1,4 +1,5 @@
 import { Form, router, usePage } from '@inertiajs/react';
+import { useAuthGate } from '../../authGate';
 import { patchPostInProps, prependFeedPost, useSocialFlash } from '../../optimistic';
 
 /**
@@ -10,6 +11,7 @@ export default function QuoteComposer({ post, maxBodyLength = 280, onClose }) {
     const page = usePage();
     const viewer = page.props?.auth?.user;
     const { reportError } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
 
     return (
         <Form
@@ -17,6 +19,7 @@ export default function QuoteComposer({ post, maxBodyLength = 280, onClose }) {
             method="post"
             resetOnSuccess
             className="mf-quote-form"
+            onBefore={() => requireAuth('quote this post')}
             onSuccess={onClose}
             onError={(errors) => {
                 reportError(

@@ -20,7 +20,7 @@ class SocialClubProfileController extends Controller
         StandingsService $standings,
         FanLeaderboardService $leaderboard,
     ): Response {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         $club->loadMissing('league:id,name');
@@ -39,7 +39,7 @@ class SocialClubProfileController extends Controller
                 ->where('is_primary', true)
                 ->count(),
             'top_fans' => $leaderboard->present($user, 5, null, $club->id)['entries'],
-            'is_favourite' => $user->favourite_club_id === $club->id,
+            'is_favourite' => $user !== null && $user->favourite_club_id === $club->id,
         ]);
     }
 }

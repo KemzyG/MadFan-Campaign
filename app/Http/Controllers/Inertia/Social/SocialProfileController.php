@@ -20,7 +20,7 @@ class SocialProfileController extends Controller
         FeedService $feedService,
         SocialPassportService $socialPassport,
     ): Response {
-        /** @var User $viewer */
+        /** @var User|null $viewer */
         $viewer = $request->user();
 
         $profile = User::query()
@@ -51,9 +51,9 @@ class SocialProfileController extends Controller
                 'posts_count' => $profile->posts()->whereNull('reply_to_id')->count(),
                 'followers_count' => Follow::query()->where('following_id', $profile->id)->count(),
                 'following_count' => Follow::query()->where('follower_id', $profile->id)->count(),
-                'is_self' => $viewer->id === $profile->id,
-                'is_following' => $viewer->id !== $profile->id && $viewer->isFollowing($profile),
-                'is_followed_by' => $viewer->id !== $profile->id && $profile->isFollowing($viewer),
+                'is_self' => $viewer !== null && $viewer->id === $profile->id,
+                'is_following' => $viewer !== null && $viewer->id !== $profile->id && $viewer->isFollowing($profile),
+                'is_followed_by' => $viewer !== null && $viewer->id !== $profile->id && $profile->isFollowing($viewer),
                 'club' => $profile->favouriteClub ? [
                     'id' => $profile->favouriteClub->id,
                     'name' => $profile->favouriteClub->name,

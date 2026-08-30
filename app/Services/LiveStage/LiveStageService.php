@@ -408,10 +408,19 @@ class LiveStageService
     }
 
     /**
+     * `$guestId` is only consulted when `$user` is null — a stable-per-browser-
+     * session identifier (see LiveStageMediaTokenController) so a guest's
+     * LiveKit participant identity doesn't churn on every reload. Guests never
+     * get a host/publish token; there is no host without an account.
+     *
      * @return array{token: string, url: string, room: string, identity: string, expires_at: int}
      */
-    public function issueMediaToken(LiveStage $stage, User $user): array
+    public function issueMediaToken(LiveStage $stage, ?User $user, ?string $guestId = null): array
     {
+        if ($user === null) {
+            return $this->media->createGuestViewerToken($stage, (string) $guestId);
+        }
+
         if ($stage->isHost($user)) {
             return $this->media->createHostToken($stage, $user);
         }
@@ -419,8 +428,17 @@ class LiveStageService
         return $this->media->createViewerToken($stage, $user);
     }
 
-    public function activeSession(LiveStage $stage, User $user): ?LiveStageViewerSession
+    /**
+     * A guest is never tracked as a viewer session row (no user_id to key it
+     * on) — always null, which every caller already treats as "not a member
+     * of this stage's presence roster".
+     */
+    public function activeSession(LiveStage $stage, ?User $user): ?LiveStageViewerSession
     {
+        if ($user === null) {
+            return null;
+        }
+
         return LiveStageViewerSession::query()
             ->where('live_stage_id', $stage->id)
             ->where('user_id', $user->id)
@@ -523,7 +541,7 @@ class LiveStageService
      *
      * @return array<string, mixed>
      */
-    public function presentStage(LiveStage $stage, User $viewer): array
+    public function presentStage(LiveStage $stage, ?User $viewer): array
     {
         $stage->loadMissing(['host:id,name,handle,fan_id,avatar_path,avatar_emoji']);
 

@@ -14,7 +14,7 @@ class SocialStandingsController extends Controller
 {
     public function __invoke(Request $request, StandingsService $standings): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
 
         $this->authorize('viewAny', MatchTicket::class);
@@ -32,7 +32,7 @@ class SocialStandingsController extends Controller
             'filters' => [
                 'league_id' => $league?->id,
             ],
-            'favourite_club_id' => $user->favourite_club_id,
+            'favourite_club_id' => $user?->favourite_club_id,
         ]);
     }
 }

@@ -19,9 +19,9 @@ class SocialEventsController extends Controller
 {
     public function __invoke(Request $request, EventFeedService $events): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $request->user();
-        $user->loadMissing('favouriteClub.league');
+        $user?->loadMissing('favouriteClub.league');
 
         $only = EventType::tryFrom($request->string('type')->toString());
 
@@ -29,7 +29,7 @@ class SocialEventsController extends Controller
         // always describe the unfiltered stream the viewer can switch back to.
         $cards = $events->cards($user);
 
-        $club = $user->favouriteClub;
+        $club = $user?->favouriteClub;
 
         return Inertia::render('Social/Events', [
             'club' => $club ? [

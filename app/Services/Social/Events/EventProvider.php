@@ -22,5 +22,5 @@ interface EventProvider
      *
      * @return iterable<EventCard>
      */
-    public function cards(User $viewer): iterable;
+    public function cards(?User $viewer): iterable;
 }
