@@ -7,6 +7,8 @@ use App\Http\Requests\LiveStage\StoreLiveStageRequest;
 use App\Models\LiveStage;
 use App\Models\User;
 use App\Services\LiveStage\LiveStageService;
+use App\Services\Social\StageMediaService;
+use App\Services\Social\StageService;
 use App\Support\LiveStage\LiveStageTypeConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -31,9 +33,13 @@ class LiveStageController extends Controller
     /**
      * The "Go Live" form — its own page (not a modal) so it has a real URL
      * and back-button behaviour, and so /social/stage's "Go Live" button can
-     * send a host here directly instead of duplicating the form.
+     * send a host here directly instead of duplicating the form. One page,
+     * two formats: a host picks Camera Live (creates a LiveStage, submits to
+     * LiveStageController::store) or Voice Room (creates a Stage, submits to
+     * SocialStageController::store) — both creation endpoints are unchanged,
+     * this just carries both formats' field data for the shared picker.
      */
-    public function create(): Response
+    public function create(StageMediaService $stageMedia): Response
     {
         $this->authorize('create', LiveStage::class);
 
@@ -44,6 +50,9 @@ class LiveStageController extends Controller
             ),
             'max_title_length' => LiveStageService::MAX_TITLE_LENGTH,
             'max_description_length' => LiveStageService::MAX_DESCRIPTION_LENGTH,
+            'stage_max_title_length' => StageService::MAX_TITLE_LENGTH,
+            'stage_max_description_length' => StageService::MAX_DESCRIPTION_LENGTH,
+            'stage_backgrounds' => $stageMedia->presentBackgroundOptions(),
         ]);
     }
 

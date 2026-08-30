@@ -133,6 +133,19 @@
     border-inline: 0;
 }
 
+/*
+ * The Go Live page (Social/Live/Create.jsx) is full-bleed dark, same
+ * register as the Studio/Reels pages it leads into — capping it to the
+ * feed/app-width column would leave Snow showing at the edges and through
+ * .mf-main's own bottom safe-area padding (its background is transparent,
+ * so whatever's behind it — this — is what actually shows there).
+ */
+.mf-app:has(.kf-live-create) {
+    max-width: none;
+    border-inline: 0;
+    background: var(--kfl-black);
+}
+
 @media (min-width: 480px) and (max-width: 767.98px) {
     .mf-app {
         /* The hairline is the whole separation; the old triple drop shadow was

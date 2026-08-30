@@ -1,8 +1,9 @@
 /**
- * Shared form primitives for the Stage create + settings sheets, so both keep a
- * single source of truth for switches, backdrop picker and section chrome.
+ * Shared form primitives for the Stage settings sheet — a single source of
+ * truth for switches, backdrop picker and section chrome. (Voice room
+ * creation moved to the shared Go Live page, Social/Live/Create.jsx — see
+ * the deleted CreateStageSheet.jsx.)
  */
-import { IconVoiceWave } from './StageIcons';
 
 export function SectionLabel({ id, children }) {
     return (
@@ -71,56 +72,6 @@ export function SwitchRow({ id, label, hint, checked, onChange, disabled = false
     );
 }
 
-// Camera broadcasting lives entirely in the Live Stage feature now (see
-// resources/js/pages/Social/Live/Create.jsx) — a Stage room is voice-only
-// going forward, so there's nothing left to pick between here.
-// Kept as a one-entry list (rather than deleted outright) so TypePicker
-// still has a real shape to render if a second Stage format is ever added.
-export const STAGE_TYPES = [
-    {
-        key: 'voice',
-        label: 'Voice',
-        hint: 'Audio + chat, no camera',
-        icon: IconVoiceWave,
-    },
-];
-
-/** Segmented control for the stage type, chosen once at creation — an icon
- *  card per format so the choice reads at a glance, not just as label text. */
-export function TypePicker({ value, onChange, disabled = false, name = 'stage-type' }) {
-    return (
-        <div className="mf-stage-type-picker" role="radiogroup" aria-label="Stage type">
-            {STAGE_TYPES.map((type) => {
-                const selected = value === type.key;
-                const Icon = type.icon;
-
-                return (
-                    <label
-                        key={type.key}
-                        className={`mf-stage-type-picker__option ${selected ? 'is-selected' : ''}`}
-                    >
-                        <input
-                            type="radio"
-                            name={name}
-                            className="sr-only"
-                            value={type.key}
-                            checked={selected}
-                            onChange={() => onChange(type.key)}
-                            disabled={disabled}
-                        />
-                        <span className="mf-stage-type-picker__icon" aria-hidden>
-                            <Icon />
-                        </span>
-                        <span className="mf-stage-type-picker__copy">
-                            <span className="mf-stage-type-picker__label">{type.label}</span>
-                            <span className="mf-stage-type-picker__hint">{type.hint}</span>
-                        </span>
-                    </label>
-                );
-            })}
-        </div>
-    );
-}
 
 /** Radio grid of stadium backdrops with a live thumbnail. */
 export function BackgroundPicker({

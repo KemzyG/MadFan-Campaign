@@ -8,7 +8,6 @@ use App\Http\Requests\Social\UpdateSocialStageRequest;
 use App\Models\Stage;
 use App\Models\StageMessage;
 use App\Models\User;
-use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
 use App\Support\StageVoice;
 use Illuminate\Http\JsonResponse;
@@ -21,20 +20,17 @@ use Inertia\Response;
 class SocialStageController extends Controller
 {
     /**
-     * Camera broadcasting's "Go Live" button just navigates to
-     * /social/live/new (LiveStageController::create) — its own page, not a
-     * sheet fed from here — so this only ever renders Voice rooms now.
+     * "Go Live" (both camera and voice) navigates to /social/live/new —
+     * LiveStageController::create's shared page — rather than a sheet fed
+     * from here, so this only ever renders the live Voice rooms list.
      */
-    public function index(Request $request, StageService $stages, StageMediaService $stageMedia): Response
+    public function index(Request $request, StageService $stages): Response
     {
         $this->authorize('viewAny', Stage::class);
 
         return Inertia::render('Social/Stage/Index', [
             'stages' => $stages->presentLiveStages(),
-            'max_title_length' => StageService::MAX_TITLE_LENGTH,
-            'max_description_length' => StageService::MAX_DESCRIPTION_LENGTH,
             'max_speakers' => StageService::MAX_SPEAKERS,
-            'stage_backgrounds' => $stageMedia->presentBackgroundOptions(),
             'voice_note' => StageVoice::usesLiveKit()
                 ? 'LiveKit Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb for room events'
                 : 'Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb signaling with mesh fallback',

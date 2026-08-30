@@ -47,6 +47,12 @@
 .kf-connection-screen {
     --kf-amber: var(--kfl-accent);
     --kf-amber-dim: color-mix(in srgb, var(--kfl-accent) 55%, transparent);
+    /* Form surfaces (stage-form.css's inputs/checkboxes) and "ink on accent"
+       text both read off these two — override them too so a shared form
+       inside Live's containers (the Go Live page) sits on the same navy
+       family as everything else here, not the legacy Kickoff steel/ink. */
+    --kf-steel: var(--kfl-panel);
+    --kf-ink: var(--kfl-black);
 }
 
 /* —— Video element mounting ————————————————————————————————————— */

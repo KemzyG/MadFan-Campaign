@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { StageLobbySkeleton } from '../components/Skeletons';
-import CreateStageSheet from './CreateStageSheet';
 import StageLobbyToolbar from './StageLobbyToolbar';
 import { IconLive, IconMic } from './StageIcons';
 import { useStageSessionOptional } from './StageSessionContext';
@@ -127,16 +126,10 @@ function StageCard({ stage, index = 0 }) {
     );
 }
 
-export default function Index({
-    stages,
-    max_title_length = 80,
-    max_description_length = 280,
-    stage_backgrounds = [],
-}) {
+export default function Index({ stages }) {
     const { auth } = usePage().props;
     const myClubId = auth?.user?.club?.id ?? auth?.user?.club_id ?? null;
     const stageList = stages ?? [];
-    const [createOpen, setCreateOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('newest');
@@ -188,10 +181,9 @@ export default function Index({
         setFilter('all');
     }
 
-    // Camera broadcasting is a separate, distinctly-designed flow now — its
-    // own page (Social/Live/Create.jsx), not a second sheet duplicating
-    // /social/live's own "Go Live" form. Submitting it creates a LiveStage
-    // and redirects into /social/live/{id}'s Creator Studio, not a Stage room.
+    // One shared "Go Live" page for both formats now (Social/Live/Create.jsx)
+    // — the host picks Camera Live or Voice Room there, rather than this
+    // page offering two separate entry points into two separate forms.
     function goLive() {
         router.visit('/social/live/new');
     }
@@ -216,14 +208,6 @@ export default function Index({
                             </p>
                         </div>
                         <div className="mf-stage-hero__cta-group">
-                            <button
-                                type="button"
-                                className="mf-btn mf-stage-hero__cta"
-                                onClick={() => setCreateOpen(true)}
-                            >
-                                <IconMic className="mf-stage-hero__cta-glyph" />
-                                Start voice room
-                            </button>
                             <button
                                 type="button"
                                 className="mf-btn mf-btn--pitch mf-stage-hero__cta"
@@ -255,11 +239,8 @@ export default function Index({
                                     <span className="mf-stage-live-dot mf-stage-live-dot--lg" />
                                 </div>
                                 <p className="mf-empty-title">Terrace is quiet</p>
-                                <p>No live Stages yet. Start a voice room or go live and be first.</p>
+                                <p>No live Stages yet. Go live and be first — voice-only, or on camera.</p>
                                 <div className="mf-stage-empty__ctas mt-4">
-                                    <button type="button" className="mf-btn" onClick={() => setCreateOpen(true)}>
-                                        Start voice room
-                                    </button>
                                     <button
                                         type="button"
                                         className="mf-btn mf-btn--pitch"
@@ -285,14 +266,6 @@ export default function Index({
                             </div>
                         )}
                     </section>
-
-                    <CreateStageSheet
-                        open={createOpen}
-                        onClose={() => setCreateOpen(false)}
-                        maxTitleLength={max_title_length}
-                        maxDescriptionLength={max_description_length}
-                        stageBackgrounds={stage_backgrounds}
-                    />
                 </div>
             )}
         </SocialShell>
