@@ -5,19 +5,21 @@ import {
     BackgroundPicker,
     FieldGroup,
     SectionLabel,
-    STAGE_TYPES,
     SwitchRow,
     TextAreaField,
     TextField,
-    TypePicker,
 } from './StageFormFields';
-import { IconLive } from './StageIcons';
+import { IconMic } from './StageIcons';
 import StageSheet from './StageSheet';
 
 /**
- * "Go live" sheet. Same optimistic `useForm().optimistic()` submit the modal had,
- * restyled on the shared StageSheet + form primitives with a live backdrop
- * preview. Prepends the new stage to the lobby list, then rolls back on failure.
+ * "Start a voice room" sheet — mic-only conversation, no camera. Camera
+ * broadcasting is a separate, distinctly-designed flow now (see the "Go
+ * Live" button on Index.jsx, which opens Live's own LiveCreateSheet and
+ * creates a LiveStage instead of a Stage). Same optimistic
+ * `useForm().optimistic()` submit the modal had, restyled on the shared
+ * StageSheet + form primitives with a live backdrop preview. Prepends the
+ * new stage to the lobby list, then rolls back on failure.
  */
 export default function CreateStageSheet({
     open,
@@ -34,7 +36,7 @@ export default function CreateStageSheet({
 
     const { data, setData, post, processing, errors, reset, optimistic } = useForm({
         title: '',
-        type: 'voice',
+        type: 'voice', // the only Stage format now — see the docblock above
         description: '',
         is_public: true,
         allow_invite: true,
@@ -104,18 +106,16 @@ export default function CreateStageSheet({
     const descriptionRemaining = maxDescriptionLength - data.description.length;
     const canGoLive = data.title.trim().length >= 3 && !processing;
     const previewBg = stageBackgrounds.find((bg) => bg.key === data.background_key) ?? stageBackgrounds[0];
-    const selectedType = STAGE_TYPES.find((type) => type.key === data.type) ?? STAGE_TYPES[0];
-    const TypeIcon = selectedType.icon;
 
     return (
         <StageSheet
             open={open}
             onClose={onClose}
             labelledBy={labelId}
-            icon={<IconLive className="mf-stage-sheet__icon" />}
+            icon={<IconMic className="mf-stage-sheet__icon" />}
             eyebrow="Open the terrace"
-            title="Go live"
-            subtitle="Name your room and set the terrace rules."
+            title="Start a voice room"
+            subtitle="Name your room and set the terrace rules — mic only, no camera."
             className="mf-sheet--stage-create"
         >
             <form className="mf-stage-form" onSubmit={submit}>
@@ -132,8 +132,8 @@ export default function CreateStageSheet({
                                     Live preview
                                 </span>
                                 <span className="mf-stage-form__preview-type mf-mono">
-                                    <TypeIcon />
-                                    {selectedType.label}
+                                    <IconMic />
+                                    Voice
                                 </span>
                             </span>
                             <span className="mf-stage-form__preview-title truncate">
@@ -141,16 +141,6 @@ export default function CreateStageSheet({
                             </span>
                         </div>
                     ) : null}
-
-                    <section className="mf-stage-form__section">
-                        <SectionLabel id={`${labelId}-type`}>Stage type</SectionLabel>
-                        <TypePicker
-                            value={data.type}
-                            onChange={(key) => setData('type', key)}
-                            disabled={processing}
-                            name={`${labelId}-type`}
-                        />
-                    </section>
 
                     <section className="mf-stage-form__section">
                         <SectionLabel id={`${labelId}-details`}>Stage details</SectionLabel>
@@ -243,7 +233,7 @@ export default function CreateStageSheet({
                         </p>
                     )}
                     <button type="submit" className="mf-btn mf-btn--pitch" disabled={!canGoLive}>
-                        {processing ? 'Opening…' : 'Go live'}
+                        {processing ? 'Opening…' : 'Start room'}
                     </button>
                 </div>
             </form>

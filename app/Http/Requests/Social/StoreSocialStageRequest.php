@@ -23,7 +23,12 @@ class StoreSocialStageRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'min:3', 'max:'.StageService::MAX_TITLE_LENGTH],
-            'type' => ['sometimes', Rule::enum(StageType::class)],
+            // Camera broadcasting now lives entirely in the Live Stage feature
+            // (see LiveStageController::store) — a Stage created through this
+            // request is always Voice, regardless of what a caller sends.
+            // Real enum(Video/Streaming) values are rejected outright rather
+            // than silently downgraded, so a stale client finds out immediately.
+            'type' => ['sometimes', Rule::in([StageType::Voice->value])],
             'description' => ['nullable', 'string', 'max:'.StageService::MAX_DESCRIPTION_LENGTH],
             'is_public' => ['sometimes', 'boolean'],
             'allow_invite' => ['sometimes', 'boolean'],

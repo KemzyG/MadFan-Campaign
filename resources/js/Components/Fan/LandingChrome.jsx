@@ -45,6 +45,7 @@ export const LANDING_FOOTER = [
             { href: '/community', label: 'Fan community' },
             { href: '/social/stage', label: 'Live stage' },
             { href: '/social/tickets', label: 'Match tickets' },
+            { href: '/guidelines', label: 'Community Guidelines' },
         ],
     },
 ];
@@ -176,6 +177,7 @@ export function LandingFooter() {
                     <div className="mf-land__legal-links">
                         <Link href="/privacy">Privacy Policy</Link>
                         <Link href="/terms">Terms & Conditions</Link>
+                        <Link href="/guidelines">Community Guidelines</Link>
                     </div>
                 </div>
             </div>
