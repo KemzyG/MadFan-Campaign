@@ -127,7 +127,12 @@ export default function CreatorStudio() {
             </div>
 
             <aside className="kf-studio__side">
-                <h2 className="kf-studio__side-title">Comments</h2>
+                <div className="kf-studio__side-head">
+                    <h2 className="kf-studio__side-title">Comments</h2>
+                    {comments.length > 0 ? (
+                        <span className="kf-studio__side-count mf-mono">{comments.length}</span>
+                    ) : null}
+                </div>
                 <CommentsFeed
                     comments={comments}
                     canModerate

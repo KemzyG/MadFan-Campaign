@@ -40,20 +40,12 @@
 }
 
 .kf-connection-screen__ring {
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 4rem;
+    height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.kf-connection-screen__spinner {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    border: 2px solid var(--kf-line-strong);
-    border-top-color: var(--kf-amber);
-    animation: kf-comet-spin 0.9s linear infinite;
+    margin-bottom: 0.2rem;
 }
 
 .kf-connection-screen__title {
@@ -74,6 +66,16 @@
     display: flex;
     gap: 0.6rem;
     margin-top: 0.4rem;
+}
+
+/* Embedded in the Live Now grid's own flow (not a full-viewport overlay) —
+   same voice, page background instead of a flat ink panel. */
+.kf-connection-screen--inline {
+    position: static;
+    padding: 3rem 1.5rem;
+    background: transparent;
+    border-radius: var(--kf-radius-md);
+    border: 1px dashed var(--kf-line-strong);
 }
 
 /* —— Reels: viewer full-bleed experience ————————————————————————— */
@@ -103,8 +105,26 @@
     display: none;
 }
 
+/* Cinematic vignette — a fixed atmosphere layer over the raw feed, independent
+   of what the camera is pointed at, so the header/interaction chrome always
+   sits on a touch of depth rather than flatly on top of the video. Never
+   intercepts input: the swipe surface and its children sit above this. */
+.kf-reels__video::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    background:
+        linear-gradient(to bottom, rgba(3, 8, 5, 0.5) 0%, transparent 22%, transparent 68%, rgba(3, 8, 5, 0.62) 100%);
+}
+
 .kf-reels__video-empty {
-    color: var(--kf-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--kf-muted-strong);
     font-size: 0.9rem;
 }
 
@@ -118,6 +138,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.6rem;
+    animation: kf-chrome-settle var(--kf-dur-feed) var(--kf-ease-feed) both;
 }
 
 .kf-reels__host {
@@ -142,6 +163,10 @@
     border-radius: var(--kf-radius-full);
     background: var(--kf-steel);
     font-size: 1.1rem;
+    box-shadow:
+        0 0 0 2px var(--kf-ink),
+        0 0 0 3.5px var(--kf-amber),
+        0 0 0.5rem 0 color-mix(in srgb, var(--kf-amber) 55%, transparent);
 }
 
 .kf-reels__host-meta {
@@ -203,6 +228,40 @@
     font-size: 1.3rem;
     line-height: 1;
     cursor: pointer;
+    transition:
+        background var(--kf-dur-console) var(--kf-ease-console),
+        transform var(--kf-dur-console) var(--kf-ease-console);
+    animation: kf-chrome-settle var(--kf-dur-feed) var(--kf-ease-feed) both;
+}
+
+.kf-reels__leave:hover {
+    background: color-mix(in srgb, var(--kf-steel) 70%, transparent);
+}
+
+.kf-reels__leave:active {
+    transform: scale(0.9);
+}
+
+@keyframes kf-chrome-settle {
+    from {
+        opacity: 0;
+        transform: translateY(-0.4rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes kf-chrome-settle-up {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem) scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* —— Swipe layers: front (header+interactions) vs chat ———————————— */
@@ -254,6 +313,14 @@
     backdrop-filter: blur(10px);
     color: var(--kf-white);
     cursor: pointer;
+    transition:
+        background var(--kf-dur-console) var(--kf-ease-console),
+        transform var(--kf-dur-console) var(--kf-ease-console);
+    animation: kf-chrome-settle-up var(--kf-dur-feed) var(--kf-ease-feed) both;
+}
+
+.kf-reels__chat-toggle:active {
+    transform: scale(0.9);
 }
 
 .kf-reels__chat-toggle svg {
@@ -383,6 +450,24 @@
     font-size: 1.15rem;
     cursor: pointer;
     transition: transform var(--kf-dur-feed) var(--kf-ease-feed), background var(--kf-dur-feed) var(--kf-ease-feed);
+    animation: kf-chrome-settle-up var(--kf-dur-feed) var(--kf-ease-feed) both;
+}
+
+/* Stagger each reaction button in behind the chat toggle above it. */
+.kf-reaction-fab__btn:nth-child(1) {
+    animation-delay: 40ms;
+}
+.kf-reaction-fab__btn:nth-child(2) {
+    animation-delay: 80ms;
+}
+.kf-reaction-fab__btn:nth-child(3) {
+    animation-delay: 120ms;
+}
+.kf-reaction-fab__btn:nth-child(4) {
+    animation-delay: 160ms;
+}
+.kf-reaction-fab__btn:nth-child(5) {
+    animation-delay: 200ms;
 }
 
 .kf-reaction-fab__btn:hover {
@@ -536,7 +621,11 @@
     gap: 0.6rem;
     height: 100dvh;
     padding: 0.8rem;
-    background: var(--kf-steel);
+    /* A rig lit from one corner, not a flat panel — echoes the amber
+       broadcast register without competing with the monitor itself. */
+    background:
+        radial-gradient(ellipse 65% 50% at 12% -8%, color-mix(in srgb, var(--kf-amber) 8%, transparent), transparent 65%),
+        linear-gradient(175deg, var(--kf-steel), color-mix(in srgb, var(--kf-ink) 60%, var(--kf-steel)) 85%);
 }
 
 @media (min-width: 1024px) {
@@ -564,7 +653,24 @@
     justify-content: center;
     background: var(--kf-ink);
     border: 2px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-sm);
     overflow: hidden;
+    box-shadow:
+        0 1px 0 0 color-mix(in srgb, var(--kf-white) 6%, transparent) inset,
+        0 1.5rem 2.5rem -1.5rem rgba(0, 0, 0, 0.75);
+}
+
+/* A single soft highlight across the top edge — glass-over-hardware, not a
+   flat cutout. Unpositioned z-index (paints in DOM order, as the first
+   child) keeps it above the static video layer but below the corner
+   brackets and badge overlay, which are both positioned after it. */
+.kf-studio__monitor::before,
+.kf-studio__preview-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--kf-white) 5%, transparent), transparent 30%);
 }
 
 .kf-studio__monitor-video,
@@ -593,24 +699,36 @@
 .kf-studio__controls {
     flex-shrink: 0;
     display: flex;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.6rem;
-    background: var(--kf-steel);
+    background: color-mix(in srgb, var(--kf-steel) 92%, black);
     border: 1px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-sm);
+    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--kf-white) 5%, transparent) inset, 0 0.5rem 1rem -0.6rem rgba(0, 0, 0, 0.7);
 }
 
 .kf-studio__control-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.8rem;
+    gap: 0.45rem;
+    padding: 0.55rem 0.9rem;
     border: 1px solid var(--kf-line-strong);
-    border-radius: var(--kf-radius-sm);
-    background: transparent;
-    color: var(--kf-white);
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-ink) 35%, transparent);
+    color: var(--kf-muted-strong);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
+    transition:
+        border-color var(--kf-dur-console) var(--kf-ease-console),
+        background var(--kf-dur-console) var(--kf-ease-console),
+        color var(--kf-dur-console) var(--kf-ease-console),
+        transform var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-studio__control-btn:active {
+    transform: scale(0.96);
 }
 
 .kf-studio__control-btn svg {
@@ -619,17 +737,19 @@
 }
 
 .kf-studio__control-btn.is-live {
-    border-color: var(--kf-amber);
+    border-color: color-mix(in srgb, var(--kf-amber) 55%, transparent);
+    background: color-mix(in srgb, var(--kf-amber) 16%, transparent);
     color: var(--kf-amber);
 }
 
 .kf-studio__control-btn--danger {
     margin-left: auto;
-    border-color: var(--kf-red);
+    border-color: color-mix(in srgb, var(--kf-red) 45%, transparent);
     color: var(--kf-red);
 }
 
 .kf-studio__control-btn--danger:hover {
+    border-color: var(--kf-red);
     background: color-mix(in srgb, var(--kf-red) 15%, transparent);
 }
 
@@ -639,14 +759,26 @@
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.7rem;
-    background: var(--kf-steel);
+    background: color-mix(in srgb, var(--kf-steel) 92%, black);
     border: 1px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-sm);
+    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--kf-white) 5%, transparent) inset, 0 0.5rem 1rem -0.6rem rgba(0, 0, 0, 0.7);
 }
 
 .kf-studio__side .kf-comments {
     flex: 1 1 auto;
     max-height: none;
+    padding: 0.5rem;
+    border-radius: var(--kf-radius-xs);
     background: color-mix(in srgb, var(--kf-ink) 55%, transparent);
+    mask-image: none;
+}
+
+.kf-studio__side-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .kf-studio__side-title {
@@ -656,6 +788,13 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.kf-studio__side-count {
+    color: var(--kf-muted);
+    font-family: var(--kf-font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
 }
 
 /* —— Studio: pre-live setup ————————————————————————————————— */
@@ -693,6 +832,11 @@
 .kf-studio__go-live {
     margin-top: 0.4rem;
     padding: 0.75rem 2rem;
+    animation: kf-badge-glow 2.4s ease-in-out infinite;
+}
+
+.kf-studio__go-live:disabled {
+    animation: none;
 }
 
 /* —— Live Now discovery + card grid ————————————————————— */
@@ -737,11 +881,18 @@
     border: 1px solid var(--mf-line);
     background: var(--kf-ink);
     text-decoration: none;
-    transition: transform var(--kf-dur-feed) var(--kf-ease-feed);
+    transition:
+        transform var(--kf-dur-feed) var(--kf-ease-feed),
+        border-color var(--kf-dur-feed) var(--kf-ease-feed),
+        box-shadow var(--kf-dur-feed) var(--kf-ease-feed);
 }
 
 .kf-live-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--kf-amber) 45%, transparent);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--kf-amber) 25%, transparent),
+        0 1.25rem 2rem -1rem rgba(0, 0, 0, 0.6);
 }
 
 .kf-live-card__thumb {
@@ -751,11 +902,33 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(160deg, var(--kf-steel), var(--kf-ink));
+    overflow: hidden;
+}
+
+/* A soft amber bloom behind the avatar glyph, not a flat gradient tile —
+   the card reads as "a broadcast is happening in here" before any label
+   is read. */
+.kf-live-card__thumb::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--kf-amber) 20%, transparent), transparent 60%);
+    transition: opacity var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.kf-live-card:hover .kf-live-card__thumb::before {
+    opacity: 1.4;
 }
 
 .kf-live-card__thumb-icon {
+    position: relative;
     font-size: 2.5rem;
-    opacity: 0.6;
+    filter: drop-shadow(0 0.4rem 0.8rem rgba(0, 0, 0, 0.5));
+    transition: transform var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.kf-live-card:hover .kf-live-card__thumb-icon {
+    transform: scale(1.08);
 }
 
 .kf-live-card__badge {
@@ -793,8 +966,20 @@
 }
 
 .kf-live-card__host {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--mf-muted);
     font-size: 0.75rem;
+}
+
+.kf-live-card__host-dot {
+    flex-shrink: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kf-amber);
+    animation: kf-rec-blink 1.4s steps(1, end) infinite;
 }
 
 /* —— Create sheet (modal) ————————————————————————————————— */
@@ -823,9 +1008,16 @@
     max-height: 90vh;
     overflow-y: auto;
     padding: 1.2rem;
-    background: var(--kf-steel);
+    background: linear-gradient(175deg, color-mix(in srgb, var(--kf-steel) 100%, white 3%), var(--kf-steel) 40%);
     border: 1px solid var(--kf-line-strong);
     border-radius: var(--kf-radius-md) var(--kf-radius-md) 0 0;
+    box-shadow: 0 -1.5rem 3rem -1rem rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 640px) {
+    .kf-sheet {
+        box-shadow: 0 1.5rem 3rem -1rem rgba(0, 0, 0, 0.55);
+    }
 }
 
 @media (min-width: 640px) {
@@ -861,19 +1053,29 @@
 /* —— Stage-type picker (create sheet) ————————————————————— */
 
 .kf-form__radio-grid--types {
-    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.7rem;
 }
 
 .kf-type-option {
     position: relative;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.7rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.85rem 0.8rem;
     border: 1px solid var(--kf-line);
     border-radius: var(--kf-radius-sm);
+    background: color-mix(in srgb, var(--kf-ink) 30%, transparent);
     cursor: pointer;
-    text-align: center;
+    text-align: left;
+    transition:
+        border-color var(--kf-dur-console) var(--kf-ease-console),
+        background var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-type-option:hover {
+    border-color: var(--kf-line-strong);
 }
 
 .kf-type-option input {
@@ -889,10 +1091,41 @@
     background: color-mix(in srgb, var(--kf-amber) 12%, transparent);
 }
 
+.kf-type-option__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-white) 8%, transparent);
+    color: var(--kf-muted-strong);
+    transition:
+        background var(--kf-dur-console) var(--kf-ease-console),
+        color var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-type-option__icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.kf-type-option:has(input:checked) .kf-type-option__icon {
+    background: color-mix(in srgb, var(--kf-amber) 22%, transparent);
+    color: var(--kf-amber);
+}
+
 .kf-type-option__label {
     color: var(--kf-white);
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.kf-type-option__blurb {
+    margin-top: -0.3rem;
+    color: var(--kf-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
 }
 
 /* —— Mobile ————————————————————————————————————————————— */
@@ -919,7 +1152,13 @@
 @media (prefers-reduced-motion: reduce) {
     .kf-reactions-layer__item,
     .kf-connection-screen__spinner,
-    .kf-live-card {
+    .kf-live-card,
+    .kf-reels__top,
+    .kf-reels__leave,
+    .kf-reels__chat-toggle,
+    .kf-reaction-fab__btn,
+    .kf-studio__go-live,
+    .kf-live-card__host-dot {
         animation: none !important;
         transition: none !important;
     }

@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
+import KickoffRing from '../../Stage/KickoffRing';
 import LiveCreateSheet from './LiveCreateSheet';
 
 function LiveCard({ stage }) {
@@ -18,7 +19,10 @@ function LiveCard({ stage }) {
             </div>
             <div className="kf-live-card__meta">
                 <span className="kf-live-card__title">{stage.title}</span>
-                <span className="kf-live-card__host">{stage.host?.name}</span>
+                <span className="kf-live-card__host">
+                    <span className="kf-live-card__host-dot" aria-hidden />
+                    {stage.host?.name}
+                </span>
             </div>
         </Link>
     );
@@ -57,9 +61,21 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                         ))}
                     </div>
                 ) : (
-                    <div className="kf-connection-screen">
+                    <div className="kf-connection-screen kf-connection-screen--inline">
+                        <div className="kf-connection-screen__ring" aria-hidden>
+                            <KickoffRing state="idle" size={64} />
+                        </div>
                         <h2 className="kf-connection-screen__title">Nobody is live right now</h2>
                         <p className="kf-connection-screen__body">Start your own stream and be the first.</p>
+                        <div className="kf-connection-screen__actions">
+                            <button
+                                type="button"
+                                className="kf-form__btn kf-form__btn--primary"
+                                onClick={() => setCreateOpen(true)}
+                            >
+                                Go Live
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

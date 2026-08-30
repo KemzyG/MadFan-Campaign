@@ -1,5 +1,13 @@
 import { useForm } from '@inertiajs/react';
 import { useId } from 'react';
+import { IconBroadcast, IconCamera, IconScreenShare, IconUploadVideo } from '../Stage/StageIcons';
+
+const TYPE_META = {
+    creator: { icon: IconCamera, blurb: 'Camera, mic, and live chat' },
+    gaming: { icon: IconScreenShare, blurb: 'Your screen, dominant, chat docked beside it' },
+    movie: { icon: IconUploadVideo, blurb: 'A video fills the frame, chat tucks away' },
+    presenter: { icon: IconScreenShare, blurb: 'Your slides lead, your camera rides along' },
+};
 
 /**
  * Stage-format picker + title/description (spec §7). Only `creator` is
@@ -54,18 +62,28 @@ export default function LiveCreateSheet({ open, onClose, stageTypes, maxTitleLen
                     <div className="kf-form__group">
                         <span className="kf-form__label">Format</span>
                         <div className="kf-form__radio-grid kf-form__radio-grid--types">
-                            {stageTypes.map((type) => (
-                                <label key={type.value} className="kf-type-option">
-                                    <input
-                                        type="radio"
-                                        name="type"
-                                        value={type.value}
-                                        checked={data.type === type.value}
-                                        onChange={() => setData('type', type.value)}
-                                    />
-                                    <span className="kf-type-option__label">{type.label}</span>
-                                </label>
-                            ))}
+                            {stageTypes.map((type) => {
+                                const meta = TYPE_META[type.value] || { icon: IconBroadcast, blurb: null };
+                                const Icon = meta.icon;
+                                return (
+                                    <label key={type.value} className="kf-type-option">
+                                        <input
+                                            type="radio"
+                                            name="type"
+                                            value={type.value}
+                                            checked={data.type === type.value}
+                                            onChange={() => setData('type', type.value)}
+                                        />
+                                        <span className="kf-type-option__icon" aria-hidden>
+                                            <Icon />
+                                        </span>
+                                        <span className="kf-type-option__label">{type.label}</span>
+                                        {meta.blurb ? (
+                                            <span className="kf-type-option__blurb">{meta.blurb}</span>
+                                        ) : null}
+                                    </label>
+                                );
+                            })}
                         </div>
                     </div>
 
