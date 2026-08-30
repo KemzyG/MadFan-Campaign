@@ -28,6 +28,9 @@ export default function MirrorPanel({ stage, media, endConfirm, onEndStream, com
 
                 <div className="kf-studio__monitor-overlay">
                     <LiveBadge />
+                </div>
+
+                <div className="kf-studio__monitor-overlay kf-studio__monitor-overlay--right">
                     <ViewerCountBadge count={stage.viewer_count} />
                     <LikesCountBadge count={stage.reaction_count} />
                 </div>

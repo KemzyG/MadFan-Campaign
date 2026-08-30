@@ -83,67 +83,6 @@
     cursor: default;
 }
 
-/* —— Checkbox ————————————————————————————————————————— */
-
-.kf-form__checkbox-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-.kf-form__checkbox {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 1.3rem;
-    height: 1.3rem;
-    border: 1px solid var(--kf-line-strong);
-    border-radius: var(--kf-radius-xs);
-    background: color-mix(in srgb, var(--kf-steel) 50%, transparent);
-    cursor: pointer;
-    transition:
-        border-color var(--kf-dur-console) var(--kf-ease-console),
-        background var(--kf-dur-console) var(--kf-ease-console);
-}
-
-.kf-form__checkbox input {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.kf-form__checkbox input:checked + .kf-form__checkbox-visual {
-    display: flex;
-}
-
-.kf-form__checkbox input:checked ~ .kf-form__checkbox {
-    border-color: var(--kf-amber);
-    background: var(--kf-amber);
-}
-
-.kf-form__checkbox-visual {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    color: var(--kf-ink);
-}
-
-.kf-form__checkbox-visual::after {
-    content: '✓';
-}
-
-.kf-form__checkbox-label {
-    color: var(--kf-white);
-    font-size: 0.95rem;
-    cursor: pointer;
-    user-select: none;
-}
-
 /* —— Select dropdown ———————————————————————————————————— */
 
 .kf-form__select {
@@ -354,11 +293,6 @@
 .kf-form--conversation .kf-form__textarea:focus {
     border-color: var(--kf-green);
     background: color-mix(in srgb, var(--kf-green) 8%, var(--kf-steel));
-}
-
-.kf-form--conversation .kf-form__checkbox input:checked ~ .kf-form__checkbox {
-    border-color: var(--kf-green);
-    background: var(--kf-green);
 }
 
 .kf-form--conversation .kf-form__btn--primary {

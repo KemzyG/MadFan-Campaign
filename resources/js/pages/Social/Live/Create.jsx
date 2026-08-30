@@ -174,80 +174,84 @@ export default function Create({
                     </div>
 
                     <div className="kf-form__group">
-                        <div className="kf-form__checkbox-wrap">
-                            <span className="kf-form__checkbox">
+                        <label className="kf-toggle-row">
+                            <span>Public — listed on {isVoice ? 'the Stage lobby' : 'Live Now'}</span>
+                            <span className="kf-toggle">
                                 <input
                                     type="checkbox"
+                                    className="kf-toggle__input"
                                     checked={data.is_public}
                                     onChange={(e) => setData('is_public', e.target.checked)}
                                 />
-                                <span className="kf-form__checkbox-visual" />
+                                <span className="kf-toggle__track" aria-hidden />
                             </span>
-                            <span className="kf-form__checkbox-label">
-                                Public — listed on {isVoice ? 'the Stage lobby' : 'Live Now'}
-                            </span>
-                        </div>
+                        </label>
 
                         {isVoice ? (
                             <>
-                                <div className="kf-form__checkbox-wrap">
-                                    <span className="kf-form__checkbox">
+                                <label className="kf-toggle-row">
+                                    <span>Fans can invite</span>
+                                    <span className="kf-toggle">
                                         <input
                                             type="checkbox"
+                                            className="kf-toggle__input"
                                             checked={data.allow_invite}
                                             onChange={(e) => setData('allow_invite', e.target.checked)}
                                         />
-                                        <span className="kf-form__checkbox-visual" />
+                                        <span className="kf-toggle__track" aria-hidden />
                                     </span>
-                                    <span className="kf-form__checkbox-label">Fans can invite</span>
-                                </div>
-                                <div className="kf-form__checkbox-wrap">
-                                    <span className="kf-form__checkbox">
+                                </label>
+                                <label className="kf-toggle-row">
+                                    <span>Room chat</span>
+                                    <span className="kf-toggle">
                                         <input
                                             type="checkbox"
+                                            className="kf-toggle__input"
                                             checked={data.allow_chat}
                                             onChange={(e) => setData('allow_chat', e.target.checked)}
                                         />
-                                        <span className="kf-form__checkbox-visual" />
+                                        <span className="kf-toggle__track" aria-hidden />
                                     </span>
-                                    <span className="kf-form__checkbox-label">Room chat</span>
-                                </div>
-                                <div className="kf-form__checkbox-wrap">
-                                    <span className="kf-form__checkbox">
+                                </label>
+                                <label className="kf-toggle-row">
+                                    <span>Speak requests</span>
+                                    <span className="kf-toggle">
                                         <input
                                             type="checkbox"
+                                            className="kf-toggle__input"
                                             checked={data.allow_speak_requests}
                                             onChange={(e) => setData('allow_speak_requests', e.target.checked)}
                                         />
-                                        <span className="kf-form__checkbox-visual" />
+                                        <span className="kf-toggle__track" aria-hidden />
                                     </span>
-                                    <span className="kf-form__checkbox-label">Speak requests</span>
-                                </div>
+                                </label>
                             </>
                         ) : (
                             <>
-                                <div className="kf-form__checkbox-wrap">
-                                    <span className="kf-form__checkbox">
+                                <label className="kf-toggle-row">
+                                    <span>Allow comments</span>
+                                    <span className="kf-toggle">
                                         <input
                                             type="checkbox"
+                                            className="kf-toggle__input"
                                             checked={data.allow_comments}
                                             onChange={(e) => setData('allow_comments', e.target.checked)}
                                         />
-                                        <span className="kf-form__checkbox-visual" />
+                                        <span className="kf-toggle__track" aria-hidden />
                                     </span>
-                                    <span className="kf-form__checkbox-label">Allow comments</span>
-                                </div>
-                                <div className="kf-form__checkbox-wrap">
-                                    <span className="kf-form__checkbox">
+                                </label>
+                                <label className="kf-toggle-row">
+                                    <span>Allow reactions</span>
+                                    <span className="kf-toggle">
                                         <input
                                             type="checkbox"
+                                            className="kf-toggle__input"
                                             checked={data.allow_reactions}
                                             onChange={(e) => setData('allow_reactions', e.target.checked)}
                                         />
-                                        <span className="kf-form__checkbox-visual" />
+                                        <span className="kf-toggle__track" aria-hidden />
                                     </span>
-                                    <span className="kf-form__checkbox-label">Allow reactions</span>
-                                </div>
+                                </label>
                             </>
                         )}
                     </div>

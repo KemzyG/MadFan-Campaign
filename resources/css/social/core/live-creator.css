@@ -23,14 +23,32 @@
                      using it here instead of generic #000 is the whole point.
        --kfl-panel:  Vibrants Midnight Navy (--mf-rival) — one step lighter,
                      for panels that need to read as elevated above --kfl-black.
-       --kfl-accent: Vibrants Vibrant Green (--mf-ok) — literally documented
-                     in tokens.css as "success / live / verified", so it's
-                     not a new color choice, just using the one the app's
-                     design system already reserves for exactly this meaning. */
+       --kfl-accent: Vibrants Sky Wash (--mf-amber, #91c3ff — the token is
+                     misnamed, it's actually a light blue) — tokens.css
+                     documents it as "ghost borders, icon accents, links",
+                     which is exactly this role. Was the Vibrant Green
+                     success color before; that read as an arbitrary "why
+                     is this green" accent with nothing semantically live
+                     about it here, so it's been swapped for the palette's
+                     actual accent-shaped token instead. */
     --kfl-black: #021422;
     --kfl-panel: #001f38;
     --kfl-glass-line: rgba(255, 255, 255, 0.09);
-    --kfl-accent: #00852e;
+    --kfl-accent: var(--mf-amber);
+
+    /* Light glass — the floating tool chips (mic, mobile-nav, chat toggle,
+       reaction fab, viewer/likes badges) that sit directly on the video,
+       styled after real broadcast-app toolbars (translucent frosted white,
+       not tinted navy) — distinct from --kfl-panel's darker, denser glass
+       used for content-bearing surfaces (the side panel, comment rows)
+       where legibility over long text matters more than "floating on
+       video" glassiness. Mixed together this is the "light glass on a dark
+       base" register the whole Live surface uses. */
+    --kfl-glass-bg: color-mix(in srgb, var(--mf-on-fill) 14%, color-mix(in srgb, var(--kfl-panel) 45%, transparent));
+    --kfl-glass-border: color-mix(in srgb, var(--mf-on-fill) 28%, transparent);
+    --kfl-glass-shadow:
+        inset 0 1px 0 0 color-mix(in srgb, var(--mf-on-fill) 25%, transparent),
+        0 0.4rem 1rem -0.4rem rgba(0, 0, 0, 0.55);
 }
 
 /* Live reuses several shared Kickoff atoms as-is (the LIVE badge, viewfinder
@@ -255,9 +273,10 @@
 .kf-reels__stats .kf-odometer {
     padding: 0.3rem 0.6rem;
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-panel) 45%, transparent);
-    border: 1px solid var(--kf-line);
-    backdrop-filter: blur(10px);
+    background: var(--kfl-glass-bg);
+    border: 1px solid var(--kfl-glass-border);
+    box-shadow: var(--kfl-glass-shadow);
+    backdrop-filter: blur(14px);
     color: var(--kf-white);
     font-size: 0.78rem;
 }
@@ -360,9 +379,10 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-panel) 45%, transparent);
-    border: 1px solid var(--kf-line);
-    backdrop-filter: blur(10px);
+    background: var(--kfl-glass-bg);
+    border: 1px solid var(--kfl-glass-border);
+    box-shadow: var(--kfl-glass-shadow);
+    backdrop-filter: blur(14px);
     color: var(--kf-white);
     cursor: pointer;
     transition:
@@ -496,9 +516,10 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-panel) 45%, transparent);
-    border: 1px solid var(--kf-line);
-    backdrop-filter: blur(10px);
+    background: var(--kfl-glass-bg);
+    border: 1px solid var(--kfl-glass-border);
+    box-shadow: var(--kfl-glass-shadow);
+    backdrop-filter: blur(14px);
     font-size: 1.15rem;
     cursor: pointer;
     transition: transform var(--kf-dur-feed) var(--kf-ease-feed), background var(--kf-dur-feed) var(--kf-ease-feed);
@@ -523,7 +544,7 @@
 }
 
 .kf-reaction-fab__btn:hover {
-    background: color-mix(in srgb, var(--kfl-panel) 65%, transparent);
+    background: color-mix(in srgb, var(--mf-on-fill) 22%, color-mix(in srgb, var(--kfl-panel) 45%, transparent));
 }
 
 .kf-reaction-fab__btn:active {
@@ -773,15 +794,24 @@
     gap: 0.5rem;
 }
 
+/* LIVE stays alone on the left; viewer count and likes anchor the opposite
+   corner instead of crowding the same cluster — separate at-a-glance
+   readouts, not one run-on badge row. */
+.kf-studio__monitor-overlay--right {
+    left: auto;
+    right: 0.7rem;
+}
+
 /* Viewer count and likes float directly on the video now (no boxed monitor
    behind them to lean on), so they need the same glass-pill legibility the
    Reels viewer overlay already gives its own odometers. */
 .kf-studio__monitor-overlay .kf-odometer {
     padding: 0.3rem 0.6rem;
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-panel) 45%, transparent);
-    border: 1px solid var(--kf-line);
-    backdrop-filter: blur(10px);
+    background: var(--kfl-glass-bg);
+    border: 1px solid var(--kfl-glass-border);
+    box-shadow: var(--kfl-glass-shadow);
+    backdrop-filter: blur(14px);
     color: var(--kf-white);
     font-size: 0.78rem;
 }
@@ -827,10 +857,11 @@
     left: 1.1rem;
     width: 3rem;
     height: 3rem;
-    border: 1px solid var(--kfl-glass-line);
-    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    border: 1px solid var(--kfl-glass-border);
+    background: var(--kfl-glass-bg);
+    box-shadow: var(--kfl-glass-shadow);
     backdrop-filter: blur(20px);
-    color: var(--kf-muted-strong);
+    color: var(--kf-white);
 }
 
 .kf-studio__fab--mic svg {
@@ -906,11 +937,12 @@
     justify-content: center;
     width: 2.6rem;
     height: 2.6rem;
-    border: 1px solid var(--kf-line-strong);
+    border: 1px solid var(--kfl-glass-border);
     border-radius: var(--kf-radius-full);
-    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    background: var(--kfl-glass-bg);
+    box-shadow: var(--kfl-glass-shadow);
     backdrop-filter: blur(20px);
-    color: var(--kf-muted-strong);
+    color: var(--kf-white);
     cursor: pointer;
 }
 
@@ -1182,7 +1214,9 @@
     min-height: 4rem;
 }
 
-.kf-studio__settings-toggle-row {
+/* Shared toggle-row layout — label left, pill switch right — used by both
+   the Settings panel and the Go Live form's checkboxes. */
+.kf-toggle-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1192,11 +1226,54 @@
     cursor: pointer;
 }
 
-.kf-studio__settings-toggle-row input[type='checkbox'] {
+/* Sliding pill toggle — same shape as a broadcast app's settings-list
+   switches, not a bare checkbox. */
+.kf-toggle {
+    position: relative;
+    display: inline-flex;
     flex-shrink: 0;
-    width: 1.1rem;
-    height: 1.1rem;
-    accent-color: var(--kfl-accent);
+    width: 2.4rem;
+    height: 1.4rem;
+}
+
+.kf-toggle__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.kf-toggle__track {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kf-white) 18%, transparent);
+    border: 1px solid var(--kf-line-strong);
+    transition:
+        background var(--kf-dur-console) var(--kf-ease-console),
+        border-color var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-toggle__track::after {
+    content: '';
+    position: absolute;
+    top: 0.15rem;
+    left: 0.15rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kf-white);
+    transition: transform var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-toggle__input:checked ~ .kf-toggle__track {
+    background: var(--kfl-accent);
+    border-color: var(--kfl-accent);
+}
+
+.kf-toggle__input:checked ~ .kf-toggle__track::after {
+    transform: translateX(1rem);
 }
 
 .kf-studio__settings-feedback {
@@ -1617,7 +1694,7 @@
         padding: 0;
         border: none;
         cursor: pointer;
-        background: color-mix(in srgb, var(--kfl-black) 55%, transparent);
+        background: var(--mf-scrim);
         backdrop-filter: blur(3px);
     }
 }

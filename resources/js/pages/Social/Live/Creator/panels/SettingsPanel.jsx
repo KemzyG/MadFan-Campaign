@@ -60,27 +60,43 @@ export default function SettingsPanel({ stage, onSave }) {
                 />
             </label>
 
-            <label className="kf-studio__settings-toggle-row">
+            <label className="kf-toggle-row">
                 <span>Public — anyone can find and watch</span>
-                <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+                <span className="kf-toggle">
+                    <input
+                        type="checkbox"
+                        className="kf-toggle__input"
+                        checked={isPublic}
+                        onChange={(e) => setIsPublic(e.target.checked)}
+                    />
+                    <span className="kf-toggle__track" aria-hidden />
+                </span>
             </label>
 
-            <label className="kf-studio__settings-toggle-row">
+            <label className="kf-toggle-row">
                 <span>Allow comments</span>
-                <input
-                    type="checkbox"
-                    checked={allowComments}
-                    onChange={(e) => setAllowComments(e.target.checked)}
-                />
+                <span className="kf-toggle">
+                    <input
+                        type="checkbox"
+                        className="kf-toggle__input"
+                        checked={allowComments}
+                        onChange={(e) => setAllowComments(e.target.checked)}
+                    />
+                    <span className="kf-toggle__track" aria-hidden />
+                </span>
             </label>
 
-            <label className="kf-studio__settings-toggle-row">
+            <label className="kf-toggle-row">
                 <span>Allow reactions</span>
-                <input
-                    type="checkbox"
-                    checked={allowReactions}
-                    onChange={(e) => setAllowReactions(e.target.checked)}
-                />
+                <span className="kf-toggle">
+                    <input
+                        type="checkbox"
+                        className="kf-toggle__input"
+                        checked={allowReactions}
+                        onChange={(e) => setAllowReactions(e.target.checked)}
+                    />
+                    <span className="kf-toggle__track" aria-hidden />
+                </span>
             </label>
 
             {feedback ? (
