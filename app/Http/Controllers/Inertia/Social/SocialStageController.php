@@ -8,8 +8,10 @@ use App\Http\Requests\Social\UpdateSocialStageRequest;
 use App\Models\Stage;
 use App\Models\StageMessage;
 use App\Models\User;
+use App\Services\LiveStage\LiveStageService;
 use App\Services\Social\StageMediaService;
 use App\Services\Social\StageService;
+use App\Support\LiveStage\LiveStageTypeConfig;
 use App\Support\StageVoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +35,15 @@ class SocialStageController extends Controller
             'voice_note' => StageVoice::usesLiveKit()
                 ? 'LiveKit Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb for room events'
                 : 'Stage voice — max '.StageService::MAX_SPEAKERS.' speakers — Reverb signaling with mesh fallback',
+            // Feeds the "Go Live" button's sheet — camera broadcasting is the
+            // Live Stage feature's LiveCreateSheet, reused as-is (not a second
+            // implementation), same props LiveStageController::index passes it.
+            'live_stage_types' => array_map(
+                fn ($type) => ['value' => $type->value, ...LiveStageTypeConfig::for($type)],
+                LiveStageTypeConfig::implemented(),
+            ),
+            'live_max_title_length' => LiveStageService::MAX_TITLE_LENGTH,
+            'live_max_description_length' => LiveStageService::MAX_DESCRIPTION_LENGTH,
         ]);
     }
 

@@ -738,6 +738,13 @@
     max-width: 34ch;
 }
 
+.mf-stage-hero__cta-group {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .mf-stage-hero__cta {
     flex-shrink: 0;
     display: inline-flex;
@@ -902,6 +909,12 @@
     align-items: center;
     gap: 0.35rem;
     text-align: center;
+}
+
+.mf-stage-empty__ctas {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .mf-stage-empty__mark {

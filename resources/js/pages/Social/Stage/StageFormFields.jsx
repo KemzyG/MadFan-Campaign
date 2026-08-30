@@ -2,7 +2,7 @@
  * Shared form primitives for the Stage create + settings sheets, so both keep a
  * single source of truth for switches, backdrop picker and section chrome.
  */
-import { IconBroadcast, IconCamera, IconVoiceWave } from './StageIcons';
+import { IconVoiceWave } from './StageIcons';
 
 export function SectionLabel({ id, children }) {
     return (
@@ -71,24 +71,17 @@ export function SwitchRow({ id, label, hint, checked, onChange, disabled = false
     );
 }
 
+// Camera broadcasting lives entirely in the Live Stage feature now (see
+// resources/js/pages/Social/Live/LiveCreateSheet.jsx) — a Stage room is
+// voice-only going forward, so there's nothing left to pick between here.
+// Kept as a one-entry list (rather than deleted outright) so TypePicker
+// still has a real shape to render if a second Stage format is ever added.
 export const STAGE_TYPES = [
     {
         key: 'voice',
         label: 'Voice',
         hint: 'Audio + chat, no camera',
         icon: IconVoiceWave,
-    },
-    {
-        key: 'video',
-        label: 'Video',
-        hint: 'Host + speakers on camera',
-        icon: IconCamera,
-    },
-    {
-        key: 'streaming',
-        label: 'Streaming',
-        hint: 'One broadcaster, everyone watches',
-        icon: IconBroadcast,
     },
 ];
 

@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
+import LiveCreateSheet from '../Live/LiveCreateSheet';
 import { StageLobbySkeleton } from '../components/Skeletons';
 import CreateStageSheet from './CreateStageSheet';
 import StageLobbyToolbar from './StageLobbyToolbar';
@@ -132,11 +133,15 @@ export default function Index({
     max_title_length = 80,
     max_description_length = 280,
     stage_backgrounds = [],
+    live_stage_types = [],
+    live_max_title_length = 100,
+    live_max_description_length = 500,
 }) {
     const { auth } = usePage().props;
     const myClubId = auth?.user?.club?.id ?? auth?.user?.club_id ?? null;
     const stageList = stages ?? [];
     const [createOpen, setCreateOpen] = useState(false);
+    const [goLiveOpen, setGoLiveOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('newest');
@@ -204,17 +209,27 @@ export default function Index({
                             </span>
                             <h1 className="mf-stage-hero__title">Live on stage</h1>
                             <p className="mf-stage-hero__sub mf-text-meta text-[var(--mf-muted)]">
-                                Drop into a live room, or start your own and take the mic.
+                                Drop into a live room, or start your own — voice-only, or on camera.
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            className="mf-btn mf-btn--pitch mf-stage-hero__cta"
-                            onClick={() => setCreateOpen(true)}
-                        >
-                            <IconLive className="mf-stage-hero__cta-glyph" />
-                            Go live
-                        </button>
+                        <div className="mf-stage-hero__cta-group">
+                            <button
+                                type="button"
+                                className="mf-btn mf-stage-hero__cta"
+                                onClick={() => setCreateOpen(true)}
+                            >
+                                <IconMic className="mf-stage-hero__cta-glyph" />
+                                Start voice room
+                            </button>
+                            <button
+                                type="button"
+                                className="mf-btn mf-btn--pitch mf-stage-hero__cta"
+                                onClick={() => setGoLiveOpen(true)}
+                            >
+                                <IconLive className="mf-stage-hero__cta-glyph" />
+                                Go live
+                            </button>
+                        </div>
                     </header>
 
                     {hasStages ? (
@@ -237,14 +252,19 @@ export default function Index({
                                     <span className="mf-stage-live-dot mf-stage-live-dot--lg" />
                                 </div>
                                 <p className="mf-empty-title">Terrace is quiet</p>
-                                <p>No live Stages yet. Go live and be first on the mic.</p>
-                                <button
-                                    type="button"
-                                    className="mf-btn mf-btn--pitch mt-4"
-                                    onClick={() => setCreateOpen(true)}
-                                >
-                                    Go live
-                                </button>
+                                <p>No live Stages yet. Start a voice room or go live and be first.</p>
+                                <div className="mf-stage-empty__ctas mt-4">
+                                    <button type="button" className="mf-btn" onClick={() => setCreateOpen(true)}>
+                                        Start voice room
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="mf-btn mf-btn--pitch"
+                                        onClick={() => setGoLiveOpen(true)}
+                                    >
+                                        Go live
+                                    </button>
+                                </div>
                             </div>
                         ) : visible.length === 0 ? (
                             <div className="mf-stage-empty mf-empty mf-empty--compact">
@@ -269,6 +289,17 @@ export default function Index({
                         maxTitleLength={max_title_length}
                         maxDescriptionLength={max_description_length}
                         stageBackgrounds={stage_backgrounds}
+                    />
+
+                    {/* Camera broadcasting — Live Stage's own creation sheet, reused
+                        as-is. Submitting it creates a LiveStage and redirects into
+                        /social/live/{id}'s Creator Studio, not a Stage room. */}
+                    <LiveCreateSheet
+                        open={goLiveOpen}
+                        onClose={() => setGoLiveOpen(false)}
+                        stageTypes={live_stage_types}
+                        maxTitleLength={live_max_title_length}
+                        maxDescriptionLength={live_max_description_length}
                     />
                 </div>
             )}
