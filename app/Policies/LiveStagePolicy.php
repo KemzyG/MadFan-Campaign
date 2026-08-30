@@ -73,6 +73,16 @@ class LiveStagePolicy
             && app(LiveStageService::class)->activeSession($stage, $user) !== null;
     }
 
+    /**
+     * Host-only: edit title/description/visibility/comment & reaction toggles.
+     * Unlike `moderate`, this is never delegated to staff — settings are a
+     * host-identity concern, not a moderation one.
+     */
+    public function update(User $user, LiveStage $stage): bool
+    {
+        return $this->canAccessLiveNetwork($user) && $stage->isHost($user);
+    }
+
     public function moderate(User $user, LiveStage $stage): bool
     {
         if ($stage->isHost($user)) {

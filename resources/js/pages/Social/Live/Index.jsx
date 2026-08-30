@@ -1,9 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { useAuthGate } from '../authGate';
 import KickoffRing from '../Stage/KickoffRing';
-import LiveCreateSheet from './LiveCreateSheet';
 
 function LiveCard({ stage }) {
     return (
@@ -29,13 +27,15 @@ function LiveCard({ stage }) {
     );
 }
 
-export default function Index({ stages, stage_types: stageTypes, max_title_length: maxTitleLength, max_description_length: maxDescriptionLength }) {
-    const [createOpen, setCreateOpen] = useState(false);
+export default function Index({ stages }) {
     const { requireAuth } = useAuthGate();
 
-    const openCreate = () => {
+    // "Go Live" is its own page now (Social/Live/Create.jsx), not a modal —
+    // real URL, real back-button behaviour, and /social/stage's own "Go
+    // Live" button sends hosts to this exact same place.
+    const goLive = () => {
         if (requireAuth('go live')) {
-            setCreateOpen(true);
+            router.visit('/social/live/new');
         }
     };
 
@@ -56,7 +56,7 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                     <button
                         type="button"
                         className="kf-form__btn kf-form__btn--primary"
-                        onClick={openCreate}
+                        onClick={goLive}
                     >
                         Go Live
                     </button>
@@ -79,7 +79,7 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                             <button
                                 type="button"
                                 className="kf-form__btn kf-form__btn--primary"
-                                onClick={openCreate}
+                                onClick={goLive}
                             >
                                 Go Live
                             </button>
@@ -87,14 +87,6 @@ export default function Index({ stages, stage_types: stageTypes, max_title_lengt
                     </div>
                 )}
             </div>
-
-            <LiveCreateSheet
-                open={createOpen}
-                onClose={() => setCreateOpen(false)}
-                stageTypes={stageTypes}
-                maxTitleLength={maxTitleLength}
-                maxDescriptionLength={maxDescriptionLength}
-            />
         </SocialShell>
     );
 }

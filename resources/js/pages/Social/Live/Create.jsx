@@ -1,6 +1,7 @@
-import { useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useId } from 'react';
-import { IconBroadcast, IconCamera, IconScreenShare, IconUploadVideo } from '../Stage/StageIcons';
+import SocialShell from '../../../Layouts/SocialShell';
+import { IconBack, IconBroadcast, IconCamera, IconScreenShare, IconUploadVideo } from '../Stage/StageIcons';
 
 const TYPE_META = {
     creator: { icon: IconCamera, blurb: 'Camera, mic, and live chat' },
@@ -10,14 +11,14 @@ const TYPE_META = {
 };
 
 /**
- * Stage-format picker + title/description (spec §7). Only `creator` is
- * selectable today — stageTypes comes from the backend's
- * LiveStageTypeConfig::implemented(), so this list grows automatically the
- * moment a new format ships server-side, with zero changes here.
+ * The "Go Live" form — its own page (not a modal), reached from both
+ * /social/live and /social/stage's "Go Live" button. One implementation:
+ * submitting here creates a LiveStage and redirects straight into
+ * /social/live/{id}'s Creator Studio, same as it always has.
  */
-export default function LiveCreateSheet({ open, onClose, stageTypes, maxTitleLength, maxDescriptionLength }) {
+export default function Create({ stage_types: stageTypes, max_title_length: maxTitleLength, max_description_length: maxDescriptionLength }) {
     const labelId = useId();
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         title: '',
         type: stageTypes[0]?.value || 'creator',
         description: '',
@@ -26,39 +27,29 @@ export default function LiveCreateSheet({ open, onClose, stageTypes, maxTitleLen
         allow_reactions: true,
     });
 
-    if (!open) {
-        return null;
-    }
-
-    const close = () => {
-        reset();
-        onClose();
-    };
-
     const submit = (event) => {
         event.preventDefault();
-        post('/social/live', { onSuccess: close });
+        post('/social/live');
     };
 
     return (
-        <div className="kf-sheet-scrim" role="presentation" onClick={close}>
-            <div
-                className="kf-sheet"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={labelId}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="kf-sheet__head">
-                    <h2 id={labelId} className="kf-sheet__title">
-                        Go Live
-                    </h2>
-                    <button type="button" className="kf-sheet__close" aria-label="Close" onClick={close}>
-                        ×
-                    </button>
+        <SocialShell title="Go Live" showTabs={false}>
+            <Head title="Go Live · Mad Fan" />
+
+            <div className="kf-live-create">
+                <div className="kf-live-create__head">
+                    <Link href="/social/live" className="kf-live-create__back" aria-label="Back to Live Now">
+                        <IconBack />
+                    </Link>
+                    <div>
+                        <h1 id={labelId} className="kf-live-create__title">
+                            Go Live
+                        </h1>
+                        <p className="kf-live-create__sub">Name your stream and pick who can join in.</p>
+                    </div>
                 </div>
 
-                <form className="kf-form" onSubmit={submit}>
+                <form className="kf-form kf-live-create__form" onSubmit={submit} aria-labelledby={labelId}>
                     <div className="kf-form__group">
                         <span className="kf-form__label">Format</span>
                         <div className="kf-form__radio-grid kf-form__radio-grid--types">
@@ -100,6 +91,7 @@ export default function LiveCreateSheet({ open, onClose, stageTypes, maxTitleLen
                             maxLength={maxTitleLength}
                             placeholder="What's happening?"
                             required
+                            autoFocus
                         />
                         {errors.title ? <span className="kf-form__hint">{errors.title}</span> : null}
                     </div>
@@ -155,15 +147,15 @@ export default function LiveCreateSheet({ open, onClose, stageTypes, maxTitleLen
                     </div>
 
                     <div className="kf-form__buttons">
-                        <button type="button" className="kf-form__btn" onClick={close}>
+                        <Link href="/social/live" className="kf-form__btn">
                             Cancel
-                        </button>
+                        </Link>
                         <button type="submit" className="kf-form__btn kf-form__btn--primary" disabled={processing}>
-                            {processing ? 'Creating…' : 'Continue'}
+                            {processing ? 'Going live…' : 'Go live'}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </SocialShell>
     );
 }

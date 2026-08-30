@@ -17,7 +17,7 @@ use Inertia\Response;
 class LiveStageController extends Controller
 {
     /**
-     * "Live Now" discovery + the creation form (stage-type picker).
+     * "Live Now" discovery.
      */
     public function index(LiveStageService $stages): Response
     {
@@ -25,6 +25,19 @@ class LiveStageController extends Controller
 
         return Inertia::render('Social/Live/Index', [
             'stages' => $stages->presentLiveNow(),
+        ]);
+    }
+
+    /**
+     * The "Go Live" form — its own page (not a modal) so it has a real URL
+     * and back-button behaviour, and so /social/stage's "Go Live" button can
+     * send a host here directly instead of duplicating the form.
+     */
+    public function create(): Response
+    {
+        $this->authorize('create', LiveStage::class);
+
+        return Inertia::render('Social/Live/Create', [
             'stage_types' => array_map(
                 fn ($type) => ['value' => $type->value, ...LiveStageTypeConfig::for($type)],
                 LiveStageTypeConfig::implemented(),

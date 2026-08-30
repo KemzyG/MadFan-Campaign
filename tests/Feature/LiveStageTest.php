@@ -20,7 +20,13 @@ test('onboarded fans can list and create a live stage', function () {
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Live/Index')
-            ->has('stages')
+            ->has('stages'));
+
+    $this->actingAs($user)
+        ->get('/social/live/new')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Social/Live/Create')
             ->has('stage_types'));
 
     $this->actingAs($user)
@@ -241,6 +247,100 @@ test('the host can mute and remove a viewer', function () {
     $this->actingAs($viewer)
         ->post("/social/live/{$stage->id}/comments", ['body' => 'Let me back in'])
         ->assertForbidden();
+});
+
+test('the host can list active viewers', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $viewer = socialReadyUser($club);
+
+    $stage = LiveStage::query()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => LiveStageType::Creator,
+        'title' => 'Roster check',
+        'status' => LiveStageStatus::Live,
+        'started_at' => now(),
+    ]);
+
+    $this->actingAs($viewer)->get("/social/live/{$stage->id}");
+
+    $this->actingAs($host)
+        ->getJson("/social/live/{$stage->id}/viewers")
+        ->assertSuccessful()
+        ->assertJsonCount(1, 'viewers')
+        ->assertJsonPath('viewers.0.user.id', $viewer->id)
+        ->assertJsonPath('viewers.0.is_muted_by_host', false);
+});
+
+test('a stranger cannot list viewers for a stage they do not host', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $stranger = socialReadyUser($club);
+
+    $stage = LiveStage::query()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => LiveStageType::Creator,
+        'title' => 'Private roster',
+        'status' => LiveStageStatus::Live,
+        'started_at' => now(),
+    ]);
+
+    $this->actingAs($stranger)
+        ->getJson("/social/live/{$stage->id}/viewers")
+        ->assertForbidden();
+});
+
+test('the host can update stage settings while live', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+
+    $stage = LiveStage::query()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => LiveStageType::Creator,
+        'title' => 'Original title',
+        'status' => LiveStageStatus::Live,
+        'started_at' => now(),
+        'settings' => ['allow_comments' => true, 'allow_reactions' => true],
+    ]);
+
+    $this->actingAs($host)
+        ->patchJson("/social/live/{$stage->id}/settings", [
+            'title' => 'Updated title',
+            'allow_comments' => false,
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('stage.title', 'Updated title')
+        ->assertJsonPath('stage.settings.allow_comments', false)
+        ->assertJsonPath('stage.settings.allow_reactions', true);
+
+    $stage = $stage->fresh();
+    expect($stage->title)->toBe('Updated title')
+        ->and($stage->settings['allow_comments'])->toBeFalse()
+        ->and($stage->settings['allow_reactions'])->toBeTrue();
+});
+
+test('a stranger cannot update settings for a stage they do not host', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $stranger = socialReadyUser($club);
+
+    $stage = LiveStage::query()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+        'type' => LiveStageType::Creator,
+        'title' => 'Locked settings',
+        'status' => LiveStageStatus::Live,
+        'started_at' => now(),
+    ]);
+
+    $this->actingAs($stranger)
+        ->patchJson("/social/live/{$stage->id}/settings", ['title' => 'Hijacked'])
+        ->assertForbidden();
+
+    expect($stage->fresh()->title)->toBe('Locked settings');
 });
 
 test('a stranger cannot moderate a stage they do not host', function () {

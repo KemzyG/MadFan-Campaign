@@ -2,7 +2,6 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
-import LiveCreateSheet from '../Live/LiveCreateSheet';
 import { StageLobbySkeleton } from '../components/Skeletons';
 import CreateStageSheet from './CreateStageSheet';
 import StageLobbyToolbar from './StageLobbyToolbar';
@@ -133,15 +132,11 @@ export default function Index({
     max_title_length = 80,
     max_description_length = 280,
     stage_backgrounds = [],
-    live_stage_types = [],
-    live_max_title_length = 100,
-    live_max_description_length = 500,
 }) {
     const { auth } = usePage().props;
     const myClubId = auth?.user?.club?.id ?? auth?.user?.club_id ?? null;
     const stageList = stages ?? [];
     const [createOpen, setCreateOpen] = useState(false);
-    const [goLiveOpen, setGoLiveOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('newest');
@@ -193,6 +188,14 @@ export default function Index({
         setFilter('all');
     }
 
+    // Camera broadcasting is a separate, distinctly-designed flow now — its
+    // own page (Social/Live/Create.jsx), not a second sheet duplicating
+    // /social/live's own "Go Live" form. Submitting it creates a LiveStage
+    // and redirects into /social/live/{id}'s Creator Studio, not a Stage room.
+    function goLive() {
+        router.visit('/social/live/new');
+    }
+
     return (
         <SocialShell title="Stage" showTabs wide>
             <Head title="Stage · Mad Fan Social" />
@@ -224,7 +227,7 @@ export default function Index({
                             <button
                                 type="button"
                                 className="mf-btn mf-btn--pitch mf-stage-hero__cta"
-                                onClick={() => setGoLiveOpen(true)}
+                                onClick={goLive}
                             >
                                 <IconLive className="mf-stage-hero__cta-glyph" />
                                 Go live
@@ -260,7 +263,7 @@ export default function Index({
                                     <button
                                         type="button"
                                         className="mf-btn mf-btn--pitch"
-                                        onClick={() => setGoLiveOpen(true)}
+                                        onClick={goLive}
                                     >
                                         Go live
                                     </button>
@@ -289,17 +292,6 @@ export default function Index({
                         maxTitleLength={max_title_length}
                         maxDescriptionLength={max_description_length}
                         stageBackgrounds={stage_backgrounds}
-                    />
-
-                    {/* Camera broadcasting — Live Stage's own creation sheet, reused
-                        as-is. Submitting it creates a LiveStage and redirects into
-                        /social/live/{id}'s Creator Studio, not a Stage room. */}
-                    <LiveCreateSheet
-                        open={goLiveOpen}
-                        onClose={() => setGoLiveOpen(false)}
-                        stageTypes={live_stage_types}
-                        maxTitleLength={live_max_title_length}
-                        maxDescriptionLength={live_max_description_length}
                     />
                 </div>
             )}

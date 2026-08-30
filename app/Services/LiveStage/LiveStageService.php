@@ -11,6 +11,7 @@ use App\Events\LiveStage\LiveStageCommentDeleted;
 use App\Events\LiveStage\LiveStageEnded;
 use App\Events\LiveStage\LiveStageReactionCreated;
 use App\Events\LiveStage\LiveStageStarted;
+use App\Events\LiveStage\LiveStageUpdated;
 use App\Events\LiveStage\LiveStageViewerCountUpdated;
 use App\Events\LiveStage\LiveStageViewerModerated;
 use App\Models\LiveStage;
@@ -446,6 +447,83 @@ class LiveStageService
             ->first();
     }
 
+    /**
+     * Live roster for the host's Viewers panel — active sessions only, most
+     * recently joined first. Returned user ids are exactly what
+     * muteViewer()/removeViewer() expect as their `$target`.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function activeViewers(LiveStage $stage): array
+    {
+        $this->pruneStaleViewers($stage);
+
+        return LiveStageViewerSession::query()
+            ->where('live_stage_id', $stage->id)
+            ->whereNull('left_at')
+            ->whereNotNull('user_id')
+            ->with('user:id,name,handle,fan_id,avatar_path,avatar_emoji')
+            ->orderByDesc('joined_at')
+            ->get()
+            ->map(fn (LiveStageViewerSession $session): array => [
+                'user' => $this->presentUser($session->user),
+                'joined_at' => $session->joined_at?->toIso8601String(),
+                'is_muted_by_host' => (bool) $session->is_muted_by_host,
+            ])
+            ->all();
+    }
+
+    /**
+     * Host-only: edit title/description/visibility and the allow_comments /
+     * allow_reactions toggles, live or in draft. Broadcasts so viewers and
+     * any co-host tabs pick up the change without a manual refresh.
+     *
+     * @param  array{title?: string, description?: ?string, is_public?: bool, allow_comments?: bool, allow_reactions?: bool}  $data
+     */
+    public function updateSettings(LiveStage $stage, User $actor, array $data): LiveStage
+    {
+        $this->assertHost($stage, $actor);
+
+        $update = [];
+
+        if (array_key_exists('title', $data)) {
+            $update['title'] = trim((string) $data['title']);
+        }
+
+        if (array_key_exists('description', $data)) {
+            $update['description'] = filled($data['description']) ? trim((string) $data['description']) : null;
+        }
+
+        if (array_key_exists('is_public', $data)) {
+            $update['is_public'] = (bool) $data['is_public'];
+        }
+
+        if (array_key_exists('allow_comments', $data) || array_key_exists('allow_reactions', $data)) {
+            $settings = $stage->settings ?? [];
+
+            if (array_key_exists('allow_comments', $data)) {
+                $settings['allow_comments'] = (bool) $data['allow_comments'];
+            }
+
+            if (array_key_exists('allow_reactions', $data)) {
+                $settings['allow_reactions'] = (bool) $data['allow_reactions'];
+            }
+
+            $update['settings'] = $settings;
+        }
+
+        if ($update === []) {
+            return $stage;
+        }
+
+        $stage->update($update);
+
+        $stage = $stage->fresh();
+        SocialBroadcast::try(fn () => LiveStageUpdated::dispatch($stage));
+
+        return $stage;
+    }
+
     public function viewerCount(LiveStage $stage): int
     {
         return LiveStageViewerSession::query()
@@ -558,6 +636,7 @@ class LiveStageService
             'status' => $stage->status->value,
             'is_live' => $stage->isLive(),
             'is_host' => $isHost,
+            'is_public' => (bool) $stage->is_public,
             'host' => $this->presentUser($stage->host),
             'settings' => [
                 'allow_comments' => (bool) ($stage->settings['allow_comments'] ?? true),

@@ -51,6 +51,10 @@ async function post(url, body) {
     return request('POST', url, body || {});
 }
 
+async function patch(url, body) {
+    return request('PATCH', url, body || {});
+}
+
 async function del(url) {
     return request('DELETE', url);
 }
@@ -96,4 +100,12 @@ export function muteViewer(stageId, userId, muted) {
 
 export function removeViewer(stageId, userId, ban = false) {
     return post(`/social/live/${stageId}/viewers/${userId}/remove`, { ban });
+}
+
+export function fetchViewers(stageId) {
+    return get(`/social/live/${stageId}/viewers`);
+}
+
+export function updateStageSettings(stageId, payload) {
+    return patch(`/social/live/${stageId}/settings`, payload);
 }

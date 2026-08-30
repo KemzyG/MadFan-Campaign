@@ -1,31 +1,41 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import CommentComposer from '../components/CommentComposer';
-import CommentsFeed from '../components/CommentsFeed';
-import LiveBadge from '../components/LiveBadge';
-import ViewerCountBadge from '../components/ViewerCountBadge';
 import VideoMount from '../components/VideoMount';
 import { useDevicePreview } from '../useDevicePreview';
 import { useLiveStageSession } from '../LiveStageSessionContext';
 import { useLiveStageMedia } from '../useLiveStageMedia';
-import { IconCamera, IconCameraOff, IconMic, IconMicOff } from '../../Stage/StageIcons';
+import { useLiveStageViewers } from './useLiveStageViewers';
+import MirrorPanel from './panels/MirrorPanel';
+import StudioSidePanel from './panels/StudioSidePanel';
 
 /**
  * The host's production interface for Creator Live (spec §7-9): a pre-live
- * device-check studio, then — once live — a docked console around the
- * camera preview with viewer count, comments (with inline moderation), and
- * the End Live control. Built on the Kickoff Studio register (dark steel,
- * console/instant motion) already shipped for Stage.
+ * device-check studio, then — once live — a docked console split into the
+ * Mirror (camera preview + mic/camera/end controls) and a tabbed side panel
+ * covering Messages, Viewers, and Settings. Built on the Kickoff Studio
+ * register (dark steel, console/instant motion) already shipped for Stage.
  */
 export default function CreatorStudio() {
-    const { stage, comments, postComment, deleteComment, muteViewer, removeViewer } = useLiveStageSession();
+    const { stage, comments, postComment, deleteComment, muteViewer, removeViewer, updateSettings } =
+        useLiveStageSession();
     const isDraft = stage.status === 'draft';
+    const isLive = !isDraft;
 
     const preview = useDevicePreview(isDraft);
-    const media = useLiveStageMedia({ stageId: stage.id, isHost: true, isLive: !isDraft });
+    const media = useLiveStageMedia({ stageId: stage.id, isHost: true, isLive });
+    const { viewers, loading: viewersLoading } = useLiveStageViewers(stage.id, isLive, stage.viewer_count);
 
     const [starting, setStarting] = useState(false);
     const [endConfirm, setEndConfirm] = useState(false);
+    const [activeTab, setActiveTab] = useState('messages');
+    const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+
+    // On desktop the side panel is always docked open, so this only matters
+    // on mobile — see MobilePanelNav/StudioSidePanel's `mobileOpen` prop.
+    const openMobilePanel = (tab) => {
+        setActiveTab(tab);
+        setMobilePanelOpen(true);
+    };
 
     const goLive = () => {
         setStarting(true);
@@ -39,6 +49,9 @@ export default function CreatorStudio() {
         }
         router.post(`/social/live/${stage.id}/end`);
     };
+
+    const handleMuteViewer = (userId, muted = true) => userId && muteViewer(userId, muted);
+    const handleRemoveViewer = (userId, ban = false) => userId && removeViewer(userId, ban);
 
     if (isDraft) {
         return (
@@ -77,76 +90,30 @@ export default function CreatorStudio() {
 
     return (
         <div className="kf-studio">
-            <div className="kf-studio__main">
-                <div className="kf-studio__monitor kf-viewfinder kf-viewfinder--live">
-                    {media.localVideoEl ? (
-                        <VideoMount videoEl={media.localVideoEl} className="kf-studio__monitor-video" mirrored />
-                    ) : (
-                        <div className="kf-studio__preview-empty">
-                            {media.mediaState === 'error' ? media.mediaError : 'Connecting…'}
-                        </div>
-                    )}
-                    <span className="kf-viewfinder__tl" />
-                    <span className="kf-viewfinder__tr" />
-                    <span className="kf-viewfinder__bl" />
-                    <span className="kf-viewfinder__br" />
+            <MirrorPanel
+                stage={stage}
+                media={media}
+                endConfirm={endConfirm}
+                onEndStream={endStream}
+                commentCount={comments.length}
+                onOpenPanel={openMobilePanel}
+            />
 
-                    <div className="kf-studio__monitor-overlay">
-                        <LiveBadge />
-                        <ViewerCountBadge count={stage.viewer_count} />
-                    </div>
-                </div>
-
-                <div className="kf-studio__controls">
-                    <button
-                        type="button"
-                        className={`kf-studio__control-btn ${media.micOn ? 'is-live' : ''}`}
-                        onClick={media.toggleMic}
-                        aria-pressed={media.micOn}
-                    >
-                        {media.micOn ? <IconMic /> : <IconMicOff />}
-                        Mic
-                    </button>
-                    <button
-                        type="button"
-                        className={`kf-studio__control-btn ${media.cameraOn ? 'is-live' : ''}`}
-                        onClick={media.toggleCamera}
-                        aria-pressed={media.cameraOn}
-                    >
-                        {media.cameraOn ? <IconCamera /> : <IconCameraOff />}
-                        Camera
-                    </button>
-                    <button
-                        type="button"
-                        className="kf-studio__control-btn kf-studio__control-btn--danger"
-                        onClick={endStream}
-                    >
-                        {endConfirm ? 'Confirm end?' : 'End Live'}
-                    </button>
-                </div>
-            </div>
-
-            <aside className="kf-studio__side">
-                <div className="kf-studio__side-head">
-                    <h2 className="kf-studio__side-title">Comments</h2>
-                    {comments.length > 0 ? (
-                        <span className="kf-studio__side-count mf-mono">{comments.length}</span>
-                    ) : null}
-                </div>
-                <CommentsFeed
-                    comments={comments}
-                    canModerate
-                    onDelete={deleteComment}
-                    onMuteUser={(userId) => userId && muteViewer(userId, true)}
-                    onRemoveUser={(userId) => userId && removeViewer(userId, false)}
-                />
-                <CommentComposer
-                    onSubmit={postComment}
-                    disabled={!stage.settings.allow_comments}
-                    maxLength={stage.max_comment_length}
-                    placeholder="Reply as host…"
-                />
-            </aside>
+            <StudioSidePanel
+                stage={stage}
+                comments={comments}
+                onPostComment={postComment}
+                onDeleteComment={deleteComment}
+                onMuteViewer={handleMuteViewer}
+                onRemoveViewer={handleRemoveViewer}
+                viewers={viewers}
+                viewersLoading={viewersLoading}
+                onUpdateSettings={updateSettings}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                mobileOpen={mobilePanelOpen}
+                onMobileClose={() => setMobilePanelOpen(false)}
+            />
         </div>
     );
 }

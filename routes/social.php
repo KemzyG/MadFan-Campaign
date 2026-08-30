@@ -22,6 +22,7 @@ use App\Http\Controllers\Inertia\LiveStage\LiveStageLifecycleController;
 use App\Http\Controllers\Inertia\LiveStage\LiveStageMediaTokenController;
 use App\Http\Controllers\Inertia\LiveStage\LiveStageModerationController;
 use App\Http\Controllers\Inertia\LiveStage\LiveStageReactionController;
+use App\Http\Controllers\Inertia\LiveStage\LiveStageSettingsController;
 use App\Http\Controllers\Inertia\LiveStage\LiveStageViewerController;
 use App\Http\Controllers\Inertia\Social\SocialChatController;
 use App\Http\Controllers\Inertia\Social\SocialChatMessageController;
@@ -74,6 +75,23 @@ use Illuminate\Support\Facades\Route;
  * @param  bool  $withNames  Whether to register named routes (only once per app boot).
  */
 return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
+    // Registered before the guest group below on purpose: Laravel matches
+    // routes in registration order, and the guest group's `/live/{liveStage}`
+    // would otherwise swallow this literal path first (capturing "new" as
+    // the id and 404ing on the model lookup) before this auth-gated route
+    // ever got a chance to match. Full protection to match live.store's own
+    // gate — this is the form that leads straight into it.
+    $liveCreate = Route::middleware(['app.maintenance', 'auth', TouchLastSeen::class, 'verified', 'social.enabled', 'social.onboarded']);
+    if ($pathPrefix !== '') {
+        $liveCreate->prefix($pathPrefix);
+    }
+    if ($withNames) {
+        $liveCreate->name('social.');
+    }
+    $liveCreate->group(function () {
+        Route::get('/live/new', [LiveStageController::class, 'create'])->name('live.create');
+    });
+
     // Guest-viewable surface — no `auth`, no `verified`: a visitor with no
     // session at all can read these pages, same shape as X/TikTok/Facebook
     // ("see the content, sign in to act on it"). `social.onboarded` stays in
@@ -360,12 +378,18 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/live/{liveStage}/reactions', [LiveStageReactionController::class, 'store'])
                     ->middleware('throttle:live-stage-reaction')
                     ->name('live.reactions.store');
+                Route::get('/live/{liveStage}/viewers', [LiveStageModerationController::class, 'viewers'])
+                    ->middleware('throttle:live-stage-poll')
+                    ->name('live.viewers.index');
                 Route::post('/live/{liveStage}/viewers/{user}/mute', [LiveStageModerationController::class, 'mute'])
                     ->middleware('throttle:30,1')
                     ->name('live.viewers.mute');
                 Route::post('/live/{liveStage}/viewers/{user}/remove', [LiveStageModerationController::class, 'remove'])
                     ->middleware('throttle:30,1')
                     ->name('live.viewers.remove');
+                Route::patch('/live/{liveStage}/settings', [LiveStageSettingsController::class, 'update'])
+                    ->middleware('throttle:20,1')
+                    ->name('live.settings.update');
 
                 Route::get('/videos', [SocialVideoController::class, 'index'])->name('videos.index');
                 Route::post('/videos', [SocialVideoController::class, 'store'])

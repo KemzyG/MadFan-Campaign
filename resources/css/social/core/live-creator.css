@@ -10,15 +10,43 @@
  */
 
 :root {
-    /* Live's own background language — true black + glass, deliberately its
-       own tokens rather than --kf-ink/--kf-steel (the pitch-green-tinted
-       surfaces the legacy Stage feature keeps using, on purpose: the two
-       features are meant to look different, not share a palette). Amber
-       (broadcast) and white stay the shared Kickoff vocabulary — only the
-       ground/panel colors change here. */
-    --kfl-black: #000000;
-    --kfl-panel: #0c0d0d;
+    /* Live's own surface + accent language — the Social app's actual
+       Vibrants palette (resources/css/social/core/tokens.css), not
+       Kickoff's amber-on-black. Deliberately still its own tokens rather
+       than reassigning --kf-ink/--kf-steel/--kf-amber directly: the legacy
+       Stage feature's voice rooms keep using those at their original
+       (pitch-green + amber) values on purpose — the two features are meant
+       to look different, not share a palette, and redefining the shared
+       root tokens here would recolor Stage's voice UI too.
+       --kfl-black:  Vibrants Deep Navy (--mf-pitch) — the app's own darkest
+                     ink, used everywhere else in Social as the primary fill;
+                     using it here instead of generic #000 is the whole point.
+       --kfl-panel:  Vibrants Midnight Navy (--mf-rival) — one step lighter,
+                     for panels that need to read as elevated above --kfl-black.
+       --kfl-accent: Vibrants Vibrant Green (--mf-ok) — literally documented
+                     in tokens.css as "success / live / verified", so it's
+                     not a new color choice, just using the one the app's
+                     design system already reserves for exactly this meaning. */
+    --kfl-black: #021422;
+    --kfl-panel: #001f38;
     --kfl-glass-line: rgba(255, 255, 255, 0.09);
+    --kfl-accent: #00852e;
+}
+
+/* Live reuses several shared Kickoff atoms as-is (the LIVE badge, viewfinder
+   corner brackets, the Kickoff Ring) rather than forking them — this just
+   recolors their broadcast accent locally, via the same --kf-amber custom
+   property those shared rules already read, scoped to Live's own containers
+   only. Stage's voice rooms reuse the same shared atoms too but are never
+   inside these containers, so they keep the real (root) amber untouched. */
+.kf-reels,
+.kf-studio,
+.kf-studio--setup,
+.kf-live-index,
+.kf-live-create,
+.kf-connection-screen {
+    --kf-amber: var(--kfl-accent);
+    --kf-amber-dim: color-mix(in srgb, var(--kfl-accent) 55%, transparent);
 }
 
 /* —— Video element mounting ————————————————————————————————————— */
@@ -128,7 +156,13 @@
     z-index: 10;
     pointer-events: none;
     background:
-        linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, transparent 22%, transparent 68%, rgba(0, 0, 0, 0.68) 100%);
+        linear-gradient(
+            to bottom,
+            color-mix(in srgb, var(--kfl-black) 65%, transparent) 0%,
+            transparent 22%,
+            transparent 68%,
+            color-mix(in srgb, var(--kfl-black) 75%, transparent) 100%
+        );
 }
 
 .kf-reels__video-empty {
@@ -177,8 +211,8 @@
     font-size: 1.1rem;
     box-shadow:
         0 0 0 2px var(--kfl-black),
-        0 0 0 3.5px var(--kf-amber),
-        0 0 0.5rem 0 color-mix(in srgb, var(--kf-amber) 55%, transparent);
+        0 0 0 3.5px var(--kfl-accent),
+        0 0 0.5rem 0 color-mix(in srgb, var(--kfl-accent) 55%, transparent);
 }
 
 .kf-reels__host-meta {
@@ -351,7 +385,7 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--kf-radius-full);
-    background: var(--kf-amber);
+    background: var(--kfl-accent);
     color: var(--kfl-black);
     font-size: 0.62rem;
     line-height: 1;
@@ -531,7 +565,7 @@
 
 .kf-comments__author {
     flex-shrink: 0;
-    color: var(--kf-amber);
+    color: var(--kfl-accent);
     font-weight: 600;
 }
 
@@ -611,8 +645,8 @@
     flex-shrink: 0;
     padding: 0.5rem 0.9rem;
     border-radius: var(--kf-radius-full);
-    border: 1px solid var(--kf-amber);
-    background: var(--kf-amber);
+    border: 1px solid var(--kfl-accent);
+    background: var(--kfl-accent);
     color: var(--kfl-black);
     font-weight: 600;
     font-size: 0.8rem;
@@ -633,10 +667,10 @@
     gap: 0.6rem;
     height: 100dvh;
     padding: 0.8rem;
-    /* A rig lit from one corner, not a flat panel — echoes the amber
-       broadcast register without competing with the monitor itself. */
+    /* A rig lit from one corner, not a flat panel — echoes the broadcast
+       accent without competing with the monitor itself. */
     background:
-        radial-gradient(ellipse 65% 50% at 12% -8%, color-mix(in srgb, var(--kf-amber) 8%, transparent), transparent 65%),
+        radial-gradient(ellipse 65% 50% at 12% -8%, color-mix(in srgb, var(--kfl-accent) 8%, transparent), transparent 65%),
         linear-gradient(175deg, var(--kfl-panel), color-mix(in srgb, var(--kfl-black) 60%, var(--kfl-panel)) 85%);
 }
 
@@ -750,9 +784,9 @@
 }
 
 .kf-studio__control-btn.is-live {
-    border-color: color-mix(in srgb, var(--kf-amber) 55%, transparent);
-    background: color-mix(in srgb, var(--kf-amber) 16%, transparent);
-    color: var(--kf-amber);
+    border-color: color-mix(in srgb, var(--kfl-accent) 55%, transparent);
+    background: color-mix(in srgb, var(--kfl-accent) 16%, transparent);
+    color: var(--kfl-accent);
 }
 
 .kf-studio__control-btn--danger {
@@ -764,6 +798,44 @@
 .kf-studio__control-btn--danger:hover {
     border-color: var(--kf-red);
     background: color-mix(in srgb, var(--kf-red) 15%, transparent);
+}
+
+/* Launcher for Messages/Viewers/Settings on mobile, where the side panel
+   has nowhere to dock (see StudioSidePanel's bottom-sheet mode below).
+   Hidden by default; shown only under the 1024px docked breakpoint. */
+.kf-studio__mobile-nav {
+    display: none;
+}
+
+.kf-studio__mobile-nav-btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-sm);
+    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    backdrop-filter: blur(20px);
+    color: var(--kf-muted-strong);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.kf-studio__mobile-nav-btn:active {
+    transform: scale(0.96);
+}
+
+.kf-studio__mobile-nav-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.kf-studio__mobile-nav-count {
+    color: var(--kfl-accent);
+    font-size: 0.65rem;
 }
 
 .kf-studio__side {
@@ -809,6 +881,252 @@
     font-family: var(--kf-font-mono);
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
+}
+
+/* —— Studio: side panel tabs (Messages / Viewers / Settings) —————— */
+
+.kf-studio__tabs {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.3rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--kfl-glass-line);
+}
+
+.kf-studio__tab {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.3rem;
+    border: 1px solid transparent;
+    border-radius: var(--kf-radius-xs);
+    background: transparent;
+    color: var(--kf-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        color var(--kf-dur-console) var(--kf-ease-console),
+        background var(--kf-dur-console) var(--kf-ease-console),
+        border-color var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-studio__tab-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex-shrink: 0;
+}
+
+.kf-studio__tab-count {
+    color: inherit;
+    font-size: 0.68rem;
+    opacity: 0.75;
+}
+
+.kf-studio__tab:hover {
+    color: var(--kf-white);
+}
+
+.kf-studio__tab.is-active {
+    border-color: color-mix(in srgb, var(--kfl-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--kfl-accent) 14%, transparent);
+    color: var(--kfl-accent);
+}
+
+/* Bottom-sheet chrome — real only below the 1024px docked breakpoint (see
+   the mobile media query near the end of this file). Declared here as
+   hidden/inert by default so the desktop dock never has to think about
+   them. */
+.kf-studio__side-close {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: none;
+    background: transparent;
+    color: var(--kf-muted);
+    cursor: pointer;
+}
+
+.kf-studio__side-close svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.kf-studio__side-backdrop {
+    display: none;
+}
+
+.kf-studio__panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+
+/* —— Studio: Viewers panel ————————————————————————————————— */
+
+.kf-studio__viewers-empty {
+    margin: 0;
+    padding: 0.5rem 0;
+    color: var(--kf-muted);
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+.kf-studio__viewers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    overflow-y: auto;
+}
+
+.kf-studio__viewer-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem;
+    border-radius: var(--kf-radius-xs);
+    background: color-mix(in srgb, var(--kfl-black) 35%, transparent);
+}
+
+.kf-studio__viewer-avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: var(--kf-radius-full);
+    background: var(--kfl-panel);
+    font-size: 1rem;
+}
+
+.kf-studio__viewer-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.kf-studio__viewer-name {
+    color: var(--kf-white);
+    font-weight: 600;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kf-studio__viewer-handle {
+    color: var(--kf-muted);
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kf-studio__viewer-actions {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* —— Studio: Settings panel ————————————————————————————————— */
+
+.kf-studio__settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+}
+
+.kf-studio__settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.kf-studio__settings-label {
+    color: var(--kf-muted-strong);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kf-studio__settings-input {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--kf-line-strong);
+    border-radius: var(--kf-radius-xs);
+    background: color-mix(in srgb, var(--kfl-black) 40%, transparent);
+    color: var(--kf-white);
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+.kf-studio__settings-input:focus {
+    outline: none;
+    border-color: var(--kfl-accent);
+}
+
+.kf-studio__settings-input--textarea {
+    resize: vertical;
+    min-height: 4rem;
+}
+
+.kf-studio__settings-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    color: var(--kf-muted-strong);
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.kf-studio__settings-toggle-row input[type='checkbox'] {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--kfl-accent);
+}
+
+.kf-studio__settings-feedback {
+    margin: 0;
+    font-size: 0.78rem;
+}
+
+.kf-studio__settings-feedback--success {
+    color: var(--kfl-accent);
+}
+
+.kf-studio__settings-feedback--error {
+    color: var(--kf-red);
+}
+
+.kf-studio__settings-save {
+    padding: 0.6rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--kfl-accent) 55%, transparent);
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kfl-accent) 16%, transparent);
+    color: var(--kfl-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.kf-studio__settings-save:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 /* —— Studio: pre-live setup ————————————————————————————————— */
@@ -867,7 +1185,7 @@
     padding: 1rem;
     min-height: 100dvh;
     background:
-        radial-gradient(ellipse 70% 35% at 50% -12%, color-mix(in srgb, var(--kf-amber) 6%, transparent), transparent 60%),
+        radial-gradient(ellipse 70% 35% at 50% -12%, color-mix(in srgb, var(--kfl-accent) 6%, transparent), transparent 60%),
         var(--kfl-black);
     color: var(--kf-white);
 }
@@ -914,9 +1232,9 @@
 
 .kf-live-card:hover {
     transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--kf-amber) 45%, transparent);
+    border-color: color-mix(in srgb, var(--kfl-accent) 45%, transparent);
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--kf-amber) 25%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--kfl-accent) 25%, transparent),
         0 1.25rem 2rem -1rem rgba(0, 0, 0, 0.6);
 }
 
@@ -930,14 +1248,14 @@
     overflow: hidden;
 }
 
-/* A soft amber bloom behind the avatar glyph, not a flat gradient tile —
+/* A soft accent bloom behind the avatar glyph, not a flat gradient tile —
    the card reads as "a broadcast is happening in here" before any label
    is read. */
 .kf-live-card__thumb::before {
     content: '';
     position: absolute;
     inset: -20%;
-    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--kf-amber) 20%, transparent), transparent 60%);
+    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--kfl-accent) 20%, transparent), transparent 60%);
     transition: opacity var(--kf-dur-feed) var(--kf-ease-feed);
 }
 
@@ -1003,80 +1321,11 @@
     width: 0.4rem;
     height: 0.4rem;
     border-radius: var(--kf-radius-full);
-    background: var(--kf-amber);
+    background: var(--kfl-accent);
     animation: kf-rec-blink 1.4s steps(1, end) infinite;
 }
 
-/* —— Create sheet (modal) ————————————————————————————————— */
-
-.kf-sheet-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 300;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.62);
-    backdrop-filter: blur(6px);
-    animation: mf-page-in var(--mf-dur-fast, 160ms) ease both;
-}
-
-@media (min-width: 640px) {
-    .kf-sheet-scrim {
-        align-items: center;
-    }
-}
-
-.kf-sheet {
-    width: 100%;
-    max-width: 30rem;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 1.2rem;
-    background: linear-gradient(175deg, color-mix(in srgb, var(--kfl-panel) 82%, transparent), color-mix(in srgb, var(--kfl-black) 88%, transparent) 60%);
-    backdrop-filter: blur(24px);
-    border: 1px solid var(--kfl-glass-line);
-    border-radius: var(--kf-radius-md) var(--kf-radius-md) 0 0;
-    box-shadow: 0 -1.5rem 3rem -1rem rgba(0, 0, 0, 0.55);
-}
-
-@media (min-width: 640px) {
-    .kf-sheet {
-        box-shadow: 0 1.5rem 3rem -1rem rgba(0, 0, 0, 0.55);
-    }
-}
-
-@media (min-width: 640px) {
-    .kf-sheet {
-        border-radius: var(--kf-radius-md);
-    }
-}
-
-.kf-sheet__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.8rem;
-}
-
-.kf-sheet__title {
-    margin: 0;
-    color: var(--kf-white);
-    font-family: var(--kf-font-display);
-    font-size: 1.2rem;
-}
-
-.kf-sheet__close {
-    width: 1.8rem;
-    height: 1.8rem;
-    border: none;
-    background: transparent;
-    color: var(--kf-muted);
-    font-size: 1.3rem;
-    cursor: pointer;
-}
-
-/* —— Stage-type picker (create sheet) ————————————————————— */
+/* —— Stage-type picker (Go Live page + Stage's voice-room sheet) ——— */
 
 .kf-form__radio-grid--types {
     grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
@@ -1113,8 +1362,8 @@
 }
 
 .kf-type-option:has(input:checked) {
-    border-color: var(--kf-amber);
-    background: color-mix(in srgb, var(--kf-amber) 12%, transparent);
+    border-color: var(--kfl-accent);
+    background: color-mix(in srgb, var(--kfl-accent) 12%, transparent);
 }
 
 .kf-type-option__icon {
@@ -1137,8 +1386,8 @@
 }
 
 .kf-type-option:has(input:checked) .kf-type-option__icon {
-    background: color-mix(in srgb, var(--kf-amber) 22%, transparent);
-    color: var(--kf-amber);
+    background: color-mix(in srgb, var(--kfl-accent) 22%, transparent);
+    color: var(--kfl-accent);
 }
 
 .kf-type-option__label {
@@ -1154,6 +1403,127 @@
     line-height: 1.35;
 }
 
+/* —— Go Live page (its own URL, not a modal) ————————————————— */
+
+.kf-live-create {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    min-height: 100dvh;
+    padding: 1.2rem 1rem 3rem;
+    background:
+        radial-gradient(ellipse 60% 30% at 15% -10%, color-mix(in srgb, var(--kfl-accent) 7%, transparent), transparent 60%),
+        var(--kfl-black);
+}
+
+.kf-live-create__head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.kf-live-create__back {
+    flex-shrink: 0;
+    width: 2.3rem;
+    height: 2.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--kf-radius-full);
+    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    border: 1px solid var(--kfl-glass-line);
+    color: var(--kf-white);
+    text-decoration: none;
+}
+
+.kf-live-create__back:hover {
+    background: color-mix(in srgb, var(--kfl-panel) 80%, transparent);
+}
+
+.kf-live-create__back svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.kf-live-create__title {
+    margin: 0;
+    color: var(--kf-white);
+    font-family: var(--kf-font-display);
+    font-size: 1.5rem;
+}
+
+.kf-live-create__sub {
+    margin: 0.15rem 0 0;
+    color: var(--kf-muted-strong);
+    font-size: 0.85rem;
+}
+
+.kf-live-create__form {
+    width: 100%;
+    max-width: 30rem;
+    padding: 1.4rem;
+    background: color-mix(in srgb, var(--kfl-panel) 55%, transparent);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--kfl-glass-line);
+    border-radius: var(--kf-radius-md);
+}
+
+@media (max-width: 767.98px) {
+    .kf-live-create__form {
+        max-width: none;
+        padding: 1.1rem;
+    }
+}
+
+/* —— Studio: mobile panel overlay (below the 1024px docked breakpoint) ——
+   The side panel has nowhere to dock next to the monitor at this width, so
+   it becomes a bottom sheet over a transparent, blurred scrim instead —
+   MobilePanelNav (in the Mirror panel's controls) is what opens it, tapping
+   a nav item sets `mobileOpen` true in CreatorStudio and picks the tab. */
+
+@media (max-width: 1023.98px) {
+    .kf-studio__mobile-nav {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .kf-studio__side-close {
+        display: inline-flex;
+    }
+
+    .kf-studio__side {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        z-index: 31;
+        height: 78vh;
+        max-height: 78vh;
+        border-radius: var(--kf-radius-md) var(--kf-radius-md) 0 0;
+        background: color-mix(in srgb, var(--kfl-panel) 92%, transparent);
+        transform: translateY(100%);
+        transition: transform var(--kf-dur-console) var(--kf-ease-console);
+    }
+
+    .kf-studio__side.is-mobile-open {
+        transform: translateY(0%);
+    }
+
+    .kf-studio__side-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        margin: 0;
+        padding: 0;
+        border: none;
+        cursor: pointer;
+        background: color-mix(in srgb, var(--kfl-black) 55%, transparent);
+        backdrop-filter: blur(3px);
+    }
+}
+
 /* —— Mobile ————————————————————————————————————————————— */
 
 @media (max-width: 767.98px) {
@@ -1164,10 +1534,6 @@
 
     .kf-reels__comments {
         max-width: none;
-    }
-
-    .kf-studio__side {
-        flex: none;
     }
 
     .kf-live-index {
@@ -1184,6 +1550,7 @@
     .kf-reels__chat-toggle,
     .kf-reaction-fab__btn,
     .kf-studio__go-live,
+    .kf-studio__side,
     .kf-live-card__host-dot {
         animation: none !important;
         transition: none !important;

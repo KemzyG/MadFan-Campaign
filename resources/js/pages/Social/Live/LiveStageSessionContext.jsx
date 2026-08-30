@@ -94,6 +94,9 @@ export function LiveStageSessionProvider({ initialStage, initialComments, childr
             .listen('.stage.started', () => {
                 refreshState();
             })
+            .listen('.stage.updated', () => {
+                refreshState();
+            })
             .listen('.stage.ended', () => {
                 setStage((prev) => (prev ? { ...prev, status: 'ended', is_live: false } : prev));
             })
@@ -194,6 +197,15 @@ export function LiveStageSessionProvider({ initialStage, initialComments, childr
         return api.removeViewer(stageIdRef.current, userId, ban);
     }, []);
 
+    const updateSettings = useCallback(async (payload) => {
+        const id = stageIdRef.current;
+        const result = await api.updateStageSettings(id, payload);
+        if (result?.stage) {
+            setStage(result.stage);
+        }
+        return result?.stage;
+    }, []);
+
     const value = useMemo(
         () => ({
             stage,
@@ -207,8 +219,9 @@ export function LiveStageSessionProvider({ initialStage, initialComments, childr
             react,
             muteViewer,
             removeViewer,
+            updateSettings,
         }),
-        [stage, comments, reactions, connection, error, refreshState, postComment, deleteComment, react, muteViewer, removeViewer],
+        [stage, comments, reactions, connection, error, refreshState, postComment, deleteComment, react, muteViewer, removeViewer, updateSettings],
     );
 
     return (

@@ -15,8 +15,8 @@ import StageSheet from './StageSheet';
 /**
  * "Start a voice room" sheet — mic-only conversation, no camera. Camera
  * broadcasting is a separate, distinctly-designed flow now (see the "Go
- * Live" button on Index.jsx, which opens Live's own LiveCreateSheet and
- * creates a LiveStage instead of a Stage). Same optimistic
+ * Live" button on Index.jsx, which navigates to /social/live/new — Live's
+ * own dedicated page — and creates a LiveStage instead of a Stage). Same optimistic
  * `useForm().optimistic()` submit the modal had, restyled on the shared
  * StageSheet + form primitives with a live backdrop preview. Prepends the
  * new stage to the lobby list, then rolls back on failure.
