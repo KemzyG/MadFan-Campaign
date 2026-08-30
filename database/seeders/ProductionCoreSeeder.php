@@ -24,6 +24,12 @@ class ProductionCoreSeeder extends Seeder
             TaskSeeder::class,
             EarnSourceSeeder::class,
             ClubSeeder::class,
+            // Beyond the bootstrap "football" Fandom row (created directly by
+            // the create_sports_table migration, so it always exists by the
+            // time this runs) — every other discovery category (Esports,
+            // Cricket, Music, ...) and their subsets. Idempotent
+            // (firstOrCreate/updateOrCreate on slug), safe to re-run.
+            FandomDiscoverySeeder::class,
             MatchSeeder::class,
             LeagueStandingSeeder::class,
             SettingSeeder::class,

@@ -230,10 +230,11 @@
     font-size: var(--mf-text-caption);
 }
 
-/* Category grid */
+/* Category grid — 3 columns on the smallest screens, scaling up to 6 as the
+   viewport grows rather than staying capped at 3 forever. */
 .mf-fd-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.6rem;
 }
 
@@ -275,7 +276,19 @@
 
 @media (min-width: 640px) {
     .mf-fd-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .mf-fd-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .mf-fd-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
     }
 }
 
