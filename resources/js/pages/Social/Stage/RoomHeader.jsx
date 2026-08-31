@@ -123,6 +123,15 @@ export default function RoomHeader({
                                 {formatLiveDuration(stage.started_at, now)}
                             </span>
                         ) : null}
+                        {isLive ? (
+                            <span
+                                className="mf-stageroom__viewers mf-mono"
+                                aria-label={`${stage.listener_count ?? 0} listening`}
+                            >
+                                <IconEye />
+                                {stage.listener_count ?? 0}
+                            </span>
+                        ) : null}
                     </div>
 
                     <h1 className="mf-stageroom__title" title={stage.title}>

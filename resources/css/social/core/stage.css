@@ -1101,9 +1101,9 @@
 .mf-stageroom__deck {
     position: relative;
     width: 100%;
-    /* Isolate the deck as its own base stacking layer. Its section headings
-       (.mf-stage-deck__head / .mf-stage-listeners__head) are static, and its
-       reaction layer is z-5 — without isolation those leak into the room's
+    /* Isolate the deck as its own base stacking layer. Its section heading
+       (.mf-stage-deck__head) is static, and its reaction layer is z-5 —
+       without isolation those leak into the room's
        shared context and can paint over the control-bar popover / reaction
        picker. z-index:0 confines all deck content below the overlays, which
        sit above it via their own z-index. */
@@ -1161,6 +1161,21 @@
     font-size: var(--mf-text-micro);
     color: var(--mf-muted);
     letter-spacing: 0.04em;
+}
+
+.mf-stageroom__viewers {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-muted);
+    letter-spacing: 0.04em;
+}
+
+.mf-stageroom__viewers svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-shrink: 0;
 }
 
 .mf-stageroom__title {
@@ -2054,47 +2069,6 @@
     height: 0.5rem;
     border-radius: var(--mf-radius-full);
     background: var(--mf-ok);
-}
-
-/* —— 6. Listener strip —————————————————————————————————————————————— */
-.mf-stage-listeners {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.7rem 0.75rem;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius);
-    background: var(--mf-recess);
-}
-
-.mf-stage-listeners__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.mf-stage-listeners__head p {
-    margin: 0;
-    letter-spacing: var(--mf-tracking-label);
-    text-transform: uppercase;
-}
-
-.mf-stage-listeners__hands {
-    align-self: flex-start;
-    padding: 0.3rem 0.6rem;
-    border: 1px solid color-mix(in srgb, var(--mf-pitch) 30%, var(--mf-line));
-    border-radius: var(--mf-radius-full);
-    background: color-mix(in srgb, var(--mf-pitch) 8%, var(--mf-panel));
-    color: var(--mf-text);
-    font-size: var(--mf-text-micro);
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    transition: border-color var(--mf-dur-fast) var(--mf-ease);
-}
-
-.mf-stage-listeners__hands:hover {
-    border-color: var(--mf-pitch);
 }
 
 /* —— 7. Reaction layer —————————————————————————————————————————————— */
@@ -3743,12 +3717,6 @@
     .mf-stageroom.mf-stageroom--reels .mf-stage-monitor:has(.mf-stage-deck) {
         width: auto;
         margin-inline: 0.6rem;
-    }
-
-    /* The seat grid already shows everyone on stage — the listener roster
-       below it is redundant chrome on a phone-width screen. */
-    .mf-stage-listeners {
-        display: none;
     }
 
     /* Chat/People carousel panes (voice only) paint the same stadium backdrop

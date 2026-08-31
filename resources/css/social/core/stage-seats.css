@@ -1,8 +1,8 @@
 /*
- * Seat grid — the voice room's on-stage deck and listener roster, both drawn
- * as the same glass-square language: small blurred squares in a responsive
- * columns/rows grid, tiny (5px) corner radius, a reduced avatar centred
- * inside, or a "+" claim button when the seat is empty.
+ * Seat grid — the voice room's on-stage deck, drawn as small blurred glass
+ * squares in a responsive columns/rows grid, tiny (5px) corner radius, a
+ * reduced avatar centred inside, or a "+" claim button when the seat is
+ * empty.
  *
  * Loaded after stage.css in social.css — reuses its `--mf-*` tokens and the
  * `mf-stage-ring` / `mf-stage-pulse-dim` keyframes (defined in tickets.css,
@@ -13,10 +13,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(3.75rem, 1fr));
     gap: 0.5rem;
-}
-
-.mf-seat-grid--listeners {
-    grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
 }
 
 /* On-stage deck: a predictable seat count per row — 3 columns on narrow
@@ -164,32 +160,6 @@
 
 .mf-seat--empty.is-clickable .mf-seat__plus {
     color: var(--mf-pitch);
-}
-
-/* Listener grid — raised-hand accent dot, "+N" overflow tile. */
-.mf-seat--listener.has-hand::after {
-    content: '';
-    position: absolute;
-    top: 0.3rem;
-    right: 0.3rem;
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-warn);
-    animation: mf-stage-pulse-dim 1.6s var(--mf-ease) infinite;
-}
-
-.mf-seat--more {
-    color: var(--mf-muted);
-    font-family: var(--mf-font-ui);
-    font-size: var(--mf-text-meta);
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.mf-seat--more:hover {
-    border-color: var(--mf-pitch-dim);
-    color: var(--mf-text);
 }
 
 /* —— Seat-picker sheet (host filling an empty seat) —————————————— */

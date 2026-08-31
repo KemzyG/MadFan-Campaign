@@ -4,7 +4,6 @@ import SocialShell from '../../../Layouts/SocialShell';
 import { useSwipeLayer } from '../../../lib/useSwipeLayer';
 import { StageRoomSkeleton } from '../components/Skeletons';
 import InviteStageSheet from './InviteStageSheet';
-import ListenerStrip from './ListenerStrip';
 import PinnedMessage from './PinnedMessage';
 import ReactionLayer from './ReactionLayer';
 import RoomHeader from './RoomHeader';
@@ -288,16 +287,6 @@ export default function Show(props) {
                             </div>
 
                             {!isReelsViewer ? <StageSourcesBar /> : null}
-
-                            {/* Video/Streaming stages let the camera/screen tiles carry the
-                                deck — a text roster of "who's just listening" is leftover
-                                voice-room UI once there's real video to look at. The count
-                                itself stays visible (header stats, the Streaming hero's own
-                                "watching" overlay); only the avatar-chip roster drops here.
-                                Raised hands are still reachable via the People panel. */}
-                            {roomStage?.type === 'voice' ? (
-                                <ListenerStrip onSeeAll={() => openPeople('people')} />
-                            ) : null}
                         </div>
 
                         {isReelsViewer ? (
