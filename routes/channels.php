@@ -36,6 +36,24 @@ Broadcast::channel('social.stage.{stageId}', function (User $user, int $stageId)
     return app(StageService::class)->activeParticipant($stage, $user) !== null;
 });
 
+// Per-recipient WebRTC signal channel — a signal (SDP/ICE) is meant for
+// exactly one participant, so it broadcasts here instead of the shared room
+// channel above (see StageSignalCreated::broadcastOn). Only that user, and
+// only while still an active participant, may subscribe.
+Broadcast::channel('social.stage.{stageId}.user.{userId}', function (User $user, int $stageId, int $userId): bool {
+    if ($user->id !== $userId) {
+        return false;
+    }
+
+    $stage = Stage::query()->find($stageId);
+
+    if ($stage === null) {
+        return false;
+    }
+
+    return app(StageService::class)->activeParticipant($stage, $user) !== null;
+});
+
 Broadcast::channel('live-stage.{stageId}', function (User $user, int $stageId): bool {
     $stage = LiveStage::query()->find($stageId);
 

@@ -20,11 +20,11 @@ export default function PinnedMessage({ compact = false }) {
     const isHost = room?.me?.role === 'host';
 
     function unpin() {
-        patchRoom((props) => ({ ...props, pinned_message: null }));
+        const rollback = patchRoom((props) => ({ ...props, pinned_message: null }));
         router.post(
             `/social/stage/${stageId}/pin`,
             { message_id: '' },
-            withRollbackFlash(reportError, { preserveState: true }),
+            withRollbackFlash(reportError, { preserveState: true, rollback }),
         );
     }
 

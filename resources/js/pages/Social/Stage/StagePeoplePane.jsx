@@ -28,7 +28,7 @@ function ParticipantActions({ participant, stageId, section }) {
     }
 
     function promote() {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).map((p) =>
                 p.user_id === participant.user_id
@@ -39,11 +39,15 @@ function ParticipantActions({ participant, stageId, section }) {
                 ? { ...props.stage, speaker_count: (props.stage.speaker_count || 0) + 1 }
                 : props.stage,
         }));
-        router.post(`/social/stage/${stageId}/participants/${participant.user_id}/promote`, {}, flashVisit());
+        router.post(
+            `/social/stage/${stageId}/participants/${participant.user_id}/promote`,
+            {},
+            flashVisit({ rollback }),
+        );
     }
 
     function dismissHand() {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).map((p) =>
                 p.user_id === participant.user_id ? { ...p, speak_requested_at: null } : p,
@@ -52,13 +56,13 @@ function ParticipantActions({ participant, stageId, section }) {
         router.post(
             `/social/stage/${stageId}/participants/${participant.user_id}/dismiss-hand`,
             {},
-            flashVisit(),
+            flashVisit({ rollback }),
         );
     }
 
     function toggleHostMute() {
         const nextMuted = !participant.is_muted;
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).map((p) =>
                 p.user_id === participant.user_id ? { ...p, is_muted: nextMuted } : p,
@@ -67,12 +71,12 @@ function ParticipantActions({ participant, stageId, section }) {
         router.post(
             `/social/stage/${stageId}/participants/${participant.user_id}/host-mute`,
             { muted: nextMuted ? 1 : 0 },
-            flashVisit(),
+            flashVisit({ rollback }),
         );
     }
 
     function demote() {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).map((p) =>
                 p.user_id === participant.user_id
@@ -83,22 +87,26 @@ function ParticipantActions({ participant, stageId, section }) {
                 ? { ...props.stage, speaker_count: Math.max(0, (props.stage.speaker_count || 1) - 1) }
                 : props.stage,
         }));
-        router.post(`/social/stage/${stageId}/participants/${participant.user_id}/demote`, {}, flashVisit());
+        router.post(
+            `/social/stage/${stageId}/participants/${participant.user_id}/demote`,
+            {},
+            flashVisit({ rollback }),
+        );
     }
 
     function ban() {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).filter((p) => p.user_id !== participant.user_id),
             stage: props.stage
                 ? { ...props.stage, participant_count: Math.max(0, (props.stage.participant_count || 1) - 1) }
                 : props.stage,
         }));
-        router.post(`/social/stage/${stageId}/participants/${participant.user_id}/ban`, {}, flashVisit());
+        router.post(`/social/stage/${stageId}/participants/${participant.user_id}/ban`, {}, flashVisit({ rollback }));
     }
 
     function transferHost() {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             stage: props.stage ? { ...props.stage, host: user } : props.stage,
             me:
@@ -117,7 +125,11 @@ function ParticipantActions({ participant, stageId, section }) {
                 return p;
             }),
         }));
-        router.post(`/social/stage/${stageId}/transfer-host`, { user_id: participant.user_id }, flashVisit());
+        router.post(
+            `/social/stage/${stageId}/transfer-host`,
+            { user_id: participant.user_id },
+            flashVisit({ rollback }),
+        );
     }
 
     return (

@@ -24,7 +24,7 @@ export default function SeatPickerSheet({ open, onClose }) {
     const candidates = [...handRaised, ...listeners.filter((p) => !handRaisedIds.has(p.user_id))];
 
     function promote(participant) {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             participants: (props.participants || []).map((p) =>
                 p.user_id === participant.user_id
@@ -38,7 +38,7 @@ export default function SeatPickerSheet({ open, onClose }) {
         router.post(
             `/social/stage/${stage.id}/participants/${participant.user_id}/promote`,
             {},
-            withRollbackFlash(reportError, { preserveState: true, onSuccess: onClose, onFinish: onClose }),
+            withRollbackFlash(reportError, { preserveState: true, rollback, onSuccess: onClose, onFinish: onClose }),
         );
     }
 

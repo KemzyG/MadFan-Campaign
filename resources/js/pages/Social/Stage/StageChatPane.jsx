@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSocialFlash, withRollbackFlash } from '../optimistic';
 import { formatTime } from '../Chat/helpers';
 import PinnedMessage from './PinnedMessage';
@@ -9,8 +9,16 @@ import { useStageSession } from './StageSessionContext';
 
 /**
  * In-pane room chat. Same optimistic `tmp-msg-` push the modal used, plus a
- * pinned banner and a per-message pin control for the host. Marks messages seen
- * while mounted (the pane only mounts when its tab/segment is active).
+ * pinned banner and a per-message pin control for the host.
+ *
+ * This component stays mounted for the whole Stage session — it's a
+ * permanent sibling in both the mobile swipe carousel and the desktop column
+ * layout, never remounted when the user scrolls/taps to another pane. So
+ * "seen while mounted" doesn't track "seen while actually looking at it";
+ * an IntersectionObserver on the root element does, for both layouts (a
+ * carousel pane scrolled out of `.mf-stageroom`'s clipped scrollport reports
+ * as non-intersecting even against the default viewport root, and a desktop
+ * column that's simply always on-screen reports as intersecting).
  */
 export default function StageChatPane() {
     const { room, patchRoom, openChat, closeChat } = useStageSession();
@@ -18,6 +26,11 @@ export default function StageChatPane() {
     const { data, setData, post, processing, errors, reset } = useForm({ body: '' });
     const bottomRef = useRef(null);
     const inputRef = useRef(null);
+    // A callback ref, not useRef: the pane's root only exists once `stage` is
+    // loaded (this component renders null until then), so a plain ref +
+    // mount-only effect would attach to a still-null node and never retry.
+    const [paneNode, setPaneNode] = useState(null);
+    const [visible, setVisible] = useState(false);
 
     const stage = room?.stage;
     const messages = room?.messages || [];
@@ -29,11 +42,25 @@ export default function StageChatPane() {
     const pinnedId = room?.pinned_message?.id ?? null;
     const stageId = stage?.id;
 
-    // Reset the unread badge while this pane is visible.
     useEffect(() => {
-        openChat();
-        return () => closeChat();
-    }, [openChat, closeChat]);
+        if (!paneNode) {
+            return undefined;
+        }
+        const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
+            threshold: 0.6,
+        });
+        observer.observe(paneNode);
+        return () => observer.disconnect();
+    }, [paneNode]);
+
+    // Reset the unread badge only while the pane is actually on screen.
+    useEffect(() => {
+        if (visible) {
+            openChat();
+        } else {
+            closeChat();
+        }
+    }, [visible, openChat, closeChat]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +78,7 @@ export default function StageChatPane() {
         const body = data.body.trim();
         const tempId = `tmp-msg-${Date.now()}`;
 
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             messages: [
                 ...(props.messages || []),
@@ -70,13 +97,14 @@ export default function StageChatPane() {
             withRollbackFlash(reportError, {
                 preserveScroll: true,
                 preserveState: true,
+                rollback,
                 onSuccess: () => reset('body'),
             }),
         );
     }
 
     function pin(message) {
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             pinned_message: {
                 id: message.id,
@@ -88,12 +116,12 @@ export default function StageChatPane() {
         router.post(
             `/social/stage/${stageId}/pin`,
             { message_id: message.id },
-            withRollbackFlash(reportError, { preserveState: true }),
+            withRollbackFlash(reportError, { preserveState: true, rollback }),
         );
     }
 
     return (
-        <div className="mf-stage-chat" aria-label="Room chat">
+        <div className="mf-stage-chat" aria-label="Room chat" ref={setPaneNode}>
             <PinnedMessage />
 
             <div className="mf-stage-chat__stream">

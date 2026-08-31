@@ -3,6 +3,7 @@
 use App\Enums\StageParticipantRole;
 use App\Enums\StageSignalType;
 use App\Enums\StageStatus;
+use App\Events\Social\StageSignalCreated;
 use App\Models\Club;
 use App\Models\Post;
 use App\Models\Stage;
@@ -11,6 +12,7 @@ use App\Models\StageParticipant;
 use App\Models\StageSignal;
 use App\Support\ApplicationSettings;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 
 test('social stage requires authentication', function () {
@@ -383,6 +385,37 @@ test('webrtc signal store and drain requires voice enabled participant', functio
         ->getJson("/social/stage/{$stage->id}/signals")
         ->assertSuccessful()
         ->assertJsonPath('signals', []);
+});
+
+test('a webrtc signal broadcasts on a per-recipient channel, not the shared room channel', function () {
+    Event::fake([StageSignalCreated::class]);
+
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $guest = socialReadyUser($club);
+
+    $stage = Stage::factory()->live()->withVoice()->create([
+        'host_id' => $host->id,
+        'club_id' => $club->id,
+    ]);
+
+    StageParticipant::factory()->host()->create(['stage_id' => $stage->id, 'user_id' => $host->id]);
+    StageParticipant::factory()->listener()->create(['stage_id' => $stage->id, 'user_id' => $guest->id]);
+
+    $this->actingAs($host)
+        ->postJson("/social/stage/{$stage->id}/signals", [
+            'to_user_id' => $guest->id,
+            'type' => StageSignalType::Offer->value,
+            'payload' => ['sdp' => 'v=0', 'type' => 'offer'],
+        ])
+        ->assertCreated();
+
+    Event::assertDispatched(StageSignalCreated::class, function (StageSignalCreated $event) use ($stage, $guest) {
+        $channelNames = collect($event->broadcastOn())->map(fn ($channel) => $channel->name);
+
+        return $channelNames->contains("private-social.stage.{$stage->id}.user.{$guest->id}")
+            && ! $channelNames->contains("private-social.stage.{$stage->id}");
+    });
 });
 
 test('webrtc signal payload preserves trailing sdp crlf for setRemoteDescription', function () {

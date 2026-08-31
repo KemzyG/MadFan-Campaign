@@ -69,10 +69,9 @@ export default function StageSettingsSheet({
             return;
         }
 
-        const snapshot = stage;
         const selectedBg = stageBackgrounds.find((bg) => bg.key === data.background_key);
 
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             stage: props.stage
                 ? {
@@ -94,7 +93,7 @@ export default function StageSettingsSheet({
             withRollbackFlash(reportError, {
                 preserveScroll: true,
                 preserveState: true,
-                onError: () => patchRoom((props) => ({ ...props, stage: snapshot })),
+                rollback,
                 onSuccess: () => onClose(),
             }),
         );

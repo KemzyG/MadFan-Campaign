@@ -448,26 +448,33 @@ class StageService
             return;
         }
 
-        $maxSpeakers = $stage->max_speakers ?? self::MAX_SPEAKERS;
+        // Lock the stage row as a mutex around the count-then-write below —
+        // without it, two concurrent promote/takeSeat calls can both read
+        // the same speaker count, both pass the capacity check, and both
+        // save, over-filling the deck past max_speakers.
+        DB::transaction(function () use ($stage, $target): void {
+            $locked = Stage::query()->whereKey($stage->id)->lockForUpdate()->firstOrFail();
+            $maxSpeakers = $locked->max_speakers ?? self::MAX_SPEAKERS;
 
-        if ($this->activeSpeakerCount($stage) >= $maxSpeakers) {
-            throw ValidationException::withMessages([
-                'speakers' => 'Stage is full (max '.$maxSpeakers.' seats).',
-            ]);
-        }
+            if ($this->activeSpeakerCount($locked) >= $maxSpeakers) {
+                throw ValidationException::withMessages([
+                    'speakers' => 'Stage is full (max '.$maxSpeakers.' seats).',
+                ]);
+            }
 
-        $participant = $this->activeParticipant($stage, $target);
+            $participant = $this->activeParticipant($locked, $target);
 
-        if ($participant === null) {
-            throw ValidationException::withMessages([
-                'user' => 'That fan is not in this Stage.',
-            ]);
-        }
+            if ($participant === null) {
+                throw ValidationException::withMessages([
+                    'user' => 'That fan is not in this Stage.',
+                ]);
+            }
 
-        $participant->role = StageParticipantRole::Speaker;
-        $participant->speak_requested_at = null;
-        $participant->is_muted = true;
-        $participant->save();
+            $participant->role = StageParticipantRole::Speaker;
+            $participant->speak_requested_at = null;
+            $participant->is_muted = true;
+            $participant->save();
+        });
 
         SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'promote'));
     }
@@ -485,26 +492,33 @@ class StageService
             ]);
         }
 
-        $participant = $this->activeParticipant($stage, $user);
+        // Same mutex pattern as promote() above — see VR-C02: without the
+        // lock, two listeners tapping an empty seat at once (or a listener
+        // self-claiming while the host promotes someone else) can both pass
+        // the capacity check before either writes.
+        DB::transaction(function () use ($stage, $user): void {
+            $locked = Stage::query()->whereKey($stage->id)->lockForUpdate()->firstOrFail();
+            $participant = $this->activeParticipant($locked, $user);
 
-        if ($participant === null || $participant->role !== StageParticipantRole::Listener) {
-            throw ValidationException::withMessages([
-                'seat' => 'Only listeners can take an open seat.',
-            ]);
-        }
+            if ($participant === null || $participant->role !== StageParticipantRole::Listener) {
+                throw ValidationException::withMessages([
+                    'seat' => 'Only listeners can take an open seat.',
+                ]);
+            }
 
-        $maxSpeakers = $stage->max_speakers ?? self::MAX_SPEAKERS;
+            $maxSpeakers = $locked->max_speakers ?? self::MAX_SPEAKERS;
 
-        if ($this->activeSpeakerCount($stage) >= $maxSpeakers) {
-            throw ValidationException::withMessages([
-                'seat' => 'No open seats right now.',
-            ]);
-        }
+            if ($this->activeSpeakerCount($locked) >= $maxSpeakers) {
+                throw ValidationException::withMessages([
+                    'seat' => 'No open seats right now.',
+                ]);
+            }
 
-        $participant->role = StageParticipantRole::Speaker;
-        $participant->speak_requested_at = null;
-        $participant->is_muted = true;
-        $participant->save();
+            $participant->role = StageParticipantRole::Speaker;
+            $participant->speak_requested_at = null;
+            $participant->is_muted = true;
+            $participant->save();
+        });
 
         SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'take-seat'));
     }

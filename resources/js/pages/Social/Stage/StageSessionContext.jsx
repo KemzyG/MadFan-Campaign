@@ -413,13 +413,23 @@ export function StageSessionProvider({ children }) {
         [applyRoom],
     );
 
+    // Returns a rollback closure over the pre-patch snapshot (via roomRef,
+    // kept in sync with `room` — setRoom itself is async/batched, so this
+    // can't just read `room` and expect it to still be "before" by the time
+    // the caller's mutation actually fails). Every optimistic mutation
+    // should pass the returned rollback into withRollbackFlash's `rollback`
+    // option so a failed POST puts the room back the way it was instead of
+    // leaving the optimistic (wrong) state up until the next poll/Echo
+    // update corrects it.
     const patchRoom = useCallback((updater) => {
+        const previous = roomRef.current;
         setRoom((prev) => {
             if (!prev) {
                 return prev;
             }
             return typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
         });
+        return () => setRoom(previous);
     }, []);
 
     const unlockVoicePlayback = useCallback(() => {
@@ -681,14 +691,6 @@ export function StageSessionProvider({ children }) {
                     return { ...prev, messages: [...withoutOptimistic, message] };
                 });
             })
-            .listen('.signal.created', (payload) => {
-                const signal = payload?.signal;
-                const meId = roomRef.current?.me?.user_id;
-                if (!signal || !meId || Number(signal.to_user_id) !== Number(meId)) {
-                    return;
-                }
-                voiceRef.current?.ingestSignals?.([signal]);
-            })
             .listen('.reaction.created', (payload) => {
                 const reaction = payload?.reaction;
                 if (!reaction?.emoji) {
@@ -702,12 +704,43 @@ export function StageSessionProvider({ children }) {
 
         return () => {
             channel.stopListening('.message.created');
-            channel.stopListening('.signal.created');
             channel.stopListening('.reaction.created');
             channel.stopListening('.room.updated');
             leaveEchoChannel(name);
         };
     }, [activeStageId, room?.realtime?.mode, applyRoom, clearSession, fetchRoom, patchRoom, ingestReactions]);
+
+    // Per-recipient WebRTC signal channel (SDP/ICE) — see
+    // StageSignalCreated::broadcastOn and the matching authorization in
+    // routes/channels.php. Kept as its own effect since it needs our own
+    // user id, which isn't known until the room payload above has loaded —
+    // folding it into the room-events effect would force that one to
+    // resubscribe every time `me` changes for unrelated reasons.
+    useEffect(() => {
+        const meId = room?.me?.user_id;
+        if (!activeStageId || room?.realtime?.mode !== 'reverb' || !meId) {
+            return undefined;
+        }
+
+        const echo = getEcho();
+        if (!echo) {
+            return undefined;
+        }
+
+        const name = `social.stage.${activeStageId}.user.${meId}`;
+        const channel = echo.private(name).listen('.signal.created', (payload) => {
+            const signal = payload?.signal;
+            if (!signal) {
+                return;
+            }
+            voiceRef.current?.ingestSignals?.([signal]);
+        });
+
+        return () => {
+            channel.stopListening('.signal.created');
+            leaveEchoChannel(name);
+        };
+    }, [activeStageId, room?.realtime?.mode, room?.me?.user_id]);
 
     // Keep Stage voice mounted for the life of the session (on the room route or off it).
     useEffect(() => {

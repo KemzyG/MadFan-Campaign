@@ -18,12 +18,20 @@ class StageSignalCreated implements ShouldBroadcastNow
     public function __construct(public StageSignal $signal) {}
 
     /**
+     * A WebRTC signal (SDP offer/answer, ICE candidate) is meant for exactly
+     * one recipient — broadcast it on a channel scoped to that recipient
+     * only, not the shared room channel every participant listens on.
+     * Previously this went out on `social.stage.{id}` and relied on the
+     * client filtering by `to_user_id`, which meant every joined user (or a
+     * modified client) could read every peer pair's signaling data,
+     * including host candidates that reveal network topology.
+     *
      * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('social.stage.'.$this->signal->stage_id),
+            new PrivateChannel('social.stage.'.$this->signal->stage_id.'.user.'.$this->signal->to_user_id),
         ];
     }
 

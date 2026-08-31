@@ -83,14 +83,14 @@ export function useStageActions() {
         if (nextMuted === 0) {
             void retryMicAccess?.();
         }
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             me: props.me ? { ...props.me, is_muted: Boolean(nextMuted) } : props.me,
             participants: (props.participants || []).map((p) =>
                 p.user_id === me.user_id ? { ...p, is_muted: Boolean(nextMuted) } : p,
             ),
         }));
-        router.post(`/social/stage/${stageId}/mute`, { muted: nextMuted }, flashVisit());
+        router.post(`/social/stage/${stageId}/mute`, { muted: nextMuted }, flashVisit({ rollback }));
     }, [onStage, isLive, voiceEnabled, me, stageId, patchRoom, flashVisit, unlockVoicePlayback, retryMicAccess]);
 
     const raiseHand = useCallback(() => {
@@ -98,14 +98,14 @@ export function useStageActions() {
             return;
         }
         const now = new Date().toISOString();
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             me: props.me ? { ...props.me, speak_requested_at: now } : props.me,
             participants: (props.participants || []).map((p) =>
                 p.user_id === me.user_id ? { ...p, speak_requested_at: now } : p,
             ),
         }));
-        router.post(`/social/stage/${stageId}/speak-request`, {}, flashVisit());
+        router.post(`/social/stage/${stageId}/speak-request`, {}, flashVisit({ rollback }));
     }, [me, isLive, speakRequestsAllowed, handRaised, stageId, patchRoom, flashVisit]);
 
     // Claiming an open seat outright — a listener tapping an empty slot on the
@@ -116,7 +116,7 @@ export function useStageActions() {
         if (me?.role !== 'listener' || !isLive) {
             return;
         }
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             me: props.me
                 ? { ...props.me, role: 'speaker', on_stage: true, speak_requested_at: null, is_muted: true }
@@ -130,7 +130,7 @@ export function useStageActions() {
                 ? { ...props.stage, speaker_count: (props.stage.speaker_count || 0) + 1 }
                 : props.stage,
         }));
-        router.post(`/social/stage/${stageId}/take-seat`, {}, flashVisit());
+        router.post(`/social/stage/${stageId}/take-seat`, {}, flashVisit({ rollback }));
     }, [me, isLive, stageId, patchRoom, flashVisit]);
 
     // Network-only reaction send (no local animation). The FAB drives the local
@@ -167,13 +167,13 @@ export function useStageActions() {
         }
         unlockVoicePlayback?.();
         void retryMicAccess?.();
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             stage: props.stage ? { ...props.stage, voice_enabled: true } : props.stage,
             voice: props.voice ? { ...props.voice, enabled: true } : props.voice,
             me: props.me ? { ...props.me, is_muted: false } : props.me,
         }));
-        router.post(`/social/stage/${stageId}/voice`, {}, flashVisit());
+        router.post(`/social/stage/${stageId}/voice`, {}, flashVisit({ rollback }));
     }, [isHost, isLive, voiceEnabled, stageId, patchRoom, flashVisit, unlockVoicePlayback, retryMicAccess]);
 
     const enableMic = useCallback(() => {
@@ -230,7 +230,7 @@ export function useStageActions() {
         if (!isLive || !me) {
             return;
         }
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             me: null,
             participants: (props.participants || []).filter((p) => p.user_id !== me.user_id),
@@ -244,7 +244,7 @@ export function useStageActions() {
         router.post(
             `/social/stage/${stageId}/leave`,
             {},
-            flashVisit({ onSuccess: () => clearSession(), onFinish: () => clearSession() }),
+            flashVisit({ rollback, onSuccess: () => clearSession(), onFinish: () => clearSession() }),
         );
     }, [isLive, me, stageId, patchRoom, flashVisit, clearSession]);
 
@@ -252,14 +252,14 @@ export function useStageActions() {
         if (!isHost || !isLive) {
             return;
         }
-        patchRoom((props) => ({
+        const rollback = patchRoom((props) => ({
             ...props,
             stage: props.stage ? { ...props.stage, status: 'ended', voice_enabled: false } : props.stage,
         }));
         router.post(
             `/social/stage/${stageId}/end`,
             {},
-            flashVisit({ onSuccess: () => clearSession(), onFinish: () => clearSession() }),
+            flashVisit({ rollback, onSuccess: () => clearSession(), onFinish: () => clearSession() }),
         );
     }, [isHost, isLive, stageId, patchRoom, flashVisit, clearSession]);
 

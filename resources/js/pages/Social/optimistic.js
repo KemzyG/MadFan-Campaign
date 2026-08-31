@@ -45,11 +45,21 @@ export function firstErrorMessage(errors, fallback = 'Action failed — rolled b
 /**
  * Wrap Inertia visit options so validation/server failures surface in the shared Social flash.
  */
+/**
+ * `options.rollback`, when passed, is called before the error toast on a
+ * failed visit — pass the closure `StageSessionContext.patchRoom(...)`
+ * returns so a failed mutation actually puts the optimistic room state back,
+ * instead of just telling the user it failed while the wrong state lingers
+ * on screen until the next poll/Echo update.
+ */
 export function withRollbackFlash(reportError, options = {}, fallback = 'Action failed — rolled back.') {
+    const { rollback, ...rest } = options;
+
     return {
         preserveScroll: true,
-        ...options,
+        ...rest,
         onError: (errors) => {
+            rollback?.();
             reportError?.(firstErrorMessage(errors, fallback));
             options.onError?.(errors);
         },
