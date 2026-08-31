@@ -61,6 +61,7 @@ export default function Show(props) {
     const carouselRef = useRef(null);
     const carouselSyncingRef = useRef(false);
     const carouselCenteredRef = useRef(false);
+    const carouselSettleTimerRef = useRef(null);
 
     const stageBackgrounds = props.stage_backgrounds || [];
 
@@ -199,22 +200,53 @@ export default function Show(props) {
     // mobileView (and the laptop overlay's reveal flag) to whichever pane is
     // nearest once the user's own scroll settles, skipped while the effect
     // above is driving the scroll to avoid feedback-looping against itself.
+    //
+    // "Settles" is load-bearing: native `scroll` events fire continuously
+    // throughout an in-progress touch drag, long before the finger lifts.
+    // Committing mobileView synchronously on every event let a drag cross a
+    // pane's 50% threshold mid-gesture, which re-triggers the effect above
+    // and calls scrollTo() on the very element the user is still physically
+    // dragging — most mobile browsers treat a programmatic scroll during an
+    // active touch-scroll as taking control away from the gesture, so the
+    // swipe visibly stalls or snaps back before reaching the next pane.
+    // Debouncing to "no scroll events for 120ms" waits out the drag (touch
+    // scroll fires roughly every 16ms) and any inertial/snap settling before
+    // syncing state, so the effect's scrollTo only ever runs once nothing is
+    // actively dragging the element anymore.
     const handleCarouselScroll = useCallback(() => {
         if (carouselSyncingRef.current) {
             return;
         }
-        const node = carouselRef.current;
-        if (!node || !node.clientWidth) {
-            return;
+        if (carouselSettleTimerRef.current) {
+            window.clearTimeout(carouselSettleTimerRef.current);
         }
-        const index = Math.round(node.scrollLeft / node.clientWidth);
-        const next = panes[index];
-        if (!next || next === mobileView) {
-            return;
-        }
-        setMobileView(next);
-        setPeopleOpen(next === 'people');
+        carouselSettleTimerRef.current = window.setTimeout(() => {
+            carouselSettleTimerRef.current = null;
+            if (carouselSyncingRef.current) {
+                return;
+            }
+            const node = carouselRef.current;
+            if (!node || !node.clientWidth) {
+                return;
+            }
+            const index = Math.round(node.scrollLeft / node.clientWidth);
+            const next = panes[index];
+            if (!next || next === mobileView) {
+                return;
+            }
+            setMobileView(next);
+            setPeopleOpen(next === 'people');
+        }, 120);
     }, [panes, mobileView]);
+
+    useEffect(
+        () => () => {
+            if (carouselSettleTimerRef.current) {
+                window.clearTimeout(carouselSettleTimerRef.current);
+            }
+        },
+        [],
+    );
 
     // A Reels viewer's chat lives in the swipe-overlay layer, not the grid/
     // carousel — from the layout's perspective that's the same as "no chat
