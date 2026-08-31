@@ -143,27 +143,40 @@ class PredictionService
     }
 
     /**
-     * Resolve a prediction against its fixture's final score, marking every
-     * submitted guess correct/incorrect and awarding points for the correct
-     * ones. Safe to call more than once — a resolved prediction is skipped.
+     * Resolve a prediction, marking every submitted guess correct/incorrect
+     * and awarding points for the correct ones. Safe to call more than once —
+     * a resolved prediction is skipped.
+     *
+     * Normally the outcome is derived from the fixture's final score, and
+     * only once it's actually Finished (the auto-resolve path — see
+     * EditMatchFixture::afterSave and Admin\FixturesController::update()).
+     * $forceChoice lets an admin settle a prediction by hand instead (e.g.
+     * the fixture record itself is wrong or missing) — see
+     * Admin\PredictionsController::update(), the only caller that passes it.
+     * That path skips the "fixture must be Finished" guard on purpose: an
+     * admin choosing to force a choice already knows the outcome.
      */
-    public function resolve(Prediction $prediction): void
+    public function resolve(Prediction $prediction, ?string $forceChoice = null): void
     {
         if ($prediction->isResolved()) {
             return;
         }
 
-        $fixture = $prediction->matchFixture;
+        if ($forceChoice !== null) {
+            $correctChoice = $forceChoice;
+        } else {
+            $fixture = $prediction->matchFixture;
 
-        if ($fixture === null || ! $fixture->isFinished()) {
-            return;
+            if ($fixture === null || ! $fixture->isFinished()) {
+                return;
+            }
+
+            $correctChoice = match (true) {
+                $fixture->home_score > $fixture->away_score => Prediction::CHOICE_HOME,
+                $fixture->home_score < $fixture->away_score => Prediction::CHOICE_AWAY,
+                default => Prediction::CHOICE_DRAW,
+            };
         }
-
-        $correctChoice = match (true) {
-            $fixture->home_score > $fixture->away_score => Prediction::CHOICE_HOME,
-            $fixture->home_score < $fixture->away_score => Prediction::CHOICE_AWAY,
-            default => Prediction::CHOICE_DRAW,
-        };
 
         DB::transaction(function () use ($prediction, $correctChoice): void {
             $prediction->update(['correct_choice' => $correctChoice, 'resolved_at' => now()]);

@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { socialPlatformIcon } from '../../Components/Fan/socialPlatformIcons';
 import FanLayout from '../../Layouts/FanLayout';
 
@@ -64,6 +64,19 @@ export default function Tasks({ tasks = [] }) {
         if (status === 'claimed') return;
         setOpenId(openId === id ? null : id);
     }
+
+    // Deep link from an event card's "Join challenge" (/tasks?task=123) —
+    // open that task's card and scroll it into view, same as tapping it.
+    useEffect(() => {
+        const taskId = Number(new URLSearchParams(window.location.search).get('task'));
+        if (!taskId || !tasks.some((task) => task.id === taskId)) {
+            return;
+        }
+
+        setOpenId(taskId);
+        document.getElementById(`task-${taskId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     function canCompleteTask(task) {
         const rules = task.completion_rules ?? {};
@@ -160,6 +173,7 @@ export default function Tasks({ tasks = [] }) {
                         return (
                             <div
                                 key={task.id}
+                                id={`task-${task.id}`}
                                 className={`task-card${isDone ? ' completed' : ''}${awaitingReview ? ' awaiting-review' : ''}`}
                                 data-status={status ?? 'pending'}
                             >

@@ -55,11 +55,17 @@ class ChallengeEventProvider implements EventProvider
                 headline: $task->name,
                 subtitle: $task->description,
                 club: null,
+                // Always the in-app task, never straight to external_url: every
+                // task (external or not) still needs a return trip to /tasks to
+                // check the confirm box and claim/submit — that page renders
+                // external_url as its own "Open task" step link (new tab), so
+                // sending the CTA there directly stranded the fan with no path
+                // back to actually collect the points. See Fan/Tasks.jsx.
                 cta: [
                     'label' => 'Join challenge',
-                    'href' => filled($task->external_url) ? $task->external_url : '/campaign',
+                    'href' => '/tasks?task='.$task->id,
                 ],
-                share: ['title' => $task->name, 'url' => '/campaign'],
+                share: ['title' => $task->name, 'url' => '/tasks?task='.$task->id],
                 data: [
                     'points' => (int) $task->points,
                     'platform' => $task->platform,
