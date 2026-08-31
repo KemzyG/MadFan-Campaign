@@ -3725,6 +3725,40 @@
         border: 1px solid var(--mf-line);
         background: color-mix(in srgb, var(--mf-panel) 74%, transparent);
     }
+
+    /* Voice room only (:has(.mf-stage-deck) — the seat grid, never rendered
+       by a Video/Streaming stage) — the mobile header above is an absolute
+       overlay (.mf-stageroom--host/--viewer .mf-stageroom__header, both set
+       elsewhere), so the deck needs its own clearance to start below it
+       instead of directly underneath. 3.6rem matches the same header
+       clearance already used for the Studio's pinned banner/sources chip. */
+    .mf-stage-monitor:has(.mf-stage-deck) {
+        margin-top: 3.6rem;
+    }
+
+    /* The seat grid already shows everyone on stage — the listener roster
+       below it is redundant chrome on a phone-width screen. */
+    .mf-stage-listeners {
+        display: none;
+    }
+
+    /* Chat/People carousel panes (voice only) paint the same stadium backdrop
+       + scrim as the Program monitor instead of a solid panel background —
+       swiping to them slides that pane's whole header/body/controls in over
+       the room's own background image, the same "glass over a persistent
+       backdrop" register the Reels swipe-layers already use for chat. */
+    .mf-stageroom:has(.mf-stage-deck) .mf-stage-panel--chat,
+    .mf-stageroom:has(.mf-stage-deck) .mf-stage-panel--people {
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--mf-canvas) 55%, transparent) 0%,
+                color-mix(in srgb, var(--mf-canvas) 80%, transparent) 55%,
+                var(--mf-canvas) 100%
+            ),
+            var(--mf-stage-bg-image, none) center / cover no-repeat,
+            var(--mf-canvas);
+    }
 }
 
 /*
