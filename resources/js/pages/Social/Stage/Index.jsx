@@ -7,6 +7,16 @@ import StageLobbyToolbar from './StageLobbyToolbar';
 import { IconLive, IconMic } from './StageIcons';
 import { useStageSessionOptional } from './StageSessionContext';
 
+// Stadium-atmosphere shots only — the hero's own copy needs real dark
+// negative space to sit in, which rules out the flat product photography
+// (shop/kit) and phone-mockup screenshots also living in landing-media/.
+const HERO_BACKGROUNDS = [
+    '/landing-media/social.png',
+    '/landing-media/campaign.png',
+    '/landing-media/hero.png',
+    '/landing-media/passport.png',
+];
+
 const FILTERS = [
     { key: 'all', label: 'All' },
     { key: 'club', label: 'My club' },
@@ -139,6 +149,14 @@ export default function Index({ stages }) {
         [stageList],
     );
 
+    // Picked once per visit (empty deps — a fresh mount re-rolls it), not
+    // re-rolled on every re-render, so filtering/sorting the list below
+    // doesn't flicker the hero photo.
+    const heroBackground = useMemo(
+        () => HERO_BACKGROUNDS[Math.floor(Math.random() * HERO_BACKGROUNDS.length)],
+        [],
+    );
+
     const visible = useMemo(() => {
         const q = query.trim().toLowerCase();
         let list = stageList.filter((stage) => {
@@ -196,7 +214,10 @@ export default function Index({ stages }) {
                 <StageLobbySkeleton />
             ) : (
                 <div className="mf-stage-lobby">
-                    <header className="mf-stage-hero">
+                    <header
+                        className="mf-stage-hero"
+                        style={{ '--mf-stage-hero-bg': `url('${heroBackground}')` }}
+                    >
                         <div className="mf-stage-hero__copy min-w-0">
                             <span className="mf-stage-hero__eyebrow mf-mono">
                                 <span className="mf-stage-live-dot" />
