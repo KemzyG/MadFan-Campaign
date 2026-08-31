@@ -93,14 +93,16 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
     });
 
     // Guest-viewable surface — no `auth`, no `verified`: a visitor with no
-    // session at all can read these pages, same shape as X/TikTok/Facebook
-    // ("see the content, sign in to act on it"). `social.onboarded` stays in
-    // this stack even though guests never hit it (it no-ops on a null user —
-    // see EnsureSocialOnboarded) because a *logged-in* user who hasn't picked
-    // a club yet must still be funnelled through onboarding same as before;
-    // only the guest case is new here. Every controller reachable from this
-    // group must tolerate `$request->user() === null` — see each controller's
-    // own null-guards rather than re-deriving that contract here.
+    // session at all can read these two pages, same first look X/TikTok/
+    // Facebook give a logged-out visitor. Everything else in Social (Live,
+    // Fandom, Fixtures, Clubs, Leaderboard, Shop, profiles, post permalinks)
+    // now requires a real account — see the guest-was-here routes moved down
+    // into the auth-only group below. `social.onboarded` stays in this stack
+    // even though guests never hit it (it no-ops on a null user — see
+    // EnsureSocialOnboarded) because a *logged-in* user who hasn't picked a
+    // club yet must still be funnelled through onboarding same as before.
+    // Both controllers reachable from this group must still tolerate
+    // `$request->user() === null`.
     $guest = Route::middleware(['app.maintenance', 'social.enabled', 'social.onboarded', TouchLastSeen::class]);
     if ($pathPrefix !== '') {
         $guest->prefix($pathPrefix);
@@ -111,34 +113,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
     $guest->group(function () {
         Route::get('/', SocialEventsController::class)->name('home');
         Route::get('/feed', SocialFeedController::class)->name('feed');
-
-        Route::get('/live', [LiveStageController::class, 'index'])->name('live.index');
-        Route::get('/live/{liveStage}', [LiveStageController::class, 'show'])->name('live.show');
-        Route::get('/live/{liveStage}/state', [LiveStageController::class, 'state'])
-            ->middleware('throttle:live-stage-poll')
-            ->name('live.state');
-        // Video is content, not interaction — a guest gets a real subscribe-only
-        // LiveKit token here too (see LiveStagePolicy::mediaToken / issueMediaToken).
-        Route::get('/live/{liveStage}/media-token', LiveStageMediaTokenController::class)
-            ->middleware('throttle:60,1')
-            ->name('live.media-token');
-
-        Route::get('/fandom', SocialFandomDiscoveryController::class)->name('fandom');
-        Route::get('/fandom/{fandom:slug}', SocialFandomController::class)->name('fandom.show');
-        Route::get('/fandom/{fandom:slug}/members', SocialFandomMembersController::class)->name('fandom.members');
-        Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
-        Route::get('/clubs', SocialStandingsController::class)->name('clubs');
-        Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
-        Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
-
-        Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
-        Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');
-
-        Route::get('/u/{handle}', SocialProfileController::class)
-            ->where('handle', '[A-Za-z0-9._\\-]+')
-            ->name('profile');
-
-        Route::get('/posts/{post}', SocialPostShowController::class)->name('posts.show');
     });
 
     Route::middleware(['app.maintenance', 'auth', TouchLastSeen::class])->group(function () use ($pathPrefix, $apiPrefix, $withNames): void {
@@ -483,5 +457,47 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
             });
         });
 
+    });
+
+    // Previously part of the guest-viewable surface above; now a real
+    // account is required to read them too (see that group's own comment).
+    // Registered last, after every other `/shop/*` and `/live/*` route in
+    // this file, so the wildcard show routes here (`/shop/{product:slug}`,
+    // `/live/{liveStage}`) never get a first crack at a literal sibling
+    // path like `/shop/cart` or `/live/new` — Laravel matches routes in
+    // registration order. Same middleware stack as $liveCreate above.
+    $authPages = Route::middleware(['app.maintenance', 'auth', TouchLastSeen::class, 'verified', 'social.enabled', 'social.onboarded']);
+    if ($pathPrefix !== '') {
+        $authPages->prefix($pathPrefix);
+    }
+    if ($withNames) {
+        $authPages->name('social.');
+    }
+    $authPages->group(function () {
+        Route::get('/live', [LiveStageController::class, 'index'])->name('live.index');
+        Route::get('/live/{liveStage}', [LiveStageController::class, 'show'])->name('live.show');
+        Route::get('/live/{liveStage}/state', [LiveStageController::class, 'state'])
+            ->middleware('throttle:live-stage-poll')
+            ->name('live.state');
+        Route::get('/live/{liveStage}/media-token', LiveStageMediaTokenController::class)
+            ->middleware('throttle:60,1')
+            ->name('live.media-token');
+
+        Route::get('/fandom', SocialFandomDiscoveryController::class)->name('fandom');
+        Route::get('/fandom/{fandom:slug}', SocialFandomController::class)->name('fandom.show');
+        Route::get('/fandom/{fandom:slug}/members', SocialFandomMembersController::class)->name('fandom.members');
+        Route::get('/fixtures', SocialFixtureController::class)->name('fixtures');
+        Route::get('/clubs', SocialStandingsController::class)->name('clubs');
+        Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
+        Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
+
+        Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
+        Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');
+
+        Route::get('/u/{handle}', SocialProfileController::class)
+            ->where('handle', '[A-Za-z0-9._\\-]+')
+            ->name('profile');
+
+        Route::get('/posts/{post}', SocialPostShowController::class)->name('posts.show');
     });
 };

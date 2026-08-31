@@ -374,7 +374,7 @@ function HeaderMenuItem({ href, label, icon: Icon, active, onClick, method, as, 
     );
 }
 
-function SocialHeaderNavMenu({ tabs }) {
+function SocialHeaderNavMenu({ tabs, isGuest }) {
     const menuId = useId();
     const [open, setOpen] = useState(false);
     const triggerRef = useRef(null);
@@ -416,14 +416,18 @@ function SocialHeaderNavMenu({ tabs }) {
                         />
                     ))}
                     <li role="separator" className="mf-header-menu__sep" aria-hidden="true" />
-                    <HeaderMenuItem
-                        href="/logout"
-                        method="post"
-                        as="button"
-                        label="Sign out"
-                        danger
-                        onClick={close}
-                    />
+                    {isGuest ? (
+                        <HeaderMenuItem href="/login" label="Sign in" onClick={close} />
+                    ) : (
+                        <HeaderMenuItem
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            label="Sign out"
+                            danger
+                            onClick={close}
+                        />
+                    )}
                 </ul>
             ) : null}
         </div>
@@ -699,7 +703,10 @@ export default function SocialShell({
         };
     }, [clearNavSkeleton]);
 
-    // Primary destinations shown in the mobile bottom tab bar (exactly these five).
+    // Primary destinations shown in the mobile bottom tab bar (exactly these
+    // five) — for a guest, only Events and Feed are reachable at all (every
+    // other Social page now requires an account, see routes/social.php), so
+    // the rest have nothing to navigate to and are dropped from the list.
     const primaryTabs = [
         {
             href: '/social',
@@ -713,62 +720,70 @@ export default function SocialShell({
             icon: IconFeed,
             active: pathMatches(current, '/social/feed') || pathMatches(current, '/social/posts'),
         },
-        {
-            href: '/social/fandom',
-            label: 'Fandom',
-            icon: IconFandom,
-            // Fixtures and the League table are fandom-specific pages, so both
-            // live under this one Fandom hub instead of two standalone nav
-            // entries — ticket purchase/wallet is reached from a fixture's own
-            // match detail.
-            active:
-                pathMatches(current, '/social/fandom') ||
-                pathMatches(current, '/social/fixtures') ||
-                pathMatches(current, '/social/clubs') ||
-                pathMatches(current, '/social/tickets'),
-        },
-        {
-            href: '/social/videos',
-            label: 'Short',
-            icon: IconReels,
-            active: pathMatches(current, '/social/videos'),
-        },
-        {
-            href: '/social/chat',
-            label: 'Chat',
-            icon: IconChat,
-            active: pathMatches(current, '/social/chat'),
-            badge: chatUnread,
-        },
+        ...(isGuest
+            ? []
+            : [
+                  {
+                      href: '/social/fandom',
+                      label: 'Fandom',
+                      icon: IconFandom,
+                      // Fixtures and the League table are fandom-specific pages, so both
+                      // live under this one Fandom hub instead of two standalone nav
+                      // entries — ticket purchase/wallet is reached from a fixture's own
+                      // match detail.
+                      active:
+                          pathMatches(current, '/social/fandom') ||
+                          pathMatches(current, '/social/fixtures') ||
+                          pathMatches(current, '/social/clubs') ||
+                          pathMatches(current, '/social/tickets'),
+                  },
+                  {
+                      href: '/social/videos',
+                      label: 'Short',
+                      icon: IconReels,
+                      active: pathMatches(current, '/social/videos'),
+                  },
+                  {
+                      href: '/social/chat',
+                      label: 'Chat',
+                      icon: IconChat,
+                      active: pathMatches(current, '/social/chat'),
+                      badge: chatUnread,
+                  },
+              ]),
     ];
 
     // Secondary destinations: sidebar + header menus only (not bottom tabs).
-    const secondaryTabs = [
-        {
-            href: '/social/shop',
-            label: 'Store',
-            icon: IconShop,
-            active: pathMatches(current, '/social/shop'),
-        },
-        {
-            href: '/social/stage',
-            label: 'Join stage',
-            icon: IconStage,
-            active: pathMatches(current, '/social/stage'),
-        },
-        {
-            href: '/social/live',
-            label: 'Live',
-            icon: IconLiveStage,
-            active: pathMatches(current, '/social/live'),
-        },
-        {
-            href: profileHref,
-            label: 'You',
-            icon: IconProfile,
-            active: pathMatches(current, '/social/you'),
-        },
-    ];
+    // All auth-only pages, so a guest gets none of them — the sidebar's own
+    // "You" slot becomes a Sign in prompt instead (see the sidebar render below).
+    const secondaryTabs = isGuest
+        ? []
+        : [
+              {
+                  href: '/social/shop',
+                  label: 'Store',
+                  icon: IconShop,
+                  active: pathMatches(current, '/social/shop'),
+              },
+              {
+                  href: '/social/stage',
+                  label: 'Join stage',
+                  icon: IconStage,
+                  active: pathMatches(current, '/social/stage'),
+              },
+              {
+                  href: '/social/live',
+                  label: 'Live',
+                  icon: IconLiveStage,
+                  active: pathMatches(current, '/social/live'),
+              },
+              {
+                  href: profileHref,
+                  label: 'You',
+                  icon: IconProfile,
+                  active: pathMatches(current, '/social/you'),
+              },
+          ];
 
     const tabs = [...primaryTabs, ...secondaryTabs];
     const mobileTabs = primaryTabs;
@@ -859,7 +874,26 @@ export default function SocialShell({
                                         <span className="mf-text-caption">pts</span>
                                     </span>
                                 </Link>
-                            ) : null}
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="mf-sidebar__user mf-sidebar__user--guest"
+                                    aria-label="Sign in"
+                                    title="Sign in"
+                                    prefetch
+                                >
+                                    <span
+                                        className="mf-sidebar__user-avatar mf-sidebar__user-avatar--fallback mf-display"
+                                        aria-hidden
+                                    >
+                                        👤
+                                    </span>
+                                    <span className="mf-sidebar__user-meta">
+                                        <span className="mf-sidebar__user-name">Sign in</span>
+                                        <span className="mf-sidebar__user-handle mf-mono">Join Mad Fan</span>
+                                    </span>
+                                </Link>
+                            )}
                         </aside>
                     ) : null}
 
@@ -867,7 +901,7 @@ export default function SocialShell({
                         {!hideHeader && (title || backHref || showTabs) && (
                             <header className={`mf-header ${fillViewport ? 'mf-header--compact' : ''}`}>
                                 {showTabs ? (
-                                    <SocialHeaderNavMenu tabs={tabs} />
+                                    <SocialHeaderNavMenu tabs={tabs} isGuest={isGuest} />
                                 ) : null}
 
                                 {backHref ? (
