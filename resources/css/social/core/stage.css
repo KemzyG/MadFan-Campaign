@@ -1100,6 +1100,7 @@
 
 .mf-stageroom__deck {
     position: relative;
+    width: 100%;
     /* Isolate the deck as its own base stacking layer. Its section headings
        (.mf-stage-deck__head / .mf-stage-listeners__head) are static, and its
        reaction layer is z-5 — without isolation those leak into the room's
@@ -1122,6 +1123,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
+    width: 100%;
     flex-shrink: 0;
     padding: 0.7rem 0.85rem;
     border-bottom: 1px solid var(--mf-line);
@@ -1334,6 +1336,7 @@
 .mf-stage-deck {
     display: flex;
     flex-direction: column;
+    width: 100%;
     gap: 0.65rem;
 }
 

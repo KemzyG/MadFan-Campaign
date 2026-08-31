@@ -19,6 +19,20 @@
     grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
 }
 
+/* On-stage deck: a predictable seat count per row — 3 columns on narrow
+   screens, 4 from tablet width up — instead of auto-fill's screen-width-
+   dependent column count (which on a wide desktop Studio spread seats too
+   thin across the now-full-width deck). */
+.mf-seat-grid--seats {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (min-width: 768px) {
+    .mf-seat-grid--seats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 /* One seat: filled or empty, on-stage or listener — same shape throughout. */
 .mf-seat {
     position: relative;

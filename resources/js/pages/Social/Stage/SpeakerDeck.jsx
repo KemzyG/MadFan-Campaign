@@ -31,7 +31,7 @@ export default function SpeakerDeck({ onSelectSpeaker, onClaimSeat, onOpenSeatPi
                 </span>
             </header>
 
-            <div className="mf-seat-grid">
+            <div className="mf-seat-grid mf-seat-grid--seats">
                 {seats.map((participant, index) => {
                     if (!participant) {
                         const claimable = isLive && (isListener || isHost);

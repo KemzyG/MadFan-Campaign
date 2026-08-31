@@ -67,6 +67,28 @@
     z-index: 10;
 }
 
+/* Voice rooms render the plain seat-grid deck (.mf-stage-deck), never a
+   Video/Streaming hero — the Reels register above is built around a video
+   frame with no intrinsic width (full-bleed, absolutely positioned, centred
+   in a flex parent), which for voice just leaves the header/deck/monitor
+   shrunk to their content width instead of the full room width. Reset both
+   back to a normal stacked, full-width box for this case only —
+   :has(.mf-stage-deck) leaves the actual Reels video layout above untouched. */
+.mf-stageroom--reels .mf-stageroom__main:has(.mf-stage-deck) {
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.mf-stageroom--reels .mf-stage-monitor:has(.mf-stage-deck) {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    display: block;
+    z-index: auto;
+    border: 1px solid var(--mf-line);
+}
+
 .mf-stageroom--reels .mf-stage-hero-deck {
     width: 100%;
     height: 100%;
