@@ -1,15 +1,12 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { usePage } from '@inertiajs/react';
+import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
 
 /**
  * The one "sign in to continue" moment every guest interaction opens onto —
  * see resources/js/pages/Social/authGate.js for the hook that drives this.
- * Deliberately its own fixed dark card rather than inheriting the light
- * Vibrants page or the Kickoff broadcast palette behind it: this prompt can
- * appear over either (a feed post, a live stream, a profile), so it carries
- * a single consistent identity instead of two different skins depending on
- * where a guest happened to tap.
+ * Minimal on purpose: logo, one line, two buttons — no pitch copy.
  */
 export default function SignInGate({ action, onClose }) {
     const open = Boolean(action);
@@ -51,16 +48,11 @@ export default function SignInGate({ action, onClose }) {
                     ×
                 </button>
 
-                <span className="mf-authgate__mark" aria-hidden>
-                    ⚽
-                </span>
+                <FanBrandLogo asLink={false} size={40} className="mf-authgate__mark" />
 
                 <h2 id="mf-authgate-title" className="mf-authgate__title">
                     {headline}
                 </h2>
-                <p className="mf-authgate__body">
-                    You're browsing as a guest — create a free account to join in.
-                </p>
 
                 <div className="mf-authgate__actions">
                     <a className="mf-authgate__btn mf-authgate__btn--primary" href={`/login?redirect=${redirect}`}>

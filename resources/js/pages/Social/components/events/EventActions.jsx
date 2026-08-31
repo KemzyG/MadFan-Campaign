@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
 import { socialApi } from '../../../../lib/socialApi';
+import { useAuthGate } from '../../authGate';
 import { applyOptimisticProps, runSocialMutation, useSocialFlash } from '../../optimistic';
 import { formatCount } from '../post/format';
 import { setEventInterest } from './eventProps';
@@ -43,13 +44,14 @@ export function EventCTA({ cta, tone = 'pitch' }) {
  */
 export function InterestButton({ event }) {
     const { reportError } = useSocialFlash();
+    const { requireAuth } = useAuthGate();
     const [pending, setPending] = useState(false);
 
     const active = Boolean(event?.interest?.active);
     const count = event?.interest?.count || 0;
 
     const toggle = useCallback(async () => {
-        if (pending || !event?.key) {
+        if (pending || !event?.key || !requireAuth('join this event')) {
             return;
         }
 
@@ -85,7 +87,7 @@ export function InterestButton({ event }) {
         } finally {
             setPending(false);
         }
-    }, [active, event?.key, event?.type, pending, reportError]);
+    }, [active, event?.key, event?.type, pending, reportError, requireAuth]);
 
     return (
         <button

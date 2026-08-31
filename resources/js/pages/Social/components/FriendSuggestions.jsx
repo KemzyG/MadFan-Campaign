@@ -2,10 +2,12 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
 import { socialApi } from '../../../lib/socialApi';
+import { useAuthGate } from '../authGate';
 
 function SuggestionCard({ user }) {
     const { app } = usePage().props;
     const fallbackUrl = resolveDefaultImageUrl({ app });
+    const { requireAuth } = useAuthGate();
     const [following, setFollowing] = useState(false);
     const [pending, setPending] = useState(false);
 
@@ -13,7 +15,7 @@ function SuggestionCard({ user }) {
         event.preventDefault();
         event.stopPropagation();
 
-        if (pending || following) {
+        if (pending || following || !requireAuth('follow this fan')) {
             return;
         }
 
