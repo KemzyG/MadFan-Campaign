@@ -6,6 +6,7 @@ import LiveEventCard from './templates/LiveEventCard';
 import LiveMatchCard from './templates/LiveMatchCard';
 import LivestreamCard from './templates/LivestreamCard';
 import NewEpisodeCard from './templates/NewEpisodeCard';
+import ShowdownCard from './templates/ShowdownCard';
 import SongReleaseCard from './templates/SongReleaseCard';
 import TournamentCard from './templates/TournamentCard';
 
@@ -21,6 +22,7 @@ const TEMPLATES = {
     new_episode: NewEpisodeCard,
     campaign: CampaignCard,
     fan_challenge: FanChallengeCard,
+    showdown: ShowdownCard,
     concert: ConcertCard,
     song_release: SongReleaseCard,
     breaking_news: BreakingNewsCard,

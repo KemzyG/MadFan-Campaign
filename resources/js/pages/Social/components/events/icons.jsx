@@ -81,6 +81,16 @@ export function IconTarget() {
     );
 }
 
+/** showdown — two facing chevrons, a head-to-head. */
+export function IconVersus() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="M10 5 5 12l5 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="M14 5l5 7-5 7" />
+        </svg>
+    );
+}
+
 /** concert — music notes. */
 export function IconMusic() {
     return (
@@ -195,6 +205,7 @@ export const EVENT_ICONS = {
     new_episode: IconPlay,
     campaign: IconFlag,
     fan_challenge: IconTarget,
+    showdown: IconVersus,
     concert: IconMusic,
     song_release: IconDisc,
     breaking_news: IconAlert,

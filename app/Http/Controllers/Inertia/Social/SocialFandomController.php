@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Social\FandomHubService;
 use App\Services\Social\PollService;
 use App\Services\Social\PredictionService;
+use App\Services\Social\ShowdownService;
 use App\Services\Social\VideoHighlightService;
 use App\Support\Social\FandomContent;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class SocialFandomController extends Controller
         FandomHubService $hub,
         PredictionService $predictions,
         PollService $polls,
+        ShowdownService $showdowns,
         VideoHighlightService $videos,
     ): Response {
         /** @var User|null $user */
@@ -60,6 +62,7 @@ class SocialFandomController extends Controller
                 'challenges' => $hub->challenges(4),
                 'predictions' => $predictions->openForFandom($fandom, $user, 3),
                 'polls' => $polls->openForFandom($fandom, $user, 2),
+                'showdowns' => $showdowns->openForFandom($fandom, $user, 2),
                 'feed' => $hub->feedExcerpt($user, 5),
                 'leaderboard' => $hub->leaderboardExcerpt($fandom, $user, 5),
                 'upcoming' => $hub->upcoming(4),

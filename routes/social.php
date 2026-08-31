@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Social\NotificationController as ApiSocialNotificat
 use App\Http\Controllers\Api\Social\PollController as ApiSocialPollController;
 use App\Http\Controllers\Api\Social\PostLikeController as ApiSocialPostLikeController;
 use App\Http\Controllers\Api\Social\PredictionController as ApiSocialPredictionController;
+use App\Http\Controllers\Api\Social\ShowdownController as ApiSocialShowdownController;
 use App\Http\Controllers\Api\Social\StageInviteCandidatesController as ApiSocialStageInviteCandidatesController;
 use App\Http\Controllers\Api\Social\TicketController as ApiSocialTicketController;
 use App\Http\Controllers\Api\Social\UserSearchController as ApiSocialUserSearchController;
@@ -53,6 +54,7 @@ use App\Http\Controllers\Inertia\Social\SocialShopCartController;
 use App\Http\Controllers\Inertia\Social\SocialShopCheckoutController;
 use App\Http\Controllers\Inertia\Social\SocialShopController;
 use App\Http\Controllers\Inertia\Social\SocialShopOrderController;
+use App\Http\Controllers\Inertia\Social\SocialShowdownController;
 use App\Http\Controllers\Inertia\Social\SocialStageController;
 use App\Http\Controllers\Inertia\Social\SocialStageLiveKitTokenController;
 use App\Http\Controllers\Inertia\Social\SocialStageMessageController;
@@ -176,6 +178,14 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/polls/{poll}/vote', [ApiSocialPollController::class, 'vote'])
                     ->middleware('throttle:60,1')
                     ->name('polls.vote');
+
+                // "Unlimited" taps is the feature, but a request still has to
+                // hit the network each time — this throttle is spam/DoS
+                // protection, not a gameplay cap, and 60/min is well above
+                // any human's sustained tap rate.
+                Route::post('/showdowns/{showdown}/vote', [ApiSocialShowdownController::class, 'vote'])
+                    ->middleware('throttle:60,1')
+                    ->name('showdowns.vote');
 
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
@@ -490,6 +500,8 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
         Route::get('/clubs', SocialStandingsController::class)->name('clubs');
         Route::get('/clubs/{club}', SocialClubProfileController::class)->name('clubs.show');
         Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
+
+        Route::get('/showdown/{showdown}', SocialShowdownController::class)->name('showdown.show');
 
         Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
         Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');

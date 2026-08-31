@@ -19,6 +19,7 @@ enum PointSourceType: string
     case SocialDailyTask = 'social_daily_task';
     case SocialPrediction = 'social_prediction';
     case SocialPoll = 'social_poll';
+    case SocialShowdown = 'social_showdown';
 
     public function label(): string
     {
@@ -38,6 +39,7 @@ enum PointSourceType: string
             self::SocialDailyTask => 'Social Daily Tasks',
             self::SocialPrediction => 'Social Prediction',
             self::SocialPoll => 'Social Poll',
+            self::SocialShowdown => 'Social Showdown',
         };
     }
 
@@ -86,6 +88,7 @@ enum PointSourceType: string
             self::SocialDailyTask->value,
             self::SocialPrediction->value,
             self::SocialPoll->value,
+            self::SocialShowdown->value,
         ];
     }
 };

@@ -22,6 +22,8 @@ class AwardSocialPoints
 
     public const SOURCE_POLL_VOTE = 'social_poll';
 
+    public const SOURCE_SHOWDOWN_VOTE = 'social_showdown';
+
     /** @var array<string, array{points: int, cap: int, min_chars?: int}> */
     public const RULES = [
         self::SOURCE_POST => ['points' => 5, 'cap' => 3],
@@ -29,6 +31,11 @@ class AwardSocialPoints
         self::SOURCE_LIKE_RECEIVED => ['points' => 1, 'cap' => 50],
         self::SOURCE_CHAT => ['points' => 1, 'cap' => 25, 'min_chars' => 5],
         self::SOURCE_POLL_VOTE => ['points' => 3, 'cap' => 5],
+        // Voting itself stays unlimited (see ShowdownService::vote — tap_count
+        // keeps climbing forever); only the points a tap can earn are capped,
+        // and capped per day rather than per showdown so the reward can't be
+        // farmed by spamming taps on one showdown or hopping between many.
+        self::SOURCE_SHOWDOWN_VOTE => ['points' => 1, 'cap' => 10],
     ];
 
     public function __construct(
@@ -79,6 +86,17 @@ class AwardSocialPoints
     public function forPollVote(User $user, int $pollId): ?PointTransaction
     {
         return $this->award($user, self::SOURCE_POLL_VOTE, (string) $pollId, 'Poll vote cast');
+    }
+
+    /**
+     * $tapNumber (this user's running tap_count on this showdown) is the
+     * per-call idempotency source id — a distinct id per tap is what lets
+     * award()'s daily cap count "how many taps have earned points today"
+     * instead of collapsing every tap on one showdown into a single award.
+     */
+    public function forShowdownVote(User $user, int $showdownId, int $tapNumber): ?PointTransaction
+    {
+        return $this->award($user, self::SOURCE_SHOWDOWN_VOTE, "{$showdownId}-{$tapNumber}", 'Showdown vote cast');
     }
 
     public function award(User $user, string $sourceType, string $sourceId, string $reason): ?PointTransaction

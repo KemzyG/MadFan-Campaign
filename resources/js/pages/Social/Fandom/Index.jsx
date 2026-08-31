@@ -11,6 +11,7 @@ import MoreSheet from './MoreSheet';
 import PollCard from './PollCard';
 import PredictionCard from './PredictionCard';
 import PulseStrip from './PulseStrip';
+import ShowdownCard from './ShowdownCard';
 import UpcomingList from './UpcomingList';
 
 function HomeTab({ home, fandomSlug }) {
@@ -21,6 +22,7 @@ function HomeTab({ home, fandomSlug }) {
     const activities = [
         ...home.predictions.map((prediction) => ({ kind: 'prediction', key: `prediction-${prediction.id}`, prediction })),
         ...home.polls.map((poll) => ({ kind: 'poll', key: `poll-${poll.id}`, poll })),
+        ...(home.showdowns ?? []).map((showdown) => ({ kind: 'showdown', key: `showdown-${showdown.id}`, showdown })),
         ...home.challenges.map((challenge) => ({ kind: 'challenge', key: `challenge-${challenge.id}`, challenge })),
     ];
 
@@ -57,6 +59,9 @@ function HomeTab({ home, fandomSlug }) {
                                 }
                                 if (item.kind === 'poll') {
                                     return <PollCard key={item.key} poll={item.poll} />;
+                                }
+                                if (item.kind === 'showdown') {
+                                    return <ShowdownCard key={item.key} showdown={item.showdown} />;
                                 }
                                 return <ChallengeCard key={item.key} challenge={item.challenge} />;
                             })}

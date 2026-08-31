@@ -23,6 +23,7 @@ enum EventType: string
     case NewEpisode = 'new_episode';
     case Campaign = 'campaign';
     case FanChallenge = 'fan_challenge';
+    case Showdown = 'showdown';
     case Concert = 'concert';
     case SongRelease = 'song_release';
     case BreakingNews = 'breaking_news';
@@ -38,6 +39,7 @@ enum EventType: string
             self::NewEpisode => 'New episode',
             self::Campaign => 'Campaign',
             self::FanChallenge => 'Fan challenge',
+            self::Showdown => 'Fan showdown',
             self::Concert => 'Concert',
             self::SongRelease => 'New song',
             self::BreakingNews => 'Breaking news',
@@ -55,6 +57,7 @@ enum EventType: string
             self::NewEpisode => 'Watch',
             self::Campaign => 'View campaign',
             self::FanChallenge => 'Join challenge',
+            self::Showdown => 'Vote now',
             self::Concert => 'Get tickets',
             self::SongRelease => 'Listen',
             self::BreakingNews => 'Read',
