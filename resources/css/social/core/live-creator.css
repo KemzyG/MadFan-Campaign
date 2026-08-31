@@ -59,7 +59,6 @@
    inside these containers, so they keep the real (root) amber untouched. */
 .kf-reels,
 .kf-studio,
-.kf-studio--setup,
 .kf-live-index,
 .kf-live-create,
 .kf-connection-screen {
@@ -687,8 +686,7 @@
 
 /* —— Studio: host production interface ————————————————————— */
 
-.kf-studio,
-.kf-studio--setup {
+.kf-studio {
     display: flex;
     flex-direction: column;
     height: 100dvh;
@@ -697,22 +695,14 @@
     background:
         radial-gradient(ellipse 65% 50% at 12% -8%, color-mix(in srgb, var(--kfl-accent) 8%, transparent), transparent 65%),
         linear-gradient(175deg, var(--kfl-panel), color-mix(in srgb, var(--kfl-black) 60%, var(--kfl-panel)) 85%);
-}
-
-.kf-studio--setup {
-    gap: 0.6rem;
-    padding: 0.8rem;
-}
-
-/* The live console is one full-bleed view, edge to edge, never a padded
-   card — see MirrorPanel: the monitor fills this completely and every
-   control floats over it, so there's nothing here to scroll. */
-.kf-studio:not(.kf-studio--setup) {
+    /* One full-bleed view, edge to edge, never a padded card — the monitor
+       fills this completely and every control floats over it, so there's
+       nothing here to scroll. */
     overflow: hidden;
 }
 
 @media (min-width: 1024px) {
-    .kf-studio:not(.kf-studio--setup) {
+    .kf-studio {
         flex-direction: row;
         align-items: stretch;
     }
@@ -723,22 +713,6 @@
     min-width: 0;
     min-height: 0;
     display: flex;
-}
-
-.kf-studio__preview-frame {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 18rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--kfl-black);
-    border: 2px solid var(--kf-line-strong);
-    border-radius: var(--kf-radius-sm);
-    overflow: hidden;
-    box-shadow:
-        0 1px 0 0 color-mix(in srgb, var(--kf-white) 6%, transparent) inset,
-        0 1.5rem 2.5rem -1.5rem rgba(0, 0, 0, 0.75);
 }
 
 /* The live monitor — full-bleed, no frame, no border: the video itself is
@@ -762,8 +736,7 @@
    flat cutout. Unpositioned z-index (paints in DOM order, as the first
    child) keeps it above the static video layer but below the corner
    brackets and badge overlay, which are both positioned after it. */
-.kf-studio__monitor::before,
-.kf-studio__preview-frame::before {
+.kf-studio__monitor::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -771,8 +744,7 @@
     background: linear-gradient(180deg, color-mix(in srgb, var(--kf-white) 5%, transparent), transparent 30%);
 }
 
-.kf-studio__monitor-video,
-.kf-studio__preview-video {
+.kf-studio__monitor-video {
     width: 100%;
     height: 100%;
 }
@@ -1305,48 +1277,6 @@
     cursor: default;
 }
 
-/* —— Studio: pre-live setup ————————————————————————————————— */
-
-.kf-studio--setup {
-    align-items: center;
-    justify-content: center;
-}
-
-.kf-studio__setup-panel {
-    width: 100%;
-    max-width: 26rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-    text-align: center;
-    padding: 1rem 0;
-}
-
-.kf-studio__setup-title {
-    margin: 0;
-    color: var(--kf-white);
-    font-family: var(--kf-font-display);
-    font-size: 1.4rem;
-}
-
-.kf-studio__setup-hint {
-    margin: 0;
-    color: var(--kf-muted-strong);
-    font-size: 0.85rem;
-    max-width: 30ch;
-}
-
-.kf-studio__go-live {
-    margin-top: 0.4rem;
-    padding: 0.75rem 2rem;
-    animation: kf-badge-glow 2.4s ease-in-out infinite;
-}
-
-.kf-studio__go-live:disabled {
-    animation: none;
-}
-
 /* —— Live Now discovery + card grid ————————————————————— */
 
 /* The Live Now page previously just inherited the light Vibrants canvas
@@ -1773,7 +1703,6 @@
     .kf-reels__leave,
     .kf-reels__chat-toggle,
     .kf-reaction-fab__btn,
-    .kf-studio__go-live,
     .kf-studio__side,
     .kf-live-card__host-dot {
         animation: none !important;

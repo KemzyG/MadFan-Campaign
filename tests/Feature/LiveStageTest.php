@@ -40,13 +40,17 @@ test('onboarded fans can list and create a live stage', function () {
 
     $stage = LiveStage::query()->first();
 
+    // Go Live creates and starts in the same request — there's no separate
+    // "device check, then press Start" step to land on afterward (see
+    // LiveStageController::store).
     expect($stage)->not->toBeNull()
         ->and($stage->title)->toBe('Matchday chat with the gaffer')
         ->and($stage->type)->toBe(LiveStageType::Creator)
-        ->and($stage->status)->toBe(LiveStageStatus::Draft)
+        ->and($stage->status)->toBe(LiveStageStatus::Live)
         ->and($stage->host_id)->toBe($user->id)
         ->and($stage->club_id)->toBe($club->id)
-        ->and($stage->started_at)->toBeNull();
+        ->and($stage->started_at)->not->toBeNull()
+        ->and($stage->stream_room_id)->toBe("madfan-live-{$stage->id}");
 });
 
 test('only implemented stage types can be created', function () {

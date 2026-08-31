@@ -56,11 +56,21 @@ class LiveStageController extends Controller
         ]);
     }
 
+    /**
+     * Create and go live in one step — the host already confirmed the
+     * format/title on the Go Live form, so there's no separate "device
+     * check, then press Start" studio screen to land on afterward. Camera/
+     * mic access itself is still requested client-side once the host's
+     * browser reaches the (already-live) Studio page — see MirrorPanel /
+     * useLiveStageMedia, which handles that connection's own loading and
+     * error states.
+     */
     public function store(StoreLiveStageRequest $request, LiveStageService $stages): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
         $stage = $stages->create($user, $request->validated());
+        $stage = $stages->start($stage, $user);
 
         return redirect()->route('social.live.show', $stage);
     }

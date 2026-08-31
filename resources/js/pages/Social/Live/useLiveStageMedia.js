@@ -10,11 +10,10 @@ import { fetchMediaToken } from './liveStageApi';
  *            LiveKitMediaProvider::createViewerToken), so there's no
  *            client-side gate to bypass even with a modified client.
  *
- * Deliberately does NOT connect while the stage is merely `draft`/`waiting`
- * — there is no LiveKit room until the host presses Start (see
- * LiveStageService::start), so connecting earlier would just fail. The
- * pre-live device preview (see useDevicePreview) is a separate, LiveKit-free
- * concern for exactly this reason.
+ * Deliberately does NOT connect while the stage is merely `draft` — there is
+ * no LiveKit room until the stage goes live (see LiveStageService::start,
+ * now called in the same request as create() — see LiveStageController::
+ * store), so connecting earlier would just fail.
  */
 export function useLiveStageMedia({ stageId, isHost, isLive }) {
     const [mediaState, setMediaState] = useState('idle'); // idle | connecting | connected | reconnecting | disconnected | error
