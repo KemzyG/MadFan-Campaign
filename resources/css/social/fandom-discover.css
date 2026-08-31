@@ -6,6 +6,11 @@
 
 .mf-fd-header {
     display: flex;
+    flex-direction: column;
+}
+
+.mf-fd-header__top {
+    display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
@@ -423,13 +428,14 @@
 }
 
 /*
- * ——— lg+ desktop: three real columns ———————————————————————————————
+ * ——— lg+ desktop: two real columns ————————————————————————————————
  * Same 1024px breakpoint as .mf-split and the app shell's own third-track
  * arrival. Below this everything above is a single mobile column in DOM
- * order; at 1024px+ it reflows into rail | main | rail without changing
- * what's rendered, only how mf-fd-shell's three children are placed. This
- * page also renders inside a `wide` SocialShell (no chat rail competing
- * for the space) — see Discover.jsx.
+ * order; at 1024px+ mf-fd-shell reflows into main | trending-rail without
+ * changing what's rendered. The group pills aren't a third column here —
+ * they live inside the header above, same band as on mobile, just wider.
+ * This page also renders inside a `wide` SocialShell (no chat rail
+ * competing for the space) — see Discover.jsx.
  */
 @media (min-width: 1024px) {
     .mf-fd {
@@ -438,38 +444,23 @@
         padding-inline: 1.5rem;
     }
 
-    .mf-fd-header {
+    .mf-fd-header__top,
+    .mf-fd-pills {
         padding-inline: 0;
     }
 
     .mf-fd-shell {
         display: grid;
-        grid-template-columns: 14rem minmax(0, 1fr) 17rem;
+        grid-template-columns: minmax(0, 1fr) 17rem;
         align-items: start;
         gap: 1.75rem;
     }
 
-    /* Column 1 — category rail: pills become a vertical list, not a scroller. */
-    .mf-fd-pills {
-        grid-column: 1;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.35rem;
-        overflow: visible;
-        padding: 0.25rem 0 0;
-        position: sticky;
-        top: 1.25rem;
-    }
-
-    .mf-fd-pill {
-        justify-content: flex-start;
-        width: 100%;
-    }
-
-    /* Column 2 — main: Popular Fandoms becomes a real grid instead of a
-       horizontal shelf, since it no longer needs to conserve width. */
+    /* Column 1 — main: fills the whole space the pills rail used to share
+       with it. Popular Fandoms becomes a real grid instead of a horizontal
+       shelf, since it no longer needs to conserve width. */
     .mf-fd-main {
-        grid-column: 2;
+        grid-column: 1;
         min-width: 0;
     }
 
@@ -489,10 +480,10 @@
         width: auto;
     }
 
-    /* Column 3 — trending rail: stacks vertically and stays in view while
+    /* Column 2 — trending rail: stacks vertically and stays in view while
        the main column scrolls. */
     .mf-fd-section--trending {
-        grid-column: 3;
+        grid-column: 2;
         position: sticky;
         top: 1.25rem;
         padding: 0;

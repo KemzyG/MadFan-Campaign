@@ -36,17 +36,17 @@ export default function FandomDiscover({ groups, active_group: activeGroup, popu
                 <DiscoverHeader
                     onOpenSearch={() => setSearchOpen(true)}
                     onOpenFilter={() => pillsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                    pills={<GroupPills ref={pillsRef} groups={groups} onSelect={selectGroup} />}
                 />
 
                 {/*
                  * Mobile/tablet: one column, DOM order top-to-bottom. Desktop
-                 * (see fandom-discover.css, 1024px+): a real 3-way split —
-                 * the same rail | main | rail shape as .mf-split, purpose-built
-                 * here since .mf-split itself only models two panes.
+                 * (see fandom-discover.css, 1024px+): a real 2-way split —
+                 * main | trending rail, the same shape as .mf-split. The
+                 * group pills live in the header above (same band on both
+                 * breakpoints), not as a third column here.
                  */}
                 <div className="mf-fd-shell">
-                    <GroupPills ref={pillsRef} groups={groups} onSelect={selectGroup} />
-
                     <div className="mf-fd-main">
                         <PopularFandoms fandoms={popular} />
                         <CategoryGrid categories={categories} />
