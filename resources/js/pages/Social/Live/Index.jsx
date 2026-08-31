@@ -4,12 +4,21 @@ import { useAuthGate } from '../authGate';
 import KickoffRing from '../Stage/KickoffRing';
 
 function LiveCard({ stage }) {
+    const avatarUrl = stage.host?.avatar_url;
+
     return (
         <Link href={`/social/live/${stage.id}`} className="kf-live-card">
             <div className="kf-live-card__thumb">
-                <span className="kf-live-card__thumb-icon" aria-hidden>
-                    {stage.host?.avatar_emoji || '🎥'}
-                </span>
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt="" aria-hidden className="kf-live-card__thumb-bg" />
+                ) : null}
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="kf-live-card__thumb-avatar" />
+                ) : (
+                    <span className="kf-live-card__thumb-icon" aria-hidden>
+                        {stage.host?.avatar_emoji || '🎥'}
+                    </span>
+                )}
                 <span className="kf-live-badge kf-live-card__badge">
                     <span className="kf-live-badge__dot" aria-hidden />
                     Live

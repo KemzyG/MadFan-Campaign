@@ -158,6 +158,22 @@
     background: var(--kfl-black);
 }
 
+/*
+ * Live's own Studio (host) and Reels (viewer) pages are `fillViewport` —
+ * they manage their own edge-to-edge layout same as Go Live above — but
+ * unlike Go Live they were never added to this override, so `.mf-app`'s
+ * desktop `max-width: min(100%, var(--mf-feed-width))` (below) still
+ * boxed them into the feed column's width instead of the full desktop
+ * screen. `:has()` outranks that rule's specificity regardless of source
+ * order, so this wins without needing `!important`.
+ */
+.mf-app:has(.kf-studio),
+.mf-app:has(.kf-reels) {
+    max-width: none;
+    border-inline: 0;
+    background: var(--kfl-black);
+}
+
 @media (min-width: 480px) and (max-width: 767.98px) {
     .mf-app {
         /* The hairline is the whole separation; the old triple drop shadow was

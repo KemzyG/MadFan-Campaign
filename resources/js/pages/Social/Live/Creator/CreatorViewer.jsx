@@ -119,9 +119,17 @@ export default function CreatorViewer() {
                 >
                     <div className="kf-reels__top">
                         <div className="kf-reels__host">
-                            <span className="kf-reels__host-avatar" aria-hidden>
-                                {stage.host?.avatar_emoji || '🎥'}
-                            </span>
+                            {stage.host?.avatar_url ? (
+                                <img
+                                    src={stage.host.avatar_url}
+                                    alt=""
+                                    className="kf-reels__host-avatar kf-reels__host-avatar--img"
+                                />
+                            ) : (
+                                <span className="kf-reels__host-avatar" aria-hidden>
+                                    {stage.host?.avatar_emoji || '🎥'}
+                                </span>
+                            )}
                             <div className="kf-reels__host-meta">
                                 <span className="kf-reels__host-name">{stage.host?.name}</span>
                                 <span className="kf-reels__title">{stage.title}</span>

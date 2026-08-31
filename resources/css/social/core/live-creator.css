@@ -238,6 +238,10 @@
         0 0 0.5rem 0 color-mix(in srgb, var(--kfl-accent) 55%, transparent);
 }
 
+.kf-reels__host-avatar--img {
+    object-fit: cover;
+}
+
 .kf-reels__host-meta {
     display: flex;
     flex-direction: column;
@@ -1322,6 +1326,18 @@
     gap: 0.9rem;
 }
 
+/* Phones: auto-fill's 13rem minimum only just clears two columns on most
+   screens, leaving an awkward half-empty third track on the wider ones and
+   a cramped single column on the narrower ones. Pin it to two so every
+   phone gets the same, fully-populated layout — same fix as Fandom's
+   category grid (mf-fd-grid). */
+@media (max-width: 479.98px) {
+    .kf-live-index__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+}
+
 .kf-live-card {
     display: flex;
     flex-direction: column;
@@ -1377,6 +1393,39 @@
 }
 
 .kf-live-card:hover .kf-live-card__thumb-icon {
+    transform: scale(1.08);
+}
+
+/* No live-video snapshot pipeline exists yet (would need periodic frame
+   capture off the LiveKit room), so the host's own avatar stands in as the
+   card's "something real is happening here" signal instead of a generic
+   glyph — blurred to fill the card behind a crisp, foreground copy of the
+   same image, the same "blurred cover art" idiom Spotify/Apple Music use
+   for square art in a non-square slot. */
+.kf-live-card__thumb-bg {
+    position: absolute;
+    inset: -15%;
+    width: 130%;
+    height: 130%;
+    object-fit: cover;
+    filter: blur(1.4rem) brightness(0.55) saturate(1.15);
+    transform: scale(1.1);
+}
+
+.kf-live-card__thumb-avatar {
+    position: relative;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--kf-radius-full);
+    object-fit: cover;
+    box-shadow:
+        0 0 0 3px var(--kfl-black),
+        0 0 0 4.5px var(--kfl-accent),
+        0 0.4rem 0.8rem rgba(0, 0, 0, 0.5);
+    transition: transform var(--kf-dur-feed) var(--kf-ease-feed);
+}
+
+.kf-live-card:hover .kf-live-card__thumb-avatar {
     transform: scale(1.08);
 }
 
