@@ -98,6 +98,42 @@ test('an oversized attachment is rejected', function () {
         ->assertJsonValidationErrors('attachment');
 });
 
+test('replying to a caption-less photo carries its type, not just an empty body', function () {
+    Storage::fake('public');
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+    $channel = attachmentTestChannel($user);
+
+    $photo = $this->actingAs($user)
+        ->postJson(route('api.social.chat.messages.store', $channel), [
+            'attachment' => fakePngUpload(),
+        ])
+        ->assertCreated()
+        ->json('data');
+
+    $reply = $this->actingAs($user)
+        ->postJson(route('api.social.chat.messages.store', $channel), [
+            'body' => 'nice shot',
+            'reply_to_message_id' => $photo['id'],
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.reply_to.id', $photo['id'])
+        ->assertJsonPath('data.reply_to.body', '')
+        ->assertJsonPath('data.reply_to.type', 'attachment')
+        ->json('data');
+
+    // And again once read back through ChatService::latestMessages() — the
+    // eager-load there needs `type` too, or a page reload regresses to the
+    // same "empty body" the frontend used to misread as unavailable.
+    $presented = app(App\Services\Social\ChatService::class)
+        ->presentMessages(app(App\Services\Social\ChatService::class)->latestMessages($channel));
+
+    $presentedReply = collect($presented)->firstWhere('id', $reply['id']);
+
+    expect($presentedReply['reply_to']['type'])->toBe('attachment')
+        ->and($presentedReply['reply_to']['body'])->toBe('');
+});
+
 test('an unsupported attachment mime type is rejected', function () {
     Storage::fake('public');
     $club = Club::factory()->create();

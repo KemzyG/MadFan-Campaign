@@ -67,6 +67,20 @@ class ChatMessageCipher
             return new SymmetricKey($raw);
         }
 
+        // Outside local dev, silently falling back to a per-instance,
+        // storage-backed key is exactly how existing chat history goes
+        // permanently undecryptable — see devFallbackKeyMaterial()'s own
+        // warning. Fail loudly and immediately instead of corrupting data
+        // quietly on the next redeploy/restart.
+        if (! app()->environment('local', 'testing')) {
+            throw new \RuntimeException(
+                'CHAT_ENCRYPTION_KEY is not set. Generate one with: '
+                    .'php artisan tinker --execute="echo base64_encode(random_bytes(32));" '
+                    .'and set it identically in every app instance — do not rely on the '
+                    .'local-dev-only auto-generated fallback outside local/testing.',
+            );
+        }
+
         return new SymmetricKey($this->devFallbackKeyMaterial());
     }
 

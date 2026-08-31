@@ -92,6 +92,7 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
                         <ReplyQuote
                             authorName={message.reply_to.author_name}
                             body={message.reply_to.body}
+                            type={message.reply_to.type}
                             onJump={() => onJump?.(message.reply_to.id)}
                         />
                     ) : null}

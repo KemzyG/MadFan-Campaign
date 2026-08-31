@@ -169,7 +169,7 @@ class ChatService
             ->where('channel_id', $channel->id)
             ->with([
                 'author:id,name,handle,fan_id,avatar_path,avatar_emoji',
-                'replyTo:id,author_id,body',
+                'replyTo:id,author_id,body,type',
                 'replyTo.author:id,name',
             ])
             ->orderByDesc('id')
@@ -225,6 +225,11 @@ class ChatService
                 'id' => $replyTo->id,
                 'body' => Str::limit((string) $replyTo->body, 120),
                 'author_name' => $replyTo->author?->name,
+                // A caption-less photo/video reply target legitimately has no
+                // body (see SendChatMessage) — the frontend needs this to
+                // show "Photo/video" instead of misreading the empty string
+                // as an unavailable/deleted message.
+                'type' => $replyTo->type?->value ?? (string) $replyTo->type,
             ] : null,
         ];
     }

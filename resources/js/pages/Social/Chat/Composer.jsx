@@ -97,6 +97,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                 id: replyTo.id,
                 body: replyTo.body,
                 author_name: replyTo.author?.name ?? null,
+                type: replyTo.type,
             }
             : null;
         const tempId = `tmp-chat-${Date.now()}`;
@@ -214,6 +215,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                     variant="composer"
                     authorName={replyTo.author?.name}
                     body={replyTo.body}
+                    type={replyTo.type}
                     onDismiss={onClearReply}
                 />
             ) : null}

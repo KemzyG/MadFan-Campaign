@@ -95,7 +95,7 @@ class SendChatMessage
 
         $message->load([
             'author',
-            'replyTo:id,author_id,body',
+            'replyTo:id,author_id,body,type',
             'replyTo.author:id,name',
         ]);
 

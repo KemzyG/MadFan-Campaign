@@ -94,3 +94,17 @@ test('decrypting a non-PASETO string throws rather than returning garbage', func
     expect(fn () => $cipher->decrypt('v3.local.not-actually-valid-ciphertext'))
         ->toThrow(PasetoException::class);
 });
+
+test('resolving the key outside local/testing without CHAT_ENCRYPTION_KEY fails loudly', function () {
+    config(['services.paseto.chat_key' => null]);
+    app()['env'] = 'production';
+
+    try {
+        expect(fn () => new ChatMessageCipher())->toThrow(
+            RuntimeException::class,
+            'CHAT_ENCRYPTION_KEY is not set.',
+        );
+    } finally {
+        app()['env'] = 'testing';
+    }
+});
