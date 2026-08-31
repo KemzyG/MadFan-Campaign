@@ -3881,6 +3881,8 @@
     .mf-stageroom--viewer .mf-stage-monitor:has(.mf-stage-deck) {
         min-height: 0;
         padding: 1.9rem 0.75rem 0.75rem;
+        border: 1px solid var(--mf-line);
+        border-radius: var(--mf-radius-panel);
     }
 
     .mf-stageroom--viewer:has(.mf-stage-deck) .mf-stageroom__header {
