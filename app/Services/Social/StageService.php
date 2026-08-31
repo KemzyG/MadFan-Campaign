@@ -37,7 +37,7 @@ class StageService
      *
      * @var list<int>
      */
-    public const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10];
+    public const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 11, 12];
 
     public const MAX_TITLE_LENGTH = 80;
 

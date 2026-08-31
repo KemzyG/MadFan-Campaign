@@ -119,6 +119,29 @@ test('seat count is rejected outside the offered options', function () {
         ->assertSessionHasErrors('max_speakers');
 
     expect(Stage::query()->where('title', 'Odd seat count')->exists())->toBeFalse();
+
+    $this->actingAs($user)
+        ->post('/social/stage', [
+            'title' => 'Too many seats',
+            'max_speakers' => 13,
+        ])
+        ->assertSessionHasErrors('max_speakers');
+
+    expect(Stage::query()->where('title', 'Too many seats')->exists())->toBeFalse();
+});
+
+test('twelve seats is the top of the offered range', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->post('/social/stage', [
+            'title' => 'Full panel',
+            'max_speakers' => 12,
+        ])
+        ->assertRedirect();
+
+    expect(Stage::query()->where('title', 'Full panel')->firstOrFail()->max_speakers)->toBe(12);
 });
 
 test('creating a stage defaults to voice type with the media session off', function () {

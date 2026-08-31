@@ -3,7 +3,7 @@ import { useId } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { IconBack, IconBroadcast, IconCamera, IconMic, IconScreenShare, IconUploadVideo } from '../Stage/StageIcons';
 
-const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10];
+const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 const TYPE_META = {
     creator: { icon: IconCamera, blurb: 'Camera, mic, and live chat' },
