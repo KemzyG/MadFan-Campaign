@@ -3,6 +3,8 @@ import { useId } from 'react';
 import SocialShell from '../../../Layouts/SocialShell';
 import { IconBack, IconBroadcast, IconCamera, IconMic, IconScreenShare, IconUploadVideo } from '../Stage/StageIcons';
 
+const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10];
+
 const TYPE_META = {
     creator: { icon: IconCamera, blurb: 'Camera, mic, and live chat' },
     gaming: { icon: IconScreenShare, blurb: 'Your screen, dominant, chat docked beside it' },
@@ -41,6 +43,7 @@ export default function Create({
         allow_invite: true,
         allow_chat: true,
         allow_speak_requests: true,
+        max_speakers: 8,
         background_key: defaultBackground,
     });
 
@@ -255,6 +258,30 @@ export default function Create({
                             </>
                         )}
                     </div>
+
+                    {isVoice ? (
+                        <div className="kf-form__group">
+                            <span className="kf-form__label">Seats on stage</span>
+                            <div className="kf-form__radio-grid kf-form__radio-grid--seats">
+                                {SEAT_OPTIONS.map((count) => (
+                                    <label
+                                        key={count}
+                                        className={`kf-seat-option ${data.max_speakers === count ? 'is-selected' : ''}`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="max_speakers"
+                                            value={count}
+                                            checked={data.max_speakers === count}
+                                            onChange={() => setData('max_speakers', count)}
+                                        />
+                                        <span className="kf-seat-option__count mf-mono">{count}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <p className="kf-form__hint">How many speaker seats to start the deck with.</p>
+                        </div>
+                    ) : null}
 
                     {isVoice && stageBackgrounds.length > 0 ? (
                         <div className="kf-form__group">

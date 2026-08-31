@@ -29,6 +29,7 @@ class Stage extends Model
         'pinned_message_id',
         'status',
         'voice_enabled',
+        'max_speakers',
         'started_at',
         'ended_at',
     ];
@@ -48,6 +49,7 @@ class Stage extends Model
             'background_key' => 'integer',
             'pinned_message_id' => 'integer',
             'voice_enabled' => 'boolean',
+            'max_speakers' => 'integer',
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
         ];

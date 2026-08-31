@@ -34,6 +34,7 @@ class StoreSocialStageRequest extends FormRequest
             'allow_invite' => ['sometimes', 'boolean'],
             'allow_chat' => ['sometimes', 'boolean'],
             'allow_speak_requests' => ['sometimes', 'boolean'],
+            'max_speakers' => ['sometimes', 'integer', Rule::in(StageService::SEAT_OPTIONS)],
             'background_key' => ['sometimes', 'integer', Rule::in(app(StageMediaService::class)->backgroundKeys())],
         ];
     }

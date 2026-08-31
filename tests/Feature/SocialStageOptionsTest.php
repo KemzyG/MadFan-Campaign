@@ -195,6 +195,57 @@ test('host can dismiss a raised hand but a listener cannot', function () {
         ->value('speak_requested_at'))->toBeNull();
 });
 
+test('a listener can claim an open seat outright, no host approval needed', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $listener = socialReadyUser($club);
+    $stage = stageWithHost($club, $host, ['max_speakers' => 4]);
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $listener->id,
+    ]);
+
+    $this->actingAs($listener)
+        ->post("/social/stage/{$stage->id}/take-seat")
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $listener->id)
+        ->value('role'))->toBe(App\Enums\StageParticipantRole::Speaker);
+});
+
+test('taking a seat fails once the deck is full', function () {
+    $club = Club::factory()->create();
+    $host = socialReadyUser($club);
+    $listener = socialReadyUser($club);
+    $stage = stageWithHost($club, $host, ['max_speakers' => 4]);
+
+    // Fill every remaining seat (host already holds one of the 4).
+    for ($i = 0; $i < 3; $i++) {
+        StageParticipant::factory()->speaker()->create([
+            'stage_id' => $stage->id,
+            'user_id' => socialReadyUser($club)->id,
+        ]);
+    }
+
+    StageParticipant::factory()->listener()->create([
+        'stage_id' => $stage->id,
+        'user_id' => $listener->id,
+    ]);
+
+    $this->actingAs($listener)
+        ->post("/social/stage/{$stage->id}/take-seat")
+        ->assertSessionHasErrors('seat');
+
+    expect(StageParticipant::query()
+        ->where('stage_id', $stage->id)
+        ->where('user_id', $listener->id)
+        ->value('role'))->toBe(App\Enums\StageParticipantRole::Listener);
+});
+
 test('any active participant can react and the reaction lands in the room payload', function () {
     $club = Club::factory()->create();
     $host = socialReadyUser($club);

@@ -1,0 +1,239 @@
+/*
+ * Seat grid — the voice room's on-stage deck and listener roster, both drawn
+ * as the same glass-square language: small blurred squares in a responsive
+ * columns/rows grid, tiny (5px) corner radius, a reduced avatar centred
+ * inside, or a "+" claim button when the seat is empty.
+ *
+ * Loaded after stage.css in social.css — reuses its `--mf-*` tokens and the
+ * `mf-stage-ring` / `mf-stage-pulse-dim` keyframes (defined in tickets.css,
+ * already relied on by stage.css's own speaking-ring rule).
+ */
+
+.mf-seat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.75rem, 1fr));
+    gap: 0.5rem;
+}
+
+.mf-seat-grid--listeners {
+    grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+}
+
+/* One seat: filled or empty, on-stage or listener — same shape throughout. */
+.mf-seat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    aspect-ratio: 1;
+    width: 100%;
+    padding: 0.35rem 0.25rem;
+    border: 1px solid var(--mf-line);
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--mf-panel) 45%, transparent);
+    backdrop-filter: var(--mf-glass);
+    -webkit-backdrop-filter: var(--mf-glass);
+    color: var(--mf-text);
+    font: inherit;
+    text-align: center;
+    overflow: hidden;
+    transition:
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-seat.is-clickable {
+    cursor: pointer;
+}
+
+.mf-seat.is-clickable:hover {
+    border-color: var(--mf-pitch-dim);
+    background: color-mix(in srgb, var(--mf-panel) 62%, transparent);
+}
+
+.mf-seat.is-speaking {
+    border-color: var(--mf-pitch);
+    animation: mf-stage-ring 1.5s var(--mf-ease) infinite;
+}
+
+.mf-seat__avatar-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mf-seat.is-muted .mf-seat__avatar {
+    opacity: 0.68;
+}
+
+.mf-seat__crown {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid color-mix(in srgb, var(--mf-pitch) 40%, var(--mf-line));
+    background: var(--mf-panel);
+    color: var(--mf-pitch);
+}
+
+.mf-seat__crown svg {
+    width: 0.6rem;
+    height: 0.6rem;
+}
+
+.mf-seat__mic {
+    position: absolute;
+    bottom: -0.25rem;
+    right: -0.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: var(--mf-radius-full);
+    border: 1px solid var(--mf-line);
+    background: var(--mf-panel);
+    color: var(--mf-muted);
+}
+
+.mf-seat__mic svg {
+    width: 0.6rem;
+    height: 0.6rem;
+}
+
+.mf-seat__name {
+    max-width: 100%;
+    font-size: var(--mf-text-micro);
+    color: var(--mf-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Empty seat — dashed outline, "+" glyph, no name row. */
+.mf-seat--empty {
+    border-style: dashed;
+    background: color-mix(in srgb, var(--mf-panel) 22%, transparent);
+}
+
+.mf-seat--empty:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.mf-seat--empty.is-clickable:hover {
+    border-color: var(--mf-pitch);
+    background: color-mix(in srgb, var(--mf-pitch) 10%, transparent);
+}
+
+.mf-seat__plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    color: var(--mf-muted);
+}
+
+.mf-seat__plus svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mf-seat--empty.is-clickable .mf-seat__plus {
+    color: var(--mf-pitch);
+}
+
+/* Listener grid — raised-hand accent dot, "+N" overflow tile. */
+.mf-seat--listener.has-hand::after {
+    content: '';
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-warn);
+    animation: mf-stage-pulse-dim 1.6s var(--mf-ease) infinite;
+}
+
+.mf-seat--more {
+    color: var(--mf-muted);
+    font-family: var(--mf-font-ui);
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mf-seat--more:hover {
+    border-color: var(--mf-pitch-dim);
+    color: var(--mf-text);
+}
+
+/* —— Seat-picker sheet (host filling an empty seat) —————————————— */
+
+.mf-seat-picker__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.85rem;
+    overflow-y: auto;
+}
+
+.mf-seat-picker__empty {
+    padding: 1.5rem 0;
+    text-align: center;
+}
+
+.mf-seat-picker__row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--mf-line);
+    border-radius: var(--mf-radius);
+    background: var(--mf-panel);
+    color: var(--mf-text);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--mf-dur-fast) var(--mf-ease),
+        background var(--mf-dur-fast) var(--mf-ease);
+}
+
+.mf-seat-picker__row:hover {
+    border-color: var(--mf-pitch-dim);
+    background: color-mix(in srgb, var(--mf-pitch) 8%, var(--mf-panel));
+}
+
+.mf-seat-picker__name {
+    display: block;
+    font-size: var(--mf-text-meta);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-seat-picker__cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: var(--mf-radius-full);
+    background: color-mix(in srgb, var(--mf-pitch) 14%, transparent);
+    color: var(--mf-pitch);
+}
+
+.mf-seat-picker__cta svg {
+    width: 1rem;
+    height: 1rem;
+}

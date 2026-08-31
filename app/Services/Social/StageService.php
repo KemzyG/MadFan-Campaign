@@ -31,6 +31,14 @@ class StageService
 {
     public const MAX_SPEAKERS = 8;
 
+    /**
+     * Seat counts a host can pick from in the Go Live form — how many speaker
+     * slots the on-stage grid starts with.
+     *
+     * @var list<int>
+     */
+    public const SEAT_OPTIONS = [4, 5, 6, 7, 8, 9, 10];
+
     public const MAX_TITLE_LENGTH = 80;
 
     public const MAX_DESCRIPTION_LENGTH = 280;
@@ -124,6 +132,9 @@ class StageService
                 ? (StageType::tryFrom((string) $data['type']) ?? StageType::Voice)
                 : StageType::Voice;
 
+            $requestedSeats = (int) ($data['max_speakers'] ?? self::MAX_SPEAKERS);
+            $maxSpeakers = in_array($requestedSeats, self::SEAT_OPTIONS, true) ? $requestedSeats : self::MAX_SPEAKERS;
+
             $stage = Stage::query()->create([
                 'host_id' => $host->id,
                 'club_id' => $host->favourite_club_id,
@@ -134,6 +145,7 @@ class StageService
                 'allow_invite' => (bool) ($data['allow_invite'] ?? true),
                 'allow_chat' => (bool) ($data['allow_chat'] ?? true),
                 'allow_speak_requests' => (bool) ($data['allow_speak_requests'] ?? true),
+                'max_speakers' => $maxSpeakers,
                 'background_key' => $backgroundKey,
                 'status' => StageStatus::Live,
                 // Voice stays the classic two-step flow (host taps "Start voice" once
@@ -436,9 +448,11 @@ class StageService
             return;
         }
 
-        if ($this->activeSpeakerCount($stage) >= self::MAX_SPEAKERS) {
+        $maxSpeakers = $stage->max_speakers ?? self::MAX_SPEAKERS;
+
+        if ($this->activeSpeakerCount($stage) >= $maxSpeakers) {
             throw ValidationException::withMessages([
-                'speakers' => 'Stage is full (max '.self::MAX_SPEAKERS.' speakers for mesh voice).',
+                'speakers' => 'Stage is full (max '.$maxSpeakers.' seats).',
             ]);
         }
 
@@ -456,6 +470,43 @@ class StageService
         $participant->save();
 
         SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'promote'));
+    }
+
+    /**
+     * A listener claiming an open seat directly — no host approval needed,
+     * unlike `requestSpeak` (raise hand). Used when the on-stage grid shows an
+     * empty seat (host removed a speaker, or one left) and any listener taps it.
+     */
+    public function takeSeat(Stage $stage, User $user): void
+    {
+        if (! $stage->isLive()) {
+            throw ValidationException::withMessages([
+                'stage' => 'This Stage has ended.',
+            ]);
+        }
+
+        $participant = $this->activeParticipant($stage, $user);
+
+        if ($participant === null || $participant->role !== StageParticipantRole::Listener) {
+            throw ValidationException::withMessages([
+                'seat' => 'Only listeners can take an open seat.',
+            ]);
+        }
+
+        $maxSpeakers = $stage->max_speakers ?? self::MAX_SPEAKERS;
+
+        if ($this->activeSpeakerCount($stage) >= $maxSpeakers) {
+            throw ValidationException::withMessages([
+                'seat' => 'No open seats right now.',
+            ]);
+        }
+
+        $participant->role = StageParticipantRole::Speaker;
+        $participant->speak_requested_at = null;
+        $participant->is_muted = true;
+        $participant->save();
+
+        SocialBroadcast::try(fn () => StageRoomUpdated::dispatch($stage->fresh(), 'take-seat'));
     }
 
     public function demote(Stage $stage, User $host, User $target): void
@@ -943,13 +994,14 @@ class StageService
     {
         $meta = StageVoice::voiceModeMeta();
         $livekit = StageVoice::usesLiveKit();
+        $maxSpeakers = $stage->max_speakers ?? self::MAX_SPEAKERS;
 
         $payload = [
             'driver' => $meta['driver'],
             'mode' => $meta['mode'],
             'enabled' => $stage->voice_enabled,
-            'max_speakers' => self::MAX_SPEAKERS,
-            'note' => $meta['note'].' Cap '.self::MAX_SPEAKERS.' speakers.',
+            'max_speakers' => $maxSpeakers,
+            'note' => $meta['note'].' Cap '.$maxSpeakers.' speakers.',
             'livekit' => $meta['livekit'],
         ];
 
@@ -1061,7 +1113,7 @@ class StageService
                 'name' => $stage->club->name,
                 'short' => $stage->club->short,
             ] : null,
-            'max_speakers' => self::MAX_SPEAKERS,
+            'max_speakers' => $stage->max_speakers ?? self::MAX_SPEAKERS,
         ];
 
         if ($includeCounts) {

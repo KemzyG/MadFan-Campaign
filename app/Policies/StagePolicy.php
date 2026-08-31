@@ -128,6 +128,15 @@ class StagePolicy
             && $participant->role === StageParticipantRole::Listener;
     }
 
+    /**
+     * A listener claiming an open seat outright — same gate as raising a hand,
+     * just without needing the host to approve it first.
+     */
+    public function takeSeat(User $user, Stage $stage): bool
+    {
+        return $this->requestSpeak($user, $stage);
+    }
+
     public function muteSelf(User $user, Stage $stage): bool
     {
         $participant = $this->activeParticipant($stage, $user);

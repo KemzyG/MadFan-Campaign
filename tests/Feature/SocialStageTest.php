@@ -84,6 +84,43 @@ test('onboarded fans can list and create a live stage', function () {
             ->where('voice.driver', 'mesh'));
 });
 
+test('a host can choose how many seats the stage starts with', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->post('/social/stage', [
+            'title' => 'Five-seat panel',
+            'max_speakers' => 5,
+        ])
+        ->assertRedirect();
+
+    $stage = Stage::query()->where('title', 'Five-seat panel')->firstOrFail();
+
+    expect($stage->max_speakers)->toBe(5);
+
+    $this->actingAs($user)
+        ->get("/social/stage/{$stage->id}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->where('stage.max_speakers', 5)
+            ->where('voice.max_speakers', 5));
+});
+
+test('seat count is rejected outside the offered options', function () {
+    $club = Club::factory()->create();
+    $user = socialReadyUser($club);
+
+    $this->actingAs($user)
+        ->post('/social/stage', [
+            'title' => 'Odd seat count',
+            'max_speakers' => 3,
+        ])
+        ->assertSessionHasErrors('max_speakers');
+
+    expect(Stage::query()->where('title', 'Odd seat count')->exists())->toBeFalse();
+});
+
 test('creating a stage defaults to voice type with the media session off', function () {
     $club = Club::factory()->create();
     $user = socialReadyUser($club);

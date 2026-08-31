@@ -8,6 +8,7 @@ import ListenerStrip from './ListenerStrip';
 import PinnedMessage from './PinnedMessage';
 import ReactionLayer from './ReactionLayer';
 import RoomHeader from './RoomHeader';
+import SeatPickerSheet from './SeatPickerSheet';
 import ShareStageSheet from './ShareStageSheet';
 import SpeakerDeck from './SpeakerDeck';
 import { IconBack, IconChat } from './StageIcons';
@@ -57,6 +58,7 @@ export default function Show(props) {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const [seatPickerOpen, setSeatPickerOpen] = useState(false);
     const carouselRef = useRef(null);
     const carouselSyncingRef = useRef(false);
     const carouselCenteredRef = useRef(false);
@@ -275,7 +277,11 @@ export default function Show(props) {
                                 {actions.presenting ? (
                                     <StagePresentationControls />
                                 ) : roomStage?.type === 'voice' ? (
-                                    <SpeakerDeck onSelectSpeaker={selectSpeaker} />
+                                    <SpeakerDeck
+                                        onSelectSpeaker={selectSpeaker}
+                                        onClaimSeat={actions.takeSeat}
+                                        onOpenSeatPicker={() => setSeatPickerOpen(true)}
+                                    />
                                 ) : (
                                     <StageStreamingHero onSelectSpeaker={selectSpeaker} />
                                 )}
@@ -404,6 +410,7 @@ export default function Show(props) {
             />
             <ShareStageSheet open={shareOpen} onClose={() => setShareOpen(false)} />
             <InviteStageSheet open={inviteOpen} onClose={() => setInviteOpen(false)} />
+            <SeatPickerSheet open={seatPickerOpen} onClose={() => setSeatPickerOpen(false)} />
         </SocialShell>
     );
 }

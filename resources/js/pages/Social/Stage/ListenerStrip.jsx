@@ -1,11 +1,13 @@
 import { partitionParticipants, StageAvatar } from './helpers';
 import { useStageSession } from './StageSessionContext';
 
-const MAX_SHOWN = 14;
+const MAX_SHOWN = 24;
 
 /**
- * Compact listener row under the deck: overflow-aware avatar chips plus a
- * "+N" affordance and a raised-hands shortcut, both jumping to the People pane.
+ * Listeners as the same glass seat-grid language as the on-stage deck (just
+ * without the empty/claimable state — listener capacity isn't bounded) plus a
+ * "+N" overflow tile and a raised-hands shortcut, both jumping to the People
+ * pane.
  */
 export default function ListenerStrip({ onSeeAll }) {
     const { room } = useStageSession();
@@ -26,22 +28,23 @@ export default function ListenerStrip({ onSeeAll }) {
             {count === 0 ? (
                 <p className="mf-text-meta text-[var(--mf-muted)]">No listeners yet.</p>
             ) : (
-                <div className="mf-stage-listeners__row">
+                <div className="mf-seat-grid mf-seat-grid--listeners">
                     {shown.map((participant) => (
-                        <span
-                            key={participant.id}
-                            className={`mf-stage-listeners__chip ${participant.speak_requested_at ? 'has-hand' : ''}`.trim()}
-                            title={participant.user?.name || 'Fan'}
-                        >
-                            <StageAvatar user={participant.user} size="sm" />
-                        </span>
-                    ))}
-                    {overflow > 0 ? (
                         <button
+                            key={participant.id}
                             type="button"
-                            className="mf-stage-listeners__more"
+                            className={`mf-seat mf-seat--listener ${participant.speak_requested_at ? 'has-hand' : ''}`.trim()}
+                            title={participant.user?.name || 'Fan'}
                             onClick={onSeeAll}
                         >
+                            <span className="mf-seat__avatar-wrap">
+                                <StageAvatar user={participant.user} size="sm" className="mf-seat__avatar" />
+                            </span>
+                            <span className="mf-seat__name truncate">{participant.user?.name || 'Fan'}</span>
+                        </button>
+                    ))}
+                    {overflow > 0 ? (
+                        <button type="button" className="mf-seat mf-seat--more" onClick={onSeeAll}>
                             +{overflow}
                         </button>
                     ) : null}

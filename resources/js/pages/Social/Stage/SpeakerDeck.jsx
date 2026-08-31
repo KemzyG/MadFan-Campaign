@@ -1,66 +1,67 @@
 import { isMe, partitionParticipants } from './helpers';
-import SpeakerTile from './SpeakerTile';
+import SeatTile from './SeatTile';
 import { useStageSession } from './StageSessionContext';
 
 /**
- * Responsive grid of on-stage speakers, with an empty state before anyone takes
- * the mic. Active-speaker rings come from the session's `activeSpeakers` set.
+ * The voice room's on-stage grid: a fixed number of glass seats (the host's
+ * chosen `max_speakers`, set when going live), filled by speakers in order.
+ * Any seat left empty — nobody took it yet, the host removed someone, a
+ * speaker left — shows a "+" a listener can tap to claim it directly, or the
+ * host taps to invite a specific listener into it.
  */
-export default function SpeakerDeck({ onSelectSpeaker }) {
-    const { room, activeSpeakers, peerStates, videoTracks } = useStageSession();
+export default function SpeakerDeck({ onSelectSpeaker, onClaimSeat, onOpenSeatPicker }) {
+    const { room, activeSpeakers } = useStageSession();
 
     const participants = room?.participants || [];
     const me = room?.me;
     const { speakers } = partitionParticipants(participants);
-    const canManage = me?.role === 'host';
-    const max = room?.stage?.max_speakers;
+    const isHost = me?.role === 'host';
+    const isListener = me?.role === 'listener';
+    const canManage = isHost && room?.stage?.status === 'live';
+    const isLive = room?.stage?.status === 'live';
+    const seatCount = room?.stage?.max_speakers ?? 8;
+    const seats = Array.from({ length: Math.max(seatCount, speakers.length) }, (_, i) => speakers[i] || null);
 
     return (
         <section className="mf-stage-deck" aria-label="On stage">
             <header className="mf-stage-deck__head">
                 <p className="mf-stage-deck__label mf-text-caption">On stage</p>
                 <span className="mf-stage-deck__count mf-mono">
-                    {speakers.length}
-                    {max != null ? `/${max}` : ''}
+                    {speakers.length}/{seatCount}
                 </span>
             </header>
 
-            {speakers.length === 0 ? (
-                <div className="mf-stage-deck__empty">
-                    <span className="mf-stage-deck__empty-mark" aria-hidden />
-                    <p className="mf-stage-deck__empty-title">No one on the mic yet</p>
-                    <p className="mf-text-meta text-[var(--mf-muted)]">
-                        When a speaker joins, they’ll show up here.
-                    </p>
-                </div>
-            ) : (
-                <div
-                    className="mf-stage-deck__grid"
-                    style={{ '--mf-stage-speaker-count': speakers.length }}
-                >
-                    {speakers.map((participant) => {
-                        const mine = isMe(participant, me);
-                        const userId = Number(participant.user_id);
-                        // Screen-share takes the tile over camera when a speaker has both on.
-                        const videoElement =
-                            videoTracks.get(`${userId}:screen_share`) ||
-                            videoTracks.get(`${userId}:camera`) ||
-                            null;
-
+            <div className="mf-seat-grid">
+                {seats.map((participant, index) => {
+                    if (!participant) {
+                        const claimable = isLive && (isListener || isHost);
                         return (
-                            <SpeakerTile
-                                key={participant.id}
-                                participant={participant}
-                                speaking={activeSpeakers.has(userId)}
-                                me={mine}
-                                peerState={mine ? null : peerStates.get(userId) || null}
-                                onSelect={canManage && !mine ? onSelectSpeaker : undefined}
-                                videoElement={videoElement}
+                            <SeatTile
+                                key={`empty-${index}`}
+                                onClaim={
+                                    claimable
+                                        ? () => (isHost ? onOpenSeatPicker?.() : onClaimSeat?.())
+                                        : undefined
+                                }
+                                label={isHost ? 'Invite a fan to this seat' : 'Take this seat'}
                             />
                         );
-                    })}
-                </div>
-            )}
+                    }
+
+                    const mine = isMe(participant, me);
+                    const userId = Number(participant.user_id);
+
+                    return (
+                        <SeatTile
+                            key={participant.id}
+                            participant={participant}
+                            speaking={activeSpeakers.has(userId)}
+                            me={mine}
+                            onSelect={canManage && !mine ? onSelectSpeaker : undefined}
+                        />
+                    );
+                })}
+            </div>
         </section>
     );
 }

@@ -226,6 +226,15 @@ export function IconInvite({ className }) {
     );
 }
 
+export function IconPlus({ className }) {
+    return (
+        <svg {...IconProps({ className })}>
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+        </svg>
+    );
+}
+
 export function IconClose({ className }) {
     return (
         <svg {...IconProps({ className })}>

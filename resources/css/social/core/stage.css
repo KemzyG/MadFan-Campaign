@@ -1649,21 +1649,8 @@
     accent-color: var(--mf-pitch);
 }
 
-.mf-stage-deck__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: 0.75rem 0.5rem;
-    justify-items: center;
-}
-
-/* Camera tiles need real width to read as video, not a cramped thumbnail —
-   widen the grid the moment any speaker is on camera/screen (Video stages). */
-.mf-stage-deck__grid:has(.mf-stage-tile.has-video) {
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-    gap: 0.85rem;
-}
-
-/* One speaker. */
+/* One speaker (Video/Streaming hero deck's small chip row — the voice room's
+   own on-stage deck uses the `.mf-seat` grid in stage-seats.css instead). */
 .mf-stage-tile {
     display: flex;
     flex-direction: column;
@@ -2088,58 +2075,6 @@
     margin: 0;
     letter-spacing: var(--mf-tracking-label);
     text-transform: uppercase;
-}
-
-.mf-stage-listeners__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.mf-stage-listeners__chip {
-    position: relative;
-    display: inline-flex;
-    border-radius: var(--mf-radius-full);
-}
-
-.mf-stage-listeners__chip .mf-avatar {
-    border: 1px solid var(--mf-line);
-}
-
-.mf-stage-listeners__chip.has-hand::after {
-    content: '';
-    position: absolute;
-    top: -0.1rem;
-    right: -0.1rem;
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-pitch);
-    border: 1px solid var(--mf-panel);
-}
-
-.mf-stage-listeners__more {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 2rem;
-    padding: 0 0.6rem;
-    border: 1px solid var(--mf-line);
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-recess-deep);
-    color: var(--mf-muted);
-    font-family: var(--mf-font-mono);
-    font-size: var(--mf-text-micro);
-    cursor: pointer;
-    transition:
-        color var(--mf-dur-fast) var(--mf-ease),
-        border-color var(--mf-dur-fast) var(--mf-ease);
-}
-
-.mf-stage-listeners__more:hover {
-    color: var(--mf-text);
-    border-color: var(--mf-pitch-dim);
 }
 
 .mf-stage-listeners__hands {

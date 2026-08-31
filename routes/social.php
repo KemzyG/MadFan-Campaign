@@ -307,6 +307,9 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/stage/{stage}/speak-request', [SocialStageParticipantController::class, 'requestSpeak'])
                     ->middleware('throttle:20,1')
                     ->name('stage.speak-request');
+                Route::post('/stage/{stage}/take-seat', [SocialStageParticipantController::class, 'takeSeat'])
+                    ->middleware('throttle:20,1')
+                    ->name('stage.take-seat');
                 Route::post('/stage/{stage}/participants/{user}/promote', [SocialStageParticipantController::class, 'promote'])
                     ->middleware('throttle:30,1')
                     ->name('stage.participants.promote');

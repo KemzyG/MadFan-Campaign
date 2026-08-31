@@ -1579,6 +1579,55 @@
     line-height: 1.35;
 }
 
+/* —— Seat-count picker (Go Live page, voice format only) ——————— */
+
+.kf-form__radio-grid--seats {
+    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+    gap: 0.5rem;
+}
+
+.kf-seat-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--kf-line);
+    border-radius: var(--kf-radius-sm);
+    background: color-mix(in srgb, var(--kfl-black) 30%, transparent);
+    cursor: pointer;
+    transition:
+        border-color var(--kf-dur-console) var(--kf-ease-console),
+        background var(--kf-dur-console) var(--kf-ease-console);
+}
+
+.kf-seat-option:hover {
+    border-color: var(--kf-line-strong);
+}
+
+.kf-seat-option input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.kf-seat-option.is-selected {
+    border-color: var(--kfl-accent);
+    background: color-mix(in srgb, var(--kfl-accent) 12%, transparent);
+}
+
+.kf-seat-option__count {
+    color: var(--kf-white);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.kf-seat-option.is-selected .kf-seat-option__count {
+    color: var(--kfl-accent);
+}
+
 /* —— Go Live page (its own URL, not a modal) ————————————————— */
 
 .kf-live-create {

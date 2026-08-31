@@ -108,6 +108,31 @@ export function useStageActions() {
         router.post(`/social/stage/${stageId}/speak-request`, {}, flashVisit());
     }, [me, isLive, speakRequestsAllowed, handRaised, stageId, patchRoom, flashVisit]);
 
+    // Claiming an open seat outright — a listener tapping an empty slot on the
+    // deck, no host approval needed (unlike raiseHand above).
+    const seatsFull = (stage?.speaker_count ?? 0) >= (stage?.max_speakers ?? Infinity);
+    const canTakeSeat = me?.role === 'listener' && isLive && !seatsFull;
+    const takeSeat = useCallback(() => {
+        if (me?.role !== 'listener' || !isLive) {
+            return;
+        }
+        patchRoom((props) => ({
+            ...props,
+            me: props.me
+                ? { ...props.me, role: 'speaker', on_stage: true, speak_requested_at: null, is_muted: true }
+                : props.me,
+            participants: (props.participants || []).map((p) =>
+                p.user_id === me.user_id
+                    ? { ...p, role: 'speaker', on_stage: true, speak_requested_at: null, is_muted: true }
+                    : p,
+            ),
+            stage: props.stage
+                ? { ...props.stage, speaker_count: (props.stage.speaker_count || 0) + 1 }
+                : props.stage,
+        }));
+        router.post(`/social/stage/${stageId}/take-seat`, {}, flashVisit());
+    }, [me, isLive, stageId, patchRoom, flashVisit]);
+
     // Network-only reaction send (no local animation). The FAB drives the local
     // burst itself per tap and throttles this, so combos don't spam the endpoint.
     const sendReaction = useCallback(
@@ -251,6 +276,8 @@ export function useStageActions() {
             reactionOptions: room?.reaction_options || [],
             canMute: onStage && isLive && voiceEnabled,
             canRaiseHand: me?.role === 'listener' && isLive && speakRequestsAllowed,
+            canTakeSeat,
+            takeSeat,
             canStartVoice: isHost && isLive && !voiceEnabled,
             canReact: isLive && Boolean(me),
             canLeave: isLive && Boolean(me),
@@ -268,6 +295,7 @@ export function useStageActions() {
             presentationPointerMove,
             toggleMute,
             raiseHand,
+            takeSeat,
             react,
             sendReaction,
             startVoice,
@@ -292,6 +320,7 @@ export function useStageActions() {
             handRaised,
             micNeedsRecovery,
             speakRequestsAllowed,
+            canTakeSeat,
             room?.reaction_options,
             canPublishVideo,
             cameraOn,
@@ -306,6 +335,7 @@ export function useStageActions() {
             presentationPointerMove,
             toggleMute,
             raiseHand,
+            takeSeat,
             react,
             sendReaction,
             startVoice,

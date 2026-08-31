@@ -22,6 +22,17 @@ class SocialStageParticipantController extends Controller
         return back()->with('success', 'Raise hand sent to host.');
     }
 
+    public function takeSeat(Request $request, Stage $stage, StageService $stages): RedirectResponse
+    {
+        $this->authorize('takeSeat', $stage);
+
+        /** @var User $user */
+        $user = $request->user();
+        $stages->takeSeat($stage, $user);
+
+        return back()->with('success', 'You\'re on stage.');
+    }
+
     public function promote(Request $request, Stage $stage, User $user, StageService $stages): RedirectResponse
     {
         $this->authorize('manageSpeakers', $stage);
