@@ -15,8 +15,16 @@
 
 /* Viewer layout: the video/hero fills the screen, UI floats over. Glass/
    transparency is the key aesthetic — no solid panel backgrounds, only the
-   live feed and transparent overlays. */
-.mf-stageroom--viewer.mf-stageroom--reels {
+   live feed and transparent overlays.
+
+   :not(:has(.mf-stage-deck)) is load-bearing: a voice listener carries this
+   same --viewer.--reels combo with no video to center. Without the guard
+   this `display: flex` hijacks .mf-stageroom's own `display: grid` from the
+   1024px/1280px breakpoints below (higher specificity, later in the
+   cascade), collapsing the whole 3-column desktop layout — Chat and People
+   stop being columns and fall back to plain stacked flex items, which is
+   what actually made every panel look broken for listeners. */
+.mf-stageroom--viewer.mf-stageroom--reels:not(:has(.mf-stage-deck)) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,6 +95,12 @@
     display: block;
     z-index: auto;
     border: 1px solid var(--mf-line);
+    /* .mf-stageroom--viewer .mf-stage-monitor (stage.css) still sets
+       `flex: 1` — harmless for the video Reels case (monitor fills the
+       deck intentionally there) but for voice it stretched the monitor to
+       fill the deck's whole flex height, leaving a large empty gap below
+       the seat grid. Size to content instead. */
+    flex: none;
 }
 
 .mf-stageroom--reels .mf-stage-hero-deck {

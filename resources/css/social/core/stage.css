@@ -3755,9 +3755,29 @@
        + scrim as the Program monitor instead of a solid panel background —
        swiping to them slides that pane's whole header/body/controls in over
        the room's own background image, the same "glass over a persistent
-       backdrop" register the Reels swipe-layers already use for chat. */
+       backdrop" register the Reels swipe-layers already use for chat.
+
+       These panes are siblings of .mf-stageroom__main, not descendants of
+       it — they never see that element's dark-theme custom-property
+       override (--mf-canvas, --mf-text, etc., redefined there for the whole
+       broadcast console — see its own rule/comment). Without redeclaring
+       the same tokens here too, every var(--mf-text)/var(--mf-line)/etc.
+       used by the message list, panel head, People rows and the chat input
+       resolves to the light Social theme's near-black-on-white values
+       instead — invisible dark navy text on what's now a black backdrop. */
     .mf-stageroom:has(.mf-stage-deck) .mf-stage-panel--chat,
     .mf-stageroom:has(.mf-stage-deck) .mf-stage-panel--people {
+        --mf-canvas: #000000;
+        --mf-panel: #0d1613;
+        --mf-elevated: #16211d;
+        --mf-recess: #101a17;
+        --mf-line: color-mix(in srgb, #f4fff8 14%, transparent);
+        --mf-text: #f4fff8;
+        --mf-muted: color-mix(in srgb, #f4fff8 68%, transparent);
+        --mf-pitch: #ff5470;
+        --mf-pitch-dim: color-mix(in srgb, #ff5470 55%, transparent);
+        --mf-rival: #ff6b6b;
+        color: var(--mf-text);
         background:
             linear-gradient(
                 180deg,
