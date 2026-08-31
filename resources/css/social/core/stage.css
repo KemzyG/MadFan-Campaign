@@ -3709,7 +3709,14 @@
        margin-inline gives the monitor a little breathing room off the
        screen edges instead of sitting flush against them — the extra
        `.mf-stageroom.mf-stageroom--reels` specificity is needed to beat the
-       :has(.mf-stage-deck) reset's own `width: 100%` in stage-reels.css. */
+       :has(.mf-stage-deck) reset's own `width: 100%` in stage-reels.css.
+       padding/border-radius restore the same framed-panel look the desktop
+       breakpoint already gets (see the @media(min-width:1024px) block
+       below for the viewer half of that; host never lost it there) — both
+       .mf-stageroom--host and (unconditioned) .mf-stageroom--viewer set
+       padding/border-radius to 0 on the monitor for the actual Video/
+       Streaming full-bleed mobile treatment, which voice has no reason to
+       inherit. */
     .mf-stage-monitor:has(.mf-stage-deck) {
         margin-top: 3.6rem;
     }
@@ -3717,6 +3724,8 @@
     .mf-stageroom.mf-stageroom--reels .mf-stage-monitor:has(.mf-stage-deck) {
         width: auto;
         margin-inline: 0.6rem;
+        padding: 1.9rem 0.75rem 0.75rem;
+        border-radius: var(--mf-radius-panel);
     }
 
     /* Chat/People carousel panes (voice only) paint the same stadium backdrop
