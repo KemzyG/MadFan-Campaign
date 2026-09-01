@@ -10,8 +10,10 @@ use App\Services\Social\PollService;
 use App\Support\Social\EventCard;
 
 /**
- * Open fan votes → `vote`. Platform-wide polls (no fandom_id) show for every
- * viewer; fandom-scoped polls only show to fans of that fandom.
+ * Open polls → `vote` (a question with multiple options — not to be
+ * confused with `showdown`, the head-to-head fan-vs-fan contest). Platform-
+ * wide polls (no fandom_id) show for every viewer; fandom-scoped polls only
+ * show to fans of that fandom.
  */
 class PollEventProvider implements EventProvider
 {
@@ -51,7 +53,7 @@ class PollEventProvider implements EventProvider
             headline: $poll->question,
             subtitle: $presented['total_votes'].' '.str('vote')->plural($presented['total_votes']).' so far',
             club: null,
-            cta: ['label' => 'Vote now', 'href' => "/social/polls/{$poll->id}"],
+            cta: ['label' => 'Answer poll', 'href' => "/social/polls/{$poll->id}"],
             share: ['title' => $poll->question, 'url' => "/social/polls/{$poll->id}"],
             data: [
                 'options' => $presented['options'],

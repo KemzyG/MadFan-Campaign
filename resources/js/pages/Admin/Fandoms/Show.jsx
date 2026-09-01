@@ -234,7 +234,7 @@ export default function FandomShow({ fandom, analytics, groups = [] }) {
                 <MetricCard label="Followers" value={analytics.followers} hint="Fandom follows" />
                 <MetricCard label="Leagues" value={analytics.leagues} hint="Linked competitions" />
                 <MetricCard label="Subsets" value={analytics.subsets} hint="Discovery browse nodes" />
-                <MetricCard label="Votes" value={analytics.polls} hint="Active fan votes" />
+                <MetricCard label="Polls" value={analytics.polls} hint="Active social polls" />
                 <MetricCard label="Products" value={analytics.products} hint="Shop catalog items" />
                 <MetricCard label="Predictions" value={analytics.predictions} hint="Prediction games" />
             </div>

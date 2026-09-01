@@ -3,10 +3,10 @@ import EventShell from '../EventShell';
 const MAX_OPTIONS_SHOWN = 3;
 
 /**
- * vote — a teaser for the full poll page: the question, a percent bar per
- * option (capped so a long poll doesn't take over the feed), total votes.
- * Tapping the card (or its "Vote now" CTA) hands off to /social/polls/{id},
- * which owns the actual voting.
+ * vote — a teaser for the full poll (question + multiple options, distinct
+ * from the head-to-head fan showdown): a percent bar per option (capped so
+ * a long poll doesn't take over the feed), total votes. Tapping the card
+ * (or its "Answer poll" CTA) hands off to /social/polls/{id}.
  */
 export default function VoteCard({ event }) {
     const { options = [], total_votes: totalVotes = 0, my_option_id: myOptionId } = event.data || {};

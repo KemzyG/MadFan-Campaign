@@ -41,7 +41,10 @@ enum EventType: string
             self::Campaign => 'Campaign',
             self::FanChallenge => 'Fan challenge',
             self::Showdown => 'Fan showdown',
-            self::Vote => 'Fan vote',
+            // Not "Fan vote": a poll is a question with multiple options,
+            // distinct from the head-to-head, one-on-one fan showdown above
+            // — see PollEventProvider / TaskFeedProvider doc comments.
+            self::Vote => 'Fan poll',
             self::Concert => 'Concert',
             self::SongRelease => 'New song',
             self::BreakingNews => 'Breaking news',
@@ -60,7 +63,7 @@ enum EventType: string
             self::Campaign => 'Join campaign',
             self::FanChallenge => 'Join challenge',
             self::Showdown => 'Vote now',
-            self::Vote => 'Vote now',
+            self::Vote => 'Answer poll',
             self::Concert => 'Get tickets',
             self::SongRelease => 'Listen',
             self::BreakingNews => 'Read',

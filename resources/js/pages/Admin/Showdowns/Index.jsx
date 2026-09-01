@@ -92,7 +92,7 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
     }
 
     async function remove(showdown) {
-        if (!confirm('Delete this showdown?')) return;
+        if (!confirm('Delete this vote?')) return;
         await adminApi(`/showdowns/${showdown.id}`, { method: 'DELETE' });
         router.reload({ only: ['showdowns'] });
     }
@@ -120,13 +120,13 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
     }));
 
     return (
-        <AdminLayout title="Showdowns">
+        <AdminLayout title="Vote">
             <AdminPageHeader
-                title="Fan showdowns"
-                description="Head-to-head fan battles that appear on the live events feed."
+                title="Vote"
+                description="Head-to-head fan votes — two fans compete, unlimited taps, side locks once picked. Appears on the Events feed as Fan showdown cards."
                 actions={
                     <Button type="button" onClick={openCreate}>
-                        New showdown
+                        New vote
                     </Button>
                 }
             />
@@ -145,7 +145,7 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>{editing ? 'Edit showdown' : 'Create showdown'}</DialogTitle>
+                        <DialogTitle>{editing ? 'Edit vote' : 'Create vote'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={save} className="space-y-3">
                         <Field>

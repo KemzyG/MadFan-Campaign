@@ -52,13 +52,13 @@ export default function PollShow({ poll: initialPoll }) {
     const closes = closesLabel(state.closes_at);
 
     return (
-        <SocialShell title="Vote">
+        <SocialShell title="Poll">
             <Head title={`${state.question} · Mad Fan`} />
 
             <div className="mf-pv-page">
                 <div className="mf-pv-card">
                     <div className="mf-pv-card__eyebrow">
-                        <span>Mad Fan | Fan Vote</span>
+                        <span>Mad Fan | Fan Poll</span>
                         {!state.is_open ? <span>Closed</span> : closes ? <span>{closes}</span> : null}
                     </div>
 
