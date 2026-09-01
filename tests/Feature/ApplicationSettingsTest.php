@@ -136,7 +136,7 @@ test('maintenance mode redirects fans but allows admins', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/app/settings')
+        ->get('/ops/settings')
         ->assertSuccessful();
 
     $this->actingAs($admin)

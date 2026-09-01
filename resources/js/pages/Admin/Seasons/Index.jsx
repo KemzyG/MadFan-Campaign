@@ -1,12 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 
@@ -101,89 +107,79 @@ export default function SeasonsIndex({ seasons }) {
 
     const rows = (seasons?.data ?? []).map((season) => ({
         ...season,
-        status: <Badge variant={statusVariant[season.status] ?? 'default'}>{season.status}</Badge>,
+        status: <Badge variant={adminBadgeVariant(statusVariant[season.status] ?? 'default')} className={adminBadgeClass(statusVariant[season.status] ?? 'default')}>{season.status}</Badge>,
         period: `${formatDate(season.starts_at)} – ${formatDate(season.ends_at)}`,
         tasks: season.tasks_count ?? 0,
         weeks: season.season_weeks_count ?? 0,
         actions: (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(season)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(season)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => deleteSeason(season)} className="text-xs text-red-400">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteSeason(season)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Seasons">
-            <PageHeader
+            <AdminPageHeader
                 title="Seasons"
                 description="Time-boxed loyalty campaigns and point budgets."
                 actions={
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                    >
+                    <Button type="button" onClick={openCreate}>
                         New season
-                    </button>
+                    </Button>
                 }
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={seasons?.links} meta={seasons} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={seasons?.links} meta={seasons} />
 
-            {modalOpen && (
-                <Modal title={editingId ? 'Edit season' : 'Create season'} onClose={() => setModalOpen(false)}>
-                    <form onSubmit={saveSeason} className="space-y-3">
-                        <FormField label="Code">
-                            <FormInput value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Name">
-                            <FormInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Status">
-                            <FormSelect value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                                {['draft', 'active', 'completed', 'archived'].map((s) => (
-                                    <option key={s} value={s}>
-                                        {s}
-                                    </option>
-                                ))}
-                            </FormSelect>
-                        </FormField>
-                        <FormField label="Starts">
-                            <FormInput type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Ends">
-                            <FormInput type="date" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Total weeks">
-                            <FormInput
-                                type="number"
-                                min="1"
-                                value={form.total_weeks}
-                                onChange={(e) => setForm({ ...form, total_weeks: Number(e.target.value) })}
-                                required
-                            />
-                        </FormField>
-                        {error && <p className="text-sm text-red-400">{error}</p>}
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
-                                {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editingId ? 'Edit season' : 'Create season'}</DialogTitle></DialogHeader>
+                <form onSubmit={saveSeason} className="space-y-3">
+                    <Field ><FieldLabel>Code</FieldLabel>
+                        <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Status</FieldLabel>
+                        <NativeSelect className="w-full" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                            {['draft', 'active', 'completed', 'archived'].map((s) => (
+                                <NativeSelectOption key={s} value={s}>
+                                    {s}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Starts</FieldLabel>
+                        <Input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Ends</FieldLabel>
+                        <Input type="date" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Total weeks</FieldLabel>
+                        <Input
+                            type="number"
+                            min="1"
+                            value={form.total_weeks}
+                            onChange={(e) => setForm({ ...form, total_weeks: Number(e.target.value) })}
+                            required
+                        />
+                    </Field>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

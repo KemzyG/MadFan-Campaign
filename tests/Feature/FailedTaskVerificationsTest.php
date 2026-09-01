@@ -16,7 +16,7 @@ test('support admin can view task reviews page', function () {
     $support = createSupportAdmin();
 
     $this->actingAs($support)
-        ->get('/app/task-reviews')
+        ->get('/ops/task-reviews')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('Admin/TaskReviews/Index'));
 });
@@ -25,8 +25,8 @@ test('failed verifications path redirects to rejected task reviews', function ()
     $support = createSupportAdmin();
 
     $this->actingAs($support)
-        ->get('/app/failed-verifications')
-        ->assertRedirect('/app/task-reviews?status=rejected');
+        ->get('/ops/failed-verifications')
+        ->assertRedirect('/ops/task-reviews?status=rejected');
 });
 
 test('task reviews api lists pending submissions by default', function () {
@@ -59,7 +59,7 @@ test('task reviews api lists pending submissions by default', function () {
     ]);
 
     $response = $this->actingAs($admin)
-        ->getJson('/app/api/task-reviews')
+        ->getJson('/ops/api/task-reviews')
         ->assertSuccessful();
 
     expect($response->json('data'))->toHaveCount(1)
@@ -76,7 +76,7 @@ test('admin without users.view permission cannot access task reviews api', funct
     app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
     $this->actingAs($admin)
-        ->getJson('/app/api/task-reviews')
+        ->getJson('/ops/api/task-reviews')
         ->assertForbidden();
 });
 
@@ -108,7 +108,7 @@ test('task reviews can be filtered by platform', function () {
     ]);
 
     $this->actingAs($admin)
-        ->getJson('/app/api/task-reviews?platform=discord')
+        ->getJson('/ops/api/task-reviews?platform=discord')
         ->assertSuccessful()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.task.code', $discordTask->code);

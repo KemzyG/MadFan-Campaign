@@ -1,13 +1,21 @@
-import { router } from '@inertiajs/react';
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
+import { router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect, FormTextarea } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
-import { usePage } from '@inertiajs/react';
 
 const emptyEdit = () => ({ title: '', alt_text: '', imageFile: null });
 
@@ -144,40 +152,39 @@ export default function MediaIndex({ assets, filters = {}, cloudinary = {} }) {
 
     return (
         <AdminLayout title="Media gallery">
-            <PageHeader
+            <AdminPageHeader
                 title="Media gallery"
                 description={storageHint}
                 actions={
                     <div className="flex flex-wrap gap-2">
-                        <button
+                        <Button
                             type="button"
                             onClick={() => {
                                 setError('');
                                 setForm(emptyEdit());
                                 setUploadOpen(true);
                             }}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
                         >
                             Upload
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={() => {
                                 setError('');
                                 setPrompt('');
                                 setGenTitle('');
                                 setGenerateOpen(true);
                             }}
-                            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-zinc-200"
                         >
                             Generate with AI
-                        </button>
+                        </Button>
                     </div>
                 }
             />
 
             <div className="mb-4 flex flex-wrap gap-3">
-                <FormInput
+                <Input
                     placeholder="Search title, alt, prompt…"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -187,196 +194,157 @@ export default function MediaIndex({ assets, filters = {}, cloudinary = {} }) {
                         }
                     }}
                 />
-                <FormSelect
+                <NativeSelect className="w-full"
                     value={sourceFilter}
                     onChange={(e) => {
                         setSourceFilter(e.target.value);
                         applyFilters({ source: e.target.value || undefined });
                     }}
                 >
-                    <option value="">All sources</option>
-                    <option value="upload">Uploaded</option>
-                    <option value="generated">AI generated</option>
-                </FormSelect>
-                <button
-                    type="button"
-                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300"
-                    onClick={() => applyFilters()}
-                >
+                    <NativeSelectOption value="">All sources</NativeSelectOption>
+                    <NativeSelectOption value="upload">Uploaded</NativeSelectOption>
+                    <NativeSelectOption value="generated">AI generated</NativeSelectOption>
+                </NativeSelect>
+                <Button type="button" variant="outline" onClick={() => applyFilters()}>
                     Search
-                </button>
+                </Button>
             </div>
 
             {(assets?.data ?? []).length === 0 ? (
-                <p className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-zinc-500">
+                <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
                     No media yet. Upload from your device or generate from a prompt.
                 </p>
             ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {(assets?.data ?? []).map((asset) => (
-                        <article
-                            key={asset.id}
-                            className="overflow-hidden rounded-xl border border-white/10 bg-surface-800/60"
-                        >
-                            <div className="aspect-[4/5] bg-black/30">
+                        <Card key={asset.id} className="overflow-hidden py-0">
+                            <div className="aspect-[4/5] bg-muted/30">
                                 <img src={asset.url} alt={asset.alt_text || ''} className="h-full w-full object-cover" />
                             </div>
-                            <div className="space-y-2 p-3">
-                                <p className="truncate text-sm font-medium text-zinc-100">
+                            <CardContent className="space-y-2 p-3">
+                                <p className="truncate text-sm font-medium">
                                     {asset.title || `Asset #${asset.id}`}
                                 </p>
-                                <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                                     {asset.source_label}
                                 </p>
                                 <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        className="text-xs text-brand-300"
-                                        onClick={() => openEdit(asset)}
-                                    >
+                                    <Button variant="link" size="sm" type="button" onClick={() => openEdit(asset)}>
                                         Edit
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="text-xs text-red-400"
-                                        onClick={() => deleteAsset(asset)}
-                                    >
+                                    </Button>
+                                    <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteAsset(asset)}>
                                         Delete
-                                    </button>
+                                    </Button>
                                 </div>
-                            </div>
-                        </article>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             )}
 
-            <Pagination paginator={assets} />
+            <AdminPagination links={assets?.links} meta={assets} />
 
-            <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title="Upload media">
+            <Dialog open={uploadOpen} onOpenChange={setUploadOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Upload media</DialogTitle></DialogHeader>
                 <form onSubmit={uploadAsset} className="space-y-4">
-                    {error ? <p className="text-sm text-red-400">{error}</p> : null}
-                    <FormField label="Title">
-                        <FormInput
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                    <Field ><FieldLabel>Title</FieldLabel>
+                        <Input
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                         />
-                    </FormField>
-                    <FormField label="Alt text">
-                        <FormInput
+                    </Field>
+                    <Field ><FieldLabel>Alt text</FieldLabel>
+                        <Input
                             value={form.alt_text}
                             onChange={(e) => setForm({ ...form, alt_text: e.target.value })}
                         />
-                    </FormField>
-                    <FormField label="Image">
+                    </Field>
+                    <Field ><FieldLabel>Image</FieldLabel>
                         <input
                             type="file"
                             accept="image/*"
                             required
                             onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] ?? null })}
                         />
-                    </FormField>
+                    </Field>
                     <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setUploadOpen(false)}
-                            className="rounded-lg border border-white/10 px-4 py-2 text-sm"
-                        >
+                        <Button type="button" variant="ghost" onClick={() => setUploadOpen(false)}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        </Button>
+                        <Button type="submit" disabled={loading}>
                             {loading ? 'Uploading…' : 'Upload'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </Modal>
+            </DialogContent></Dialog>
 
-            <Modal open={generateOpen} onClose={() => setGenerateOpen(false)} title="Generate with AI">
+            <Dialog open={generateOpen} onOpenChange={setGenerateOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Generate with AI</DialogTitle></DialogHeader>
                 <form onSubmit={generateAsset} className="space-y-4">
-                    {error ? <p className="text-sm text-red-400">{error}</p> : null}
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
                     {!cloudinary.generation_available ? (
-                        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-200">
                             Generation needs Cloudinary credentials and the Image Generation add-on. Uploads still
                             work without it.
                         </p>
                     ) : null}
-                    <FormField label="Prompt">
-                        <FormTextarea
+                    <Field ><FieldLabel>Prompt</FieldLabel>
+                        <Textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             rows={4}
                             required
                             placeholder="Stadium kit flat-lay, navy and gold, soft daylight, product photography…"
                         />
-                    </FormField>
-                    <FormField label="Title (optional)">
-                        <FormInput value={genTitle} onChange={(e) => setGenTitle(e.target.value)} />
-                    </FormField>
+                    </Field>
+                    <Field ><FieldLabel>Title (optional)</FieldLabel>
+                        <Input value={genTitle} onChange={(e) => setGenTitle(e.target.value)} />
+                    </Field>
                     <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setGenerateOpen(false)}
-                            className="rounded-lg border border-white/10 px-4 py-2 text-sm"
-                        >
+                        <Button type="button" variant="ghost" onClick={() => setGenerateOpen(false)}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        </Button>
+                        <Button type="submit" disabled={loading}>
                             {loading ? 'Generating…' : 'Generate'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </Modal>
+            </DialogContent></Dialog>
 
-            <Modal open={Boolean(editAsset)} onClose={() => setEditAsset(null)} title="Edit media">
+            <Dialog open={Boolean(editAsset)} onOpenChange={(open) => !open && setEditAsset(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Edit media</DialogTitle></DialogHeader>
                 <form onSubmit={saveEdit} className="space-y-4">
-                    {error ? <p className="text-sm text-red-400">{error}</p> : null}
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
                     {editAsset?.url ? (
                         <img src={editAsset.url} alt="" className="h-40 w-full rounded-lg object-cover" />
                     ) : null}
-                    <FormField label="Title">
-                        <FormInput
+                    <Field ><FieldLabel>Title</FieldLabel>
+                        <Input
                             value={form.title}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                         />
-                    </FormField>
-                    <FormField label="Alt text">
-                        <FormInput
+                    </Field>
+                    <Field ><FieldLabel>Alt text</FieldLabel>
+                        <Input
                             value={form.alt_text}
                             onChange={(e) => setForm({ ...form, alt_text: e.target.value })}
                         />
-                    </FormField>
-                    <FormField label="Replace image (optional)">
+                    </Field>
+                    <Field ><FieldLabel>Replace image (optional)</FieldLabel>
                         <input
                             type="file"
                             accept="image/*"
                             onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] ?? null })}
                         />
-                    </FormField>
+                    </Field>
                     <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setEditAsset(null)}
-                            className="rounded-lg border border-white/10 px-4 py-2 text-sm"
-                        >
+                        <Button type="button" variant="ghost" onClick={() => setEditAsset(null)}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        </Button>
+                        <Button type="submit" disabled={loading}>
                             {loading ? 'Saving…' : 'Save'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </Modal>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

@@ -1,10 +1,17 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { FormSelect } from '../../../Components/Admin/FormField';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 
 export default function JerseyOrdersIndex({
@@ -48,17 +55,17 @@ export default function JerseyOrdersIndex({
         total: `£${order.total}`,
         items: (order.items || []).map((item) => `${item.name} ${item.size}×${item.quantity}`).join(', '),
         status: canManage ? (
-            <FormSelect
+            <NativeSelect className="w-full"
                 value={order.status}
                 disabled={updatingId === order.id}
                 onChange={(e) => updateStatus(order, e.target.value)}
             >
                 {statuses.map((status) => (
-                    <option key={status.value} value={status.value}>
+                    <NativeSelectOption key={status.value} value={status.value}>
                         {status.label}
-                    </option>
+                    </NativeSelectOption>
                 ))}
-            </FormSelect>
+            </NativeSelect>
         ) : (
             order.status
         ),
@@ -66,13 +73,13 @@ export default function JerseyOrdersIndex({
 
     return (
         <AdminLayout title="Jersey orders">
-            <PageHeader
+            <AdminPageHeader
                 title="Jersey orders"
                 description="Confirmed marketplace orders and fulfillment status."
             />
 
             <div className="mb-4 flex flex-wrap gap-3">
-                <FormSelect
+                <NativeSelect className="w-full"
                     value={filters.status ?? ''}
                     onChange={(e) =>
                         router.get(
@@ -82,17 +89,17 @@ export default function JerseyOrdersIndex({
                         )
                     }
                 >
-                    <option value="">All statuses</option>
+                    <NativeSelectOption value="">All statuses</NativeSelectOption>
                     {statuses.map((status) => (
-                        <option key={status.value} value={status.value}>
+                        <NativeSelectOption key={status.value} value={status.value}>
                             {status.label}
-                        </option>
+                        </NativeSelectOption>
                     ))}
-                </FormSelect>
+                </NativeSelect>
             </div>
 
-            <DataTable columns={columns} rows={rows} />
-            <Pagination paginator={orders} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={orders?.links} meta={orders} />
         </AdminLayout>
     );
 }

@@ -17,6 +17,7 @@ class StoreLeagueRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'fandom_id' => ['nullable', 'integer', 'exists:fandoms,id'],
             'name' => ['required', 'string', 'max:255'],
             'short' => ['required', 'string', 'max:32', 'unique:leagues,short'],
             'logo' => ['nullable', 'image', 'max:2048'],

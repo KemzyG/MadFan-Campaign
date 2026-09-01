@@ -34,7 +34,7 @@ test('active staff can access inertia admin with assigned permissions', function
         ->and($staff->can(AdminPermission::UsersView->value))->toBeFalse();
 
     $this->actingAs($staff)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Dashboard')
@@ -43,11 +43,11 @@ test('active staff can access inertia admin with assigned permissions', function
             ->where('workspace.key', 'ambassador'));
 
     $this->actingAs($staff)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertForbidden();
 
     $this->actingAs($staff)
-        ->get('/app/settings')
+        ->get('/ops/settings')
         ->assertForbidden();
 });
 
@@ -68,11 +68,11 @@ test('staff login backfills missing console permissions', function () {
 
     expect($staff->fresh()->canAccessInertiaAdmin())->toBeFalse();
 
-    $this->post('/app/login', [
+    $this->post('/ops/login', [
         'email' => 'support-heal@madfan.test',
         'password' => validTestPassword(),
         '_token' => csrf_token(),
-    ])->assertRedirect('/app');
+    ])->assertRedirect('/ops');
 
     expect($staff->fresh()->canAccessInertiaAdmin())->toBeTrue()
         ->and($staff->fresh()->can(AdminPermission::DashboardView->value))->toBeTrue();
@@ -92,7 +92,7 @@ test('inactive staff lose admin console access', function () {
         ->and($staff->can(AdminPermission::DashboardView->value))->toBeFalse();
 
     $this->actingAs($staff)
-        ->get('/app')
+        ->get('/ops')
         ->assertForbidden();
 });
 

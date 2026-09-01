@@ -18,6 +18,7 @@ class ClubsPageController extends Controller
 
         $clubs = Club::query()
             ->with('league:id,name,short')
+            ->withCount('memberships')
             ->when($request->filled('league_id'), fn ($query) => $query->where('league_id', $request->integer('league_id')))
             ->orderBy('name')
             ->paginate($request->integer('per_page', 20))

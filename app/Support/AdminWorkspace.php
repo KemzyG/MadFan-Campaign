@@ -32,7 +32,7 @@ class AdminWorkspace
                 'tagline' => 'Full control · security · operator accounts',
                 'accent' => 'violet',
                 'job' => 'Govern roles, admins, settings, and system health.',
-                'focus' => ['admins', 'roles', 'settings', 'system-logs', 'dashboard'],
+                'focus' => ['admins', 'roles', 'settings', 'system-logs', 'dashboard', 'leaderboard'],
             ],
             'admin' => [
                 'key' => 'admin',
@@ -40,7 +40,11 @@ class AdminWorkspace
                 'tagline' => 'Campaigns · fans · loyalty ops',
                 'accent' => 'brand',
                 'job' => 'Run seasons, tasks, reviews, and fan operations.',
-                'focus' => ['tasks', 'task-reviews', 'users', 'seasons', 'leagues', 'clubs', 'jerseys', 'jersey-orders', 'referrals', 'staff'],
+                'focus' => [
+                    'dashboard', 'leaderboard', 'fandoms', 'posts', 'reports', 'fixtures', 'stages',
+                    'tasks', 'task-reviews', 'users', 'seasons', 'leagues', 'clubs',
+                    'jerseys', 'jersey-orders', 'referrals', 'staff',
+                ],
             ],
             'management', 'staff-management' => [
                 'key' => 'management',
@@ -48,7 +52,11 @@ class AdminWorkspace
                 'tagline' => 'Loyalty · seasons · performance',
                 'accent' => 'amber',
                 'job' => 'Shape seasons, tiers, tasks, and referral growth.',
-                'focus' => ['tasks', 'seasons', 'loyalty-tiers', 'leagues', 'clubs', 'jerseys', 'jersey-orders', 'referrals', 'point-transactions', 'dashboard'],
+                'focus' => [
+                    'dashboard', 'leaderboard', 'fandoms', 'posts', 'reports', 'fixtures', 'stages', 'channels',
+                    'tasks', 'seasons', 'loyalty-tiers', 'leagues', 'clubs',
+                    'jerseys', 'jersey-orders', 'referrals', 'point-transactions',
+                ],
             ],
             'support', 'staff-support' => [
                 'key' => 'support',
@@ -56,7 +64,10 @@ class AdminWorkspace
                 'tagline' => 'Fans · tasks · help queue',
                 'accent' => 'sky',
                 'job' => 'Help fans, manage tasks, and review jersey orders.',
-                'focus' => ['dashboard', 'tasks', 'task-reviews', 'users', 'jersey-orders', 'referrals'],
+                'focus' => [
+                    'dashboard', 'posts', 'reports', 'tasks', 'task-reviews',
+                    'users', 'jersey-orders', 'referrals',
+                ],
             ],
             'staff-community_manager' => [
                 'key' => 'community',

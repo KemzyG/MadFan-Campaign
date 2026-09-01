@@ -19,6 +19,7 @@ class UpdateLeagueRequest extends FormRequest
         $leagueId = $this->route('league')?->id;
 
         return [
+            'fandom_id' => ['nullable', 'integer', 'exists:fandoms,id'],
             'name' => ['sometimes', 'string', 'max:255'],
             'short' => ['sometimes', 'string', 'max:32', 'unique:leagues,short,'.$leagueId],
             'logo' => ['nullable', 'image', 'max:2048'],

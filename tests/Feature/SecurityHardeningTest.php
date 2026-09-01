@@ -30,7 +30,7 @@ test('support admin cannot assign super-admin role', function () {
     $target = createUser();
 
     $this->actingAs($support)
-        ->postJson('/app/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
+        ->postJson('/ops/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
         ->assertForbidden();
 });
 
@@ -39,7 +39,7 @@ test('support admin cannot delete users', function () {
     $target = createUser();
 
     $this->actingAs($support)
-        ->deleteJson('/app/api/users/'.$target->id)
+        ->deleteJson('/ops/api/users/'.$target->id)
         ->assertForbidden();
 });
 
@@ -47,13 +47,13 @@ test('login route is rate limited', function () {
     RateLimiter::clear('login');
 
     for ($attempt = 0; $attempt < 5; $attempt++) {
-        $this->post('/app/login', [
+        $this->post('/ops/login', [
             'email' => 'missing@example.com',
             'password' => 'wrong-password',
         ]);
     }
 
-    $this->post('/app/login', [
+    $this->post('/ops/login', [
         'email' => 'missing@example.com',
         'password' => 'wrong-password',
     ])->assertStatus(429);
@@ -218,7 +218,7 @@ test('admin cannot assign super-admin without being super-admin', function () {
     $target = createUser();
 
     $this->actingAs($admin)
-        ->postJson('/app/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
+        ->postJson('/ops/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['role']);
 });
@@ -230,7 +230,7 @@ test('super-admin can assign super-admin role', function () {
     $target = createUser();
 
     $this->actingAs($superAdmin)
-        ->postJson('/app/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
+        ->postJson('/ops/api/users/'.$target->id.'/assign-role', ['role' => 'super-admin'])
         ->assertSuccessful();
 
     expect($target->fresh()->hasRole('super-admin'))->toBeTrue();

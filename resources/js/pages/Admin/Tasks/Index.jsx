@@ -1,13 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect, FormTextarea } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 import { formatNumber } from '../../../lib/format';
@@ -221,61 +226,55 @@ export default function TasksIndex({
         season: task.season?.name ?? '—',
         points: formatNumber(task.points),
         status: (
-            <Badge variant={task.is_active ? 'success' : 'default'}>
+            <Badge variant={adminBadgeVariant(task.is_active ? 'success' : 'default')} className={adminBadgeClass(task.is_active ? 'success' : 'default')}>
                 {task.is_active ? 'Active' : 'Inactive'}
             </Badge>
         ),
         actions: (
             <div className="flex flex-wrap justify-end gap-2">
-                <button type="button" onClick={() => openEdit(task)} className="text-xs text-brand-300 hover:text-brand-200">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(task)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => toggleActive(task)} className="text-xs text-zinc-400 hover:text-zinc-200">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-muted-foreground" onClick={() => toggleActive(task)}>
                     {task.is_active ? 'Deactivate' : 'Activate'}
-                </button>
-                <button type="button" onClick={() => deleteTask(task)} className="text-xs text-red-400 hover:text-red-300">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteTask(task)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Tasks">
-            <PageHeader
+            <AdminPageHeader
                 title="Tasks"
                 description="Full campaign task CRUD — platforms, verification, steps, and staff assignments."
                 actions={
                     <div className="flex flex-wrap items-center gap-2">
                         {pendingReviewCount > 0 && (
-                            <Link
-                                href={`${base}/task-reviews`}
-                                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-300 transition hover:bg-amber-500/20"
-                            >
-                                {pendingReviewCount} awaiting review
-                                {pendingReviewCount === 1 ? '' : 's'}
-                            </Link>
+                            <Button variant="outline" className="border-amber-500/30 text-amber-700 dark:text-amber-300" asChild>
+                                <Link href={`${base}/task-reviews`}>
+                                    {pendingReviewCount} awaiting review
+                                    {pendingReviewCount === 1 ? '' : 's'}
+                                </Link>
+                            </Button>
                         )}
                         {failedVerificationCount > 0 && (
-                            <Link
-                                href={`${base}/task-reviews?status=rejected`}
-                                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20"
-                            >
-                                {failedVerificationCount} rejected
-                            </Link>
+                            <Button variant="outline" className="text-destructive" asChild>
+                                <Link href={`${base}/task-reviews?status=rejected`}>
+                                    {failedVerificationCount} rejected
+                                </Link>
+                            </Button>
                         )}
-                        <button
-                            type="button"
-                            onClick={openCreate}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        <Button type="button" onClick={openCreate}>
                             New task
-                        </button>
+                        </Button>
                     </div>
                 }
             />
 
-            <FilterBar
+            <AdminFilterBar
                 route={`${base}/tasks`}
                 filters={filters}
                 fields={[
@@ -298,34 +297,33 @@ export default function TasksIndex({
                 ]}
             />
 
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={tasks?.links} meta={tasks} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={tasks?.links} meta={tasks} />
 
-            {modalOpen && (
-                <Modal
-                    title={isEditing ? 'Edit task' : 'Create task'}
-                    wide
-                    onClose={() => setModalOpen(false)}
-                >
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>{isEditing ? 'Edit task' : 'Create task'}</DialogTitle>
+                    </DialogHeader>
                     <form onSubmit={saveTask} className="space-y-4">
-                        {error ? <p className="text-sm text-red-400">{error}</p> : null}
+                        {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <FormField label="Season">
-                                <FormSelect
+                            <Field ><FieldLabel>Season</FieldLabel>
+                                <NativeSelect className="w-full"
                                     value={form.season_id}
                                     onChange={(e) => setForm({ ...form, season_id: e.target.value })}
                                     required
                                 >
                                     {seasons?.map((s) => (
-                                        <option key={s.id} value={s.id}>
+                                        <NativeSelectOption key={s.id} value={s.id}>
                                             {s.name}
-                                        </option>
+                                        </NativeSelectOption>
                                     ))}
-                                </FormSelect>
-                            </FormField>
-                            <FormField label="Audience">
-                                <FormSelect
+                                </NativeSelect>
+                            </Field>
+                            <Field ><FieldLabel>Audience</FieldLabel>
+                                <NativeSelect className="w-full"
                                     value={form.audience}
                                     onChange={(e) =>
                                         setForm({
@@ -337,141 +335,141 @@ export default function TasksIndex({
                                     }
                                 >
                                     {audiences.map((audience) => (
-                                        <option key={audience.value} value={audience.value}>
+                                        <NativeSelectOption key={audience.value} value={audience.value}>
                                             {audience.label}
-                                        </option>
+                                        </NativeSelectOption>
                                     ))}
-                                </FormSelect>
-                            </FormField>
+                                </NativeSelect>
+                            </Field>
                         </div>
 
                         {isStaffAudience && (
                             <div className="grid gap-3 sm:grid-cols-2">
-                                <FormField label="Staff position">
-                                    <FormSelect
+                                <Field ><FieldLabel>Staff position</FieldLabel>
+                                    <NativeSelect className="w-full"
                                         value={form.staff_position}
                                         onChange={(e) => setForm({ ...form, staff_position: e.target.value })}
                                     >
-                                        <option value="">All staff positions</option>
+                                        <NativeSelectOption value="">All staff positions</NativeSelectOption>
                                         {staffPositions.map((position) => (
-                                            <option key={position.value} value={position.value}>
+                                            <NativeSelectOption key={position.value} value={position.value}>
                                                 {position.label}
-                                            </option>
+                                            </NativeSelectOption>
                                         ))}
-                                    </FormSelect>
-                                </FormField>
-                                <FormField label="Assignee">
-                                    <FormSelect
+                                    </NativeSelect>
+                                </Field>
+                                <Field ><FieldLabel>Assignee</FieldLabel>
+                                    <NativeSelect className="w-full"
                                         value={form.assigned_user_id}
                                         onChange={(e) => setForm({ ...form, assigned_user_id: e.target.value })}
                                     >
-                                        <option value="">No individual assignee</option>
+                                        <NativeSelectOption value="">No individual assignee</NativeSelectOption>
                                         {staffMembers.map((member) => (
-                                            <option key={member.id} value={member.id}>
+                                            <NativeSelectOption key={member.id} value={member.id}>
                                                 {member.name} ({member.fan_id})
-                                            </option>
+                                            </NativeSelectOption>
                                         ))}
-                                    </FormSelect>
-                                </FormField>
+                                    </NativeSelect>
+                                </Field>
                             </div>
                         )}
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <FormField label="Code">
-                                <FormInput
+                            <Field ><FieldLabel>Code</FieldLabel>
+                                <Input
                                     value={form.code}
                                     onChange={(e) => setForm({ ...form, code: e.target.value })}
                                     required
                                 />
-                            </FormField>
-                            <FormField label="Points">
-                                <FormInput
+                            </Field>
+                            <Field ><FieldLabel>Points</FieldLabel>
+                                <Input
                                     type="number"
                                     min={0}
                                     value={form.points}
                                     onChange={(e) => setForm({ ...form, points: Number(e.target.value) })}
                                     required
                                 />
-                            </FormField>
+                            </Field>
                         </div>
 
-                        <FormField label="Name">
-                            <FormInput
+                        <Field ><FieldLabel>Name</FieldLabel>
+                            <Input
                                 value={form.name}
                                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                                 required
                             />
-                        </FormField>
+                        </Field>
 
-                        <FormField label="Description">
-                            <FormTextarea
+                        <Field ><FieldLabel>Description</FieldLabel>
+                            <Textarea
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                             />
-                        </FormField>
+                        </Field>
 
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <FormField label="Platform">
-                                <FormSelect
+                            <Field ><FieldLabel>Platform</FieldLabel>
+                                <NativeSelect className="w-full"
                                     value={form.platform}
                                     onChange={(e) => setForm({ ...form, platform: e.target.value })}
                                 >
                                     {platforms.map((platform) => (
-                                        <option key={platform} value={platform}>
+                                        <NativeSelectOption key={platform} value={platform}>
                                             {platform}
-                                        </option>
+                                        </NativeSelectOption>
                                     ))}
-                                </FormSelect>
-                            </FormField>
-                            <FormField label="Type">
-                                <FormSelect
+                                </NativeSelect>
+                            </Field>
+                            <Field ><FieldLabel>Type</FieldLabel>
+                                <NativeSelect className="w-full"
                                     value={form.task_type}
                                     onChange={(e) => setForm({ ...form, task_type: e.target.value })}
                                 >
                                     {taskTypes.map((type) => (
-                                        <option key={type} value={type}>
+                                        <NativeSelectOption key={type} value={type}>
                                             {type}
-                                        </option>
+                                        </NativeSelectOption>
                                     ))}
-                                </FormSelect>
-                            </FormField>
-                            <FormField label="Display order">
-                                <FormInput
+                                </NativeSelect>
+                            </Field>
+                            <Field ><FieldLabel>Display order</FieldLabel>
+                                <Input
                                     type="number"
                                     min={0}
                                     value={form.display_order}
                                     onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
                                 />
-                            </FormField>
+                            </Field>
                         </div>
 
-                        <FormField label="External URL">
-                            <FormInput
+                        <Field ><FieldLabel>External URL</FieldLabel>
+                            <Input
                                 type="url"
                                 placeholder="https://"
                                 value={form.external_url}
                                 onChange={(e) => setForm({ ...form, external_url: e.target.value })}
                             />
-                        </FormField>
+                        </Field>
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <FormField label="Starts at">
-                                <FormInput
+                            <Field ><FieldLabel>Starts at</FieldLabel>
+                                <Input
                                     type="datetime-local"
                                     value={form.starts_at}
                                     onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
                                 />
-                            </FormField>
-                            <FormField label="Ends at">
-                                <FormInput
+                            </Field>
+                            <Field ><FieldLabel>Ends at</FieldLabel>
+                                <Input
                                     type="datetime-local"
                                     value={form.ends_at}
                                     onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
                                 />
-                            </FormField>
+                            </Field>
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-zinc-300">
+                        <div className="flex flex-wrap gap-4 text-sm">
                             <label className="inline-flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -490,66 +488,64 @@ export default function TasksIndex({
                             </label>
                         </div>
 
-                        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                        <div className="rounded-xl border border-border bg-muted/30 p-4">
                             <div className="mb-3 flex items-center justify-between">
-                                <h4 className="text-sm font-semibold text-white">Steps</h4>
-                                <button type="button" onClick={addStep} className="text-xs text-brand-300">
+                                <h4 className="text-sm font-semibold">Steps</h4>
+                                <Button type="button" variant="link" size="sm" onClick={addStep}>
                                     + Add step
-                                </button>
+                                </Button>
                             </div>
                             <div className="space-y-3">
                                 {form.steps.length === 0 && (
-                                    <p className="text-xs text-zinc-500">No steps yet.</p>
+                                    <p className="text-xs text-muted-foreground">No steps yet.</p>
                                 )}
                                 {form.steps.map((step, index) => (
-                                    <div key={index} className="space-y-2 rounded-lg border border-white/5 p-3">
-                                        <FormField label={`Step ${index + 1}`}>
-                                            <FormInput
+                                    <div key={index} className="space-y-2 rounded-lg border border-border p-3">
+                                        <Field>
+                                            <FieldLabel>{`Step ${index + 1}`}</FieldLabel>
+                                            <Input
                                                 value={step.description}
                                                 onChange={(e) => updateStep(index, { description: e.target.value })}
                                                 placeholder="What the fan should do"
                                                 required
                                             />
-                                        </FormField>
+                                        </Field>
                                         <div className="grid gap-2 sm:grid-cols-2">
-                                            <FormInput
+                                            <Input
                                                 value={step.link_url}
                                                 onChange={(e) => updateStep(index, { link_url: e.target.value })}
                                                 placeholder="Link URL"
                                             />
-                                            <FormInput
+                                            <Input
                                                 value={step.link_label}
                                                 onChange={(e) => updateStep(index, { link_label: e.target.value })}
                                                 placeholder="Link label"
                                             />
                                         </div>
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="link"
+                                            size="sm"
+                                            className="text-destructive"
                                             onClick={() => removeStep(index)}
-                                            className="text-xs text-red-400"
                                         >
                                             Remove
-                                        </button>
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
+                            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
                                 Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
+                            </Button>
+                            <Button type="submit" disabled={loading}>
                                 {loading ? 'Saving…' : isEditing ? 'Save changes' : 'Create'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
-                </Modal>
-            )}
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

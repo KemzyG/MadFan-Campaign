@@ -1,7 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { useForm, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { FormField, FormInput } from '../../../Components/Admin/FormField';
-import PageHeader from '../../../Components/PageHeader';
 import { adminPath } from '../../../lib/adminPath';
 import { WORKSPACE_ACCENTS } from '../../../admin/roleWorkspaces';
 
@@ -30,89 +41,86 @@ export default function ProfileEdit({ profile, workspace }) {
 
     return (
         <AdminLayout title="Profile">
-            <PageHeader
+            <AdminPageHeader
                 title="Your admin profile"
                 description="Update identity for this operator account. Role and permissions are managed by super-admins."
             />
 
             <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-                <form
-                    onSubmit={submit}
-                    className="space-y-4 rounded-2xl border border-white/10 bg-surface-800/50 p-6"
-                >
-                    {recentlySuccessful && (
-                        <p className="text-sm text-emerald-400">Profile saved.</p>
-                    )}
+                <Card>
+                    <CardContent className="p-6">
+                        <form onSubmit={submit} className="space-y-4">
+                            {recentlySuccessful && (
+                                <p className="text-sm text-emerald-600 dark:text-emerald-400">Profile saved.</p>
+                            )}
 
-                    <FormField label="Name" error={errors.name}>
-                        <FormInput value={data.name} onChange={(e) => setData('name', e.target.value)} required />
-                    </FormField>
-                    <FormField label="Email" error={errors.email}>
-                        <FormInput
-                            type="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            required
-                        />
-                    </FormField>
-
-                    <div className="border-t border-white/5 pt-4">
-                        <h3 className="mb-3 text-sm font-semibold text-white">Change password</h3>
-                        <div className="space-y-3">
-                            <FormField label="Current password" error={errors.current_password}>
-                                <FormInput
-                                    type="password"
-                                    value={data.current_password}
-                                    onChange={(e) => setData('current_password', e.target.value)}
-                                    autoComplete="current-password"
+                            <Field  error={errors.name}><FieldLabel>Name</FieldLabel>
+                                <Input value={data.name} onChange={(e) => setData('name', e.target.value)} required />
+                            </Field>
+                            <Field  error={errors.email}><FieldLabel>Email</FieldLabel>
+                                <Input
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    required
                                 />
-                            </FormField>
-                            <FormField label="New password" error={errors.password}>
-                                <FormInput
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    autoComplete="new-password"
-                                />
-                            </FormField>
-                            <FormField label="Confirm new password" error={errors.password_confirmation}>
-                                <FormInput
-                                    type="password"
-                                    value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    autoComplete="new-password"
-                                />
-                            </FormField>
-                        </div>
-                    </div>
+                            </Field>
 
-                    <div className="flex justify-end pt-2">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                        >
-                            {processing ? 'Saving…' : 'Save profile'}
-                        </button>
-                    </div>
-                </form>
+                            <div className="border-t border-border pt-4">
+                                <h3 className="mb-3 text-sm font-semibold">Change password</h3>
+                                <div className="space-y-3">
+                                    <Field  error={errors.current_password}><FieldLabel>Current password</FieldLabel>
+                                        <Input
+                                            type="password"
+                                            value={data.current_password}
+                                            onChange={(e) => setData('current_password', e.target.value)}
+                                            autoComplete="current-password"
+                                        />
+                                    </Field>
+                                    <Field  error={errors.password}><FieldLabel>New password</FieldLabel>
+                                        <Input
+                                            type="password"
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
+                                            autoComplete="new-password"
+                                        />
+                                    </Field>
+                                    <Field  error={errors.password_confirmation}><FieldLabel>Confirm new password</FieldLabel>
+                                        <Input
+                                            type="password"
+                                            value={data.password_confirmation}
+                                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                                            autoComplete="new-password"
+                                        />
+                                    </Field>
+                                </div>
+                            </div>
 
-                <aside className={`rounded-2xl border border-white/10 p-5 ${accent.soft}`}>
+                            <div className="flex justify-end pt-2">
+                                <Button type="submit" disabled={processing}>
+                                    {processing ? 'Saving…' : 'Save profile'}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <aside className={`rounded-xl border p-5 ${accent.soft}`}>
                     <p className={`text-xs font-semibold uppercase tracking-wide ${accent.text}`}>
                         {workspace?.label}
                     </p>
-                    <p className="mt-2 text-sm text-zinc-300">{workspace?.job}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{workspace?.job}</p>
                     <div className="mt-4">
-                        <p className="text-xs text-zinc-500">Roles</p>
-                        <ul className="mt-1 space-y-1 text-sm text-zinc-200">
+                        <p className="text-xs text-muted-foreground">Roles</p>
+                        <ul className="mt-1 space-y-1 text-sm">
                             {(profile?.roles ?? []).map((role) => (
                                 <li key={role}>{role}</li>
                             ))}
                         </ul>
                     </div>
                     <div className="mt-4">
-                        <p className="text-xs text-zinc-500">Permissions ({profile?.permissions?.length ?? 0})</p>
-                        <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                        <p className="text-xs text-muted-foreground">Permissions ({profile?.permissions?.length ?? 0})</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                             Nav and actions follow your Spatie permissions for this desk.
                         </p>
                     </div>

@@ -39,7 +39,7 @@ test('org admin cannot approve task reviews for fans outside their partition', f
     ]);
 
     $this->actingAs($orgAdmin)
-        ->post("/app/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
+        ->post("/ops/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
         ->assertForbidden();
 });
 
@@ -63,7 +63,7 @@ test('api task reviews only list fans inside the admin organization partition', 
     }
 
     $this->actingAs($orgAdmin)
-        ->getJson('/app/api/task-reviews')
+        ->getJson('/ops/api/task-reviews')
         ->assertSuccessful()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.user.id', $visibleFan->id);
@@ -109,6 +109,6 @@ test('org admin cannot update referral status for referrers outside their partit
     ]);
 
     $this->actingAs($orgAdmin)
-        ->patchJson("/app/api/referrals/{$referral->id}/status", ['status' => 'rejected'])
+        ->patchJson("/ops/api/referrals/{$referral->id}/status", ['status' => 'rejected'])
         ->assertForbidden();
 });

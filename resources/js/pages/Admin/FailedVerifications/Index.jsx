@@ -1,10 +1,16 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { Link, usePage } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { formatDateTime, formatNumber } from '../../../lib/format';
 import { adminPath } from '../../../lib/adminPath';
 
@@ -37,8 +43,8 @@ export default function FailedVerificationsIndex({
         ...row,
         user: (
             <div>
-                <div className="font-medium text-zinc-100">{row.user?.name ?? '—'}</div>
-                <div className="text-xs text-zinc-500">
+                <div className="font-medium">{row.user?.name ?? '—'}</div>
+                <div className="text-xs text-muted-foreground">
                     {row.user?.email}
                     {row.user?.fan_id ? ` · ${row.user.fan_id}` : ''}
                 </div>
@@ -46,20 +52,20 @@ export default function FailedVerificationsIndex({
         ),
         task: (
             <div>
-                <div className="font-medium text-zinc-100">{row.task?.name ?? '—'}</div>
-                <div className="text-xs text-zinc-500">
+                <div className="font-medium">{row.task?.name ?? '—'}</div>
+                <div className="text-xs text-muted-foreground">
                     {row.task?.code ?? '—'} · {formatNumber(row.task?.points ?? 0)} pts
                 </div>
             </div>
         ),
         platform: (
-            <Badge variant={platformVariant[row.task?.platform] ?? 'default'}>
+            <Badge variant={adminBadgeVariant(platformVariant[row.task?.platform] ?? 'default')} className={adminBadgeClass(platformVariant[row.task?.platform] ?? 'default')}>
                 {(row.task?.platform ?? 'general').toUpperCase()}
             </Badge>
         ),
         identifier: row.external_handle || row.user?.handle || '—',
         reason: (
-            <span className="text-sm text-red-300/90" title={row.failure_reason ?? ''}>
+            <span className="text-sm text-destructive" title={row.failure_reason ?? ''}>
                 {row.failure_reason ?? 'Verification failed'}
             </span>
         ),
@@ -68,19 +74,17 @@ export default function FailedVerificationsIndex({
 
     return (
         <AdminLayout title="Failed verifications">
-            <PageHeader
+            <AdminPageHeader
                 title="Failed task verifications"
                 description="Fans whose social task checks failed. Use this to troubleshoot follow/join issues before they retry."
                 actions={
                     failedCount > 0 ? (
-                        <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-300 ring-1 ring-red-500/30">
-                            {failedCount} open failure{failedCount === 1 ? '' : 's'}
-                        </span>
+                        <Badge variant="destructive">{failedCount} open failure{failedCount === 1 ? '' : 's'}</Badge>
                     ) : null
                 }
             />
 
-            <FilterBar
+            <AdminFilterBar
                 route={adminPath(page.props, 'failed-verifications')}
                 filters={filters}
                 fields={[
@@ -108,19 +112,13 @@ export default function FailedVerificationsIndex({
                 ]}
             />
 
-            {rows.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-surface-800/60 p-8 text-center text-sm text-zinc-400">
-                    No failed verifications match your filters.
-                </div>
-            ) : (
-                <DataTable columns={columns} rows={rows} />
-            )}
+            <AdminTable columns={columns} rows={rows} emptyMessage="No failed verifications match your filters." />
 
-            <Pagination links={verifications?.links} meta={verifications} />
+            <AdminPagination links={verifications?.links} meta={verifications} />
 
-            <p className="mt-6 text-xs text-zinc-500">
+            <p className="mt-6 text-xs text-muted-foreground">
                 Tip: users can retry from{' '}
-                <Link href="/tasks" className="text-brand-400 hover:text-brand-300">
+                <Link href="/tasks" className="text-primary hover:underline">
                     fan tasks
                 </Link>
                 . Confirm they completed the off-platform action (follow, join server, etc.) first.

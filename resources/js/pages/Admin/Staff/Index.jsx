@@ -1,11 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 import { formatDateTime, formatNumber } from '../../../lib/format';
@@ -75,7 +82,7 @@ export default function StaffIndex({ staff, filters, staffPositions = [], staffS
         ...member,
         position: member.staff_position_label ?? member.staff_position ?? '—',
         status: (
-            <Badge variant={statusVariant[member.staff_status] ?? 'default'}>
+            <Badge variant={adminBadgeVariant(statusVariant[member.staff_status] ?? 'default')} className={adminBadgeClass(statusVariant[member.staff_status] ?? 'default')}>
                 {member.staff_status_label ?? member.staff_status ?? '—'}
             </Badge>
         ),
@@ -86,28 +93,25 @@ export default function StaffIndex({ staff, filters, staffPositions = [], staffS
         tasks: member.completed_tasks ?? 0,
         assigned: member.staff_position_assigned_at ? formatDateTime(member.staff_position_assigned_at) : '—',
         actions: (
-            <Link href={adminPath(page.props, `staff/${member.id}`)} className="text-xs text-brand-300 hover:text-brand-200">
-                View details
-            </Link>
+            <Button variant="link" size="sm" asChild>
+                <Link href={adminPath(page.props, `staff/${member.id}`)}>View details</Link>
+            </Button>
         ),
     }));
 
     return (
         <AdminLayout title="Staff">
-            <PageHeader
+            <AdminPageHeader
                 title="Staff"
                 description="Manage staff positions, assignments, and performance."
                 actions={
-                    <button
-                        onClick={() => setModalOpen(true)}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 hover:bg-brand-400"
-                    >
+                    <Button type="button" onClick={() => setModalOpen(true)}>
                         Add staff member
-                    </button>
+                    </Button>
                 }
             />
 
-            <FilterBar
+            <AdminFilterBar
                 route={base}
                 filters={filters}
                 fields={[
@@ -127,87 +131,75 @@ export default function StaffIndex({ staff, filters, staffPositions = [], staffS
                 ]}
             />
 
-            <DataTable columns={columns} rows={rows} emptyMessage="No staff members match your filters." />
-            <Pagination links={staff?.links} meta={staff} />
+            <AdminTable columns={columns} rows={rows} emptyMessage="No staff members match your filters." />
+            <AdminPagination links={staff?.links} meta={staff} />
 
-            {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <form
-                        onSubmit={createStaffMember}
-                        className="w-full max-w-lg rounded-2xl border border-white/10 bg-surface-800 p-6"
-                    >
-                        <h3 className="text-lg font-semibold text-white">Add staff member</h3>
-                        <p className="mt-1 text-sm text-zinc-400">Promote an existing fan to a staff position.</p>
-                        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-                        <div className="mt-4 space-y-3">
-                            <div>
-                                <label className="mb-1 block text-xs text-zinc-500">Find user</label>
-                                <input
-                                    type="search"
-                                    value={userSearch}
-                                    onChange={(e) => searchUsers(e.target.value)}
-                                    placeholder="Search by name, email, or fan ID"
-                                    className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                                />
-                                {userResults.length > 0 && (
-                                    <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-surface-900">
-                                        {userResults.map((user) => (
-                                            <button
-                                                key={user.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    setForm({ ...form, user_id: user.id });
-                                                    setUserSearch(`${user.name} (${user.fan_id})`);
-                                                    setUserResults([]);
-                                                }}
-                                                className="block w-full px-3 py-2 text-left text-sm text-zinc-300 hover:bg-white/5"
-                                            >
-                                                {user.name} · {user.email} · {user.fan_id}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Add staff member</DialogTitle></DialogHeader>
+                <form onSubmit={createStaffMember} className="space-y-3">
+                    <p className="text-sm text-muted-foreground">Promote an existing fan to a staff position.</p>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <Field ><FieldLabel>Find user</FieldLabel>
+                        <Input
+                            type="search"
+                            value={userSearch}
+                            onChange={(e) => searchUsers(e.target.value)}
+                            placeholder="Search by name, email, or fan ID"
+                        />
+                        {userResults.length > 0 && (
+                            <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/30">
+                                {userResults.map((user) => (
+                                    <button
+                                        key={user.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setForm({ ...form, user_id: user.id });
+                                            setUserSearch(`${user.name} (${user.fan_id})`);
+                                            setUserResults([]);
+                                        }}
+                                        className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                                    >
+                                        {user.name} · {user.email} · {user.fan_id}
+                                    </button>
+                                ))}
                             </div>
-                            <select
-                                value={form.staff_position}
-                                onChange={(e) => setForm({ ...form, staff_position: e.target.value })}
-                                className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                                required
-                            >
-                                <option value="">Select staff position</option>
-                                {staffPositions.map((position) => (
-                                    <option key={position.value} value={position.value}>
-                                        {position.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={form.staff_status}
-                                onChange={(e) => setForm({ ...form, staff_status: e.target.value })}
-                                className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                            >
-                                {staffStatuses.map((status) => (
-                                    <option key={status.value} value={status.value}>
-                                        {status.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading || !form.user_id}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-50"
-                            >
-                                Add staff member
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+                        )}
+                    </Field>
+                    <Field ><FieldLabel>Staff position</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.staff_position}
+                            onChange={(e) => setForm({ ...form, staff_position: e.target.value })}
+                            required
+                        >
+                            <NativeSelectOption value="">Select staff position</NativeSelectOption>
+                            {staffPositions.map((position) => (
+                                <NativeSelectOption key={position.value} value={position.value}>
+                                    {position.label}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Status</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.staff_status}
+                            onChange={(e) => setForm({ ...form, staff_status: e.target.value })}
+                        >
+                            {staffStatuses.map((status) => (
+                                <NativeSelectOption key={status.value} value={status.value}>
+                                    {status.label}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading || !form.user_id}>
+                            Add staff member
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

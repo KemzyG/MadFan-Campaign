@@ -37,13 +37,18 @@ class FanLeaderboardService
         int $limit = self::DEFAULT_LIMIT,
         ?int $fandomId = null,
         ?int $clubId = null,
+        ?int $leagueId = null,
     ): array {
         $limit = max(1, min($limit, 100));
 
         $scope = fn () => User::query()
             ->fanAccounts()
             ->when($fandomId !== null, fn ($query) => $query->where('favourite_fandom_id', $fandomId))
-            ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId));
+            ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId))
+            ->when($leagueId !== null, fn ($query) => $query->whereHas(
+                'favouriteClub',
+                fn ($clubQuery) => $clubQuery->where('league_id', $leagueId),
+            ));
 
         $totalFans = $scope()->count();
 
@@ -67,7 +72,7 @@ class FanLeaderboardService
             $inBoard = $top->firstWhere('id', $viewer->id);
             $currentUser = $inBoard
                 ? $this->findEntry($entries, $viewer->id)
-                : $this->viewerEntry($viewer, $totalFans, $fandomId, $clubId);
+                : $this->viewerEntry($viewer, $totalFans, $fandomId, $clubId, $leagueId);
         }
 
         return [
@@ -111,12 +116,16 @@ class FanLeaderboardService
      *
      * @return array<string, mixed>
      */
-    private function viewerEntry(User $viewer, int $totalFans, ?int $fandomId, ?int $clubId): array
+    private function viewerEntry(User $viewer, int $totalFans, ?int $fandomId, ?int $clubId, ?int $leagueId = null): array
     {
         $ahead = User::query()
             ->fanAccounts()
             ->when($fandomId !== null, fn ($query) => $query->where('favourite_fandom_id', $fandomId))
             ->when($clubId !== null, fn ($query) => $query->where('favourite_club_id', $clubId))
+            ->when($leagueId !== null, fn ($query) => $query->whereHas(
+                'favouriteClub',
+                fn ($clubQuery) => $clubQuery->where('league_id', $leagueId),
+            ))
             ->where(function ($query) use ($viewer): void {
                 $query->where('total_points', '>', $viewer->total_points)
                     ->orWhere(function ($query) use ($viewer): void {

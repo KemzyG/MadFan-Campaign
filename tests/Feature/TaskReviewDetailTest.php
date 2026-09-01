@@ -66,7 +66,7 @@ test('task review page includes task context social accounts and evidence for ad
     ]);
 
     $this->actingAs($admin)
-        ->get('/app/task-reviews')
+        ->get('/ops/task-reviews')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/TaskReviews/Index')
@@ -99,7 +99,7 @@ test('api task reviews expose review detail fields', function () {
     ]);
 
     $this->actingAs($admin)
-        ->getJson('/app/api/task-reviews')
+        ->getJson('/ops/api/task-reviews')
         ->assertSuccessful()
         ->assertJsonPath('data.0.awaiting_review', true)
         ->assertJsonPath('data.0.proof_url', 'https://x.com/example/status/1')
@@ -134,8 +134,8 @@ test('cannot approve submissions that are not awaiting review', function () {
     ]);
 
     $this->actingAs($admin)
-        ->from('/app/task-reviews')
-        ->post("/app/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
-        ->assertRedirect('/app/task-reviews')
+        ->from('/ops/task-reviews')
+        ->post("/ops/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
+        ->assertRedirect('/ops/task-reviews')
         ->assertSessionHasErrors('progress');
 });

@@ -19,6 +19,7 @@ class LeaguesController extends Controller
         Gate::authorize('manageLeagues');
 
         $leagues = League::query()
+            ->with('fandom:id,name')
             ->withCount('clubs')
             ->orderBy('name')
             ->paginate($request->integer('per_page', 20));
@@ -37,7 +38,7 @@ class LeaguesController extends Controller
     {
         Gate::authorize('manageLeagues');
 
-        $data = $request->safe()->only(['name', 'short']);
+        $data = $request->safe()->only(['fandom_id', 'name', 'short']);
 
         if ($request->hasFile('logo')) {
             $data['logo'] = BrandLogoStorage::store($request->file('logo'), 'leagues');
@@ -54,7 +55,7 @@ class LeaguesController extends Controller
     {
         Gate::authorize('manageLeagues');
 
-        $data = $request->safe()->only(['name', 'short']);
+        $data = $request->safe()->only(['fandom_id', 'name', 'short']);
 
         if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
             BrandLogoStorage::delete($league->logo);

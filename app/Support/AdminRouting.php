@@ -33,11 +33,11 @@ class AdminRouting
      */
     public static function appPath(): string
     {
-        return trim((string) config('admin.app_path', 'app'), '/');
+        return trim((string) config('admin.app_path', 'ops'), '/');
     }
 
     /**
-     * Shared / meta base path for the frontend ("" or "/app").
+     * Shared / meta base path for the frontend ("" or "/ops").
      */
     public static function appPathPrefix(): string
     {

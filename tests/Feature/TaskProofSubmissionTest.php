@@ -139,7 +139,7 @@ test('admin review payload includes proof image url', function () {
     ]);
 
     $this->actingAs($admin)
-        ->get('/app/task-reviews')
+        ->get('/ops/task-reviews')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/TaskReviews/Index')

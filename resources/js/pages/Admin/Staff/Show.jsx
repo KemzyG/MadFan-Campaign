@@ -1,18 +1,31 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import PageHeader from '../../../Components/PageHeader';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 import { formatDateTime, formatNumber } from '../../../lib/format';
 
 function MetricCard({ label, value }) {
     return (
-        <div className="rounded-xl border border-white/10 bg-surface-800/60 p-4">
-            <div className="text-xs uppercase tracking-wider text-zinc-500">{label}</div>
-            <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
-        </div>
+        <Card>
+            <CardContent className="p-4">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+                <div className="mt-2 text-2xl font-semibold">{value}</div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -36,37 +49,39 @@ function statusVariant(status) {
 
 function AssignmentCard({ task }) {
     return (
-        <div className="rounded-xl border border-white/10 bg-surface-800/50 p-4">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <div className="font-medium text-white">{task.name}</div>
-                    <div className="text-xs text-zinc-500">
-                        {task.code} · {task.assignment_label}
+        <Card>
+            <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <div className="font-medium">{task.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                            {task.code} · {task.assignment_label}
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                        <Badge variant={adminBadgeVariant(statusVariant(task.status))} className={adminBadgeClass(statusVariant(task.status))}>{task.status?.replaceAll('_', ' ') ?? '—'}</Badge>
+                        <Badge variant={adminBadgeVariant(task.is_active ? 'success' : 'default')} className={adminBadgeClass(task.is_active ? 'success' : 'default')}>
+                            {task.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                    <Badge variant={statusVariant(task.status)}>{task.status?.replaceAll('_', ' ') ?? '—'}</Badge>
-                    <Badge variant={task.is_active ? 'success' : 'default'}>
-                        {task.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    <span>{task.task_type ?? 'Staff task'} · {task.points} pts</span>
+                    {task.points_awarded > 0 && <span>Awarded {task.points_awarded} pts</span>}
+                    {task.verification_status && task.verification_status !== 'not_required' && (
+                        <span>Verification: {task.verification_status}</span>
+                    )}
                 </div>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-400">
-                <span>{task.task_type ?? 'Staff task'} · {task.points} pts</span>
-                {task.points_awarded > 0 && <span>Awarded {task.points_awarded} pts</span>}
-                {task.verification_status && task.verification_status !== 'not_required' && (
-                    <span>Verification: {task.verification_status}</span>
+                {task.last_activity_at && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                        Last activity {formatDateTime(task.last_activity_at)}
+                    </div>
                 )}
-            </div>
-            {task.last_activity_at && (
-                <div className="mt-2 text-xs text-zinc-500">
-                    Last activity {formatDateTime(task.last_activity_at)}
-                </div>
-            )}
-            {task.failure_reason && (
-                <div className="mt-2 text-xs text-red-300">{task.failure_reason}</div>
-            )}
-        </div>
+                {task.failure_reason && (
+                    <div className="mt-2 text-xs text-destructive">{task.failure_reason}</div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 
@@ -129,75 +144,69 @@ export default function StaffShow({
 
     return (
         <AdminLayout title={member.name}>
-            <PageHeader
+            <AdminPageHeader
                 title={member.name}
                 description={`${staffProfile?.position_label ?? 'Staff'} · ${member.fan_id}`}
                 actions={
                     <div className="flex gap-2">
-                        <Link href={adminPath(page.props, 'staff')} className="rounded-lg border border-white/10 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5">
-                            Back to staff
-                        </Link>
+                        <Button variant="outline" asChild>
+                            <Link href={adminPath(page.props, 'staff')}>Back to staff</Link>
+                        </Button>
                         {canImpersonate && (
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
+                                className="border-amber-500/30 text-amber-700 dark:text-amber-300"
                                 onClick={() => router.post(adminPath(page.props, `impersonate/${member.id}`))}
-                                className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20"
                             >
                                 View as
-                            </button>
+                            </Button>
                         )}
-                        <button
-                            type="button"
-                            onClick={() => setEditOpen(true)}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        <Button type="button" onClick={() => setEditOpen(true)}>
                             Edit staff
-                        </button>
-                        <button
-                            type="button"
-                            onClick={removeStaff}
-                            disabled={loading}
-                            className="rounded-lg border border-red-500/40 px-4 py-2 text-sm text-red-300"
-                        >
+                        </Button>
+                        <Button type="button" variant="outline" className="text-destructive" onClick={removeStaff} disabled={loading}>
                             Remove staff
-                        </button>
+                        </Button>
                     </div>
                 }
             />
 
-            {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+            {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
-            <section className="mb-8 grid gap-4 rounded-2xl border border-white/10 bg-surface-800/50 p-6 lg:grid-cols-4">
-                <div>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500">Position</div>
-                    <div className="mt-1 text-lg font-medium text-white">{staffProfile?.position_label ?? '—'}</div>
-                </div>
-                <div>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500">Status</div>
-                    <div className="mt-1">
-                        <Badge variant={staffProfile?.status === 'active' ? 'success' : 'default'}>
-                            {staffProfile?.status_label ?? '—'}
-                        </Badge>
+            <Card className="mb-8">
+                <CardContent className="grid gap-4 p-6 lg:grid-cols-4">
+                    <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Position</div>
+                        <div className="mt-1 text-lg font-medium">{staffProfile?.position_label ?? '—'}</div>
                     </div>
-                </div>
-                <div>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500">Assigned</div>
-                    <div className="mt-1 text-sm text-zinc-200">
-                        {staffProfile?.assigned_at ? formatDateTime(staffProfile.assigned_at) : '—'}
+                    <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Status</div>
+                        <div className="mt-1">
+                            <Badge variant={adminBadgeVariant(staffProfile?.status === 'active' ? 'success' : 'default')} className={adminBadgeClass(staffProfile?.status === 'active' ? 'success' : 'default')}>
+                                {staffProfile?.status_label ?? '—'}
+                            </Badge>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500">Assigned by</div>
-                    <div className="mt-1 text-sm text-zinc-200">{staffProfile?.assigned_by?.name ?? '—'}</div>
-                </div>
-                <div className="lg:col-span-4">
-                    <div className="text-xs uppercase tracking-wider text-zinc-500">Description</div>
-                    <div className="mt-1 text-sm text-zinc-300">{staffProfile?.position_description ?? '—'}</div>
-                </div>
-            </section>
+                    <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Assigned</div>
+                        <div className="mt-1 text-sm">
+                            {staffProfile?.assigned_at ? formatDateTime(staffProfile.assigned_at) : '—'}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Assigned by</div>
+                        <div className="mt-1 text-sm">{staffProfile?.assigned_by?.name ?? '—'}</div>
+                    </div>
+                    <div className="lg:col-span-4">
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Description</div>
+                        <div className="mt-1 text-sm text-muted-foreground">{staffProfile?.position_description ?? '—'}</div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <section className="mb-8">
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-300">Performance</h2>
+                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">Performance</h2>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <MetricCard label="Performance score" value={formatNumber(performance?.performance_score ?? 0)} />
                     <MetricCard label="Staff rank" value={`#${performance?.staff_rank ?? '—'}`} />
@@ -216,12 +225,12 @@ export default function StaffShow({
 
             <div className="mb-8 grid gap-8 lg:grid-cols-2">
                 <section>
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-300">
+                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
                         Direct assignments
                     </h2>
                     <div className="space-y-3">
                         {directAssignments.length === 0 ? (
-                            <p className="text-sm text-zinc-500">No tasks assigned directly to this staff member.</p>
+                            <p className="text-sm text-muted-foreground">No tasks assigned directly to this staff member.</p>
                         ) : (
                             directAssignments.map((task) => <AssignmentCard key={task.id} task={task} />)
                         )}
@@ -229,12 +238,12 @@ export default function StaffShow({
                 </section>
 
                 <section>
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-300">
+                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
                         Position / shared tasks
                     </h2>
                     <div className="space-y-3">
                         {sharedAssignments.length === 0 ? (
-                            <p className="text-sm text-zinc-500">No position-wide staff tasks for this role.</p>
+                            <p className="text-sm text-muted-foreground">No position-wide staff tasks for this role.</p>
                         ) : (
                             sharedAssignments.map((task) => <AssignmentCard key={task.id} task={task} />)
                         )}
@@ -243,119 +252,120 @@ export default function StaffShow({
             </div>
 
             <section className="mb-8">
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-300">
+                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
                     Activity timeline
                 </h2>
-                <div className="rounded-2xl border border-white/10 bg-surface-800/50">
-                    {activityTimeline.length === 0 ? (
-                        <p className="p-6 text-sm text-zinc-500">
-                            No staff activity yet. Once this member works on assigned tasks, progress appears here.
-                        </p>
-                    ) : (
-                        <ul className="divide-y divide-white/5">
-                            {activityTimeline.map((item, index) => (
-                                <li key={`${item.event}-${item.occurred_at}-${index}`} className="flex gap-4 p-4">
-                                    <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-400" />
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-medium text-white">{item.title}</span>
-                                            {item.status && (
-                                                <Badge variant={statusVariant(item.status)}>
-                                                    {String(item.status).replaceAll('_', ' ')}
-                                                </Badge>
-                                            )}
+                <Card>
+                    <CardContent className="p-0">
+                        {activityTimeline.length === 0 ? (
+                            <p className="p-6 text-sm text-muted-foreground">
+                                No staff activity yet. Once this member works on assigned tasks, progress appears here.
+                            </p>
+                        ) : (
+                            <ul className="divide-y divide-border">
+                                {activityTimeline.map((item, index) => (
+                                    <li key={`${item.event}-${item.occurred_at}-${index}`} className="flex gap-4 p-4">
+                                        <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="font-medium">{item.title}</span>
+                                                {item.status && (
+                                                    <Badge variant={adminBadgeVariant(statusVariant(item.status))} className={adminBadgeClass(statusVariant(item.status))}>
+                                                        {String(item.status).replaceAll('_', ' ')}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {item.occurred_at ? formatDateTime(item.occurred_at) : '—'}
+                                                {item.meta?.task_code ? ` · ${item.meta.task_code}` : ''}
+                                            </p>
                                         </div>
-                                        <p className="mt-1 text-sm text-zinc-400">{item.description}</p>
-                                        <p className="mt-1 text-xs text-zinc-500">
-                                            {item.occurred_at ? formatDateTime(item.occurred_at) : '—'}
-                                            {item.meta?.task_code ? ` · ${item.meta.task_code}` : ''}
-                                        </p>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </CardContent>
+                </Card>
             </section>
 
             <section>
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-300">Staff leaderboard</h2>
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface-800/50">
-                    <table className="min-w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Fan</th>
-                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Position</th>
-                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Score</th>
-                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Points</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {leaderboard.map((entry) => (
-                                <tr
-                                    key={entry.user_id}
-                                    className={`border-b border-white/5 ${entry.user_id === member.id ? 'bg-brand-500/10' : ''}`}
-                                >
-                                    <td className="px-4 py-3 text-zinc-300">
-                                        {entry.user_id === member.id ? (
-                                            <span className="font-medium text-brand-300">{entry.name}</span>
-                                        ) : (
-                                            <Link href={adminPath(page.props, `staff/${entry.user_id}`)} className="hover:text-brand-300">
-                                                {entry.name}
-                                            </Link>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-zinc-400">{entry.staff_position?.replace('_', ' ') ?? '—'}</td>
-                                    <td className="px-4 py-3 text-zinc-300">{entry.performance_score}</td>
-                                    <td className="px-4 py-3 text-zinc-300">{formatNumber(entry.total_points)}</td>
+                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">Staff leaderboard</h2>
+                <Card>
+                    <CardContent className="p-0">
+                        <table className="min-w-full text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-border bg-muted/30">
+                                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fan</th>
+                                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Position</th>
+                                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Score</th>
+                                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Points</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {leaderboard.map((entry) => (
+                                    <tr
+                                        key={entry.user_id}
+                                        className={`border-b border-border ${entry.user_id === member.id ? 'bg-primary/5' : ''}`}
+                                    >
+                                        <td className="px-4 py-3">
+                                            {entry.user_id === member.id ? (
+                                                <span className="font-medium text-primary">{entry.name}</span>
+                                            ) : (
+                                                <Link href={adminPath(page.props, `staff/${entry.user_id}`)} className="text-primary hover:underline">
+                                                    {entry.name}
+                                                </Link>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-muted-foreground">{entry.staff_position?.replace('_', ' ') ?? '—'}</td>
+                                        <td className="px-4 py-3">{entry.performance_score}</td>
+                                        <td className="px-4 py-3">{formatNumber(entry.total_points)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
             </section>
 
-            {editOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <form onSubmit={updateStaff} className="w-full max-w-md rounded-2xl border border-white/10 bg-surface-800 p-6">
-                        <h3 className="text-lg font-semibold text-white">Edit staff member</h3>
-                        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-                        <div className="mt-4 space-y-3">
-                            <select
-                                value={form.staff_position}
-                                onChange={(e) => setForm({ ...form, staff_position: e.target.value })}
-                                className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                                required
-                            >
-                                {staffPositions.map((position) => (
-                                    <option key={position.value} value={position.value}>
-                                        {position.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={form.staff_status}
-                                onChange={(e) => setForm({ ...form, staff_status: e.target.value })}
-                                className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                            >
-                                {staffStatuses.map((status) => (
-                                    <option key={status.value} value={status.value}>
-                                        {status.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button type="button" onClick={() => setEditOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button type="submit" disabled={loading} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900">
-                                Save changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Edit staff member</DialogTitle></DialogHeader>
+                <form onSubmit={updateStaff} className="space-y-3">
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <Field ><FieldLabel>Position</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.staff_position}
+                            onChange={(e) => setForm({ ...form, staff_position: e.target.value })}
+                            required
+                        >
+                            {staffPositions.map((position) => (
+                                <NativeSelectOption key={position.value} value={position.value}>
+                                    {position.label}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Status</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.staff_status}
+                            onChange={(e) => setForm({ ...form, staff_status: e.target.value })}
+                        >
+                            {staffStatuses.map((status) => (
+                                <NativeSelectOption key={status.value} value={status.value}>
+                                    {status.label}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setEditOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            Save changes
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

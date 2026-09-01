@@ -1,10 +1,16 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { usePage } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { formatDateTime, formatNumber } from '../../../lib/format';
 import { adminPath } from '../../../lib/adminPath';
 
@@ -22,20 +28,20 @@ export default function PointTransactionsIndex({ transactions, filters, seasons,
         ...tx,
         fan: tx.user?.name ?? '—',
         amount: (
-            <span className={tx.amount >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+            <span className={tx.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>
                 {tx.amount >= 0 ? '+' : ''}
                 {formatNumber(tx.amount)}
             </span>
         ),
-        source: <Badge variant="brand">{sourceTypeLabels?.[tx.source_type] ?? tx.source_type}</Badge>,
+        source: <Badge>{sourceTypeLabels?.[tx.source_type] ?? tx.source_type}</Badge>,
         season: tx.season?.name ?? '—',
         date: formatDateTime(tx.created_at),
     }));
 
     return (
         <AdminLayout title="Point Transactions">
-            <PageHeader title="Point transactions" description="Read-only ledger of all point movements, including penalty shootout." />
-            <FilterBar
+            <AdminPageHeader title="Point transactions" description="Read-only ledger of all point movements, including penalty shootout." />
+            <AdminFilterBar
                 route={adminPath(page.props, 'point-transactions')}
                 filters={filters}
                 fields={[
@@ -58,8 +64,8 @@ export default function PointTransactionsIndex({ transactions, filters, seasons,
                     { name: 'date_to', label: 'To', type: 'date' },
                 ]}
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={transactions?.links} meta={transactions} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={transactions?.links} meta={transactions} />
         </AdminLayout>
     );
 }

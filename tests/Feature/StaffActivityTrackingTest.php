@@ -72,7 +72,7 @@ test('super admin can track staff assignment progress and activity timeline', fu
     ]);
 
     $this->actingAs($super)
-        ->get("/app/staff/{$staff->id}")
+        ->get("/ops/staff/{$staff->id}")
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Staff/Show')
@@ -92,7 +92,7 @@ test('assigning a staff task logs an activity for the assignee', function () {
     $season = Season::query()->where('status', 'active')->first();
 
     $this->actingAs($admin)
-        ->postJson('/app/api/tasks', [
+        ->postJson('/ops/api/tasks', [
             'season_id' => $season->id,
             'code' => 'STAFF_ASSIGN_LOG',
             'name' => 'Logged Assignment',
@@ -114,7 +114,7 @@ test('assigning a staff task logs an activity for the assignee', function () {
     )->toBeTrue();
 
     $this->actingAs($admin)
-        ->getJson("/app/api/users/{$staff->id}/staff-performance")
+        ->getJson("/ops/api/users/{$staff->id}/staff-performance")
         ->assertSuccessful()
         ->assertJsonPath('tracked_assignments.0.code', 'STAFF_ASSIGN_LOG')
         ->assertJsonStructure([

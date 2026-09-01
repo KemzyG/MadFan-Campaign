@@ -63,7 +63,7 @@ test('admin can assign staff position to a user', function () {
     $user = createUser();
 
     $this->actingAs($admin)
-        ->postJson("/app/api/users/{$user->id}/staff-position", [
+        ->postJson("/ops/api/users/{$user->id}/staff-position", [
             'staff_position' => StaffPosition::Ambassador->value,
             'staff_status' => 'active',
         ])
@@ -86,7 +86,7 @@ test('admin can update and remove staff position', function () {
     $user = createStaffUser(StaffPosition::Ambassador->value, $admin);
 
     $this->actingAs($admin)
-        ->putJson("/app/api/users/{$user->id}/staff-position", [
+        ->putJson("/ops/api/users/{$user->id}/staff-position", [
             'staff_position' => StaffPosition::Support->value,
             'staff_status' => 'active',
         ])
@@ -94,7 +94,7 @@ test('admin can update and remove staff position', function () {
         ->assertJsonPath('staff.position', StaffPosition::Support->value);
 
     $this->actingAs($admin)
-        ->deleteJson("/app/api/users/{$user->id}/staff-position")
+        ->deleteJson("/ops/api/users/{$user->id}/staff-position")
         ->assertSuccessful();
 
     $user->refresh();
@@ -109,7 +109,7 @@ test('non-admin cannot assign staff positions', function () {
     $target = createUser();
 
     $this->actingAs($user)
-        ->postJson("/app/api/users/{$target->id}/staff-position", [
+        ->postJson("/ops/api/users/{$target->id}/staff-position", [
             'staff_position' => StaffPosition::Ambassador->value,
         ])
         ->assertForbidden();
@@ -216,7 +216,7 @@ test('admin user detail includes staff profile and performance', function () {
     ]);
 
     $this->actingAs($admin)
-        ->getJson("/app/api/users/{$user->id}")
+        ->getJson("/ops/api/users/{$user->id}")
         ->assertSuccessful()
         ->assertJsonPath('staff_profile.position', StaffPosition::CommunityManager->value)
         ->assertJsonPath('staff_performance.total_points', 1200)
@@ -229,7 +229,7 @@ test('admin can create staff task assignments', function () {
     $season = Season::query()->where('status', 'active')->first();
 
     $this->actingAs($admin)
-        ->postJson('/app/api/tasks', [
+        ->postJson('/ops/api/tasks', [
             'season_id' => $season->id,
             'code' => 'STAFF_EVENT_COORD',
             'name' => 'Event Coordination',
@@ -267,7 +267,7 @@ test('users page includes staff position options', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->has('staffPositions', count(StaffPosition::cases())));

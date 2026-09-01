@@ -62,7 +62,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manageSeasons', fn (User $user): bool => $user->can(AdminPermission::SeasonsManage->value));
         Gate::define('manageLoyaltyTiers', fn (User $user): bool => $user->can(AdminPermission::LoyaltyTiersManage->value));
         Gate::define('manageLeagues', fn (User $user): bool => $user->can(AdminPermission::LeaguesManage->value));
+        Gate::define('manageFandoms', fn (User $user): bool => $user->can(AdminPermission::FandomsManage->value));
         Gate::define('manageClubs', fn (User $user): bool => $user->can(AdminPermission::ClubsManage->value));
+        Gate::define('managePosts', fn (User $user): bool => $user->can(AdminPermission::PostsManage->value));
+        Gate::define('manageAnnouncements', fn (User $user): bool => $user->can(AdminPermission::AnnouncementsManage->value));
+        Gate::define('manageFixtures', fn (User $user): bool => $user->can(AdminPermission::FixturesManage->value));
+        Gate::define('manageReports', fn (User $user): bool => $user->can(AdminPermission::ReportsManage->value));
+        Gate::define('managePolls', fn (User $user): bool => $user->can(AdminPermission::PollsManage->value));
+        Gate::define('managePredictions', fn (User $user): bool => $user->can(AdminPermission::PredictionsManage->value));
+        Gate::define('manageStages', fn (User $user): bool => $user->can(AdminPermission::StagesManage->value));
+        Gate::define('manageChannels', fn (User $user): bool => $user->can(AdminPermission::ChannelsManage->value));
+        Gate::define('manageHighlights', fn (User $user): bool => $user->can(AdminPermission::HighlightsManage->value));
         Gate::define('manageJerseys', fn (User $user): bool => $user->can(AdminPermission::JerseysManage->value));
         Gate::define('manageMedia', fn (User $user): bool => $user->can(AdminPermission::MediaManage->value));
         Gate::define('viewJerseyOrders', fn (User $user): bool => $user->can(AdminPermission::JerseyOrdersView->value));

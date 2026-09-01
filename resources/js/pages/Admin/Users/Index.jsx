@@ -1,10 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 import { formatDateTime, formatNumber } from '../../../lib/format';
@@ -61,13 +69,10 @@ export default function UsersIndex({
         ...user,
         fan: (
             <div>
-                <Link
-                    href={`${base}/users/${user.id}`}
-                    className="font-medium text-white underline decoration-white/20 underline-offset-2 hover:text-brand-300 hover:decoration-brand-300"
-                >
+                <Link href={`${base}/users/${user.id}`} className="font-medium text-primary underline-offset-2 hover:underline">
                     {user.name}
                 </Link>
-                <div className="mt-0.5 text-xs text-zinc-500">Click for profile & stats</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Click for profile & stats</div>
             </div>
         ),
         email: user.email ?? '—',
@@ -78,20 +83,13 @@ export default function UsersIndex({
         joined: formatDateTime(user.created_at),
         actions: (
             <div className="flex flex-wrap items-center gap-2">
-                <Link
-                    href={`${base}/users/${user.id}`}
-                    className="rounded-md border border-brand-500/40 bg-brand-500/10 px-2.5 py-1 text-xs font-medium text-brand-200 hover:bg-brand-500/20"
-                >
-                    View profile & stats
-                </Link>
+                <Button variant="outline" size="sm" asChild>
+                    <Link href={`${base}/users/${user.id}`}>View profile & stats</Link>
+                </Button>
                 {canDelete && (
-                    <button
-                        type="button"
-                        onClick={() => deleteUser(user.id)}
-                        className="rounded-md border border-red-500/30 px-2.5 py-1 text-xs text-red-300 hover:bg-red-500/10"
-                    >
+                    <Button variant="outline" size="sm" className="text-destructive" type="button" onClick={() => deleteUser(user.id)}>
                         Delete
-                    </button>
+                    </Button>
                 )}
             </div>
         ),
@@ -99,23 +97,19 @@ export default function UsersIndex({
 
     return (
         <AdminLayout title="Users">
-            <PageHeader
+            <AdminPageHeader
                 title="Fans & users"
                 description="Use View profile & stats on any row to open performance, analytics, and activity."
                 actions={
                     canCreate ? (
-                        <button
-                            type="button"
-                            onClick={() => setModalOpen(true)}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 hover:bg-brand-400"
-                        >
+                        <Button type="button" onClick={() => setModalOpen(true)}>
                             Add user
-                        </button>
+                        </Button>
                     ) : null
                 }
             />
 
-            <FilterBar
+            <AdminFilterBar
                 route={`${base}/users`}
                 filters={filters}
                 fields={[
@@ -129,57 +123,44 @@ export default function UsersIndex({
                 ]}
             />
 
-            <DataTable
-                columns={columns}
-                rows={rows}
-                emptyMessage="No users match your filters."
-            />
+            <AdminTable columns={columns} rows={rows} emptyMessage="No users match your filters." />
 
-            <Pagination links={users?.links} meta={users} />
+            <AdminPagination links={users?.links} meta={users} />
 
-            {modalOpen && canCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <form
-                        onSubmit={createUser}
-                        className="w-full max-w-md rounded-2xl border border-white/10 bg-surface-800 p-6"
-                    >
-                        <h3 className="text-lg font-semibold text-white">Create user</h3>
-                        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-                        <div className="mt-4 space-y-3">
-                            {['name', 'email', 'password'].map((field) => (
-                                <input
-                                    key={field}
+            {canCreate && (
+                <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Create user</DialogTitle></DialogHeader>
+                    <form onSubmit={createUser} className="space-y-3">
+                        {error && <p className="text-sm text-destructive">{error}</p>}
+                        {['name', 'email', 'password'].map((field) => (
+                            <Field key={field} ><FieldLabel>field.charAt(0).toUpperCase() + field.slice(1)</FieldLabel>
+                                <Input
                                     type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                                    placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                                     value={form[field]}
                                     onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                                    className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
                                     required
                                 />
-                            ))}
-                            <select
-                                value={form.role}
-                                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                                className="w-full rounded-lg border border-white/10 bg-surface-700 px-3 py-2 text-sm"
-                            >
-                                <option value="">No role</option>
+                            </Field>
+                        ))}
+                        <Field ><FieldLabel>Role</FieldLabel>
+                            <NativeSelect className="w-full" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                                <NativeSelectOption value="">No role</NativeSelectOption>
                                 {roles?.map((r) => (
-                                    <option key={r} value={r}>
+                                    <NativeSelectOption key={r} value={r}>
                                         {r}
-                                    </option>
+                                    </NativeSelectOption>
                                 ))}
-                            </select>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg px-4 py-2 text-sm text-zinc-400">
+                            </NativeSelect>
+                        </Field>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
                                 Cancel
-                            </button>
-                            <button type="submit" disabled={loading} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900">
+                            </Button>
+                            <Button type="submit" disabled={loading}>
                                 Create
-                            </button>
+                            </Button>
                         </div>
                     </form>
-                </div>
+                </DialogContent></Dialog>
             )}
         </AdminLayout>
     );

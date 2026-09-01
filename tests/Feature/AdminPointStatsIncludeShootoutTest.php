@@ -64,7 +64,7 @@ test('admin dashboard api exposes shootout point totals', function () {
     ]);
 
     $this->actingAs($admin)
-        ->getJson('/app/api/dashboard')
+        ->getJson('/ops/api/dashboard')
         ->assertSuccessful()
         ->assertJsonPath('stats.total_points_distributed', 12)
         ->assertJsonPath('stats.shootout_points_distributed', 12)

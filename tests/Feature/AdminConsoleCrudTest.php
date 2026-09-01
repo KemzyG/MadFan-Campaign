@@ -9,7 +9,7 @@ test('admin dashboard shares role workspace props', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Dashboard')
@@ -26,7 +26,7 @@ test('support desk gets support workspace accent and job', function () {
         ->and(AdminWorkspace::for($support)['accent'])->toBe('sky');
 
     $this->actingAs($support)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('workspace.key', 'support')
@@ -65,7 +65,7 @@ test('tasks page includes failed verification count and full task update works',
     ]);
 
     $this->actingAs($admin)
-        ->get('/app/tasks')
+        ->get('/ops/tasks')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Tasks/Index')
@@ -74,7 +74,7 @@ test('tasks page includes failed verification count and full task update works',
         );
 
     $this->actingAs($admin)
-        ->putJson("/app/api/tasks/{$task->id}", [
+        ->putJson("/ops/api/tasks/{$task->id}", [
             'name' => 'Updated task',
             'description' => 'Full CRUD description',
             'platform' => 'discord',
@@ -97,7 +97,7 @@ test('inertia admin management api routes are removed', function () {
     $super = createSuperAdminUser();
 
     $this->actingAs($super)
-        ->postJson('/app/api/admins', [
+        ->postJson('/ops/api/admins', [
             'name' => 'Ops User',
             'email' => 'ops-user@madfan.test',
             'password' => validTestPassword(),

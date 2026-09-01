@@ -1,11 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 
 const emptyForm = () => ({
@@ -112,6 +119,7 @@ export default function ClubsIndex({ clubs, leagues = [], filters = {} }) {
         { key: 'name', label: 'Club' },
         { key: 'short', label: 'Short' },
         { key: 'league', label: 'League' },
+        { key: 'members', label: 'Members' },
         { key: 'actions', label: '' },
     ];
 
@@ -120,139 +128,127 @@ export default function ClubsIndex({ clubs, leagues = [], filters = {} }) {
         logo: club.logo_url ? (
             <img src={club.logo_url} alt="" className="h-8 w-8 rounded-full object-cover" />
         ) : (
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-xs text-zinc-500">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
                 —
             </span>
         ),
         league: club.league?.name ?? '—',
+        members: club.memberships_count ?? 0,
         actions: (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(club)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(club)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => deleteClub(club)} className="text-xs text-red-400">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteClub(club)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Clubs">
-            <PageHeader
+            <AdminPageHeader
                 title="Clubs"
                 description="Football clubs belonging to a league."
                 actions={
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        disabled={leagues.length === 0}
-                    >
+                    <Button type="button" onClick={openCreate} disabled={leagues.length === 0}>
                         New club
-                    </button>
+                    </Button>
                 }
             />
 
             <div className="mb-4 flex flex-wrap items-center gap-3">
-                <label className="text-xs uppercase tracking-wide text-zinc-500">Filter by league</label>
-                <select
-                    value={filters.league_id ?? ''}
-                    onChange={(e) => filterByLeague(e.target.value)}
-                    className="rounded-lg border border-white/10 bg-surface-800 px-3 py-2 text-sm text-white"
-                >
-                    <option value="">All leagues</option>
+                <label className="text-xs uppercase tracking-wide text-muted-foreground">Filter by league</label>
+                <NativeSelect className="w-full" value={filters.league_id ?? ''} onChange={(e) => filterByLeague(e.target.value)}>
+                    <NativeSelectOption value="">All leagues</NativeSelectOption>
                     {leagues.map((league) => (
-                        <option key={league.id} value={league.id}>
+                        <NativeSelectOption key={league.id} value={league.id}>
                             {league.name}
-                        </option>
+                        </NativeSelectOption>
                     ))}
-                </select>
+                </NativeSelect>
             </div>
 
             {leagues.length === 0 && (
-                <p className="mb-4 text-sm text-amber-200">Create a league before adding clubs.</p>
+                <p className="mb-4 text-sm text-muted-foreground">Create a league before adding clubs.</p>
             )}
 
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={clubs?.links} meta={clubs} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={clubs?.links} meta={clubs} />
 
-            {modalOpen && (
-                <Modal title={editingId ? 'Edit club' : 'Create club'} onClose={() => setModalOpen(false)}>
-                    <form onSubmit={saveClub} className="space-y-3">
-                        <FormField label="League">
-                            <FormSelect
-                                value={form.league_id}
-                                onChange={(e) => setForm({ ...form, league_id: e.target.value })}
-                                required
-                            >
-                                <option value="" disabled>
-                                    Select league
-                                </option>
-                                {leagues.map((league) => (
-                                    <option key={league.id} value={league.id}>
-                                        {league.name} ({league.short})
-                                    </option>
-                                ))}
-                            </FormSelect>
-                        </FormField>
-                        <FormField label="Name">
-                            <FormInput
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Short code">
-                            <FormInput
-                                value={form.short}
-                                onChange={(e) => setForm({ ...form, short: e.target.value })}
-                                required
-                                maxLength={32}
-                            />
-                        </FormField>
-                        <FormField label="Logo">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                    setForm({
-                                        ...form,
-                                        logoFile: e.target.files?.[0] ?? null,
-                                        remove_logo: false,
-                                    })
-                                }
-                                className="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-brand-500/20 file:px-3 file:py-1.5 file:text-brand-200"
-                            />
-                            {form.logo_url && !form.logoFile && !form.remove_logo && (
-                                <div className="mt-2 flex items-center gap-3">
-                                    <img src={form.logo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                                    <button
-                                        type="button"
-                                        className="text-xs text-red-400"
-                                        onClick={() => setForm({ ...form, remove_logo: true })}
-                                    >
-                                        Remove logo
-                                    </button>
-                                </div>
-                            )}
-                        </FormField>
-                        {error && <p className="text-sm text-red-400">{error}</p>}
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
-                                {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editingId ? 'Edit club' : 'Create club'}</DialogTitle></DialogHeader>
+                <form onSubmit={saveClub} className="space-y-3">
+                    <Field ><FieldLabel>League</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.league_id}
+                            onChange={(e) => setForm({ ...form, league_id: e.target.value })}
+                            required
+                        >
+                            <NativeSelectOption value="" disabled>
+                                Select league
+                            </NativeSelectOption>
+                            {leagues.map((league) => (
+                                <NativeSelectOption key={league.id} value={league.id}>
+                                    {league.name} ({league.short})
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            required
+                        />
+                    </Field>
+                    <Field ><FieldLabel>Short code</FieldLabel>
+                        <Input
+                            value={form.short}
+                            onChange={(e) => setForm({ ...form, short: e.target.value })}
+                            required
+                            maxLength={32}
+                        />
+                    </Field>
+                    <Field ><FieldLabel>Logo</FieldLabel>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    logoFile: e.target.files?.[0] ?? null,
+                                    remove_logo: false,
+                                })
+                            }
+                            className="block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5"
+                        />
+                        {form.logo_url && !form.logoFile && !form.remove_logo && (
+                            <div className="mt-2 flex items-center gap-3">
+                                <img src={form.logo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    size="sm"
+                                    className="text-destructive"
+                                    onClick={() => setForm({ ...form, remove_logo: true })}
+                                >
+                                    Remove logo
+                                </Button>
+                            </div>
+                        )}
+                    </Field>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

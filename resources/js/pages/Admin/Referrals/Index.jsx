@@ -1,10 +1,17 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 import { formatDateTime } from '../../../lib/format';
@@ -41,20 +48,24 @@ export default function ReferralsIndex({ referrals, filters, statuses }) {
         code: ref.referral_code,
         referrer: ref.referrer?.name ?? '—',
         referred: ref.referred?.name ?? ref.referred_email ?? '—',
-        status: <Badge variant={statusVariant[ref.status]}>{ref.status}</Badge>,
+        status: <Badge variant={adminBadgeVariant(statusVariant[ref.status])} className={adminBadgeClass(statusVariant[ref.status])}>{ref.status}</Badge>,
         created: formatDateTime(ref.created_at),
         actions: ref.status === 'pending' && (
             <div className="flex gap-2">
-                <button onClick={() => updateStatus(ref, 'active')} className="text-xs text-emerald-400">Activate</button>
-                <button onClick={() => updateStatus(ref, 'rejected')} className="text-xs text-red-400">Reject</button>
+                <Button variant="link" size="sm" type="button" className="text-emerald-600 dark:text-emerald-400" onClick={() => updateStatus(ref, 'active')}>
+                    Activate
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => updateStatus(ref, 'rejected')}>
+                    Reject
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Referrals">
-            <PageHeader title="Referrals" description="Track fan referral codes and reward status." />
-            <FilterBar
+            <AdminPageHeader title="Referrals" description="Track fan referral codes and reward status." />
+            <AdminFilterBar
                 route={adminPath(page.props, 'referrals')}
                 filters={filters}
                 fields={[
@@ -67,8 +78,8 @@ export default function ReferralsIndex({ referrals, filters, statuses }) {
                     },
                 ]}
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={referrals?.links} meta={referrals} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={referrals?.links} meta={referrals} />
         </AdminLayout>
     );
 }

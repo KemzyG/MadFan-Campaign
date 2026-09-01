@@ -1,10 +1,18 @@
-import { router, usePage } from '@inertiajs/react';
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
 import { adminApi } from '../../../lib/api';
 import { formatNumber } from '../../../lib/format';
 
@@ -27,7 +35,6 @@ function tierToForm(tier) {
 }
 
 export default function LoyaltyTiersIndex({ tiers }) {
-    usePage();
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm);
@@ -103,81 +110,71 @@ export default function LoyaltyTiersIndex({ tiers }) {
         rewards: tier.tier_rewards?.length ?? 0,
         actions: (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(tier)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(tier)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => deleteTier(tier)} className="text-xs text-red-400">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteTier(tier)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Loyalty Tiers">
-            <PageHeader
+            <AdminPageHeader
                 title="Loyalty tiers"
                 description="Fan progression levels based on lifetime points."
                 actions={
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                    >
+                    <Button type="button" onClick={openCreate}>
                         New tier
-                    </button>
+                    </Button>
                 }
             />
-            <DataTable columns={columns} rows={rows} />
+            <AdminTable columns={columns} rows={rows} />
 
-            {modalOpen && (
-                <Modal title={editingId ? 'Edit loyalty tier' : 'Create loyalty tier'} onClose={() => setModalOpen(false)}>
-                    <form onSubmit={saveTier} className="space-y-3">
-                        <FormField label="Code">
-                            <FormInput value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Name">
-                            <FormInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                        </FormField>
-                        <FormField label="Min points">
-                            <FormInput
-                                type="number"
-                                value={form.min_points}
-                                onChange={(e) => setForm({ ...form, min_points: Number(e.target.value) })}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Max points" hint="Leave blank for unlimited.">
-                            <FormInput
-                                type="number"
-                                value={form.max_points}
-                                onChange={(e) => setForm({ ...form, max_points: e.target.value })}
-                            />
-                        </FormField>
-                        <FormField label="Display order">
-                            <FormInput
-                                type="number"
-                                min={0}
-                                value={form.display_order}
-                                onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
-                            />
-                        </FormField>
-                        {error && <p className="text-sm text-red-400">{error}</p>}
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
-                                {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editingId ? 'Edit loyalty tier' : 'Create loyalty tier'}</DialogTitle></DialogHeader>
+                <form onSubmit={saveTier} className="space-y-3">
+                    <Field ><FieldLabel>Code</FieldLabel>
+                        <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Min points</FieldLabel>
+                        <Input
+                            type="number"
+                            value={form.min_points}
+                            onChange={(e) => setForm({ ...form, min_points: Number(e.target.value) })}
+                            required
+                        />
+                    </Field>
+                    <Field  hint="Leave blank for unlimited."><FieldLabel>Max points</FieldLabel>
+                        <Input
+                            type="number"
+                            value={form.max_points}
+                            onChange={(e) => setForm({ ...form, max_points: e.target.value })}
+                        />
+                    </Field>
+                    <Field ><FieldLabel>Display order</FieldLabel>
+                        <Input
+                            type="number"
+                            min={0}
+                            value={form.display_order}
+                            onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+                        />
+                    </Field>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

@@ -11,7 +11,7 @@ test('org admin only sees fans in their partition', function () {
     $hiddenFan = createUser(['country' => 'England', 'name' => 'England Fan']);
 
     $this->actingAs($orgAdmin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')
@@ -27,7 +27,7 @@ test('super-admin sees all fans when no organization is selected', function () {
     createUser(['country' => 'England']);
 
     $this->actingAs($superAdmin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')
@@ -50,7 +50,7 @@ test('super-admin can narrow fan visibility by switching organization', function
         ->assertRedirect();
 
     $this->actingAs($superAdmin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->has('users.data', 1)
@@ -62,11 +62,11 @@ test('inertia operators cannot access removed admin management routes', function
     $superAdmin = createSuperAdminUser();
 
     $this->actingAs($superAdmin)
-        ->get('/app/admins')
+        ->get('/ops/admins')
         ->assertNotFound();
 
     $this->actingAs($superAdmin)
-        ->get('/app/roles')
+        ->get('/ops/roles')
         ->assertNotFound();
 });
 
@@ -85,6 +85,6 @@ test('super-admin provisions an inertia operator via filament organizations', fu
         ->and($operator->canAccessPanel(filament()->getPanel('admin')))->toBeFalse();
 
     $this->actingAs($operator)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful();
 });

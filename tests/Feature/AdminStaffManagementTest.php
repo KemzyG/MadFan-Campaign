@@ -23,8 +23,8 @@ test('admin can access inertia staff pages', function (string $path, string $com
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component($component));
 })->with([
-    ['/app/staff', 'Admin/Staff/Index'],
-    ['/app/staff/{user}', 'Admin/Staff/Show'],
+    ['/ops/staff', 'Admin/Staff/Index'],
+    ['/ops/staff/{user}', 'Admin/Staff/Show'],
 ]);
 
 test('admin can list staff members via api', function () {
@@ -32,7 +32,7 @@ test('admin can list staff members via api', function () {
     $this->seed(StaffPositionSeeder::class);
 
     $response = $this->actingAs($admin)
-        ->getJson('/app/api/staff')
+        ->getJson('/ops/api/staff')
         ->assertSuccessful();
 
     $emails = collect($response->json('data'))->pluck('email');
@@ -45,7 +45,7 @@ test('admin can create update and delete staff members via api', function () {
     $user = createUser();
 
     $this->actingAs($admin)
-        ->postJson('/app/api/staff', [
+        ->postJson('/ops/api/staff', [
             'user_id' => $user->id,
             'staff_position' => StaffPosition::Support->value,
             'staff_status' => 'active',
@@ -54,7 +54,7 @@ test('admin can create update and delete staff members via api', function () {
         ->assertJsonPath('staff_profile.position', StaffPosition::Support->value);
 
     $this->actingAs($admin)
-        ->putJson("/app/api/staff/{$user->id}", [
+        ->putJson("/ops/api/staff/{$user->id}", [
             'staff_position' => StaffPosition::CommunityManager->value,
             'staff_status' => 'active',
         ])
@@ -62,7 +62,7 @@ test('admin can create update and delete staff members via api', function () {
         ->assertJsonPath('staff_profile.position', StaffPosition::CommunityManager->value);
 
     $this->actingAs($admin)
-        ->deleteJson("/app/api/staff/{$user->id}")
+        ->deleteJson("/ops/api/staff/{$user->id}")
         ->assertSuccessful();
 
     $user->refresh();
@@ -75,7 +75,7 @@ test('admin cannot create duplicate staff member', function () {
     $staff = User::factory()->staff(StaffPosition::Ambassador->value, $admin)->create();
 
     $this->actingAs($admin)
-        ->postJson('/app/api/staff', [
+        ->postJson('/ops/api/staff', [
             'user_id' => $staff->id,
             'staff_position' => StaffPosition::Ambassador->value,
             'staff_status' => 'active',
@@ -90,7 +90,7 @@ test('staff detail api includes performance and tasks', function () {
     $staff = User::query()->where('email', 'staff@madfan.test')->firstOrFail();
 
     $this->actingAs($admin)
-        ->getJson("/app/api/staff/{$staff->id}")
+        ->getJson("/ops/api/staff/{$staff->id}")
         ->assertSuccessful()
         ->assertJsonStructure([
             'user',

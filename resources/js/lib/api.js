@@ -6,7 +6,7 @@ function adminApiBase() {
     const fromMeta = document.querySelector('meta[name="admin-path"]')?.getAttribute('content');
     const base = fromMeta === '' || fromMeta === '/'
         ? ''
-        : (fromMeta || '/app').replace(/\/$/, '');
+        : (fromMeta || '/ops').replace(/\/$/, '');
 
     return base === '' ? '/api' : `${base}/api`;
 }

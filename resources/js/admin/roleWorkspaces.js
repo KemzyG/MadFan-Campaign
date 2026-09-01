@@ -1,37 +1,65 @@
 import { adminPath } from '../lib/adminPath';
 
+/** @typedef {'overview' | 'people' | 'social' | 'campaigns' | 'growth' | 'system'} NavSection */
+
+/** @type {Record<NavSection, string>} */
+export const NAV_SECTION_LABELS = {
+    overview: 'Overview',
+    people: 'People & access',
+    social: 'Social',
+    campaigns: 'Campaigns & rewards',
+    growth: 'Growth & finance',
+    system: 'System',
+};
+
+/** @type {NavSection[]} */
+export const NAV_SECTION_ORDER = ['overview', 'people', 'social', 'campaigns', 'growth', 'system'];
+
 /**
- * Role-aware navigation for the Inertia admin console.
- * Items are filtered by Spatie permissions; ordering prefers workspace.focus.
+ * Role-aware navigation for the Inertia ops console only (/ops or ADMIN_DOMAIN).
+ * Filament (/admin) has its own navigation — do not wire new ops items there.
  *
- * @param {string} basePath e.g. "/app"
+ * @param {string} basePath e.g. "/ops"
  */
-export function buildAdminNavigation(basePath = '/app') {
+export function buildAdminNavigation(basePath = '/ops') {
     const p = (suffix) => adminPath({ app: { admin_path: basePath } }, suffix);
 
     return [
-        { name: 'Dashboard', href: p(''), icon: '◈', permission: 'dashboard.view', key: 'dashboard' },
-        { name: 'Users', href: p('users'), icon: '◎', permission: 'users.view', key: 'users' },
-        { name: 'Staff', href: p('staff'), icon: '⬡', permission: 'staff.view', key: 'staff' },
-        { name: 'Tasks', href: p('tasks'), icon: '✦', permission: 'tasks.manage', key: 'tasks' },
-        { name: 'Task reviews', href: p('task-reviews'), icon: '⚑', permission: 'users.view', key: 'task-reviews' },
-        { name: 'Seasons', href: p('seasons'), icon: '◐', permission: 'seasons.manage', key: 'seasons' },
-        { name: 'Loyalty Tiers', href: p('loyalty-tiers'), icon: '★', permission: 'loyalty-tiers.manage', key: 'loyalty-tiers' },
-        { name: 'Leagues', href: p('leagues'), icon: '▣', permission: 'leagues.manage', key: 'leagues' },
-        { name: 'Clubs', href: p('clubs'), icon: '⌂', permission: 'clubs.manage', key: 'clubs' },
-        { name: 'Jerseys', href: p('jerseys'), icon: '⊞', permission: 'jerseys.manage', key: 'jerseys' },
-        { name: 'Media gallery', href: p('media'), icon: '▦', permission: 'media.manage', key: 'media' },
-        { name: 'Jersey orders', href: p('jersey-orders'), icon: '▤', permission: 'jersey-orders.view', key: 'jersey-orders' },
-        { name: 'Referrals', href: p('referrals'), icon: '↗', permission: 'referrals.view', key: 'referrals' },
-        { name: 'Point Transactions', href: p('point-transactions'), icon: '◆', permission: 'point-transactions.view', key: 'point-transactions' },
-        { name: 'Activity Logs', href: p('activity-logs'), icon: '☰', permission: 'activity-logs.view', key: 'activity-logs' },
-        { name: 'Settings', href: p('settings'), icon: '⚙', permission: 'settings.view', key: 'settings' },
-        { name: 'System Logs', href: p('system-logs'), icon: '⚠', permission: 'system-logs.view', key: 'system-logs' },
+        { name: 'Dashboard', href: p(''), permission: 'dashboard.view', key: 'dashboard', section: 'overview' },
+        { name: 'Leaderboard', href: p('leaderboard'), permission: 'dashboard.view', key: 'leaderboard', section: 'overview' },
+        { name: 'Users', href: p('users'), permission: 'users.view', key: 'users', section: 'people' },
+        { name: 'Staff', href: p('staff'), permission: 'staff.view', key: 'staff', section: 'people' },
+        { name: 'Admins', href: p('admins'), permission: 'admins.view', key: 'admins', section: 'people' },
+        { name: 'Roles', href: p('roles'), permission: 'roles.view', key: 'roles', section: 'people' },
+        { name: 'Fandoms', href: p('fandoms'), permission: 'fandoms.manage', key: 'fandoms', section: 'social' },
+        { name: 'Leagues', href: p('leagues'), permission: 'leagues.manage', key: 'leagues', section: 'social' },
+        { name: 'Clubs', href: p('clubs'), permission: 'clubs.manage', key: 'clubs', section: 'social' },
+        { name: 'Posts', href: p('posts'), permission: 'posts.manage', key: 'posts', section: 'social' },
+        { name: 'Events', href: p('announcements'), permission: 'announcements.manage', key: 'announcements', section: 'social' },
+        { name: 'Fixtures', href: p('fixtures'), permission: 'fixtures.manage', key: 'fixtures', section: 'social' },
+        { name: 'Reports', href: p('reports'), permission: 'reports.manage', key: 'reports', section: 'social' },
+        { name: 'Polls', href: p('polls'), permission: 'polls.manage', key: 'polls', section: 'social' },
+        { name: 'Predictions', href: p('predictions'), permission: 'predictions.manage', key: 'predictions', section: 'social' },
+        { name: 'Stages', href: p('stages'), permission: 'stages.manage', key: 'stages', section: 'social' },
+        { name: 'Channels', href: p('channels'), permission: 'channels.manage', key: 'channels', section: 'social' },
+        { name: 'Highlights', href: p('highlights'), permission: 'highlights.manage', key: 'highlights', section: 'social' },
+        { name: 'Tasks', href: p('tasks'), permission: 'tasks.manage', key: 'tasks', section: 'campaigns' },
+        { name: 'Task reviews', href: p('task-reviews'), permission: 'users.view', key: 'task-reviews', section: 'campaigns' },
+        { name: 'Seasons', href: p('seasons'), permission: 'seasons.manage', key: 'seasons', section: 'campaigns' },
+        { name: 'Loyalty Tiers', href: p('loyalty-tiers'), permission: 'loyalty-tiers.manage', key: 'loyalty-tiers', section: 'campaigns' },
+        { name: 'Jerseys', href: p('jerseys'), permission: 'jerseys.manage', key: 'jerseys', section: 'campaigns' },
+        { name: 'Media gallery', href: p('media'), permission: 'media.manage', key: 'media', section: 'campaigns' },
+        { name: 'Jersey orders', href: p('jersey-orders'), permission: 'jersey-orders.view', key: 'jersey-orders', section: 'campaigns' },
+        { name: 'Referrals', href: p('referrals'), permission: 'referrals.view', key: 'referrals', section: 'growth' },
+        { name: 'Point Transactions', href: p('point-transactions'), permission: 'point-transactions.view', key: 'point-transactions', section: 'growth' },
+        { name: 'Activity Logs', href: p('activity-logs'), permission: 'activity-logs.view', key: 'activity-logs', section: 'system' },
+        { name: 'Settings', href: p('settings'), permission: 'settings.view', key: 'settings', section: 'system' },
+        { name: 'System Logs', href: p('system-logs'), permission: 'system-logs.view', key: 'system-logs', section: 'system' },
     ];
 }
 
 /**
- * @param {Array<{ key?: string, permission: string }>} navigation
+ * @param {Array<{ key?: string, permission: string, section?: NavSection }>} navigation
  * @param {string[]} permissions
  * @param {string[]} [focusKeys]
  */
@@ -52,6 +80,29 @@ export function filterAndPrioritizeNav(navigation, permissions, focusKeys = []) 
 
         return 0;
     });
+}
+
+/**
+ * @param {Array<{ section?: NavSection }>} items
+ * @returns {Array<{ section: NavSection, label: string, items: typeof items }>}
+ */
+export function groupNavigationBySection(items) {
+    /** @type {Map<NavSection, typeof items>} */
+    const grouped = new Map();
+
+    for (const item of items) {
+        const section = item.section ?? 'overview';
+        if (!grouped.has(section)) {
+            grouped.set(section, []);
+        }
+        grouped.get(section).push(item);
+    }
+
+    return NAV_SECTION_ORDER.filter((section) => grouped.has(section)).map((section) => ({
+        section,
+        label: NAV_SECTION_LABELS[section],
+        items: grouped.get(section),
+    }));
 }
 
 export const WORKSPACE_ACCENTS = {

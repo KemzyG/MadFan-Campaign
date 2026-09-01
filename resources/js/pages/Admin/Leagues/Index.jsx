@@ -1,14 +1,22 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 
 const emptyForm = () => ({
+    fandom_id: '',
     name: '',
     short: '',
     logoFile: null,
@@ -17,6 +25,7 @@ const emptyForm = () => ({
 
 function leagueToForm(league) {
     return {
+        fandom_id: league.fandom_id ? String(league.fandom_id) : '',
         name: league.name ?? '',
         short: league.short ?? '',
         logoFile: null,
@@ -27,6 +36,9 @@ function leagueToForm(league) {
 
 function buildPayload(form) {
     const data = new FormData();
+    if (form.fandom_id) {
+        data.append('fandom_id', form.fandom_id);
+    }
     data.append('name', form.name);
     data.append('short', form.short);
     if (form.logoFile) {
@@ -39,7 +51,7 @@ function buildPayload(form) {
     return data;
 }
 
-export default function LeaguesIndex({ leagues }) {
+export default function LeaguesIndex({ leagues, fandoms = [], filters = {} }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm);
@@ -96,6 +108,7 @@ export default function LeaguesIndex({ leagues }) {
     const columns = [
         { key: 'logo', label: '' },
         { key: 'name', label: 'League' },
+        { key: 'fandom', label: 'Fandom' },
         { key: 'short', label: 'Short' },
         { key: 'clubs', label: 'Clubs' },
         { key: 'actions', label: '' },
@@ -106,101 +119,106 @@ export default function LeaguesIndex({ leagues }) {
         logo: league.logo_url ? (
             <img src={league.logo_url} alt="" className="h-8 w-8 rounded-full object-cover" />
         ) : (
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-xs text-zinc-500">
-                —
-            </span>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs">—</span>
         ),
+        fandom: league.fandom?.name ?? '—',
         clubs: league.clubs_count ?? 0,
         actions: (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(league)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(league)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => deleteLeague(league)} className="text-xs text-red-400">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteLeague(league)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Leagues">
-            <PageHeader
+            <AdminPageHeader
                 title="Leagues"
-                description="Competitions that group clubs for fan affiliation."
+                description="Competitions that group clubs under a fandom."
                 actions={
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                    >
+                    <Button type="button" onClick={openCreate}>
                         New league
-                    </button>
+                    </Button>
                 }
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={leagues?.links} meta={leagues} />
+            <div className="mb-4">
+                <NativeSelect className="w-full"
+                    value={filters.fandom_id ?? ''}
+                    onChange={(e) =>
+                        router.get(
+                            window.location.pathname,
+                            { fandom_id: e.target.value || undefined },
+                            { preserveState: true, replace: true },
+                        )
+                    }
+                >
+                    <NativeSelectOption value="">All fandoms</NativeSelectOption>
+                    {fandoms.map((fandom) => (
+                        <NativeSelectOption key={fandom.id} value={fandom.id}>
+                            {fandom.name}
+                        </NativeSelectOption>
+                    ))}
+                </NativeSelect>
+            </div>
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={leagues?.links} meta={leagues} />
 
-            {modalOpen && (
-                <Modal title={editingId ? 'Edit league' : 'Create league'} onClose={() => setModalOpen(false)}>
-                    <form onSubmit={saveLeague} className="space-y-3">
-                        <FormField label="Name">
-                            <FormInput
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Short code">
-                            <FormInput
-                                value={form.short}
-                                onChange={(e) => setForm({ ...form, short: e.target.value })}
-                                required
-                                maxLength={32}
-                            />
-                        </FormField>
-                        <FormField label="Logo">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                    setForm({
-                                        ...form,
-                                        logoFile: e.target.files?.[0] ?? null,
-                                        remove_logo: false,
-                                    })
-                                }
-                                className="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-brand-500/20 file:px-3 file:py-1.5 file:text-brand-200"
-                            />
-                            {form.logo_url && !form.logoFile && !form.remove_logo && (
-                                <div className="mt-2 flex items-center gap-3">
-                                    <img src={form.logo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                                    <button
-                                        type="button"
-                                        className="text-xs text-red-400"
-                                        onClick={() => setForm({ ...form, remove_logo: true })}
-                                    >
-                                        Remove logo
-                                    </button>
-                                </div>
-                            )}
-                        </FormField>
-                        {error && <p className="text-sm text-red-400">{error}</p>}
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
-                                {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editingId ? 'Edit league' : 'Create league'}</DialogTitle></DialogHeader>
+                <form onSubmit={saveLeague} className="space-y-3">
+                    <Field ><FieldLabel>Fandom</FieldLabel>
+                        <NativeSelect className="w-full" value={form.fandom_id} onChange={(e) => setForm({ ...form, fandom_id: e.target.value })}>
+                            <NativeSelectOption value="">None</NativeSelectOption>
+                            {fandoms.map((fandom) => (
+                                <NativeSelectOption key={fandom.id} value={fandom.id}>
+                                    {fandom.name}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    </Field>
+                    <Field ><FieldLabel>Short code</FieldLabel>
+                        <Input value={form.short} onChange={(e) => setForm({ ...form, short: e.target.value })} required maxLength={32} />
+                    </Field>
+                    <Field ><FieldLabel>Logo</FieldLabel>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    logoFile: e.target.files?.[0] ?? null,
+                                    remove_logo: false,
+                                })
+                            }
+                            className="block w-full text-sm"
+                        />
+                        {form.logo_url && !form.logoFile && !form.remove_logo && (
+                            <div className="mt-2 flex items-center gap-3">
+                                <img src={form.logo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                                <Button type="button" variant="link" size="sm" className="text-destructive" onClick={() => setForm({ ...form, remove_logo: true })}>
+                                    Remove logo
+                                </Button>
+                            </div>
+                        )}
+                    </Field>
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving…' : editingId ? 'Save' : 'Create'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

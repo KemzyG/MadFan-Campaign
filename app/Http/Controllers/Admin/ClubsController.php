@@ -20,6 +20,7 @@ class ClubsController extends Controller
 
         $clubs = Club::query()
             ->with('league:id,name,short')
+            ->withCount('memberships')
             ->when($request->filled('league_id'), fn ($query) => $query->where('league_id', $request->integer('league_id')))
             ->orderBy('name')
             ->paginate($request->integer('per_page', 20));
@@ -31,7 +32,11 @@ class ClubsController extends Controller
     {
         Gate::authorize('manageClubs');
 
-        return response()->json($club->load('league:id,name,short'));
+        return response()->json(
+            $club->load('league:id,name,short')
+                ->loadCount('memberships')
+                ->load(['memberships' => fn ($query) => $query->with('user:id,name,email')->latest()->limit(50)]),
+        );
     }
 
     public function store(StoreClubRequest $request): JsonResponse

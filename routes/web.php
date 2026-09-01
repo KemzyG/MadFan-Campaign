@@ -1,19 +1,32 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogsController;
+use App\Http\Controllers\Admin\AdminsController;
+use App\Http\Controllers\Admin\AnnouncementsController;
+use App\Http\Controllers\Admin\ChannelsController;
 use App\Http\Controllers\Admin\ClubsController;
 use App\Http\Controllers\Admin\DashboardController as AdminApiDashboardController;
+use App\Http\Controllers\Admin\FandomsController;
+use App\Http\Controllers\Admin\FandomSubsetsController;
+use App\Http\Controllers\Admin\FixturesController;
+use App\Http\Controllers\Admin\HighlightsController;
 use App\Http\Controllers\Admin\JerseyOrdersController;
 use App\Http\Controllers\Admin\JerseysController;
 use App\Http\Controllers\Admin\LeaguesController;
 use App\Http\Controllers\Admin\LoyaltyTiersController;
 use App\Http\Controllers\Admin\MediaAssetsController;
 use App\Http\Controllers\Admin\PointTransactionsController;
+use App\Http\Controllers\Admin\PollsController;
+use App\Http\Controllers\Admin\PostsController;
+use App\Http\Controllers\Admin\PredictionsController;
 use App\Http\Controllers\Admin\ReferralsController;
+use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\RolesController;
 use App\Http\Controllers\Admin\SeasonsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StaffAssignmentsController;
 use App\Http\Controllers\Admin\StaffMembersController;
+use App\Http\Controllers\Admin\StagesController;
 use App\Http\Controllers\Admin\SystemLogsController;
 use App\Http\Controllers\Admin\TaskReviewsController;
 use App\Http\Controllers\Admin\TasksController;
@@ -31,6 +44,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Inertia\ActivityLogsPageController;
 use App\Http\Controllers\Inertia\AdminOrganizationSwitchController;
 use App\Http\Controllers\Inertia\AdminProfilePageController;
+use App\Http\Controllers\Inertia\AdminsPageController;
+use App\Http\Controllers\Inertia\AnnouncementsPageController;
+use App\Http\Controllers\Inertia\ChannelsPageController;
 use App\Http\Controllers\Inertia\ClubsPageController;
 use App\Http\Controllers\Inertia\Fan\CampaignPageController;
 use App\Http\Controllers\Inertia\Fan\ConnectAccountsPageController;
@@ -41,17 +57,27 @@ use App\Http\Controllers\Inertia\Fan\LegalPageController;
 use App\Http\Controllers\Inertia\Fan\PassportPageController;
 use App\Http\Controllers\Inertia\Fan\StaticPageController;
 use App\Http\Controllers\Inertia\Fan\TasksPageController as FanTasksPageController;
+use App\Http\Controllers\Inertia\FandomsPageController;
+use App\Http\Controllers\Inertia\FixturesPageController;
+use App\Http\Controllers\Inertia\HighlightsPageController;
 use App\Http\Controllers\Inertia\ImpersonationController;
 use App\Http\Controllers\Inertia\JerseyOrdersPageController;
 use App\Http\Controllers\Inertia\JerseysPageController;
+use App\Http\Controllers\Inertia\LeaderboardPageController;
 use App\Http\Controllers\Inertia\LeaguesPageController;
 use App\Http\Controllers\Inertia\LoyaltyTiersPageController;
 use App\Http\Controllers\Inertia\MediaGalleryPageController;
 use App\Http\Controllers\Inertia\PointTransactionsPageController;
+use App\Http\Controllers\Inertia\PollsPageController;
+use App\Http\Controllers\Inertia\PostsPageController;
+use App\Http\Controllers\Inertia\PredictionsPageController;
 use App\Http\Controllers\Inertia\ReferralsPageController;
+use App\Http\Controllers\Inertia\ReportsPageController;
+use App\Http\Controllers\Inertia\RolesPageController;
 use App\Http\Controllers\Inertia\SeasonsPageController;
 use App\Http\Controllers\Inertia\SettingsPageController;
 use App\Http\Controllers\Inertia\StaffPageController;
+use App\Http\Controllers\Inertia\StagesPageController;
 use App\Http\Controllers\Inertia\SystemLogsPageController;
 use App\Http\Controllers\Inertia\TaskReviewsPageController;
 use App\Http\Controllers\Inertia\TasksPageController;
@@ -269,6 +295,12 @@ if ($socialDomain !== null) {
 // --------------------------------------------------------------------------
 // Admin app (Inertia) — optional subdomain via ADMIN_DOMAIN / ADMIN_APP_DOMAIN
 // --------------------------------------------------------------------------
+if (AdminRouting::appPath() === 'ops' && AdminRouting::appDomain() === null) {
+    Route::get('/app/{path?}', function (?string $path = null) {
+        return redirect(AdminRouting::absoluteAppPath($path ?? ''));
+    })->where('path', '.*');
+}
+
 $registerAdminRoutes = function (): void {
     $appPath = AdminRouting::appPath();
     $loginPath = AdminRouting::absoluteAppPath('login');
@@ -291,6 +323,7 @@ $registerAdminRoutes = function (): void {
         ->name('admin.')
         ->group(function () {
             Route::get('/', AdminDashboardController::class)->name('dashboard');
+            Route::get('/leaderboard', LeaderboardPageController::class)->name('leaderboard');
 
             Route::post('/organization', AdminOrganizationSwitchController::class)->name('organization.switch');
 
@@ -299,6 +332,8 @@ $registerAdminRoutes = function (): void {
             Route::put('/users/{user}', [UsersPageController::class, 'update'])->name('users.update');
             Route::get('/staff', [StaffPageController::class, 'index'])->name('staff.index');
             Route::get('/staff/{user}', [StaffPageController::class, 'show'])->name('staff.show');
+            Route::get('/admins', [AdminsPageController::class, 'index'])->name('admins');
+            Route::get('/roles', [RolesPageController::class, 'index'])->name('roles');
             Route::post('/impersonate/{user}', [ImpersonationController::class, 'start'])->name('impersonate');
             Route::get('/tasks', [TasksPageController::class, 'index'])->name('tasks');
             Route::get('/task-reviews', [TaskReviewsPageController::class, 'index'])->name('task-reviews');
@@ -311,8 +346,19 @@ $registerAdminRoutes = function (): void {
             });
             Route::get('/seasons', [SeasonsPageController::class, 'index'])->name('seasons');
             Route::get('/loyalty-tiers', [LoyaltyTiersPageController::class, 'index'])->name('loyalty-tiers');
+            Route::get('/fandoms', [FandomsPageController::class, 'index'])->name('fandoms');
+            Route::get('/fandoms/{fandom}', [FandomsPageController::class, 'show'])->name('fandoms.show');
             Route::get('/leagues', [LeaguesPageController::class, 'index'])->name('leagues');
             Route::get('/clubs', [ClubsPageController::class, 'index'])->name('clubs');
+            Route::get('/posts', [PostsPageController::class, 'index'])->name('posts');
+            Route::get('/announcements', [AnnouncementsPageController::class, 'index'])->name('announcements');
+            Route::get('/fixtures', [FixturesPageController::class, 'index'])->name('fixtures');
+            Route::get('/reports', [ReportsPageController::class, 'index'])->name('reports');
+            Route::get('/polls', [PollsPageController::class, 'index'])->name('polls');
+            Route::get('/predictions', [PredictionsPageController::class, 'index'])->name('predictions');
+            Route::get('/stages', [StagesPageController::class, 'index'])->name('stages');
+            Route::get('/channels', [ChannelsPageController::class, 'index'])->name('channels');
+            Route::get('/highlights', [HighlightsPageController::class, 'index'])->name('highlights');
             Route::get('/jerseys', [JerseysPageController::class, 'index'])->name('jerseys');
             Route::get('/media', [MediaGalleryPageController::class, 'index'])->name('media');
             Route::get('/jersey-orders', [JerseyOrdersPageController::class, 'index'])->name('jersey-orders');
@@ -329,6 +375,8 @@ $registerAdminRoutes = function (): void {
                 Route::get('/dashboard', AdminApiDashboardController::class)->name('dashboard');
 
                 Route::apiResource('users', UsersController::class);
+                Route::apiResource('admins', AdminsController::class);
+                Route::apiResource('roles', RolesController::class);
                 Route::post('users/{user}/assign-role', [UsersController::class, 'assignRole'])->name('users.assign-role');
                 Route::get('staff-positions', [StaffAssignmentsController::class, 'positions'])->name('staff-positions.index');
                 Route::apiResource('staff', StaffMembersController::class)->parameters(['staff' => 'user']);
@@ -340,8 +388,21 @@ $registerAdminRoutes = function (): void {
                 Route::apiResource('tasks', TasksController::class);
                 Route::apiResource('seasons', SeasonsController::class);
                 Route::apiResource('loyalty-tiers', LoyaltyTiersController::class);
+                Route::apiResource('fandoms', FandomsController::class);
+                Route::post('fandoms/{fandom}/subsets', [FandomSubsetsController::class, 'store'])->name('fandoms.subsets.store');
+                Route::put('fandoms/{fandom}/subsets/{subset}', [FandomSubsetsController::class, 'update'])->name('fandoms.subsets.update');
+                Route::delete('fandoms/{fandom}/subsets/{subset}', [FandomSubsetsController::class, 'destroy'])->name('fandoms.subsets.destroy');
                 Route::apiResource('leagues', LeaguesController::class);
                 Route::apiResource('clubs', ClubsController::class);
+                Route::apiResource('posts', PostsController::class);
+                Route::apiResource('announcements', AnnouncementsController::class);
+                Route::apiResource('fixtures', FixturesController::class)->parameters(['fixtures' => 'fixture']);
+                Route::apiResource('reports', ReportsController::class)->except(['store']);
+                Route::apiResource('polls', PollsController::class);
+                Route::apiResource('predictions', PredictionsController::class);
+                Route::apiResource('stages', StagesController::class);
+                Route::apiResource('channels', ChannelsController::class);
+                Route::apiResource('highlights', HighlightsController::class)->parameters(['highlights' => 'highlight']);
                 Route::apiResource('jerseys', JerseysController::class);
                 Route::get('media-assets', [MediaAssetsController::class, 'index'])->name('media-assets.index');
                 Route::post('media-assets', [MediaAssetsController::class, 'store'])->name('media-assets.store');

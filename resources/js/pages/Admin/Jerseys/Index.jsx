@@ -1,14 +1,20 @@
-import { router } from '@inertiajs/react';
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
+import { router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect, FormTextarea } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
-import { usePage } from '@inertiajs/react';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
@@ -185,7 +191,7 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
         image: jersey.image_url ? (
             <img src={jersey.image_url} alt="" className="h-10 w-10 rounded object-cover" />
         ) : (
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded bg-white/5 text-xs text-zinc-500">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
                 —
             </span>
         ),
@@ -196,42 +202,35 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
         status: jersey.is_active ? 'Active' : 'Hidden',
         actions: (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(jersey)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(jersey)}>
                     Edit
-                </button>
-                <button type="button" onClick={() => deleteJersey(jersey)} className="text-xs text-red-400">
+                </Button>
+                <Button variant="link" size="sm" type="button" className="text-destructive" onClick={() => deleteJersey(jersey)}>
                     Delete
-                </button>
+                </Button>
             </div>
         ),
     }));
 
     return (
         <AdminLayout title="Jerseys">
-            <PageHeader
+            <AdminPageHeader
                 title="Jerseys"
                 description="Marketplace listings with size stock and gallery images."
                 actions={
                     <div className="flex flex-wrap gap-2">
-                        <a
-                            href={adminPath(page.props, 'media')}
-                            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-zinc-200"
-                        >
-                            Media gallery
-                        </a>
-                        <button
-                            type="button"
-                            onClick={openCreate}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        <Button variant="outline" asChild>
+                            <a href={adminPath(page.props, 'media')}>Media gallery</a>
+                        </Button>
+                        <Button type="button" onClick={openCreate}>
                             Add jersey
-                        </button>
+                        </Button>
                     </div>
                 }
             />
 
             <div className="mb-4 flex flex-wrap gap-3">
-                <FormSelect
+                <NativeSelect className="w-full"
                     value={filters.club_id ? String(filters.club_id) : ''}
                     onChange={(e) =>
                         router.get(
@@ -241,47 +240,43 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                         )
                     }
                 >
-                    <option value="">All clubs</option>
+                    <NativeSelectOption value="">All clubs</NativeSelectOption>
                     {clubs.map((club) => (
-                        <option key={club.id} value={club.id}>
+                        <NativeSelectOption key={club.id} value={club.id}>
                             {club.name}
-                        </option>
+                        </NativeSelectOption>
                     ))}
-                </FormSelect>
+                </NativeSelect>
             </div>
 
-            <DataTable columns={columns} rows={rows} />
-            <Pagination paginator={jerseys} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={jerseys?.links} meta={jerseys} />
 
-            <Modal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                title={editingId ? 'Edit jersey' : 'Add jersey'}
-            >
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>{editingId ? 'Edit jersey' : 'Add jersey'}</DialogTitle></DialogHeader>
                 <form onSubmit={saveJersey} className="space-y-4">
-                    {error ? <p className="text-sm text-red-400">{error}</p> : null}
-                    <FormField label="Name">
-                        <FormInput
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             required
                         />
-                    </FormField>
-                    <FormField label="Club">
-                        <FormSelect
+                    </Field>
+                    <Field ><FieldLabel>Club</FieldLabel>
+                        <NativeSelect className="w-full"
                             value={form.club_id}
                             onChange={(e) => setForm({ ...form, club_id: e.target.value })}
                         >
-                            <option value="">No club</option>
+                            <NativeSelectOption value="">No club</NativeSelectOption>
                             {clubs.map((club) => (
-                                <option key={club.id} value={club.id}>
+                                <NativeSelectOption key={club.id} value={club.id}>
                                     {club.name}
-                                </option>
+                                </NativeSelectOption>
                             ))}
-                        </FormSelect>
-                    </FormField>
-                    <FormField label="Price (£)">
-                        <FormInput
+                        </NativeSelect>
+                    </Field>
+                    <Field ><FieldLabel>Price (£)</FieldLabel>
+                        <Input
                             type="number"
                             step="0.01"
                             min="0"
@@ -289,15 +284,15 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                             onChange={(e) => setForm({ ...form, price: e.target.value })}
                             required
                         />
-                    </FormField>
-                    <FormField label="Description">
-                        <FormTextarea
+                    </Field>
+                    <Field ><FieldLabel>Description</FieldLabel>
+                        <Textarea
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             rows={3}
                         />
-                    </FormField>
-                    <label className="flex items-center gap-2 text-sm text-zinc-300">
+                    </Field>
+                    <label className="flex items-center gap-2 text-sm">
                         <input
                             type="checkbox"
                             checked={form.is_active}
@@ -305,27 +300,27 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                         />
                         Active listing
                     </label>
-                    <FormField label="Cover image (optional fallback)">
+                    <Field ><FieldLabel>Cover image (optional fallback)</FieldLabel>
                         <input
                             type="file"
                             accept="image/*"
                             onChange={(e) => setForm({ ...form, imageFile: e.target.files?.[0] ?? null })}
                         />
-                    </FormField>
+                    </Field>
 
-                    <div className="space-y-3 rounded-lg border border-white/10 p-3">
+                    <div className="space-y-3 rounded-lg border border-border p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm font-medium text-zinc-200">
+                            <p className="text-sm font-medium">
                                 Gallery images ({form.media_asset_ids.length})
                             </p>
-                            <FormInput
+                            <Input
                                 placeholder="Filter gallery…"
                                 value={pickerQuery}
                                 onChange={(e) => setPickerQuery(e.target.value)}
                             />
                         </div>
                         {gallery_assets.length === 0 ? (
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-muted-foreground">
                                 No gallery assets yet. Upload or generate images in Media gallery first.
                             </p>
                         ) : (
@@ -340,8 +335,8 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                                             onClick={() => toggleMediaAsset(asset.id)}
                                             className={`overflow-hidden rounded-lg border text-left transition ${
                                                 selected
-                                                    ? 'border-brand-400 ring-1 ring-brand-400/50'
-                                                    : 'border-white/10 hover:border-white/30'
+                                                    ? 'border-primary ring-1 ring-primary/50'
+                                                    : 'border-border hover:border-muted-foreground/50'
                                             }`}
                                         >
                                             <img
@@ -349,7 +344,7 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                                                 alt=""
                                                 className="aspect-[4/5] w-full object-cover"
                                             />
-                                            <span className="block truncate px-1.5 py-1 text-[10px] text-zinc-400">
+                                            <span className="block truncate px-1.5 py-1 text-[10px] text-muted-foreground">
                                                 {asset.title || `#${asset.id}`}
                                             </span>
                                         </button>
@@ -359,22 +354,23 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                         )}
                     </div>
 
-                    <div className="space-y-3 rounded-lg border border-white/10 p-3">
+                    <div className="space-y-3 rounded-lg border border-border p-3">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-zinc-200">Sizes</p>
-                            <button
+                            <p className="text-sm font-medium">Sizes</p>
+                            <Button
                                 type="button"
-                                className="text-xs text-brand-300"
+                                variant="link"
+                                size="sm"
                                 onClick={() =>
                                     setForm({ ...form, variants: [...form.variants, emptyVariant()] })
                                 }
                             >
                                 Add size
-                            </button>
+                            </Button>
                         </div>
                         {form.variants.map((variant, index) => (
                             <div key={index} className="grid grid-cols-3 gap-2">
-                                <FormSelect
+                                <NativeSelect className="w-full"
                                     value={variant.size}
                                     onChange={(e) => {
                                         const variants = [...form.variants];
@@ -383,12 +379,12 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                                     }}
                                 >
                                     {SIZES.map((size) => (
-                                        <option key={size} value={size}>
+                                        <NativeSelectOption key={size} value={size}>
                                             {size}
-                                        </option>
+                                        </NativeSelectOption>
                                     ))}
-                                </FormSelect>
-                                <FormInput
+                                </NativeSelect>
+                                <Input
                                     type="number"
                                     min="0"
                                     value={variant.stock}
@@ -401,7 +397,7 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                                         setForm({ ...form, variants });
                                     }}
                                 />
-                                <FormInput
+                                <Input
                                     placeholder="SKU"
                                     value={variant.sku}
                                     onChange={(e) => {
@@ -414,23 +410,15 @@ export default function JerseysIndex({ jerseys, clubs = [], gallery_assets = [],
                         ))}
                     </div>
                     <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setModalOpen(false)}
-                            className="rounded-lg border border-white/10 px-4 py-2 text-sm"
-                        >
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
                             Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        </Button>
+                        <Button type="submit" disabled={loading}>
                             {loading ? 'Saving…' : 'Save'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </Modal>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

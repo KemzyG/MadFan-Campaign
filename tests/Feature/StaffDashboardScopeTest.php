@@ -17,7 +17,7 @@ test('admin and super admin see platform dashboard analytics', function () {
         ->and($super->can(AdminPermission::DashboardPlatform->value))->toBeTrue();
 
     $this->actingAs($admin)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Dashboard')
@@ -26,12 +26,12 @@ test('admin and super admin see platform dashboard analytics', function () {
             ->has('top_users'));
 
     $this->actingAs($super)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page->where('dashboard_mode', 'platform'));
 });
 
-test('support sees personal performance dashboard not platform analytics', function () {
+test('support sees platform social dashboard on ops', function () {
     $support = createSupportAdmin();
 
     expect($support->can(AdminPermission::DashboardPlatform->value))->toBeFalse()
@@ -39,21 +39,21 @@ test('support sees personal performance dashboard not platform analytics', funct
         ->and($support->can(AdminPermission::StaffView->value))->toBeFalse();
 
     $this->actingAs($support)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Dashboard')
-            ->where('dashboard_mode', 'personal')
-            ->has('stats.performance_score')
-            ->has('performance')
-            ->missing('stats.total_users'));
+            ->where('dashboard_mode', 'platform')
+            ->has('stats.daily_active_fans_today')
+            ->has('stats.active_events_now')
+            ->has('active_events'));
 
     $this->actingAs($support)
-        ->get('/app/staff')
+        ->get('/ops/staff')
         ->assertForbidden();
 
     $this->actingAs($support)
-        ->get('/app/tasks')
+        ->get('/ops/tasks')
         ->assertSuccessful();
 });
 
@@ -76,7 +76,7 @@ test('ambassador dashboard is personal performance only', function () {
         ->and($ambassador->can(AdminPermission::UsersView->value))->toBeFalse();
 
     $this->actingAs($ambassador)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('dashboard_mode', 'personal')
@@ -85,11 +85,11 @@ test('ambassador dashboard is personal performance only', function () {
             ->where('staff_profile.position', StaffPosition::Ambassador->value));
 
     $this->actingAs($ambassador)
-        ->get('/app/staff')
+        ->get('/ops/staff')
         ->assertForbidden();
 
     $this->actingAs($ambassador)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertForbidden();
 });
 
@@ -101,18 +101,21 @@ test('management can manage tasks but not staff directory', function () {
 
     expect($management->can(AdminPermission::TasksManage->value))->toBeTrue()
         ->and($management->can(AdminPermission::StaffView->value))->toBeFalse()
-        ->and($management->can(AdminPermission::DashboardPlatform->value))->toBeFalse();
+        ->and($management->can(AdminPermission::DashboardPlatform->value))->toBeTrue();
 
     $this->actingAs($management)
-        ->get('/app/tasks')
+        ->get('/ops/tasks')
         ->assertSuccessful();
 
     $this->actingAs($management)
-        ->get('/app/staff')
+        ->get('/ops/staff')
         ->assertForbidden();
 
     $this->actingAs($management)
-        ->get('/app')
+        ->get('/ops')
         ->assertSuccessful()
-        ->assertInertia(fn ($page) => $page->where('dashboard_mode', 'personal'));
+        ->assertInertia(fn ($page) => $page
+            ->where('dashboard_mode', 'platform')
+            ->has('stats.daily_active_fans_today')
+            ->has('stats.active_events_now'));
 });

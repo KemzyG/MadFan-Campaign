@@ -11,6 +11,10 @@
 | [05 — Data Model](./05-data-model.md) | Social tables + reuse of users / passports / point_transactions |
 | [06 — Roadmap](./06-roadmap.md) | Phases; passport identity slice status |
 | [07 — Phase 1 Builder Guide](./07-phase-1-builder.md) | Routes, scoring, passport payload, tests |
+| [Security overview](../security/overview.md) | Combined security summary & roadmap |
+| [Backend security audit](../security/madfan-social-audit.md) | OWASP backend findings (Aug 2026) |
+| [Frontend security audit](../security/madfan-social-frontend-audit.md) | React/Inertia findings (Aug 2026) |
+| [Security checklist](../security/checklist.md) | Pre-release verification |
 
 ## Status (living)
 

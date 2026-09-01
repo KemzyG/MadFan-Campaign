@@ -8,7 +8,6 @@ use App\Enums\StaffPosition;
 use App\Models\ActivityLog;
 use App\Models\PointTransaction;
 use App\Models\Referral;
-use App\Models\Task;
 use App\Models\User;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Staff\StaffAssignmentService;
@@ -29,7 +28,7 @@ class AdminDashboardDataService
      */
     public function dataFor(User $user): array
     {
-        if ($user->can(AdminPermission::DashboardPlatform->value)) {
+        if ($this->usesPlatformDashboard($user)) {
             return [
                 'dashboard_mode' => 'platform',
                 ...$this->platformData(),
@@ -40,6 +39,25 @@ class AdminDashboardDataService
             'dashboard_mode' => 'personal',
             ...$this->personalData($user),
         ];
+    }
+
+    private function usesPlatformDashboard(User $user): bool
+    {
+        if ($user->can(AdminPermission::DashboardPlatform->value)) {
+            return true;
+        }
+
+        // Management ops users should see the same social analytics desk as admins.
+        if ($user->hasRole('management')) {
+            return true;
+        }
+
+        // Anyone with dashboard access who is not a staff-only operator sees platform stats.
+        if ($user->can(AdminPermission::DashboardView->value) && ! $user->isActiveStaffMember()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -118,20 +136,31 @@ class AdminDashboardDataService
                     ->where('source_type', PointSourceType::PenaltyShootout)
                     ->whereHas('user', $fanScope)
                     ->sum('amount'),
-                'active_tasks' => Task::query()->where('is_active', true)->count(),
                 'pending_referrals' => Referral::query()
                     ->where('status', 'pending')
                     ->whereHas('referrer', $fanScope)
                     ->count(),
-                'daily_claims_today' => $this->analytics->dailyClaimsToday(),
-                'task_completion_rate' => $this->analytics->taskCompletionRate(),
+                'daily_active_fans_today' => $this->analytics->dailyActiveFansToday(),
+                'daily_posts_today' => $this->analytics->dailyPostsToday(),
+                'daily_engagement_today' => $this->analytics->dailyEngagementToday(),
+                'daily_active_live_today' => $this->analytics->dailyActiveLiveToday(),
+                'daily_live_participants_today' => $this->analytics->dailyLiveParticipantsToday(),
+                'daily_events_today' => $this->analytics->dailyEventsToday(),
+                'daily_other_activities_today' => $this->analytics->dailyOtherActivitiesToday(),
+                'active_events_now' => $this->analytics->activeEventsNow(),
             ],
             'signup_trend' => $signupTrend,
             'points_trend' => $pointsTrend,
             'points_series' => $this->analytics->pointsAwardedSeries(14),
+            'active_fans_series' => $this->analytics->dailyActiveFansSeries(14),
+            'posts_series' => $this->analytics->dailyPostsSeries(14),
+            'engagement_series' => $this->analytics->dailyEngagementSeries(14),
+            'live_series' => $this->analytics->dailyActiveLiveSeries(14),
+            'events_series' => $this->analytics->dailyEventsSeries(14),
+            'activities_series' => $this->analytics->dailyOtherActivitiesSeries(14),
             'points_by_source' => $this->analytics->pointsBySource(30),
             'source_type_labels' => $this->analytics->sourceTypeLabels(),
-            'daily_claims_series' => $this->analytics->dailyClaimsSeries(14),
+            'active_events' => $this->analytics->activeEventsList(10),
             'top_users' => $topUsers,
             'recent_activity' => $recentActivity,
             'performance' => null,

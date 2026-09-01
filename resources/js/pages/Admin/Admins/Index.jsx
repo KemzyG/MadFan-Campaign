@@ -1,13 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import Modal from '../../../Components/Admin/Modal';
-import { FormField, FormInput, FormSelect } from '../../../Components/Admin/FormField';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 
@@ -108,109 +113,101 @@ export default function AdminsIndex({ admins, adminRoles, filters, can_manage: c
     const rows = (admins?.data ?? []).map((admin) => ({
         ...admin,
         role: (
-            <Badge variant="brand">{admin.roles?.map((r) => r.name).join(', ') || '—'}</Badge>
+            <Badge>{admin.roles?.map((r) => r.name).join(', ') || '—'}</Badge>
         ),
         actions: canManage ? (
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => openEdit(admin)} className="text-xs text-brand-300">
+                <Button variant="link" size="sm" type="button" onClick={() => openEdit(admin)}>
                     Edit
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="link"
+                    size="sm"
                     type="button"
+                    className="text-destructive"
                     onClick={() => deleteAdmin(admin)}
-                    className="text-xs text-red-400"
                     disabled={admin.id === meId}
                 >
                     Delete
-                </button>
+                </Button>
             </div>
         ) : (
-            <span className="text-xs text-zinc-600">View only</span>
+            <span className="text-xs text-muted-foreground">View only</span>
         ),
     }));
 
     return (
         <AdminLayout title="Admins">
-            <PageHeader
+            <AdminPageHeader
                 title="Admin users"
                 description="Operator accounts for each role desk (support, management, admin, super-admin)."
                 actions={
                     canManage ? (
-                        <button
-                            type="button"
-                            onClick={openCreate}
-                            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900"
-                        >
+                        <Button type="button" onClick={openCreate}>
                             Add admin
-                        </button>
+                        </Button>
                     ) : null
                 }
             />
-            <FilterBar
+            <AdminFilterBar
                 route={`${base}/admins`}
                 filters={filters}
                 fields={[{ name: 'search', label: 'Search', placeholder: 'Name or email…' }]}
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={admins?.links} meta={admins} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={admins?.links} meta={admins} />
 
-            {modalOpen && (
-                <Modal title={isEditing ? 'Edit admin' : 'Create admin'} onClose={() => setModalOpen(false)}>
-                    <form onSubmit={saveAdmin} className="space-y-3">
-                        {error ? <p className="text-sm text-red-400">{error}</p> : null}
-                        <FormField label="Name">
-                            <FormInput
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Email">
-                            <FormInput
-                                type="email"
-                                value={form.email}
-                                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                required
-                            />
-                        </FormField>
-                        <FormField
-                            label="Password"
-                            hint={isEditing ? 'Leave blank to keep current password.' : undefined}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{isEditing ? 'Edit admin' : 'Create admin'}</DialogTitle></DialogHeader>
+                <form onSubmit={saveAdmin} className="space-y-3">
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                    <Field ><FieldLabel>Name</FieldLabel>
+                        <Input
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            required
+                        />
+                    </Field>
+                    <Field ><FieldLabel>Email</FieldLabel>
+                        <Input
+                            type="email"
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            required
+                        />
+                    </Field>
+                    <Field
+                        
+                        hint={isEditing ? 'Leave blank to keep current password.' : undefined}
+                    ><FieldLabel>Password</FieldLabel>
+                        <Input
+                            type="password"
+                            value={form.password}
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            required={!isEditing}
+                        />
+                    </Field>
+                    <Field ><FieldLabel>Role / desk</FieldLabel>
+                        <NativeSelect className="w-full"
+                            value={form.role}
+                            onChange={(e) => setForm({ ...form, role: e.target.value })}
                         >
-                            <FormInput
-                                type="password"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                required={!isEditing}
-                            />
-                        </FormField>
-                        <FormField label="Role / desk">
-                            <FormSelect
-                                value={form.role}
-                                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                            >
-                                {adminRoles?.map((r) => (
-                                    <option key={r.id} value={r.name}>
-                                        {r.name}
-                                    </option>
-                                ))}
-                            </FormSelect>
-                        </FormField>
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setModalOpen(false)} className="text-sm text-zinc-400">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-surface-900 disabled:opacity-60"
-                            >
-                                {loading ? 'Saving…' : isEditing ? 'Save' : 'Create'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+                            {adminRoles?.map((r) => (
+                                <NativeSelectOption key={r.id} value={r.name}>
+                                    {r.name}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </Field>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving…' : isEditing ? 'Save' : 'Create'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent></Dialog>
         </AdminLayout>
     );
 }

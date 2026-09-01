@@ -19,8 +19,20 @@ enum AdminPermission: string
     case TasksManage = 'tasks.manage';
     case SeasonsManage = 'seasons.manage';
     case LoyaltyTiersManage = 'loyalty-tiers.manage';
+
+    case FandomsManage = 'fandoms.manage';
     case LeaguesManage = 'leagues.manage';
     case ClubsManage = 'clubs.manage';
+
+    case PostsManage = 'posts.manage';
+    case AnnouncementsManage = 'announcements.manage';
+    case FixturesManage = 'fixtures.manage';
+    case ReportsManage = 'reports.manage';
+    case PollsManage = 'polls.manage';
+    case PredictionsManage = 'predictions.manage';
+    case StagesManage = 'stages.manage';
+    case ChannelsManage = 'channels.manage';
+    case HighlightsManage = 'highlights.manage';
 
     case JerseysManage = 'jerseys.manage';
     case JerseyOrdersView = 'jersey-orders.view';

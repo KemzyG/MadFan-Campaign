@@ -60,14 +60,14 @@ test('support admin can view and approve pending task reviews', function () {
     ]);
 
     $this->actingAs($support)
-        ->get('/app/task-reviews')
+        ->get('/ops/task-reviews')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/TaskReviews/Index')
             ->has('reviews.data', 1));
 
     $this->actingAs($support)
-        ->post("/app/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
+        ->post("/ops/task-reviews/{$progress->id}/approve", ['_token' => csrf_token()])
         ->assertRedirect();
 
     $progress->refresh();
@@ -95,7 +95,7 @@ test('admins can reject pending task reviews with a reason', function () {
     ]);
 
     $this->actingAs($admin)
-        ->post("/app/task-reviews/{$progress->id}/reject", [
+        ->post("/ops/task-reviews/{$progress->id}/reject", [
             '_token' => csrf_token(),
             'reason' => 'Could not verify the follow.',
         ])
@@ -112,6 +112,6 @@ test('regular users cannot access task reviews', function () {
     $user = createUser();
 
     $this->actingAs($user)
-        ->get('/app/task-reviews')
+        ->get('/ops/task-reviews')
         ->assertForbidden();
 });

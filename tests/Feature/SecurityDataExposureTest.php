@@ -14,7 +14,7 @@ test('users api index does not expose sensitive registration fields', function (
     ]);
 
     $this->actingAs($admin)
-        ->getJson('/app/api/users?search='.urlencode($fan->email))
+        ->getJson('/ops/api/users?search='.urlencode($fan->email))
         ->assertSuccessful()
         ->assertJsonMissing(['registration_fingerprint' => 'abc123fingerprint'])
         ->assertJsonMissing(['registration_ip' => '203.0.113.10'])

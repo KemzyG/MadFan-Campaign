@@ -104,7 +104,7 @@ test('admin login failure message does not reveal valid fan accounts', function 
         'password_hash' => Hash::make(validTestPassword()),
     ]);
 
-    $this->post('/app/login', [
+    $this->post('/ops/login', [
         'email' => 'fan-only@example.com',
         'password' => validTestPassword(),
     ])->assertSessionHasErrors([
@@ -146,7 +146,7 @@ test('admin mfa setup confirms a valid totp code when required', function () {
     $code = (new Google2FA)->getCurrentOtp($secret);
 
     $this->actingAs($admin)
-        ->post('/app/mfa/setup', ['code' => $code])
+        ->post('/ops/mfa/setup', ['code' => $code])
         ->assertRedirect(route('admin.dashboard'));
 
     expect($admin->fresh()->hasMfaEnabled())->toBeTrue();

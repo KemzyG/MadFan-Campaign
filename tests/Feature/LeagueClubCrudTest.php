@@ -22,11 +22,11 @@ test('admin can manage leagues via inertia and api', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/app/leagues')
+        ->get('/ops/leagues')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page->component('Admin/Leagues/Index'));
 
-    $response = $this->actingAs($admin)->post('/app/api/leagues', [
+    $response = $this->actingAs($admin)->post('/ops/api/leagues', [
         'name' => 'Premier League',
         'short' => 'EPL',
         'logo' => fakeLogoUpload('epl.png'),
@@ -43,7 +43,7 @@ test('admin can manage leagues via inertia and api', function () {
     Storage::disk('public')->assertExists($league->logo);
 
     $this->actingAs($admin)
-        ->post("/app/api/leagues/{$league->id}", [
+        ->post("/ops/api/leagues/{$league->id}", [
             '_method' => 'PUT',
             'name' => 'English Premier League',
             'short' => 'EPL',
@@ -52,7 +52,7 @@ test('admin can manage leagues via inertia and api', function () {
         ->assertJsonPath('name', 'English Premier League');
 
     $this->actingAs($admin)
-        ->delete("/app/api/leagues/{$league->id}")
+        ->delete("/ops/api/leagues/{$league->id}")
         ->assertSuccessful();
 
     expect(League::query()->whereKey($league->id)->exists())->toBeFalse();
@@ -63,14 +63,14 @@ test('admin can manage clubs related to a league', function () {
     $league = League::factory()->create(['name' => 'La Liga', 'short' => 'LL']);
 
     $this->actingAs($admin)
-        ->get('/app/clubs')
+        ->get('/ops/clubs')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Clubs/Index')
             ->has('leagues', 1));
 
     $this->actingAs($admin)
-        ->post('/app/api/clubs', [
+        ->post('/ops/api/clubs', [
             'league_id' => $league->id,
             'name' => 'Real Madrid',
             'short' => 'RMA',
@@ -86,7 +86,7 @@ test('admin can manage clubs related to a league', function () {
         ->and($club->league_id)->toBe($league->id);
 
     $this->actingAs($admin)
-        ->post("/app/api/clubs/{$club->id}", [
+        ->post("/ops/api/clubs/{$club->id}", [
             '_method' => 'PUT',
             'name' => 'Real Madrid CF',
             'short' => 'RMA',
@@ -96,7 +96,7 @@ test('admin can manage clubs related to a league', function () {
         ->assertJsonPath('name', 'Real Madrid CF');
 
     $this->actingAs($admin)
-        ->get('/app/clubs?league_id='.$league->id)
+        ->get('/ops/clubs?league_id='.$league->id)
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Clubs/Index')
@@ -104,7 +104,7 @@ test('admin can manage clubs related to a league', function () {
             ->where('filters.league_id', $league->id));
 
     $this->actingAs($admin)
-        ->delete("/app/api/clubs/{$club->id}")
+        ->delete("/ops/api/clubs/{$club->id}")
         ->assertSuccessful();
 
     expect(Club::query()->whereKey($club->id)->exists())->toBeFalse();
@@ -119,7 +119,7 @@ test('club short must be unique within a league', function () {
     ]);
 
     $this->actingAs($admin)
-        ->postJson('/app/api/clubs', [
+        ->postJson('/ops/api/clubs', [
             'league_id' => $league->id,
             'name' => 'Another Club',
             'short' => 'ABC',
@@ -134,7 +134,7 @@ test('deleting a league cascades to its clubs', function () {
     $club = Club::factory()->create(['league_id' => $league->id]);
 
     $this->actingAs($admin)
-        ->delete("/app/api/leagues/{$league->id}")
+        ->delete("/ops/api/leagues/{$league->id}")
         ->assertSuccessful();
 
     expect(Club::query()->whereKey($club->id)->exists())->toBeFalse();
@@ -143,9 +143,9 @@ test('deleting a league cascades to its clubs', function () {
 test('regular users cannot manage leagues or clubs', function () {
     $user = createUser();
 
-    $this->actingAs($user)->get('/app/leagues')->assertForbidden();
-    $this->actingAs($user)->get('/app/clubs')->assertForbidden();
-    $this->actingAs($user)->postJson('/app/api/leagues', [
+    $this->actingAs($user)->get('/ops/leagues')->assertForbidden();
+    $this->actingAs($user)->get('/ops/clubs')->assertForbidden();
+    $this->actingAs($user)->postJson('/ops/api/leagues', [
         'name' => 'Denied League',
         'short' => 'DNY',
     ])->assertForbidden();

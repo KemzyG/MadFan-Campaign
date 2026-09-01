@@ -22,9 +22,9 @@ test('activity logs are admin and super admin only', function () {
         ->and($super->can(AdminPermission::ActivityLogsView->value))->toBeTrue()
         ->and($support->can(AdminPermission::ActivityLogsView->value))->toBeFalse();
 
-    $this->actingAs($admin)->get('/app/activity-logs')->assertSuccessful();
-    $this->actingAs($super)->get('/app/activity-logs')->assertSuccessful();
-    $this->actingAs($support)->get('/app/activity-logs')->assertForbidden();
+    $this->actingAs($admin)->get('/ops/activity-logs')->assertSuccessful();
+    $this->actingAs($super)->get('/ops/activity-logs')->assertSuccessful();
+    $this->actingAs($support)->get('/ops/activity-logs')->assertForbidden();
 });
 
 test('support can view user profiles but cannot create update or delete', function () {
@@ -38,7 +38,7 @@ test('support can view user profiles but cannot create update or delete', functi
         ->and($support->can(AdminPermission::UsersDelete->value))->toBeFalse();
 
     $this->actingAs($support)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')
@@ -47,7 +47,7 @@ test('support can view user profiles but cannot create update or delete', functi
             ->has('users.data'));
 
     $this->actingAs($support)
-        ->get("/app/users/{$fan->id}")
+        ->get("/ops/users/{$fan->id}")
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Show')
@@ -58,7 +58,7 @@ test('support can view user profiles but cannot create update or delete', functi
     $this->withoutMiddleware(PreventRequestForgery::class);
 
     $this->actingAs($support)
-        ->put("/app/users/{$fan->id}", [
+        ->put("/ops/users/{$fan->id}", [
             'name' => 'Hacked',
             'email' => $fan->email,
         ])
@@ -80,7 +80,7 @@ test('only admin and super admin can create and delete users', function () {
         ->and($management->can(AdminPermission::UsersDelete->value))->toBeFalse();
 
     $this->actingAs($admin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertInertia(fn ($page) => $page
             ->where('can_create', true)
             ->where('can_delete', true));

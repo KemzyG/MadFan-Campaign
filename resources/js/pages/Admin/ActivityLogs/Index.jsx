@@ -1,9 +1,16 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { usePage } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import DataTable from '../../../Components/DataTable';
-import FilterBar from '../../../Components/FilterBar';
-import PageHeader from '../../../Components/PageHeader';
-import Pagination from '../../../Components/Pagination';
 import { formatDateTime } from '../../../lib/format';
 import { adminPath } from '../../../lib/adminPath';
 
@@ -24,8 +31,8 @@ export default function ActivityLogsIndex({ logs, filters }) {
 
     return (
         <AdminLayout title="Activity Logs">
-            <PageHeader title="Activity logs" description="Audit trail of admin and system events." />
-            <FilterBar
+            <AdminPageHeader title="Activity logs" description="Audit trail of admin and system events." />
+            <AdminFilterBar
                 route={adminPath(page.props, 'activity-logs')}
                 filters={filters}
                 fields={[
@@ -34,8 +41,8 @@ export default function ActivityLogsIndex({ logs, filters }) {
                     { name: 'date_to', label: 'To', type: 'date' },
                 ]}
             />
-            <DataTable columns={columns} rows={rows} />
-            <Pagination links={logs?.links} meta={logs} />
+            <AdminTable columns={columns} rows={rows} />
+            <AdminPagination links={logs?.links} meta={logs} />
         </AdminLayout>
     );
 }

@@ -142,10 +142,10 @@ test('prevent fan routes middleware still supports legacy /app mount', function 
     expect($adminLogin->getContent())->toBe('passed');
 });
 
-test('admin login page shares admin_path meta for the local /app mount', function () {
-    $this->get('/app/login')
+test('admin login page shares admin_path meta for the local /ops mount', function () {
+    $this->get('/ops/login')
         ->assertSuccessful()
-        ->assertSee('Admin Panel', false)
+        ->assertSee('Ops Console', false)
         ->assertSee('name="admin-path"', false)
-        ->assertSee('content="/app"', false);
+        ->assertSee('content="/ops"', false);
 });

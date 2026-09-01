@@ -11,7 +11,7 @@ test('admin user profile serializes last login as an ISO date', function () {
     $fan = createUser(['last_login_at' => $lastLoginAt]);
 
     $this->actingAs($admin)
-        ->get("/app/users/{$fan->id}")
+        ->get("/ops/users/{$fan->id}")
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Show')
@@ -50,7 +50,7 @@ test('admin can view fan profile with analytics', function () {
     ]);
 
     $this->actingAs($admin)
-        ->get("/app/users/{$fan->id}")
+        ->get("/ops/users/{$fan->id}")
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Show')
@@ -72,7 +72,7 @@ test('super admin can update fan profile from inertia', function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
 
     $this->actingAs($super)
-        ->put("/app/users/{$fan->id}", [
+        ->put("/ops/users/{$fan->id}", [
             'name' => 'After Name',
             'email' => $fan->email,
             'club' => 'Liverpool FC',
@@ -93,7 +93,7 @@ test('admin can update fan profile from inertia', function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
 
     $this->actingAs($admin)
-        ->put("/app/users/{$fan->id}", [
+        ->put("/ops/users/{$fan->id}", [
             'name' => 'Admin Edit After',
             'email' => $fan->email,
             'country' => 'Spain',
@@ -109,7 +109,7 @@ test('support can view but cannot update fan profile', function () {
     $fan = createUser(['name' => 'Locked Fan']);
 
     $this->actingAs($support)
-        ->get("/app/users/{$fan->id}")
+        ->get("/ops/users/{$fan->id}")
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Show')
@@ -118,7 +118,7 @@ test('support can view but cannot update fan profile', function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
 
     $this->actingAs($support)
-        ->put("/app/users/{$fan->id}", [
+        ->put("/ops/users/{$fan->id}", [
             'name' => 'Hacked',
             'email' => $fan->email,
         ])
@@ -133,7 +133,7 @@ test('org admin cannot view fan outside partition', function () {
     $hiddenFan = createUser(['country' => 'England', 'name' => 'Hidden Fan']);
 
     $this->actingAs($orgAdmin)
-        ->get("/app/users/{$hiddenFan->id}")
+        ->get("/ops/users/{$hiddenFan->id}")
         ->assertForbidden();
 });
 
@@ -141,7 +141,7 @@ test('users index includes create and delete flags for admin', function () {
     $admin = createAdminUser();
 
     $this->actingAs($admin)
-        ->get('/app/users')
+        ->get('/ops/users')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')

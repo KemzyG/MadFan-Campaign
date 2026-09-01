@@ -9,6 +9,7 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\Fan\FanPageDataService;
 use App\Services\PasetoService;
+use App\Support\AdminRouting;
 use App\Support\ApplicationSettings;
 use Database\Seeders\AdminPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +41,11 @@ expect()->extend('toBeOne', function () {
 | Functions
 |--------------------------------------------------------------------------
 */
+
+function adminUrl(string $suffix = ''): string
+{
+    return AdminRouting::absoluteAppPath($suffix);
+}
 
 function seedRoles(): void
 {

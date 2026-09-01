@@ -1,7 +1,18 @@
+import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
+import { AdminFilterBar } from '@/lib/admin-filter-bar';
+import { AdminPageHeader } from '@/lib/admin-page-header';
+import { AdminPagination } from '@/lib/admin-pagination';
+import { AdminTable } from '@/lib/admin-table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import Badge from '../../../Components/Badge';
-import PageHeader from '../../../Components/PageHeader';
 import { adminApi } from '../../../lib/api';
 import { adminPath } from '../../../lib/adminPath';
 
@@ -31,38 +42,38 @@ export default function SystemLogsIndex({ logData, lines }) {
 
     return (
         <AdminLayout title="System Logs">
-            <PageHeader
+            <AdminPageHeader
                 title="System logs"
                 description={`Tail of laravel.log · ${logData?.size ? `${Math.round(logData.size / 1024)} KB` : 'empty'}`}
                 actions={
                     <>
-                        <button onClick={refresh} className="rounded-lg border border-white/10 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5">
+                        <Button type="button" variant="outline" onClick={refresh}>
                             Refresh
-                        </button>
-                        <button onClick={clearLogs} className="rounded-lg border border-red-500/30 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10">
+                        </Button>
+                        <Button type="button" variant="outline" className="text-destructive" onClick={clearLogs}>
                             Clear log
-                        </button>
+                        </Button>
                     </>
                 }
             />
 
-            <div className="rounded-2xl border border-white/5 bg-surface-800/50">
-                <div className="max-h-[70vh] overflow-auto p-4 font-mono text-xs">
+            <Card>
+                <CardContent className="max-h-[70vh] overflow-auto p-4 font-mono text-xs">
                     {(logData?.lines ?? []).length === 0 ? (
-                        <p className="text-zinc-500">No log entries found.</p>
+                        <p className="text-muted-foreground">No log entries found.</p>
                     ) : (
                         logData.lines.map((line, index) => (
-                            <div key={index} className="mb-3 border-b border-white/5 pb-3 last:border-0">
+                            <div key={index} className="mb-3 border-b border-border pb-3 last:border-0">
                                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                                    <span className="text-zinc-500">{line.timestamp}</span>
-                                    <Badge variant={levelVariant[line.level] ?? 'default'}>{line.level}</Badge>
+                                    <span className="text-muted-foreground">{line.timestamp}</span>
+                                    <Badge variant={adminBadgeVariant(levelVariant[line.level] ?? 'default')} className={adminBadgeClass(levelVariant[line.level] ?? 'default')}>{line.level}</Badge>
                                 </div>
-                                <p className="whitespace-pre-wrap text-zinc-300">{line.message}</p>
+                                <p className="whitespace-pre-wrap">{line.message}</p>
                             </div>
                         ))
                     )}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </AdminLayout>
     );
 }

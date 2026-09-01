@@ -54,6 +54,11 @@ class Club extends Model
         return $this->hasOne(LeagueStanding::class);
     }
 
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ClubMembership::class);
+    }
+
     public function getLogoUrlAttribute(): string
     {
         return PublicStorageUrl::path($this->logo);

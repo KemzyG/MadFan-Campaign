@@ -38,10 +38,22 @@ class PreventFanRoutesOnAdminDomain
 
         $appPath = AdminRouting::appPath();
 
-        // Legacy /app URLs when the console is mounted at the subdomain root.
-        if ($appPath === '' && $request->is('app', 'app/*')) {
+        // Legacy prefixed URLs when the console is mounted at the subdomain root.
+        if ($appPath === '') {
+            foreach (['app', 'ops'] as $legacyPrefix) {
+                if ($request->is($legacyPrefix, $legacyPrefix.'/*')) {
+                    $remainder = ltrim(substr($request->getRequestUri(), strlen('/'.$legacyPrefix)), '/');
+                    $target = $remainder === '' ? '/' : '/'.$remainder;
+
+                    return redirect()->to($target);
+                }
+            }
+        }
+
+        // Legacy /app URLs when the console uses the /ops prefix on this host.
+        if ($appPath === 'ops' && $request->is('app', 'app/*')) {
             $remainder = ltrim(substr($request->getRequestUri(), strlen('/app')), '/');
-            $target = $remainder === '' ? '/' : '/'.$remainder;
+            $target = $remainder === '' ? '/ops' : '/ops/'.$remainder;
 
             return redirect()->to($target);
         }
@@ -52,7 +64,7 @@ class PreventFanRoutesOnAdminDomain
             }
 
             if ($request->is('/', 'dashboard')) {
-                return redirect()->route('admin.dashboard');
+                return redirect()->to(AdminRouting::absoluteAppPath());
             }
 
             return redirect()->away(AdminRouting::fanSiteUrl($request->getRequestUri()));
@@ -64,7 +76,7 @@ class PreventFanRoutesOnAdminDomain
         }
 
         if ($request->is('dashboard')) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->to(AdminRouting::absoluteAppPath());
         }
 
         return $next($request);

@@ -9,7 +9,7 @@ export function adminPath(pageProps, suffix = '') {
     const base =
         raw === '' || raw === '/'
             ? ''
-            : String(raw ?? '/app').replace(/\/$/, '') || '/app';
+            : String(raw ?? '/ops').replace(/\/$/, '') || '/ops';
 
     if (!suffix) {
         return base === '' ? '/' : base;
@@ -31,7 +31,7 @@ export function adminApiPath(pageProps, apiPath) {
     const base =
         raw === '' || raw === '/'
             ? ''
-            : String(raw ?? '/app').replace(/\/$/, '') || '/app';
+            : String(raw ?? '/ops').replace(/\/$/, '') || '/ops';
     const path = String(apiPath).replace(/^\//, '');
 
     return base === '' ? `/api/${path}` : `${base}/api/${path}`;
