@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/Components/ui/badge';
 import {
     Card,
     CardAction,
@@ -6,7 +6,7 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card';
+} from '@/Components/ui/card';
 import { formatNumber } from '@/lib/format';
 import { TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
 

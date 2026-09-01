@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/Components/ui/button';
+import { Field, FieldLabel } from '@/Components/ui/field';
+import { Input } from '@/Components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/Components/ui/native-select';
 
 export function AdminFilterBar({ fields, filters, route }) {
     const [values, setValues] = useState(filters ?? {});

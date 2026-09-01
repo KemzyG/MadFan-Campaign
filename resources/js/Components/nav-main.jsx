@@ -1,12 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/Components/ui/button';
 import {
     SidebarGroup,
     SidebarGroupContent,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from '@/components/ui/sidebar';
+} from '@/Components/ui/sidebar';
 import { CirclePlusIcon, MailIcon } from 'lucide-react';
 
 export function NavMain({ items, isActive, showQuickCreate = true }) {

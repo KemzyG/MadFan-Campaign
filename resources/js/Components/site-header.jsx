@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Separator } from '@/Components/ui/separator';
+import { SidebarTrigger } from '@/Components/ui/sidebar';
 import { adminPath } from '@/lib/adminPath';
 
 export function SiteHeader({ title = 'Ops' }) {

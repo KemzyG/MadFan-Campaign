@@ -4,7 +4,7 @@ import {
     PaginationContent,
     PaginationItem,
     PaginationLink,
-} from '@/components/ui/pagination';
+} from '@/Components/ui/pagination';
 
 function paginationLabel(label) {
     return label

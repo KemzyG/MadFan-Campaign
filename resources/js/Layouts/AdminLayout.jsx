@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { AppSidebar } from '@/components/app-sidebar';
-import { SiteHeader } from '@/components/site-header';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppSidebar } from '@/Components/app-sidebar';
+import { SiteHeader } from '@/Components/site-header';
+import { SidebarInset, SidebarProvider } from '@/Components/ui/sidebar';
+import { TooltipProvider } from '@/Components/ui/tooltip';
 import FlashMessage from '../Components/FlashMessage';
 import ImpersonationBanner from '../Components/ImpersonationBanner';
 

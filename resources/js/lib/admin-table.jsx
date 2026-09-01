@@ -11,17 +11,17 @@ import {
     tableFeatures,
     useTable,
 } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Card, CardContent } from '@/Components/ui/card';
+import { Checkbox } from '@/Components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from '@/Components/ui/dropdown-menu';
+import { Input } from '@/Components/ui/input';
 import {
     Table,
     TableBody,
@@ -29,7 +29,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/Components/ui/table';
 import { ChevronDownIcon, Columns3Icon, SearchIcon } from 'lucide-react';
 
 const features = tableFeatures({

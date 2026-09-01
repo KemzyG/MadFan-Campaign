@@ -7,11 +7,12 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const jsRoot = path.resolve(__dirname, 'resources/js');
 
 export default defineConfig({
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, 'resources/js'),
+            '@': jsRoot,
         },
     },
     plugins: [

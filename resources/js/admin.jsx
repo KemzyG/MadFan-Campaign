@@ -2,7 +2,7 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/Components/ui/sonner';
 
 createInertiaApp({
     title: (title) => (title ? `${title} · Mad Fan Ops` : 'Mad Fan Ops'),

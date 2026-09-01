@@ -1,10 +1,10 @@
 import { AdminPageHeader } from '@/lib/admin-page-header';
 import { AdminTable } from '@/lib/admin-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Field, FieldLabel } from '@/Components/ui/field';
+import { NativeSelect, NativeSelectOption } from '@/Components/ui/native-select';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '../../../Layouts/AdminLayout';

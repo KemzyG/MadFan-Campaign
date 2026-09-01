@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/Components/ui/badge';
 import { AdminTable } from '@/lib/admin-table';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { adminPath } from '@/lib/adminPath';
