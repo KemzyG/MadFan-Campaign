@@ -36,5 +36,6 @@
         <env name="ADMIN_MFA_REQUIRED" value="false"/>
         <env name="EMAIL_VERIFICATION_ENABLED" value="true"/>
         <env name="PASETO_TTL_MINUTES" value="1440"/>
+        <ini name="memory_limit" value="512M"/>
     </php>
 </phpunit>

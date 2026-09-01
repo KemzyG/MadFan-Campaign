@@ -1,8 +1,13 @@
-import { Head, router, usePoll } from '@inertiajs/react';
+import { Head, usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { getEcho, leaveEchoChannel } from '../../../echo';
 import SocialShell from '../../../Layouts/SocialShell';
 import { ChatSkeleton } from '../components/Skeletons';
+import {
+    markChatMessageDeleted,
+    mergeChatMessage,
+    patchChatProps,
+} from './chatRealtime';
 import ConversationList from './ConversationList';
 import Thread from './Thread';
 
@@ -15,11 +20,6 @@ const POLL_ONLY = [
     'group_candidates',
 ];
 
-/**
- * One page component for both the list and the thread: `view` decides which pane
- * a phone shows, while desktop always shows both. Keeping it as a single component
- * means desktop list → thread navigation never unmounts the stream.
- */
 export default function Chat({
     inbox = 'friends',
     view = 'list',
@@ -55,16 +55,51 @@ export default function Chat({
         }
 
         const name = `social.chat.${channel.id}`;
-        const subscription = echo.private(name).listen('.message.created', () => {
-            router.reload({
-                only: ['messages', 'threads', 'channels'],
-                preserveScroll: true,
-                preserveState: true,
+        const subscription = echo.private(name)
+            .listen('.message.created', (payload) => {
+                const incoming = payload?.message;
+                if (!incoming?.id) {
+                    return;
+                }
+
+                patchChatProps((current) => ({
+                    messages: {
+                        ...current.messages,
+                        items: mergeChatMessage(current.messages?.items || [], incoming),
+                    },
+                }));
+            })
+            .listen('.message.updated', (payload) => {
+                const incoming = payload?.message;
+                if (!incoming?.id) {
+                    return;
+                }
+
+                patchChatProps((current) => ({
+                    messages: {
+                        ...current.messages,
+                        items: mergeChatMessage(current.messages?.items || [], incoming),
+                    },
+                }));
+            })
+            .listen('.message.deleted', (payload) => {
+                const messageId = payload?.message_id;
+                if (!messageId) {
+                    return;
+                }
+
+                patchChatProps((current) => ({
+                    messages: {
+                        ...current.messages,
+                        items: markChatMessageDeleted(current.messages?.items || [], messageId),
+                    },
+                }));
             });
-        });
 
         return () => {
             subscription.stopListening('.message.created');
+            subscription.stopListening('.message.updated');
+            subscription.stopListening('.message.deleted');
             leaveEchoChannel(name);
         };
     }, [usingReverb, channel?.id]);
@@ -96,6 +131,8 @@ export default function Chat({
                             club={club}
                             fandom={fandom}
                             messages={messages?.items || []}
+                            hasMore={Boolean(messages?.has_more)}
+                            oldestId={messages?.oldest_id}
                             maxBodyLength={max_body_length}
                             realtime={realtime}
                             app={app}

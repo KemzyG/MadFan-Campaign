@@ -18,7 +18,8 @@ export default function ReplyQuote({
     // A caption-less photo/video message legitimately has no body (see
     // SendChatMessage) — that's not the same as the quoted message being
     // unavailable, so don't conflate the two behind one fallback string.
-    const text = body || (type === 'attachment' ? 'Photo or video' : 'Message unavailable');
+    const text = body
+        || (type === 'voice' ? 'Voice note' : type === 'attachment' ? 'Photo or video' : 'Message unavailable');
 
     const inner = (
         <>

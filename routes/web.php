@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\RolesController;
 use App\Http\Controllers\Admin\SeasonsController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ShowdownsController;
 use App\Http\Controllers\Admin\StaffAssignmentsController;
 use App\Http\Controllers\Admin\StaffMembersController;
 use App\Http\Controllers\Admin\StagesController;
@@ -63,10 +64,13 @@ use App\Http\Controllers\Inertia\HighlightsPageController;
 use App\Http\Controllers\Inertia\ImpersonationController;
 use App\Http\Controllers\Inertia\JerseyOrdersPageController;
 use App\Http\Controllers\Inertia\JerseysPageController;
+use App\Http\Controllers\Inertia\LeaderboardExportController;
 use App\Http\Controllers\Inertia\LeaderboardPageController;
 use App\Http\Controllers\Inertia\LeaguesPageController;
+use App\Http\Controllers\Inertia\LivePageController;
 use App\Http\Controllers\Inertia\LoyaltyTiersPageController;
 use App\Http\Controllers\Inertia\MediaGalleryPageController;
+use App\Http\Controllers\Inertia\MePageController;
 use App\Http\Controllers\Inertia\PointTransactionsPageController;
 use App\Http\Controllers\Inertia\PollsPageController;
 use App\Http\Controllers\Inertia\PostsPageController;
@@ -76,6 +80,7 @@ use App\Http\Controllers\Inertia\ReportsPageController;
 use App\Http\Controllers\Inertia\RolesPageController;
 use App\Http\Controllers\Inertia\SeasonsPageController;
 use App\Http\Controllers\Inertia\SettingsPageController;
+use App\Http\Controllers\Inertia\ShowdownsPageController;
 use App\Http\Controllers\Inertia\StaffPageController;
 use App\Http\Controllers\Inertia\StagesPageController;
 use App\Http\Controllers\Inertia\SystemLogsPageController;
@@ -193,6 +198,7 @@ $registerCampaignRoutes = function (): void {
                     ->name('fan.daily-claim.shootout-loss');
 
                 Route::get('/tasks', [FanTasksPageController::class, 'index'])->name('fan.tasks');
+                Route::get('/tasks/{task}', [FanTasksPageController::class, 'show'])->name('fan.tasks.show');
                 Route::post('/tasks/{task}/confirm', [FanTasksPageController::class, 'confirm'])->name('fan.tasks.confirm');
                 Route::post('/tasks/{task}/claim', [FanTasksPageController::class, 'claim'])->name('fan.tasks.claim');
                 Route::post('/tasks/{task}/complete', [FanTasksPageController::class, 'complete'])->name('fan.tasks.complete');
@@ -324,6 +330,9 @@ $registerAdminRoutes = function (): void {
         ->group(function () {
             Route::get('/', AdminDashboardController::class)->name('dashboard');
             Route::get('/leaderboard', LeaderboardPageController::class)->name('leaderboard');
+            Route::get('/leaderboard/export', LeaderboardExportController::class)->name('leaderboard.export');
+            Route::get('/live', LivePageController::class)->name('live');
+            Route::get('/me', MePageController::class)->name('me');
 
             Route::post('/organization', AdminOrganizationSwitchController::class)->name('organization.switch');
 
@@ -355,6 +364,7 @@ $registerAdminRoutes = function (): void {
             Route::get('/fixtures', [FixturesPageController::class, 'index'])->name('fixtures');
             Route::get('/reports', [ReportsPageController::class, 'index'])->name('reports');
             Route::get('/polls', [PollsPageController::class, 'index'])->name('polls');
+            Route::get('/showdowns', [ShowdownsPageController::class, 'index'])->name('showdowns');
             Route::get('/predictions', [PredictionsPageController::class, 'index'])->name('predictions');
             Route::get('/stages', [StagesPageController::class, 'index'])->name('stages');
             Route::get('/channels', [ChannelsPageController::class, 'index'])->name('channels');
@@ -399,6 +409,7 @@ $registerAdminRoutes = function (): void {
                 Route::apiResource('fixtures', FixturesController::class)->parameters(['fixtures' => 'fixture']);
                 Route::apiResource('reports', ReportsController::class)->except(['store']);
                 Route::apiResource('polls', PollsController::class);
+                Route::apiResource('showdowns', ShowdownsController::class);
                 Route::apiResource('predictions', PredictionsController::class);
                 Route::apiResource('stages', StagesController::class);
                 Route::apiResource('channels', ChannelsController::class);

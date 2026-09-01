@@ -21,12 +21,26 @@ class MessagePolicy
             && $user->hasVerifiedEmail();
     }
 
+    public function update(User $user, Message $message): bool
+    {
+        if (! $this->view($user, $message) || $message->trashed()) {
+            return false;
+        }
+
+        if ((int) $message->author_id !== (int) $user->id) {
+            return false;
+        }
+
+        return $message->created_at !== null
+            && $message->created_at->greaterThan(now()->subMinutes(5));
+    }
+
     public function delete(User $user, Message $message): bool
     {
         if (! $this->view($user, $message)) {
             return false;
         }
 
-        return $message->author_id === $user->id;
+        return (int) $message->author_id === (int) $user->id;
     }
 }

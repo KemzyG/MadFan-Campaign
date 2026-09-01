@@ -58,16 +58,18 @@ test('super-admin can narrow fan visibility by switching organization', function
         );
 });
 
-test('inertia operators cannot access removed admin management routes', function () {
+test('super-admin can access inertia admin management pages', function () {
     $superAdmin = createSuperAdminUser();
 
     $this->actingAs($superAdmin)
         ->get('/ops/admins')
-        ->assertNotFound();
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Admin/Admins/Index'));
 
     $this->actingAs($superAdmin)
         ->get('/ops/roles')
-        ->assertNotFound();
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Admin/Roles/Index'));
 });
 
 test('super-admin provisions an inertia operator via filament organizations', function () {

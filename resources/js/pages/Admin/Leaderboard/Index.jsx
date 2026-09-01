@@ -11,7 +11,11 @@ import AdminLayout from '../../../Layouts/AdminLayout';
 import { adminPath } from '../../../lib/adminPath';
 import { formatNumber } from '../../../lib/format';
 
-function scopeLabel(scope, fandom, club, league) {
+function scopeLabel(scope, fandom, club, league, season) {
+    if (scope === 'season' && season) {
+        return season.name;
+    }
+
     if (scope === 'fandom' && fandom) {
         return fandom.name;
     }
@@ -35,9 +39,11 @@ export default function LeaderboardIndex({
     fandom = null,
     club = null,
     league = null,
+    season = null,
     fandoms = [],
     clubs = [],
     leagues = [],
+    seasons = [],
 }) {
     const page = usePage();
     const base = adminPath(page.props);
@@ -48,6 +54,7 @@ export default function LeaderboardIndex({
         fandom_id: filters.fandom_id ? String(filters.fandom_id) : '',
         club_id: filters.club_id ? String(filters.club_id) : '',
         league_id: filters.league_id ? String(filters.league_id) : '',
+        season_id: filters.season_id ? String(filters.season_id) : '',
         limit: filters.limit ? String(filters.limit) : String(board.limit ?? 50),
     });
 
@@ -68,7 +75,33 @@ export default function LeaderboardIndex({
             payload.league_id = values.league_id;
         }
 
+        if (values.scope === 'season' && values.season_id) {
+            payload.season_id = values.season_id;
+        }
+
         router.get(route, payload, { preserveState: true, replace: true });
+    }
+
+    function exportCsv() {
+        const params = new URLSearchParams({ limit: values.limit || '500' });
+
+        if (values.scope === 'season' && values.season_id) {
+            params.set('scope', 'season');
+            params.set('season_id', values.season_id);
+        } else {
+            params.set('scope', values.scope);
+            if (values.scope === 'fandom' && values.fandom_id) {
+                params.set('fandom_id', values.fandom_id);
+            }
+            if (values.scope === 'club' && values.club_id) {
+                params.set('club_id', values.club_id);
+            }
+            if (values.scope === 'league' && values.league_id) {
+                params.set('league_id', values.league_id);
+            }
+        }
+
+        window.location.href = `${base}/leaderboard/export?${params.toString()}`;
     }
 
     function resetFilters() {
@@ -128,13 +161,19 @@ export default function LeaderboardIndex({
         };
     });
 
-    const activeScope = scopeLabel(scope, fandom, club, league);
+    const activeScope = scopeLabel(scope, fandom, club, league, season);
+    const canExport = values.scope !== 'season' || Boolean(values.season_id);
 
     return (
         <AdminLayout title="Leaderboard">
             <AdminPageHeader
                 title="Fan leaderboard"
-                description="Rank fans by lifetime points across global, fandom, club, or league scopes."
+                description="Rank fans by lifetime or season points across global, fandom, club, league, or season scopes."
+                actions={
+                    <Button type="button" variant="outline" disabled={!canExport} onClick={exportCsv}>
+                        Export CSV
+                    </Button>
+                }
             />
 
             <Card className="mb-6">
@@ -207,6 +246,24 @@ export default function LeaderboardIndex({
                                 >
                                     <NativeSelectOption value="">Select league…</NativeSelectOption>
                                     {leagues.map((item) => (
+                                        <NativeSelectOption key={item.id} value={String(item.id)}>
+                                            {item.name}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelect>
+                            </Field>
+                        ) : null}
+
+                        {values.scope === 'season' ? (
+                            <Field className="min-w-48">
+                                <FieldLabel>Season</FieldLabel>
+                                <NativeSelect
+                                    className="w-full"
+                                    value={values.season_id}
+                                    onChange={(e) => setValues((prev) => ({ ...prev, season_id: e.target.value }))}
+                                >
+                                    <NativeSelectOption value="">Select season…</NativeSelectOption>
+                                    {seasons.map((item) => (
                                         <NativeSelectOption key={item.id} value={String(item.id)}>
                                             {item.name}
                                         </NativeSelectOption>

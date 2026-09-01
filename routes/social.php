@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Social\ChatBlockController as ApiSocialChatBlockController;
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
+use App\Http\Controllers\Api\Social\ChatMessageReportController as ApiSocialChatMessageReportController;
+use App\Http\Controllers\Api\Social\ChatMessagesController as ApiSocialChatMessagesController;
 use App\Http\Controllers\Api\Social\ChatRailController as ApiSocialChatRailController;
 use App\Http\Controllers\Api\Social\ChatUnreadController as ApiSocialChatUnreadController;
 use App\Http\Controllers\Api\Social\DailyTaskController as ApiSocialDailyTaskController;
@@ -42,6 +45,7 @@ use App\Http\Controllers\Inertia\Social\SocialLeaderboardController;
 use App\Http\Controllers\Inertia\Social\SocialNotificationController;
 use App\Http\Controllers\Inertia\Social\SocialOnboardingController;
 use App\Http\Controllers\Inertia\Social\SocialPassportController;
+use App\Http\Controllers\Inertia\Social\SocialPollController;
 use App\Http\Controllers\Inertia\Social\SocialPostBookmarkController;
 use App\Http\Controllers\Inertia\Social\SocialPostController;
 use App\Http\Controllers\Inertia\Social\SocialPostHideController;
@@ -63,6 +67,7 @@ use App\Http\Controllers\Inertia\Social\SocialStageSignalController;
 use App\Http\Controllers\Inertia\Social\SocialStandingsController;
 use App\Http\Controllers\Inertia\Social\SocialTicketController;
 use App\Http\Controllers\Inertia\Social\SocialTicketPurchaseController;
+use App\Http\Controllers\Inertia\Social\SocialTournamentController;
 use App\Http\Controllers\Inertia\Social\SocialVideoController;
 use App\Http\Controllers\Inertia\Social\SocialWalletController;
 use App\Http\Controllers\Inertia\Social\SocialYouController;
@@ -190,6 +195,24 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::post('/chat/channels/{channel}/messages', [ApiSocialChatMessageController::class, 'store'])
                     ->middleware('throttle:60,1')
                     ->name('chat.messages.store');
+                Route::get('/chat/channels/{channel}/messages', [ApiSocialChatMessagesController::class, 'index'])
+                    ->middleware('throttle:120,1')
+                    ->name('chat.messages.index');
+                Route::patch('/chat/messages/{message}', [ApiSocialChatMessagesController::class, 'update'])
+                    ->middleware('throttle:60,1')
+                    ->name('chat.messages.update');
+                Route::delete('/chat/messages/{message}', [ApiSocialChatMessagesController::class, 'destroy'])
+                    ->middleware('throttle:60,1')
+                    ->name('chat.messages.destroy');
+                Route::post('/chat/messages/{message}/report', [ApiSocialChatMessageReportController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('chat.messages.report');
+                Route::post('/chat/users/{user}/block', [ApiSocialChatBlockController::class, 'store'])
+                    ->middleware('throttle:30,1')
+                    ->name('chat.users.block');
+                Route::delete('/chat/users/{user}/block', [ApiSocialChatBlockController::class, 'destroy'])
+                    ->middleware('throttle:30,1')
+                    ->name('chat.users.unblock');
                 Route::get('/chat/rail', ApiSocialChatRailController::class)
                     ->middleware('throttle:120,1')
                     ->name('chat.rail');
@@ -497,6 +520,8 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
         Route::get('/leaderboard', SocialLeaderboardController::class)->name('leaderboard');
 
         Route::get('/showdown/{showdown}', SocialShowdownController::class)->name('showdown.show');
+        Route::get('/polls/{poll}', SocialPollController::class)->name('polls.show');
+        Route::get('/tournaments/{competition}', SocialTournamentController::class)->name('tournaments.show');
 
         Route::get('/shop', [SocialShopController::class, 'index'])->name('shop.index');
         Route::get('/shop/{product:slug}', [SocialShopController::class, 'show'])->name('shop.show');

@@ -11,6 +11,7 @@ use App\Services\Social\Events\ChallengeEventProvider;
 use App\Services\Social\Events\EpisodeEventProvider;
 use App\Services\Social\Events\EventProvider;
 use App\Services\Social\Events\MatchEventProvider;
+use App\Services\Social\Events\PollEventProvider;
 use App\Services\Social\Events\ShowdownEventProvider;
 use App\Services\Social\Events\StageEventProvider;
 use App\Support\Social\EventCard;
@@ -36,6 +37,7 @@ class EventFeedService
         ChallengeEventProvider::class,
         CampaignEventProvider::class,
         ShowdownEventProvider::class,
+        PollEventProvider::class,
     ];
 
     /**

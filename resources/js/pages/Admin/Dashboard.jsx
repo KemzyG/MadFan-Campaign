@@ -2,9 +2,13 @@ import AdminLayout from '../../Layouts/AdminLayout';
 import { OpsDashboardChart } from '@/Components/Admin/ops-dashboard-chart';
 import { OpsDashboardSectionCards } from '@/Components/Admin/ops-dashboard-section-cards';
 import { OpsDashboardTables } from '@/Components/Admin/ops-dashboard-tables';
+import { NativeSelect, NativeSelectOption } from '@/Components/ui/native-select';
+import { router, usePage } from '@inertiajs/react';
+import { adminPath } from '../../lib/adminPath';
 
 export default function Dashboard({
     dashboard_mode: dashboardMode = 'platform',
+    chart_days: chartDays = 14,
     stats = {},
     signup_trend: signupTrend = [],
     points_series: pointsSeries = { labels: [], values: [] },
@@ -23,9 +27,30 @@ export default function Dashboard({
     activity_timeline: activityTimeline = [],
     staff_profile: staffProfile = null,
 }) {
+    const page = usePage();
+
+    function setChartDays(days) {
+        router.get(adminPath(page.props), { days }, { preserveState: true, replace: true });
+    }
+
     return (
         <AdminLayout title="Dashboard">
             <div className="flex flex-col gap-4 md:gap-6">
+                {dashboardMode === 'platform' ? (
+                    <div className="flex justify-end px-4 lg:px-6">
+                        <NativeSelect
+                            className="w-36"
+                            value={String(chartDays)}
+                            onChange={(e) => setChartDays(Number(e.target.value))}
+                        >
+                            {[7, 14, 21, 30].map((days) => (
+                                <NativeSelectOption key={days} value={String(days)}>
+                                    Last {days} days
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </div>
+                ) : null}
                 <OpsDashboardSectionCards
                     dashboardMode={dashboardMode}
                     stats={stats}

@@ -21,6 +21,10 @@ class ChannelPolicy
             return false;
         }
 
+        if ($channel->isDirect() && ! $this->canAccessDirectChannel($user, $channel)) {
+            return false;
+        }
+
         return match ($channel->scope ?? ChannelScope::Club) {
             ChannelScope::Fandom => $this->belongsToFandomChannel($user, $channel),
             ChannelScope::Club => $this->belongsToClubChannel($user, $channel),
@@ -34,7 +38,28 @@ class ChannelPolicy
             return false;
         }
 
+        if ($channel->isDirect() && ! $this->canAccessDirectChannel($user, $channel)) {
+            return false;
+        }
+
         return ! $channel->is_read_only;
+    }
+
+    private function canAccessDirectChannel(User $user, Channel $channel): bool
+    {
+        $channel->loadMissing('memberships');
+
+        $peerId = $channel->memberships
+            ->first(fn ($membership) => (int) $membership->user_id !== (int) $user->id)
+            ?->user_id;
+
+        if ($peerId === null) {
+            return true;
+        }
+
+        $peer = User::query()->find($peerId);
+
+        return $peer === null || ! $user->isBlockedWith($peer);
     }
 
     private function belongsToFandomChannel(User $user, Channel $channel): bool

@@ -373,6 +373,37 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             ->exists();
     }
 
+    public function blockedUsers(): HasMany
+    {
+        return $this->hasMany(UserBlock::class, 'blocker_id');
+    }
+
+    public function blockedByUsers(): HasMany
+    {
+        return $this->hasMany(UserBlock::class, 'blocked_id');
+    }
+
+    public function hasBlocked(User $other): bool
+    {
+        return UserBlock::query()
+            ->where('blocker_id', $this->id)
+            ->where('blocked_id', $other->id)
+            ->exists();
+    }
+
+    public function isBlockedBy(User $other): bool
+    {
+        return UserBlock::query()
+            ->where('blocker_id', $other->id)
+            ->where('blocked_id', $this->id)
+            ->exists();
+    }
+
+    public function isBlockedWith(User $other): bool
+    {
+        return $this->hasBlocked($other) || $this->isBlockedBy($other);
+    }
+
     public function passport(): HasOne
     {
         return $this->hasOne(Passport::class);

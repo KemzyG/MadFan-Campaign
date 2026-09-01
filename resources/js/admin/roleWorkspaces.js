@@ -27,6 +27,8 @@ export function buildAdminNavigation(basePath = '/ops') {
     return [
         { name: 'Dashboard', href: p(''), permission: 'dashboard.view', key: 'dashboard', section: 'overview' },
         { name: 'Leaderboard', href: p('leaderboard'), permission: 'dashboard.view', key: 'leaderboard', section: 'overview' },
+        { name: 'Live ops', href: p('live'), permission: 'dashboard.view', key: 'live', section: 'overview' },
+        { name: 'My desk', href: p('me'), permission: 'dashboard.view', key: 'me', section: 'overview' },
         { name: 'Users', href: p('users'), permission: 'users.view', key: 'users', section: 'people' },
         { name: 'Staff', href: p('staff'), permission: 'staff.view', key: 'staff', section: 'people' },
         { name: 'Admins', href: p('admins'), permission: 'admins.view', key: 'admins', section: 'people' },
@@ -39,6 +41,7 @@ export function buildAdminNavigation(basePath = '/ops') {
         { name: 'Fixtures', href: p('fixtures'), permission: 'fixtures.manage', key: 'fixtures', section: 'social' },
         { name: 'Reports', href: p('reports'), permission: 'reports.manage', key: 'reports', section: 'social' },
         { name: 'Polls', href: p('polls'), permission: 'polls.manage', key: 'polls', section: 'social' },
+        { name: 'Showdowns', href: p('showdowns'), permission: 'polls.manage', key: 'showdowns', section: 'social' },
         { name: 'Predictions', href: p('predictions'), permission: 'predictions.manage', key: 'predictions', section: 'social' },
         { name: 'Stages', href: p('stages'), permission: 'stages.manage', key: 'stages', section: 'social' },
         { name: 'Channels', href: p('channels'), permission: 'channels.manage', key: 'channels', section: 'social' },

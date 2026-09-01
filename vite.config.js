@@ -8,10 +8,17 @@ import react from '@vitejs/plugin-react';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jsRoot = path.resolve(__dirname, 'resources/js');
+const componentsRoot = path.resolve(jsRoot, 'Components');
 
 export default defineConfig({
     resolve: {
         alias: {
+            '@/Components/admin': path.resolve(componentsRoot, 'Admin'),
+            '@/Components/ui': path.resolve(componentsRoot, 'ui'),
+            '@/Components': componentsRoot,
+            '@/components/admin': path.resolve(componentsRoot, 'Admin'),
+            '@/components/ui': path.resolve(componentsRoot, 'ui'),
+            '@/components': componentsRoot,
             '@': jsRoot,
         },
     },

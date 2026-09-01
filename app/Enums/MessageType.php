@@ -7,4 +7,5 @@ enum MessageType: string
     case Text = 'text';
     case System = 'system';
     case Attachment = 'attachment';
+    case Voice = 'voice';
 }

@@ -91,6 +91,17 @@ export function IconVersus() {
     );
 }
 
+/** vote — a ballot with a check. */
+export function IconBallot() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <rect x="4" y="3.5" width="16" height="17" rx="2" strokeWidth="1.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="m8.3 12.4 2.3 2.3 5-5.1" />
+            <path strokeLinecap="round" strokeWidth="1.5" d="M7.5 16.7h9" />
+        </svg>
+    );
+}
+
 /** concert — music notes. */
 export function IconMusic() {
     return (
@@ -206,6 +217,7 @@ export const EVENT_ICONS = {
     campaign: IconFlag,
     fan_challenge: IconTarget,
     showdown: IconVersus,
+    vote: IconBallot,
     concert: IconMusic,
     song_release: IconDisc,
     breaking_news: IconAlert,

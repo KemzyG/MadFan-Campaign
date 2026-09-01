@@ -40,8 +40,8 @@ class StoreChatMessageRequest extends FormRequest
             'attachment' => [
                 'nullable',
                 'file',
-                'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm',
-                'max:'.FeedService::MAX_VIDEO_KB,
+                'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav',
+                'max:'.max(FeedService::MAX_VIDEO_KB, ChatService::MAX_VOICE_KB),
             ],
             'reply_to_message_id' => [
                 'nullable',
@@ -73,6 +73,7 @@ class StoreChatMessageRequest extends FormRequest
             $mime = strtolower((string) $file->getMimeType());
             $isImage = str_starts_with($mime, 'image/');
             $isVideo = str_starts_with($mime, 'video/');
+            $isAudio = str_starts_with($mime, 'audio/');
 
             if ($isImage && $file->getSize() > FeedService::MAX_IMAGE_KB * 1024) {
                 $validator->errors()->add(
@@ -87,6 +88,13 @@ class StoreChatMessageRequest extends FormRequest
                     'Videos must be under '.(int) (FeedService::MAX_VIDEO_KB / 1024).'MB.',
                 );
             }
+
+            if ($isAudio && $file->getSize() > ChatService::MAX_VOICE_KB * 1024) {
+                $validator->errors()->add(
+                    'attachment',
+                    'Voice notes must be under '.(int) (ChatService::MAX_VOICE_KB / 1024).'MB.',
+                );
+            }
         });
     }
 
@@ -97,7 +105,7 @@ class StoreChatMessageRequest extends FormRequest
     {
         return [
             'body.max' => 'Keep it to '.ChatService::MAX_BODY_LENGTH.' characters.',
-            'attachment.mimetypes' => 'Use jpg, png, webp, gif, mp4, or webm.',
+            'attachment.mimetypes' => 'Use jpg, png, webp, gif, mp4, webm, or a voice note (webm/mp4/ogg).',
         ];
     }
 

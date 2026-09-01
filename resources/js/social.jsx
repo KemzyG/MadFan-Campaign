@@ -27,6 +27,9 @@ import '../css/social/event-live.css';
 import '../css/social/event-media.css';
 import '../css/social/event-news.css';
 import '../css/social/event-showdown.css';
+import '../css/social/event-vote.css';
+import '../css/social/poll.css';
+import '../css/social/tournament.css';
 // Fan auth pages (login / register / password) can land in this SPA when an
 // Inertia visit redirects after session expiry — they need campaign styles.
 import '../css/madfan.css';

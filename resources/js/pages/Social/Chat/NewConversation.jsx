@@ -5,6 +5,7 @@ import { AuthorAvatar } from './helpers';
 
 function FriendPicker({ candidates, onDone }) {
     const [processing, setProcessing] = useState(false);
+    const { reportError } = useSocialFlash();
 
     if (!candidates.length) {
         return (
@@ -23,6 +24,7 @@ function FriendPicker({ candidates, onDone }) {
         router.post('/social/chat/direct', { user_id: userId }, {
             preserveScroll: true,
             onSuccess: () => onDone?.(),
+            onError: () => reportError?.('Could not start chat — follow this fan first.'),
             onFinish: () => setProcessing(false),
         });
     }

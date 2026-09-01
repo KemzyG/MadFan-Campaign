@@ -94,7 +94,18 @@ function ThreadHeader({ inbox, channel, club, fandom, realtime, fallbackUrl, onO
     );
 }
 
-export default function Thread({ inbox, channel, club, fandom, messages = [], maxBodyLength, realtime, app }) {
+export default function Thread({
+    inbox,
+    channel,
+    club,
+    fandom,
+    messages = [],
+    hasMore = false,
+    oldestId = null,
+    maxBodyLength,
+    realtime,
+    app,
+}) {
     const [replyTo, setReplyTo] = useState(null);
     const [membersOpen, setMembersOpen] = useState(false);
     const scrollerRef = useRef(null);
@@ -151,6 +162,9 @@ export default function Thread({ inbox, channel, club, fandom, messages = [], ma
             <MessageStream
                 items={messages}
                 channel={channel}
+                inbox={inbox}
+                hasMore={hasMore}
+                oldestId={oldestId}
                 showAuthorNames={inbox !== 'friends'}
                 onReply={setReplyTo}
                 scrollerRef={scrollerRef}

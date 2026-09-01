@@ -82,7 +82,11 @@ class SendChatMessage
             return Message::query()->create([
                 'channel_id' => $channel->id,
                 'author_id' => $author->id,
-                'type' => $media !== null ? MessageType::Attachment : MessageType::Text,
+                'type' => match ($media['message_type'] ?? null) {
+                    MessageType::Voice => MessageType::Voice,
+                    MessageType::Attachment => MessageType::Attachment,
+                    default => MessageType::Text,
+                },
                 'body' => $body !== '' ? $body : null,
                 'media_path' => $media['path'] ?? null,
                 'media_type' => $media['type'] ?? null,
@@ -179,7 +183,7 @@ class SendChatMessage
     }
 
     /**
-     * @return array{path: string, type: 'image'|'video', width: ?int, height: ?int}|null
+     * @return array{path: string, type: 'image'|'video'|'audio', width: ?int, height: ?int, message_type: MessageType}|null
      */
     private function storeAttachment(?UploadedFile $attachment, Channel $channel): ?array
     {
@@ -189,12 +193,13 @@ class SendChatMessage
 
         $mime = strtolower((string) $attachment->getMimeType());
         $isVideo = str_starts_with($mime, 'video/');
+        $isAudio = str_starts_with($mime, 'audio/');
         $path = CloudinaryImageStorage::storeMedia($attachment, 'social/chat/'.$channel->id);
 
         $width = null;
         $height = null;
 
-        if (! $isVideo) {
+        if (! $isVideo && ! $isAudio) {
             $size = @getimagesize($attachment->getRealPath()) ?: [null, null];
             $width = $size[0] ?? null;
             $height = $size[1] ?? null;
@@ -202,9 +207,10 @@ class SendChatMessage
 
         return [
             'path' => $path,
-            'type' => $isVideo ? 'video' : 'image',
+            'type' => $isVideo ? 'video' : ($isAudio ? 'audio' : 'image'),
             'width' => $width,
             'height' => $height,
+            'message_type' => $isAudio ? MessageType::Voice : MessageType::Attachment,
         ];
     }
 }

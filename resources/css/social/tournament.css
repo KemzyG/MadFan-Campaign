@@ -1,0 +1,150 @@
+/*
+ * Tournament hub — /social/tournaments/{competition}. A computed standings
+ * table (from finished fixtures) plus the full fixture list, grouped by
+ * status. There is no Tournament model — see TournamentService.
+ */
+
+.mf-tn-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1rem;
+    max-width: 34rem;
+    margin-inline: auto;
+}
+
+.mf-tn-title {
+    margin: 0;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-title);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tn-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--mf-radius-panel);
+    border: 1px solid var(--mf-line);
+}
+
+.mf-tn-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--mf-text-caption);
+}
+
+.mf-tn-table th,
+.mf-tn-table td {
+    padding: 0.55rem 0.6rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mf-tn-table th {
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--mf-line);
+}
+
+.mf-tn-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-tn-table__club {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tn-table__points {
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tn-empty {
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-caption);
+    border-radius: var(--mf-radius-panel);
+    border: 1px dashed var(--mf-line);
+}
+
+.mf-tn-section__title {
+    margin: 0 0 0.6rem;
+    font-family: var(--mf-font-display);
+    font-size: var(--mf-text-ui);
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tn-fixture {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 0.5rem;
+    border-bottom: 1px solid var(--mf-line-soft);
+}
+
+.mf-tn-fixture:last-child {
+    border-bottom: 0;
+}
+
+.mf-tn-fixture.is-live {
+    background: color-mix(in srgb, var(--mf-flame, red) 6%, transparent);
+}
+
+.mf-tn-fixture__side {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.mf-tn-fixture__side--away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.mf-tn-fixture__team {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--mf-text-caption);
+    font-weight: 600;
+    color: var(--mf-text);
+}
+
+.mf-tn-fixture__mid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mf-tn-fixture__score {
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-tn-badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-elevated);
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.mf-tn-badge--live {
+    background: color-mix(in srgb, var(--mf-flame, red) 18%, transparent);
+    color: var(--mf-flame, red);
+}

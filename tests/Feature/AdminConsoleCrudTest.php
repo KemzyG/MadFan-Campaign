@@ -30,7 +30,7 @@ test('support desk gets support workspace accent and job', function () {
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->where('workspace.key', 'support')
-            ->where('dashboard_mode', 'personal')
+            ->where('dashboard_mode', 'platform')
         );
 });
 
@@ -92,7 +92,7 @@ test('tasks page includes failed verification count and full task update works',
         ->and($task->fresh()->taskSteps)->toHaveCount(1);
 });
 
-test('inertia admin management api routes are removed', function () {
+test('super-admin can provision inertia operators via admin api', function () {
     seedRoles();
     $super = createSuperAdminUser();
 
@@ -103,5 +103,6 @@ test('inertia admin management api routes are removed', function () {
             'password' => validTestPassword(),
             'role' => 'support',
         ])
-        ->assertNotFound();
+        ->assertCreated()
+        ->assertJsonPath('email', 'ops-user@madfan.test');
 });

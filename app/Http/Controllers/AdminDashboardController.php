@@ -14,6 +14,9 @@ class AdminDashboardController extends Controller
     {
         Gate::authorize('viewDashboard');
 
-        return Inertia::render('Admin/Dashboard', $dashboard->dataFor($request->user()));
+        return Inertia::render('Admin/Dashboard', $dashboard->dataFor(
+            $request->user(),
+            $request->integer('days', 14),
+        ));
     }
 }

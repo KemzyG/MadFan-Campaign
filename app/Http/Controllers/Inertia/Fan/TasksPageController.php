@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\TaskController;
 use App\Http\Requests\ClaimTaskRequest;
 use App\Http\Requests\ConfirmTaskRequest;
+use App\Http\Resources\TaskResource;
 use App\Models\Task;
+use App\Models\UserTaskProgress;
 use App\Services\Fan\FanPageDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +25,23 @@ class TasksPageController extends Controller
         ]);
     }
 
+    /**
+     * A single challenge's own page — reached from the Events feed, distinct
+     * from the full /tasks list.
+     */
+    public function show(Request $request, Task $task, FanPageDataService $data): Response
+    {
+        $task->load('taskSteps');
+        $task->userProgress = UserTaskProgress::where('user_id', $request->user()->id)
+            ->where('task_id', $task->id)
+            ->first();
+
+        return Inertia::render('Fan/TaskShow', [
+            'task' => TaskResource::make($task)->resolve($request),
+            'fan' => $data->userHeader($request),
+        ]);
+    }
+
     public function confirm(ConfirmTaskRequest $request, Task $task): RedirectResponse
     {
         $response = app(TaskController::class)->confirm($request, $task);
@@ -32,14 +51,14 @@ class TasksPageController extends Controller
             ? 'Task submitted for admin review.'
             : 'Task confirmed. You can claim your points.';
 
-        return redirect()->route('fan.tasks')->with('success', $message);
+        return back(fallback: route('fan.tasks'))->with('success', $message);
     }
 
     public function claim(ClaimTaskRequest $request, Task $task): RedirectResponse
     {
         app(TaskController::class)->claim($request, $task);
 
-        return redirect()->route('fan.tasks')->with('success', 'Points claimed!');
+        return back(fallback: route('fan.tasks'))->with('success', 'Points claimed!');
     }
 
     public function complete(ConfirmTaskRequest $request, Task $task): RedirectResponse
@@ -48,11 +67,11 @@ class TasksPageController extends Controller
         $payload = $response->getData(true);
 
         if (is_array($payload) && ($payload['awaiting_review'] ?? false)) {
-            return redirect()->route('fan.tasks')->with('success', 'Task submitted for admin review. Points are awarded after approval.');
+            return back(fallback: route('fan.tasks'))->with('success', 'Task submitted for admin review. Points are awarded after approval.');
         }
 
         $points = is_array($payload) ? ($payload['points_awarded'] ?? $task->points) : $task->points;
 
-        return redirect()->route('fan.tasks')->with('success', "You earned {$points} points!");
+        return back(fallback: route('fan.tasks'))->with('success', "You earned {$points} points!");
     }
 }

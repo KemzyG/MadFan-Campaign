@@ -26,15 +26,26 @@ class AdminDashboardDataService
     /**
      * @return array<string, mixed>
      */
-    public function dataFor(User $user): array
+    public function dataFor(User $user, int $days = 14): array
     {
         if ($this->usesPlatformDashboard($user)) {
             return [
                 'dashboard_mode' => 'platform',
-                ...$this->platformData(),
+                ...$this->platformData($days),
             ];
         }
 
+        return [
+            'dashboard_mode' => 'personal',
+            ...$this->personalData($user),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function personalDeskDataFor(User $user): array
+    {
         return [
             'dashboard_mode' => 'personal',
             ...$this->personalData($user),
@@ -80,8 +91,9 @@ class AdminDashboardDataService
     /**
      * @return array<string, mixed>
      */
-    private function platformData(): array
+    private function platformData(int $days = 14): array
     {
+        $days = max(7, min(30, $days));
         $fanScope = function ($query) {
             // Service-level callers (no HTTP bootstrap) should still see fan accounts.
             if ($this->organizationContext->user() === null) {
@@ -151,16 +163,17 @@ class AdminDashboardDataService
             ],
             'signup_trend' => $signupTrend,
             'points_trend' => $pointsTrend,
-            'points_series' => $this->analytics->pointsAwardedSeries(14),
-            'active_fans_series' => $this->analytics->dailyActiveFansSeries(14),
-            'posts_series' => $this->analytics->dailyPostsSeries(14),
-            'engagement_series' => $this->analytics->dailyEngagementSeries(14),
-            'live_series' => $this->analytics->dailyActiveLiveSeries(14),
-            'events_series' => $this->analytics->dailyEventsSeries(14),
-            'activities_series' => $this->analytics->dailyOtherActivitiesSeries(14),
-            'points_by_source' => $this->analytics->pointsBySource(30),
+            'points_series' => $this->analytics->pointsAwardedSeries($days),
+            'active_fans_series' => $this->analytics->dailyActiveFansSeries($days),
+            'posts_series' => $this->analytics->dailyPostsSeries($days),
+            'engagement_series' => $this->analytics->dailyEngagementSeries($days),
+            'live_series' => $this->analytics->dailyActiveLiveSeries($days),
+            'events_series' => $this->analytics->dailyEventsSeries($days),
+            'activities_series' => $this->analytics->dailyOtherActivitiesSeries($days),
+            'points_by_source' => $this->analytics->pointsBySource($days),
             'source_type_labels' => $this->analytics->sourceTypeLabels(),
             'active_events' => $this->analytics->activeEventsList(10),
+            'chart_days' => $days,
             'top_users' => $topUsers,
             'recent_activity' => $recentActivity,
             'performance' => null,

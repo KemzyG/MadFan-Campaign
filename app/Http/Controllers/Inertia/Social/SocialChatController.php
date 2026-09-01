@@ -148,9 +148,20 @@ class SocialChatController extends Controller
             $chatService->markRead($user, $channel);
         }
 
-        $messages = $channel !== null
-            ? $chatService->latestMessages($channel)
-            : [];
+        $messagesPayload = [
+            'items' => [],
+            'has_more' => false,
+            'oldest_id' => null,
+        ];
+
+        if ($channel !== null) {
+            $page = $chatService->paginatedMessages($channel, null, ChatService::MESSAGES_PER_PAGE);
+            $messagesPayload = [
+                'items' => $chatService->presentMessages($page['messages'], $user),
+                'has_more' => $page['has_more'],
+                'oldest_id' => $page['oldest_id'],
+            ];
+        }
 
         return Inertia::render('Social/Chat/Index', [
             'inbox' => $inbox,
@@ -168,9 +179,7 @@ class SocialChatController extends Controller
             'channel' => $channel !== null
                 ? $chatService->presentActiveChannel($channel, $user)
                 : null,
-            'messages' => [
-                'items' => $chatService->presentMessages($messages, $user),
-            ],
+            'messages' => $messagesPayload,
             'max_body_length' => ChatService::MAX_BODY_LENGTH,
             'poll_ms' => SocialRealtime::enabled()
                 ? max(ChatService::POLL_INTERVAL_MS * 8, 30000)

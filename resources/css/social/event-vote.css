@@ -1,0 +1,81 @@
+/*
+ * Social events feed — vote/poll teaser (.mf-evvt). Shared byline/pill/
+ * countdown/actions chrome lives in events.css; this is just the body.
+ */
+
+.mf-evvt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.mf-evvt__question {
+    margin: 0;
+    font-weight: 700;
+    color: var(--mf-text);
+}
+
+.mf-evvt__options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.mf-evvt__option-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: var(--mf-text-caption);
+}
+
+.mf-evvt__option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--mf-text);
+    font-weight: 600;
+}
+
+.mf-evvt__option.is-mine .mf-evvt__option-label {
+    color: var(--mf-pitch);
+}
+
+.mf-evvt__option-percent {
+    flex-shrink: 0;
+    color: var(--mf-muted);
+    font-family: var(--mf-font-mono);
+}
+
+.mf-evvt__option-bar {
+    position: relative;
+    display: block;
+    height: 0.35rem;
+    margin-top: 0.25rem;
+    border-radius: var(--mf-radius-full);
+    background: var(--mf-recess);
+    overflow: hidden;
+}
+
+.mf-evvt__option-bar span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mf-pitch);
+    transition: width 220ms var(--mf-ease);
+}
+
+.mf-evvt__more {
+    margin: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}
+
+.mf-evvt__total {
+    margin: 0;
+    color: var(--mf-muted);
+    font-size: var(--mf-text-micro);
+}

@@ -121,19 +121,21 @@ class MatchEventProvider implements EventProvider
             $liveCount = (int) $round->live_count;
             $fixtureCount = (int) $round->fixture_count;
             $nextKickoff = $round->next_kickoff ? Carbon::parse($round->next_kickoff) : null;
+            // Same slug TournamentService::resolveCompetition() derives it back from.
+            $slug = Str::limit(Str::slug($competition), 60, '');
 
             yield new EventCard(
                 // Slug (not the raw name) so the interest key stays URL-safe and
                 // within the event_key column; truncated to leave room for the prefix.
-                key: EventType::Tournament->value.':'.Str::limit(Str::slug($competition), 60, ''),
+                key: EventType::Tournament->value.':'.$slug,
                 type: EventType::Tournament,
                 phase: $liveCount > 0 ? EventPhase::Live : EventPhase::Upcoming,
                 timestamp: $nextKickoff,
                 headline: $competition,
                 subtitle: $fixtureCount.' '.Str::plural('fixture', $fixtureCount).' to play',
                 club: null,
-                cta: ['label' => 'View table', 'href' => '/social/clubs'],
-                share: ['title' => $competition, 'url' => '/social/fixtures'],
+                cta: ['label' => 'View table', 'href' => '/social/tournaments/'.$slug],
+                share: ['title' => $competition, 'url' => '/social/tournaments/'.$slug],
                 data: [
                     'competition' => $competition,
                     'fixture_count' => $fixtureCount,

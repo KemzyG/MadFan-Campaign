@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Social;
 
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
-use App\Models\User;
 use App\Services\Social\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,19 +16,10 @@ class ChatMembersController extends Controller
      */
     public function __invoke(Request $request, Channel $channel, ChatService $chatService): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        if ($channel->isFandom()) {
-            abort_unless((int) $channel->fandomServer?->fandom_id === (int) $user->favourite_fandom_id, 403);
-        } elseif ($channel->isClub()) {
-            abort_unless((int) $channel->clubServer?->club_id === (int) $user->favourite_club_id, 403);
-        } else {
-            abort_unless($channel->hasMember($user), 403);
-        }
+        $this->authorize('view', $channel);
 
         return response()->json([
-            'data' => $chatService->presentMembers($channel, $user),
+            'data' => $chatService->presentMembers($channel, $request->user()),
         ]);
     }
 }

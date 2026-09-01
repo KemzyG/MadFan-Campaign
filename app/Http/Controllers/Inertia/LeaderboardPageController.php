@@ -20,6 +20,7 @@ class LeaderboardPageController extends Controller
             fandomId: $request->integer('fandom_id') ?: null,
             clubId: $request->integer('club_id') ?: null,
             leagueId: $request->integer('league_id') ?: null,
+            seasonId: $request->integer('season_id') ?: null,
             limit: $request->integer('limit', 50),
         ));
     }

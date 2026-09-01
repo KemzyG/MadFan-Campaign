@@ -55,6 +55,9 @@ import {
 const NAV_ICONS = {
     dashboard: LayoutDashboardIcon,
     leaderboard: TrophyIcon,
+    live: RadioIcon,
+    me: AwardIcon,
+    showdowns: TargetIcon,
     users: UsersIcon,
     staff: ShieldIcon,
     admins: UserCogIcon,

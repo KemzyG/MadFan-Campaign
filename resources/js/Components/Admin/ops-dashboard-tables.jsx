@@ -5,6 +5,32 @@ import { formatDateTime, formatNumber } from '@/lib/format';
 import { adminPath } from '@/lib/adminPath';
 import { adminBadgeClass, adminBadgeVariant } from '@/lib/admin-badge';
 
+function adminEventHref(pageProps, item) {
+    const base = adminPath(pageProps);
+    const [type, id] = String(item.key ?? '').split(':');
+
+    if (!id) {
+        return null;
+    }
+
+    const routes = {
+        live_match: `${base}/fixtures`,
+        livestream: `${base}/stages`,
+        live_event: `${base}/stages`,
+        tournament: `${base}/fixtures`,
+        new_episode: `${base}/stages`,
+        campaign: `${base}/seasons`,
+        fan_challenge: `${base}/tasks`,
+        showdown: `${base}/showdowns`,
+        vote: `${base}/polls`,
+        concert: `${base}/announcements`,
+        song_release: `${base}/announcements`,
+        breaking_news: `${base}/announcements`,
+    };
+
+    return routes[type] ?? null;
+}
+
 export function OpsDashboardTables({
     dashboardMode,
     topUsers = [],
@@ -110,17 +136,27 @@ export function OpsDashboardTables({
         .sort((a, b) => b.sortTotal - a.sortTotal)
         .map(({ sortTotal: _sortTotal, ...row }) => row);
 
-    const activeEventRows = activeEvents.map((item) => ({
-        id: item.key,
-        type: item.label ?? item.type?.replaceAll('_', ' ') ?? 'Event',
-        headline: item.headline ?? '—',
-        status: (
-            <Badge variant="outline" className="border-red-500/40 text-red-600 dark:text-red-400">
-                {item.pill ?? 'LIVE'}
-            </Badge>
-        ),
-        club: item.club?.name ?? '—',
-    }));
+    const activeEventRows = activeEvents.map((item) => {
+        const href = adminEventHref(page.props, item);
+
+        return {
+            id: item.key,
+            type: item.label ?? item.type?.replaceAll('_', ' ') ?? 'Event',
+            headline: href ? (
+                <Link href={href} className="font-medium text-primary underline-offset-2 hover:underline">
+                    {item.headline ?? '—'}
+                </Link>
+            ) : (
+                item.headline ?? '—'
+            ),
+            status: (
+                <Badge variant="outline" className="border-red-500/40 text-red-600 dark:text-red-400">
+                    {item.pill ?? 'LIVE'}
+                </Badge>
+            ),
+            club: item.club?.name ?? '—',
+        };
+    });
 
     return (
         <div className="grid gap-4 px-4 lg:px-6">

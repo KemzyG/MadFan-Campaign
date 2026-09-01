@@ -1,6 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import MediaLightbox from '../components/post/MediaLightbox';
 import { linkifyText } from '../../../lib/linkify';
-import { useSocialFlash } from '../optimistic';
+import { socialApi } from '../../../lib/socialApi';
+import { applyOptimisticProps, useSocialFlash } from '../optimistic';
+import { markChatMessageDeleted, prependChatMessages } from './chatRealtime';
 import {
     AuthorAvatar,
     dayKey,
@@ -16,21 +19,155 @@ const LONG_PRESS_MS = 420;
 function ReplyIcon() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.9"
-                d="M10 9V5l-6 6 6 6v-4h4a5 5 0 0 1 5 5v1"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" d="M10 9V5l-6 6 6 6v-4h4a5 5 0 0 1 5 5v1" />
         </svg>
     );
 }
 
-function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
+function MoreIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
+function MessageActions({ message, inbox, onEdit, onReply, onClose }) {
+    const { reportError, reportSuccess } = useSocialFlash();
+    const [open, setOpen] = useState(true);
+
+    if (!open) {
+        return null;
+    }
+
+    async function remove() {
+        if (!confirm('Delete this message?')) {
+            return;
+        }
+
+        try {
+            await socialApi(`/chat/messages/${message.id}`, { method: 'DELETE' });
+            applyOptimisticProps((props) => ({
+                messages: {
+                    ...props.messages,
+                    items: markChatMessageDeleted(props.messages?.items || [], message.id),
+                },
+            }));
+            reportSuccess?.('Message deleted.');
+            onClose?.();
+        } catch (error) {
+            reportError?.(error instanceof Error ? error.message : 'Could not delete message.');
+        }
+    }
+
+    async function report() {
+        try {
+            await socialApi(`/chat/messages/${message.id}/report`, {
+                method: 'POST',
+                body: { reason: 'abuse' },
+            });
+            reportSuccess?.('Report submitted.');
+            onClose?.();
+        } catch (error) {
+            reportError?.(error instanceof Error ? error.message : 'Could not submit report.');
+        }
+    }
+
+    async function blockAuthor() {
+        if (!message.author?.id) {
+            return;
+        }
+
+        try {
+            await socialApi(`/chat/users/${message.author.id}/block`, { method: 'POST' });
+            reportSuccess?.('Fan blocked.');
+            onClose?.();
+        } catch (error) {
+            reportError?.(error instanceof Error ? error.message : 'Could not block fan.');
+        }
+    }
+
+    return (
+        <div className="mf-chat-actions" role="menu">
+            {message.can_edit ? (
+                <button type="button" onClick={() => { onEdit?.(message); onClose?.(); }}>
+                    Edit
+                </button>
+            ) : null}
+            <button type="button" onClick={() => { onReply?.(message); onClose?.(); }}>
+                Reply
+            </button>
+            {message.can_delete ? (
+                <button type="button" className="is-danger" onClick={remove}>
+                    Delete
+                </button>
+            ) : null}
+            {!message.is_mine ? (
+                <>
+                    <button type="button" onClick={report}>Report</button>
+                    {inbox === 'friends' && message.author?.id ? (
+                        <button type="button" className="is-danger" onClick={blockAuthor}>
+                            Block fan
+                        </button>
+                    ) : null}
+                </>
+            ) : null}
+            <button type="button" onClick={() => { setOpen(false); onClose?.(); }}>
+                Cancel
+            </button>
+        </div>
+    );
+}
+
+function MessageMedia({ message, onOpenLightbox }) {
+    if (!message.media?.url || message.deleted) {
+        return null;
+    }
+
+    if (message.media.type === 'audio' || message.type === 'voice') {
+        return (
+            <div className="mf-chat-bubble__voice">
+                <audio src={message.media.url} controls preload="metadata" />
+            </div>
+        );
+    }
+
+    if (message.media.type === 'video') {
+        return (
+            <button type="button" className="mf-chat-bubble__media-btn" onClick={() => onOpenLightbox(message)}>
+                <video src={message.media.url} muted playsInline />
+                <span className="mf-chat-bubble__media-play" aria-hidden>▶</span>
+            </button>
+        );
+    }
+
+    return (
+        <button type="button" className="mf-chat-bubble__media-btn" onClick={() => onOpenLightbox(message)}>
+            <img src={message.media.url} alt="" loading="lazy" />
+        </button>
+    );
+}
+
+function MessageRow({
+    message,
+    isGrouped,
+    showAuthor,
+    inbox,
+    onReply,
+    onJump,
+    onEdit,
+    onOpenLightbox,
+}) {
     const author = message.author;
     const isMine = Boolean(message.is_mine);
     const pressTimer = useRef(null);
-    const canReply = typeof onReply === 'function' && !message._optimistic;
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [editBody, setEditBody] = useState(message.body || '');
+    const { reportError, reportSuccess } = useSocialFlash();
+    const canInteract = !message._optimistic && !message.deleted;
 
     function clearPress() {
         if (pressTimer.current) {
@@ -42,7 +179,7 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
     useEffect(() => clearPress, []);
 
     function startPress() {
-        if (!canReply) {
+        if (!canInteract) {
             return;
         }
 
@@ -53,11 +190,46 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
         }, LONG_PRESS_MS);
     }
 
+    async function saveEdit() {
+        const next = editBody.trim();
+        if (!next) {
+            return;
+        }
+
+        try {
+            const data = await socialApi(`/chat/messages/${message.id}`, {
+                method: 'PATCH',
+                body: { body: next },
+            });
+
+            applyOptimisticProps((props) => ({
+                messages: {
+                    ...props.messages,
+                    items: (props.messages?.items || []).map((item) =>
+                        item.id === message.id ? { ...item, ...(data?.data || {}), _optimistic: false } : item),
+                },
+            }));
+
+            setEditing(false);
+            onEdit?.(null);
+            reportSuccess?.('Message updated.');
+        } catch (error) {
+            reportError?.(error instanceof Error ? error.message : 'Could not update message.');
+        }
+    }
+
+    useEffect(() => {
+        if (onEdit && editing) {
+            onEdit(message);
+        }
+    }, [editing, message, onEdit]);
+
     const className = [
         'mf-chat-bubble',
         isMine ? 'is-mine' : 'is-theirs',
         isGrouped ? 'is-grouped' : '',
         message._optimistic ? 'is-optimistic' : '',
+        message.deleted ? 'is-deleted' : '',
     ]
         .filter(Boolean)
         .join(' ');
@@ -96,35 +268,71 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
                             onJump={() => onJump?.(message.reply_to.id)}
                         />
                     ) : null}
-                    {message.media ? (
-                        <div className="mf-chat-bubble__media">
-                            {message.media.type === 'video' ? (
-                                <video src={message.media.url} controls playsInline />
-                            ) : (
-                                <img src={message.media.url} alt="" loading="lazy" />
-                            )}
-                        </div>
-                    ) : null}
-                    {message.body ? (
-                        <p className="mf-chat-bubble__text">{linkifyText(message.body)}</p>
-                    ) : null}
+
+                    {message.deleted ? (
+                        <p className="mf-chat-bubble__deleted mf-text-meta">Message deleted</p>
+                    ) : (
+                        <>
+                            <MessageMedia message={message} onOpenLightbox={onOpenLightbox} />
+                            {editing ? (
+                                <div className="mf-chat-bubble__edit">
+                                    <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={2} />
+                                    <div className="mf-chat-bubble__edit-actions">
+                                        <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+                                        <button type="button" onClick={saveEdit}>Save</button>
+                                    </div>
+                                </div>
+                            ) : message.body ? (
+                                <p className="mf-chat-bubble__text">{linkifyText(message.body)}</p>
+                            ) : null}
+                        </>
+                    )}
+
                     <div className="mf-chat-bubble__meta">
                         <time dateTime={message.created_at}>{formatTime(message.created_at)}</time>
+                        {message.edited_at ? <span>edited</span> : null}
                         {message._optimistic ? <span>sending…</span> : null}
                     </div>
                 </div>
             </div>
 
-            {canReply ? (
-                <button
-                    type="button"
-                    className="mf-chat-bubble__reply"
-                    onClick={() => onReply(message)}
-                    aria-label={`Reply to ${author?.name || 'this message'}`}
-                    title="Reply"
-                >
-                    <ReplyIcon />
-                </button>
+            {canInteract ? (
+                <div className="mf-chat-bubble__actions">
+                    <button
+                        type="button"
+                        className="mf-chat-bubble__reply"
+                        onClick={() => onReply(message)}
+                        aria-label={`Reply to ${author?.name || 'this message'}`}
+                        title="Reply"
+                    >
+                        <ReplyIcon />
+                    </button>
+                    <button
+                        type="button"
+                        className="mf-chat-bubble__more"
+                        onClick={() => setMenuOpen(true)}
+                        aria-label="Message actions"
+                        title="Actions"
+                    >
+                        <MoreIcon />
+                    </button>
+                </div>
+            ) : null}
+
+            {menuOpen ? (
+                <>
+                    <button type="button" className="mf-chat-actions__backdrop" aria-label="Close actions" onClick={() => setMenuOpen(false)} />
+                    <MessageActions
+                        message={message}
+                        inbox={inbox}
+                        onEdit={() => {
+                            setEditBody(message.body || '');
+                            setEditing(true);
+                        }}
+                        onReply={onReply}
+                        onClose={() => setMenuOpen(false)}
+                    />
+                </>
             ) : null}
         </article>
     );
@@ -133,6 +341,9 @@ function MessageRow({ message, isGrouped, showAuthor, onReply, onJump }) {
 export default function MessageStream({
     items = [],
     channel,
+    inbox = 'friends',
+    hasMore = false,
+    oldestId = null,
     showAuthorNames = true,
     onReply,
     scrollerRef,
@@ -140,6 +351,8 @@ export default function MessageStream({
 }) {
     const { reportError } = useSocialFlash();
     const wasNearBottom = useRef(true);
+    const loadingOlderRef = useRef(false);
+    const [lightbox, setLightbox] = useState(null);
     const lastId = items[items.length - 1]?.id;
 
     useEffect(() => {
@@ -151,7 +364,6 @@ export default function MessageStream({
         el.scrollTop = el.scrollHeight;
     }, [items.length, lastId, scrollerRef]);
 
-    // A channel switch always lands at the newest message.
     useEffect(() => {
         wasNearBottom.current = true;
         const el = scrollerRef?.current;
@@ -160,6 +372,42 @@ export default function MessageStream({
         }
     }, [channel?.id, scrollerRef]);
 
+    async function loadOlder() {
+        if (!channel?.id || !hasMore || !oldestId || loadingOlderRef.current) {
+            return;
+        }
+
+        loadingOlderRef.current = true;
+        const el = scrollerRef?.current;
+        const previousHeight = el?.scrollHeight ?? 0;
+
+        try {
+            const data = await socialApi(
+                `/chat/channels/${channel.id}/messages?before_id=${oldestId}&limit=50`,
+            );
+            const older = data?.data || [];
+
+            applyOptimisticProps((props) => ({
+                messages: {
+                    ...props.messages,
+                    items: prependChatMessages(props.messages?.items || [], older),
+                    has_more: Boolean(data?.meta?.has_more),
+                    oldest_id: data?.meta?.oldest_id ?? props.messages?.oldest_id,
+                },
+            }));
+
+            requestAnimationFrame(() => {
+                if (el) {
+                    el.scrollTop = el.scrollHeight - previousHeight;
+                }
+            });
+        } catch (error) {
+            reportError?.(error instanceof Error ? error.message : 'Could not load older messages.');
+        } finally {
+            loadingOlderRef.current = false;
+        }
+    }
+
     function onScroll() {
         const el = scrollerRef?.current;
         if (!el) {
@@ -167,49 +415,85 @@ export default function MessageStream({
         }
 
         wasNearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+
+        if (el.scrollTop < 48) {
+            loadOlder();
+        }
     }
 
     function onJump(id) {
         if (!jumpToMessage(id)) {
-            reportError?.('That message is further back than this window.');
+            reportError?.('That message is further back — scroll up to load history.');
         }
     }
 
-    return (
-        <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll} role="log">
-            {items.length === 0 ? (
-                <div className="mf-empty mf-empty--compact mf-chat-empty">
-                    <div className="mf-chat-empty__mark" aria-hidden>
-                        <span />
-                        <span />
-                    </div>
-                    <p className="mf-empty-title">{emptyCopy?.title || 'No messages yet'}</p>
-                    <p>{emptyCopy?.body || 'Say hello — your messages appear on the right.'}</p>
-                </div>
-            ) : (
-                items.map((message, index) => {
-                    const previous = items[index - 1];
-                    const showDay =
-                        !previous || dayKey(previous.created_at) !== dayKey(message.created_at);
+    function openLightbox(message) {
+        if (!message.media?.url) {
+            return;
+        }
 
-                    return (
-                        <div key={message.id}>
-                            {showDay ? (
-                                <div className="mf-chat-day" role="separator">
-                                    <span>{formatDayLabel(message.created_at)}</span>
-                                </div>
-                            ) : null}
-                            <MessageRow
-                                message={message}
-                                isGrouped={!showDay && isGroupedWith(previous, message)}
-                                showAuthor={showAuthorNames}
-                                onReply={onReply}
-                                onJump={onJump}
-                            />
+        setLightbox({
+            media: [{ id: message.id, url: message.media.url, type: message.media.type }],
+            index: 0,
+        });
+    }
+
+    return (
+        <>
+            <div className="mf-chat-stream" ref={scrollerRef} onScroll={onScroll} role="log">
+                {hasMore ? (
+                    <div className="mf-chat-stream__history">
+                        <button type="button" className="mf-chat-stream__history-btn" onClick={loadOlder}>
+                            Load older messages
+                        </button>
+                    </div>
+                ) : null}
+
+                {items.length === 0 ? (
+                    <div className="mf-empty mf-empty--compact mf-chat-empty">
+                        <div className="mf-chat-empty__mark" aria-hidden>
+                            <span />
+                            <span />
                         </div>
-                    );
-                })
-            )}
-        </div>
+                        <p className="mf-empty-title">{emptyCopy?.title || 'No messages yet'}</p>
+                        <p>{emptyCopy?.body || 'Say hello — your messages appear on the right.'}</p>
+                    </div>
+                ) : (
+                    items.map((message, index) => {
+                        const previous = items[index - 1];
+                        const showDay =
+                            !previous || dayKey(previous.created_at) !== dayKey(message.created_at);
+
+                        return (
+                            <div key={message.id}>
+                                {showDay ? (
+                                    <div className="mf-chat-day" role="separator">
+                                        <span>{formatDayLabel(message.created_at)}</span>
+                                    </div>
+                                ) : null}
+                                <MessageRow
+                                    message={message}
+                                    isGrouped={!showDay && isGroupedWith(previous, message)}
+                                    showAuthor={showAuthorNames}
+                                    inbox={inbox}
+                                    onReply={onReply}
+                                    onJump={onJump}
+                                    onOpenLightbox={openLightbox}
+                                />
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+
+            {lightbox ? (
+                <MediaLightbox
+                    media={lightbox.media}
+                    index={lightbox.index}
+                    onClose={() => setLightbox(null)}
+                    onIndexChange={() => {}}
+                />
+            ) : null}
+        </>
     );
 }

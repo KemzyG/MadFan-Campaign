@@ -2,7 +2,9 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { socialApi } from '../../../lib/socialApi';
 import { applyOptimisticProps, useSocialFlash } from '../optimistic';
+import { slowmodeSecondsFromError } from './chatRealtime';
 import ReplyQuote from './ReplyQuote';
+import { formatVoiceDuration, useVoiceRecorder } from './useVoiceRecorder';
 
 function IconAttach() {
     return (
@@ -13,6 +15,28 @@ function IconAttach() {
                 strokeWidth="1.85"
                 d="M17.5 8.5 9.9 16.1a3 3 0 0 1-4.24-4.24l7.6-7.6a5 5 0 0 1 7.07 7.07l-7.6 7.6a1 1 0 0 1-1.42-1.41l7.24-7.25"
             />
+        </svg>
+    );
+}
+
+function IconMic() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.85"
+                d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z"
+            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.85" d="M19 11a7 7 0 0 1-14 0M12 18v3" />
+        </svg>
+    );
+}
+
+function IconSend() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m5 12 14-7-7 14-2-5-5-2Z" />
         </svg>
     );
 }
@@ -35,6 +59,10 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
     const [attachment, setAttachment] = useState(null);
     const [attachmentPreview, setAttachmentPreview] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [slowmodeUntil, setSlowmodeUntil] = useState(0);
+    const [slowmodeTick, setSlowmodeTick] = useState(0);
+
+    const voice = useVoiceRecorder();
 
     useEffect(() => {
         const el = textareaRef.current;
@@ -43,7 +71,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         }
 
         el.style.height = 'auto';
-        el.style.height = `${Math.min(el.scrollHeight, 112)}px`;
+        el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
     }, [body]);
 
     useEffect(() => {
@@ -52,13 +80,24 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         }
     }, [replyTo?.id]);
 
-    // The preview is a blob: URL for the locally-picked file — revoke it
-    // whenever it's replaced/cleared so it doesn't leak memory.
     useEffect(() => () => {
         if (attachmentPreview) {
             URL.revokeObjectURL(attachmentPreview);
         }
     }, [attachmentPreview]);
+
+    useEffect(() => {
+        if (slowmodeUntil <= Date.now()) {
+            return undefined;
+        }
+
+        const timer = window.setInterval(() => setSlowmodeTick(Date.now()), 500);
+
+        return () => window.clearInterval(timer);
+    }, [slowmodeUntil, slowmodeTick]);
+
+    const slowmodeRemaining = Math.max(0, Math.ceil((slowmodeUntil - Date.now()) / 1000));
+    const isSlowmodeActive = slowmodeRemaining > 0;
 
     function pickAttachment(event) {
         const file = event.target.files?.[0];
@@ -67,6 +106,8 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         if (!file) {
             return;
         }
+
+        voice.clearPreview();
 
         if (attachmentPreview) {
             URL.revokeObjectURL(attachmentPreview);
@@ -85,9 +126,13 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
     }
 
     async function submit(e) {
-        e.preventDefault();
+        e?.preventDefault?.();
+
+        const voiceFile = voice.preview?.file ?? null;
+        const mediaFile = attachment ?? voiceFile;
         const text = body.trim();
-        if ((!text && !attachment) || channel?.is_read_only || processing || !channel?.id) {
+
+        if ((!text && !mediaFile) || channel?.is_read_only || processing || !channel?.id || isSlowmodeActive) {
             return;
         }
 
@@ -101,21 +146,24 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
             }
             : null;
         const tempId = `tmp-chat-${Date.now()}`;
-        const pendingMedia = attachment
+        const isVoice = Boolean(voiceFile);
+        const pendingMedia = mediaFile
             ? {
-                url: attachmentPreview,
-                type: attachment.type.startsWith('video/') ? 'video' : 'image',
+                url: isVoice ? voice.preview.url : attachmentPreview,
+                type: isVoice ? 'audio' : mediaFile.type.startsWith('video/') ? 'video' : 'image',
             }
             : null;
-        const sentAttachment = attachment;
+        const sentAttachment = mediaFile;
 
         setProcessing(true);
         setBody('');
         clearAttachment();
+        voice.clearPreview();
         onClearReply?.();
 
         const rollback = applyOptimisticProps((props) => {
             const items = props.messages?.items || [];
+
             return {
                 messages: {
                     ...props.messages,
@@ -125,9 +173,10 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                             id: tempId,
                             body: text || null,
                             media: pendingMedia,
-                            type: pendingMedia ? 'attachment' : 'text',
+                            type: isVoice ? 'voice' : pendingMedia ? 'attachment' : 'text',
                             created_at: new Date().toISOString(),
                             edited_at: null,
+                            deleted: false,
                             is_mine: true,
                             author: {
                                 id: user?.id,
@@ -138,6 +187,8 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                                 avatar_emoji: user?.avatar_emoji,
                             },
                             reply_to: quoted,
+                            can_edit: false,
+                            can_delete: false,
                             _optimistic: true,
                         },
                     ],
@@ -168,6 +219,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
             applyOptimisticProps((props) => {
                 const items = props.messages?.items || [];
                 const presented = data?.data;
+
                 return {
                     messages: {
                         ...props.messages,
@@ -181,11 +233,12 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
         } catch (error) {
             rollback();
             setBody(text);
-            reportError?.(
-                error instanceof Error && error.message
-                    ? error.message
-                    : 'Message failed — rolled back.',
-            );
+            const message = error instanceof Error && error.message ? error.message : 'Message failed — rolled back.';
+            const slowmode = slowmodeSecondsFromError(message);
+            if (slowmode) {
+                setSlowmodeUntil(Date.now() + slowmode * 1000);
+            }
+            reportError?.(message);
         } finally {
             setProcessing(false);
         }
@@ -201,15 +254,15 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
     if (channel?.is_read_only) {
         return (
             <div className="mf-chat-composer">
-                <p className="mf-chat-composer__closed mf-text-meta">
-                    This channel is read-only.
-                </p>
+                <p className="mf-chat-composer__closed mf-text-meta">This channel is read-only.</p>
             </div>
         );
     }
 
+    const canSend = !processing && !isSlowmodeActive && (body.trim() || attachment || voice.preview);
+
     return (
-        <form className="mf-chat-composer" onSubmit={submit}>
+        <form className="mf-chat-composer mf-chat-composer--v2" onSubmit={submit}>
             {replyTo ? (
                 <ReplyQuote
                     variant="composer"
@@ -220,78 +273,114 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                 />
             ) : null}
 
-            {attachmentPreview ? (
-                <div className="mf-chat-composer__attachment">
-                    {attachment?.type.startsWith('video/') ? (
-                        <video src={attachmentPreview} muted />
-                    ) : (
-                        <img src={attachmentPreview} alt="" />
-                    )}
-                    <button
-                        type="button"
-                        className="mf-chat-composer__attachment-remove"
-                        onClick={clearAttachment}
-                        aria-label="Remove attachment"
-                    >
-                        <IconClose />
+            {(attachmentPreview || voice.preview) ? (
+                <div className="mf-chat-composer__previews">
+                    {attachmentPreview ? (
+                        <div className="mf-chat-composer__preview">
+                            {attachment?.type.startsWith('video/') ? (
+                                <video src={attachmentPreview} muted />
+                            ) : (
+                                <img src={attachmentPreview} alt="" />
+                            )}
+                            <button type="button" className="mf-chat-composer__preview-remove" onClick={clearAttachment} aria-label="Remove attachment">
+                                <IconClose />
+                            </button>
+                        </div>
+                    ) : null}
+                    {voice.preview ? (
+                        <div className="mf-chat-composer__preview mf-chat-composer__preview--voice">
+                            <audio src={voice.preview.url} controls />
+                            <span className="mf-text-micro">{formatVoiceDuration(voice.elapsedMs || voice.preview.durationMs)}</span>
+                            <button type="button" className="mf-chat-composer__preview-remove" onClick={voice.clearPreview} aria-label="Remove voice note">
+                                <IconClose />
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
+
+            {voice.recording ? (
+                <div className="mf-chat-composer__recording" role="status">
+                    <span className="mf-chat-composer__recording-dot" aria-hidden />
+                    <span>Recording {formatVoiceDuration(voice.elapsedMs)}</span>
+                    <button type="button" className="mf-chat-composer__recording-stop" onClick={voice.stopRecording}>
+                        Stop
                     </button>
                 </div>
             ) : null}
 
-            <div className="mf-chat-composer__shell">
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                    onChange={pickAttachment}
-                    style={{ display: 'none' }}
-                />
-                <button
-                    type="button"
-                    className="mf-chat-composer__attach"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={processing}
-                    aria-label="Attach a photo or video"
-                    title="Attach a photo or video"
-                >
-                    <IconAttach />
-                </button>
-                <textarea
-                    ref={textareaRef}
-                    className="mf-chat-composer__input"
-                    rows={1}
-                    maxLength={maxBodyLength}
-                    placeholder={placeholder}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Escape' && replyTo) {
-                            e.preventDefault();
-                            onClearReply?.();
-                            return;
-                        }
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            submit(e);
-                        }
-                    }}
-                    disabled={processing}
-                    aria-label="Chat message"
-                />
+            {voice.error ? <p className="mf-chat-composer__voice-error mf-text-meta">{voice.error}</p> : null}
+
+            <div className="mf-chat-composer__dock">
+                <div className="mf-chat-composer__tools">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                        onChange={pickAttachment}
+                        hidden
+                    />
+                    <button
+                        type="button"
+                        className="mf-chat-composer__tool"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={processing || voice.recording}
+                        aria-label="Attach photo or video"
+                        title="Attach photo or video"
+                    >
+                        <IconAttach />
+                    </button>
+                    <button
+                        type="button"
+                        className={`mf-chat-composer__tool ${voice.recording ? 'is-active' : ''}`}
+                        onClick={voice.recording ? voice.stopRecording : voice.startRecording}
+                        disabled={processing || Boolean(attachment)}
+                        aria-label={voice.recording ? 'Stop recording' : 'Record voice note'}
+                        title={voice.recording ? 'Stop recording' : 'Record voice note'}
+                    >
+                        <IconMic />
+                    </button>
+                </div>
+
+                <div className="mf-chat-composer__field">
+                    <textarea
+                        ref={textareaRef}
+                        className="mf-chat-composer__input"
+                        rows={1}
+                        maxLength={maxBodyLength}
+                        placeholder={isSlowmodeActive ? `Slowmode — wait ${slowmodeRemaining}s` : placeholder}
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape' && replyTo) {
+                                e.preventDefault();
+                                onClearReply?.();
+
+                                return;
+                            }
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                submit(e);
+                            }
+                        }}
+                        disabled={processing || voice.recording || isSlowmodeActive}
+                        aria-label="Chat message"
+                    />
+                </div>
+
                 <button
                     type="submit"
                     className="mf-chat-composer__send"
-                    disabled={processing || (!body.trim() && !attachment)}
+                    disabled={!canSend}
                     aria-label={processing ? 'Sending' : 'Send message'}
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
+                    <IconSend />
                 </button>
             </div>
+
             <div className="mf-chat-composer__bar">
                 <span className="mf-chat-composer__hint mf-text-meta text-[var(--mf-muted)]">
-                    Enter to send · Shift+Enter for line
+                    {isSlowmodeActive ? `Slowmode active · ${slowmodeRemaining}s left` : 'Enter to send · Shift+Enter for line'}
                 </span>
                 <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">
                     {body.length}/{maxBodyLength}

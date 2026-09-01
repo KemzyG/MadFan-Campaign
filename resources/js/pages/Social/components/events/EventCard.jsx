@@ -9,6 +9,7 @@ import NewEpisodeCard from './templates/NewEpisodeCard';
 import ShowdownCard from './templates/ShowdownCard';
 import SongReleaseCard from './templates/SongReleaseCard';
 import TournamentCard from './templates/TournamentCard';
+import VoteCard from './templates/VoteCard';
 
 /**
  * type → template. Each of the ten kinds owns its own component, so this map is
@@ -23,6 +24,7 @@ const TEMPLATES = {
     campaign: CampaignCard,
     fan_challenge: FanChallengeCard,
     showdown: ShowdownCard,
+    vote: VoteCard,
     concert: ConcertCard,
     song_release: SongReleaseCard,
     breaking_news: BreakingNewsCard,

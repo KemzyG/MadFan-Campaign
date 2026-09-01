@@ -1846,6 +1846,18 @@ body::before {
     border-bottom-color: var(--flame);
 }
 
+.task-back-link {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color 0.2s;
+}
+
+.task-back-link:hover {
+    color: var(--white);
+}
+
 /* TASK CARDS */
 .task-list {
     display: flex;

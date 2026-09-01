@@ -25,6 +25,10 @@ class ChatService
 
     public const MESSAGES_PER_PAGE = 50;
 
+    public const MAX_VOICE_KB = 5120;
+
+    public const EDIT_WINDOW_MINUTES = 5;
+
     public const POLL_INTERVAL_MS = 4000;
 
     // Legacy — favourite_club_id is no longer set during onboarding, so no
@@ -145,30 +149,7 @@ class ChatService
             return null;
         }
 
-        // Fandom/club channels have no per-user ChannelMember row by default
-        // (see markRead()) — membership is implicit ("you're in this fandom/
-        // club"), so verify the viewer's own server matches instead of
-        // hasMember(). A numeric key could name any fandom's or club's
-        // channel, not just the viewer's own — always re-derive the
-        // viewer's own server id fresh rather than trusting $server is the
-        // right type for whichever channel got fetched.
-        if ($channel->isFandom()) {
-            $ownServerId = $user->favourite_fandom_id !== null
-                ? $this->serverForFandom($user->favouriteFandom)->id
-                : null;
-
-            return (int) $channel->fandom_server_id === (int) $ownServerId ? $channel : null;
-        }
-
-        if ($channel->isClub()) {
-            $ownServerId = $user->favourite_club_id !== null
-                ? $this->serverForClub($user->favouriteClub)->id
-                : null;
-
-            return (int) $channel->club_server_id === (int) $ownServerId ? $channel : null;
-        }
-
-        return $channel->hasMember($user) ? $channel : null;
+        return $user->can('view', $channel) ? $channel : null;
     }
 
     public function inboxForChannel(Channel $channel): string
@@ -220,6 +201,7 @@ class ChatService
     {
         /** @var list<Message> $newestFirst */
         $newestFirst = Message::query()
+            ->withTrashed()
             ->where('channel_id', $channel->id)
             ->with([
                 'author:id,name,handle,fan_id,avatar_path,avatar_emoji',
@@ -232,6 +214,45 @@ class ChatService
             ->all();
 
         return array_reverse($newestFirst);
+    }
+
+    /**
+     * @return array{messages: list<Message>, has_more: bool, oldest_id: ?int}
+     */
+    public function paginatedMessages(Channel $channel, ?int $beforeId, int $limit = self::MESSAGES_PER_PAGE): array
+    {
+        $limit = max(1, min($limit, 100));
+
+        $query = Message::query()
+            ->withTrashed()
+            ->where('channel_id', $channel->id)
+            ->with([
+                'author:id,name,handle,fan_id,avatar_path,avatar_emoji',
+                'replyTo:id,author_id,body,type',
+                'replyTo.author:id,name',
+            ])
+            ->orderByDesc('id');
+
+        if ($beforeId !== null) {
+            $query->where('id', '<', $beforeId);
+        }
+
+        /** @var list<Message> $newestFirst */
+        $newestFirst = $query->limit($limit + 1)->get()->all();
+        $hasMore = count($newestFirst) > $limit;
+
+        if ($hasMore) {
+            array_pop($newestFirst);
+        }
+
+        $messages = array_reverse($newestFirst);
+        $oldestId = $messages[0]->id ?? null;
+
+        return [
+            'messages' => $messages,
+            'has_more' => $hasMore,
+            'oldest_id' => $oldestId,
+        ];
     }
 
     /**
@@ -251,6 +272,23 @@ class ChatService
      */
     public function presentMessage(Message $message, ?User $viewer = null): array
     {
+        if ($message->trashed()) {
+            return [
+                'id' => $message->id,
+                'body' => null,
+                'type' => $message->type?->value ?? (string) $message->type,
+                'media' => null,
+                'created_at' => $message->created_at?->toIso8601String(),
+                'edited_at' => null,
+                'deleted' => true,
+                'is_mine' => $viewer !== null && (int) $message->author_id === (int) $viewer->id,
+                'author' => null,
+                'reply_to' => null,
+                'can_edit' => false,
+                'can_delete' => false,
+            ];
+        }
+
         $author = $message->author;
         $replyTo = $message->replyTo;
 
@@ -266,6 +304,7 @@ class ChatService
             ] : null,
             'created_at' => $message->created_at?->toIso8601String(),
             'edited_at' => $message->edited_at?->toIso8601String(),
+            'deleted' => false,
             'is_mine' => $viewer !== null && (int) $message->author_id === (int) $viewer->id,
             'author' => $author ? [
                 'id' => $author->id,
@@ -279,12 +318,10 @@ class ChatService
                 'id' => $replyTo->id,
                 'body' => Str::limit((string) $replyTo->body, 120),
                 'author_name' => $replyTo->author?->name,
-                // A caption-less photo/video reply target legitimately has no
-                // body (see SendChatMessage) — the frontend needs this to
-                // show "Photo/video" instead of misreading the empty string
-                // as an unavailable/deleted message.
                 'type' => $replyTo->type?->value ?? (string) $replyTo->type,
             ] : null,
+            'can_edit' => $viewer !== null && $viewer->can('update', $message),
+            'can_delete' => $viewer !== null && $viewer->can('delete', $message),
         ];
     }
 
@@ -433,7 +470,7 @@ class ChatService
             ->where('recipient_id', $viewer->id)
             ->where('type', SocialNotification::TYPE_CHAT_MESSAGE)
             ->where('notifiable_type', Message::class)
-            ->whereIn('notifiable_id', Message::query()->where('channel_id', $channel->id)->pluck('id'))
+            ->whereIn('notifiable_id', Message::query()->select('id')->where('channel_id', $channel->id))
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }
@@ -458,6 +495,22 @@ class ChatService
         if ($viewer->favouriteFandom !== null) {
             $channelIds = $channelIds->merge($this->serverForFandom($viewer->favouriteFandom)->channels->pluck('id'));
         }
+
+        $followedFandomIds = FandomFollow::query()
+            ->where('user_id', $viewer->id)
+            ->pluck('fandom_id');
+
+        foreach ($followedFandomIds as $fandomId) {
+            if ((int) $fandomId === (int) $viewer->favourite_fandom_id) {
+                continue;
+            }
+
+            $fandom = Fandom::query()->find($fandomId);
+            if ($fandom !== null) {
+                $channelIds = $channelIds->merge($this->serverForFandom($fandom)->channels->pluck('id'));
+            }
+        }
+
         if ($viewer->favouriteClub !== null) {
             $channelIds = $channelIds->merge($this->serverForClub($viewer->favouriteClub)->channels->pluck('id'));
         }

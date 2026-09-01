@@ -26,6 +26,12 @@ class EnsureDirectChatChannel
             ]);
         }
 
+        if ($viewer->isBlockedWith($peer)) {
+            throw ValidationException::withMessages([
+                'user_id' => 'You cannot message this fan right now.',
+            ]);
+        }
+
         $low = min($viewer->id, $peer->id);
         $high = max($viewer->id, $peer->id);
         $key = "dm:{$low}:{$high}";

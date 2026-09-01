@@ -32,7 +32,7 @@ class AdminWorkspace
                 'tagline' => 'Full control · security · operator accounts',
                 'accent' => 'violet',
                 'job' => 'Govern roles, admins, settings, and system health.',
-                'focus' => ['admins', 'roles', 'settings', 'system-logs', 'dashboard', 'leaderboard'],
+                'focus' => ['admins', 'roles', 'settings', 'system-logs', 'dashboard', 'leaderboard', 'live'],
             ],
             'admin' => [
                 'key' => 'admin',
@@ -41,7 +41,7 @@ class AdminWorkspace
                 'accent' => 'brand',
                 'job' => 'Run seasons, tasks, reviews, and fan operations.',
                 'focus' => [
-                    'dashboard', 'leaderboard', 'fandoms', 'posts', 'reports', 'fixtures', 'stages',
+                    'dashboard', 'leaderboard', 'live', 'fandoms', 'posts', 'reports', 'fixtures', 'stages', 'showdowns',
                     'tasks', 'task-reviews', 'users', 'seasons', 'leagues', 'clubs',
                     'jerseys', 'jersey-orders', 'referrals', 'staff',
                 ],
@@ -53,7 +53,7 @@ class AdminWorkspace
                 'accent' => 'amber',
                 'job' => 'Shape seasons, tiers, tasks, and referral growth.',
                 'focus' => [
-                    'dashboard', 'leaderboard', 'fandoms', 'posts', 'reports', 'fixtures', 'stages', 'channels',
+                    'dashboard', 'leaderboard', 'live', 'fandoms', 'posts', 'reports', 'fixtures', 'stages', 'channels', 'showdowns',
                     'tasks', 'seasons', 'loyalty-tiers', 'leagues', 'clubs',
                     'jerseys', 'jersey-orders', 'referrals', 'point-transactions',
                 ],
@@ -65,7 +65,7 @@ class AdminWorkspace
                 'accent' => 'sky',
                 'job' => 'Help fans, manage tasks, and review jersey orders.',
                 'focus' => [
-                    'dashboard', 'posts', 'reports', 'tasks', 'task-reviews',
+                    'dashboard', 'me', 'posts', 'reports', 'tasks', 'task-reviews',
                     'users', 'jersey-orders', 'referrals',
                 ],
             ],
