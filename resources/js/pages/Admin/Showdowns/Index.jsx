@@ -9,36 +9,31 @@ import { NativeSelect, NativeSelectOption } from '@/Components/ui/native-select'
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/Components/ui/button';
+import UserSearchPicker from '@/Components/Admin/user-search-picker';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import { adminApi } from '../../../lib/api';
 import { formatNumber } from '../../../lib/format';
 
+const emptyForm = {
+    title: '',
+    fandom_id: '',
+    season_id: '',
+    contestant_a: null,
+    contestant_b: null,
+    is_active: true,
+    closes_at: '',
+};
+
 export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], seasons = [] }) {
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({
-        title: '',
-        fandom_id: '',
-        season_id: '',
-        contestant_a_user_id: '',
-        contestant_b_user_id: '',
-        is_active: true,
-        closes_at: '',
-    });
+    const [form, setForm] = useState(emptyForm);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     function openCreate() {
         setEditing(null);
-        setForm({
-            title: '',
-            fandom_id: '',
-            season_id: '',
-            contestant_a_user_id: '',
-            contestant_b_user_id: '',
-            is_active: true,
-            closes_at: '',
-        });
+        setForm(emptyForm);
         setError('');
         setOpen(true);
     }
@@ -49,8 +44,8 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
             title: showdown.title,
             fandom_id: showdown.fandom_id ? String(showdown.fandom_id) : '',
             season_id: showdown.season_id ? String(showdown.season_id) : '',
-            contestant_a_user_id: String(showdown.contestant_a_user_id ?? ''),
-            contestant_b_user_id: String(showdown.contestant_b_user_id ?? ''),
+            contestant_a: showdown.contestant_a ?? null,
+            contestant_b: showdown.contestant_b ?? null,
             is_active: Boolean(showdown.is_active),
             closes_at: showdown.closes_at ? String(showdown.closes_at).slice(0, 16) : '',
         });
@@ -60,6 +55,12 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
 
     async function save(e) {
         e.preventDefault();
+
+        if (!editing && (!form.contestant_a || !form.contestant_b)) {
+            setError('Search for and select both contestants before saving.');
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
@@ -77,8 +78,8 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
                     method: 'POST',
                     body: {
                         ...body,
-                        contestant_a_user_id: Number(form.contestant_a_user_id),
-                        contestant_b_user_id: Number(form.contestant_b_user_id),
+                        contestant_a_user_id: form.contestant_a.id,
+                        contestant_b_user_id: form.contestant_b.id,
                     },
                 });
             }
@@ -154,14 +155,18 @@ export default function ShowdownsIndex({ showdowns, filters = {}, fandoms = [], 
                         </Field>
                         {!editing && (
                             <div className="grid gap-3 sm:grid-cols-2">
-                                <Field>
-                                    <FieldLabel>Contestant A (user id)</FieldLabel>
-                                    <Input type="number" value={form.contestant_a_user_id} onChange={(e) => setForm({ ...form, contestant_a_user_id: e.target.value })} required />
-                                </Field>
-                                <Field>
-                                    <FieldLabel>Contestant B (user id)</FieldLabel>
-                                    <Input type="number" value={form.contestant_b_user_id} onChange={(e) => setForm({ ...form, contestant_b_user_id: e.target.value })} required />
-                                </Field>
+                                <UserSearchPicker
+                                    label="Contestant A"
+                                    value={form.contestant_a}
+                                    onChange={(user) => setForm({ ...form, contestant_a: user })}
+                                    required
+                                />
+                                <UserSearchPicker
+                                    label="Contestant B"
+                                    value={form.contestant_b}
+                                    onChange={(user) => setForm({ ...form, contestant_b: user })}
+                                    required
+                                />
                             </div>
                         )}
                         <div className="grid gap-3 sm:grid-cols-2">
