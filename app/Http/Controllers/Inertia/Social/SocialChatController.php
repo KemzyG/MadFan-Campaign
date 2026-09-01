@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Inertia\Social;
 
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
-use App\Models\Club;
-use App\Models\ClubServer;
+use App\Models\Fandom;
+use App\Models\FandomServer;
 use App\Models\User;
 use App\Services\Social\ChatService;
 use App\Support\SocialRealtime;
@@ -21,21 +21,21 @@ class SocialChatController extends Controller
      */
     public function index(Request $request, ChatService $chatService): Response
     {
-        [$user, $club, $server] = $this->context($request, $chatService);
+        [$user, $fandom, $server] = $this->context($request, $chatService);
 
         $inbox = $chatService->normalizeInbox($request->string('inbox')->toString() ?: null);
         $channelKey = $request->string('channel')->toString() ?: null;
 
         $channel = $chatService->resolveInboxChannel($user, $inbox, $channelKey);
 
-        if ($inbox === ChatService::INBOX_CLUB) {
+        if ($inbox === ChatService::INBOX_FANDOM) {
             $channel ??= $chatService->resolveChannel($server, $channelKey);
         }
 
         return $this->renderChat(
             $chatService,
             $user,
-            $club,
+            $fandom,
             $server,
             $inbox,
             $channel,
@@ -49,7 +49,7 @@ class SocialChatController extends Controller
      */
     public function show(Request $request, ChatService $chatService, string $channelKey): Response
     {
-        [$user, $club, $server] = $this->context($request, $chatService);
+        [$user, $fandom, $server] = $this->context($request, $chatService);
 
         $channel = $chatService->resolveThreadChannel($user, $server, $channelKey);
 
@@ -58,7 +58,7 @@ class SocialChatController extends Controller
         return $this->renderChat(
             $chatService,
             $user,
-            $club,
+            $fandom,
             $server,
             $chatService->inboxForChannel($channel),
             $channel,
@@ -67,26 +67,43 @@ class SocialChatController extends Controller
     }
 
     /**
-     * @return array{0: User, 1: Club, 2: ClubServer}
+     * Fandom is the mandatory anchor now (every onboarded user has one — see
+     * EnsureSocialOnboarded) — favourite_club_id is no longer set during
+     * onboarding, so gating this page on club the way it used to would 403
+     * every new fan out of Chat entirely. A user who still has a legacy club
+     * can reach it through `?inbox=club` — see renderChat().
+     *
+     * Also eagerly provisions the user's club server (not just fandom) when
+     * they have one, same as this method always did pre-fandom: several
+     * other reads (the unread badge, the chat rail) provision it
+     * independently of which inbox tab is even open, so a bare
+     * `/social/chat` visit provisioning only fandom and not club would be a
+     * regression for anyone who still has a legacy club.
+     *
+     * @return array{0: User, 1: Fandom, 2: FandomServer}
      */
     private function context(Request $request, ChatService $chatService): array
     {
         /** @var User $user */
         $user = $request->user();
-        $user->loadMissing('favouriteClub.league');
+        $user->loadMissing(['favouriteFandom', 'favouriteClub']);
 
-        $club = $user->favouriteClub;
+        $fandom = $user->favouriteFandom;
 
-        abort_if($club === null, 403);
+        abort_if($fandom === null, 403);
 
-        return [$user, $club, $chatService->serverForClub($club)];
+        if ($user->favouriteClub !== null) {
+            $chatService->serverForClub($user->favouriteClub);
+        }
+
+        return [$user, $fandom, $chatService->serverForFandom($fandom)];
     }
 
     private function renderChat(
         ChatService $chatService,
         User $user,
-        Club $club,
-        ClubServer $server,
+        Fandom $fandom,
+        FandomServer $server,
         string $inbox,
         ?Channel $channel,
         string $view,
@@ -95,10 +112,24 @@ class SocialChatController extends Controller
         $threads = [];
         $friendCandidates = [];
         $groupCandidates = [];
+        $clubProp = null;
 
-        if ($inbox === ChatService::INBOX_CLUB && $channel !== null) {
+        if ($inbox === ChatService::INBOX_FANDOM && $channel !== null) {
             $this->authorize('view', $channel);
             $channels = $chatService->presentChannels($server, $channel, $user);
+        } elseif ($inbox === ChatService::INBOX_CLUB) {
+            // Legacy path — only reachable by a fan who still has
+            // favourite_club_id set from before the fandom move.
+            $user->loadMissing('favouriteClub.league');
+            $club = $user->favouriteClub;
+            abort_if($club === null, 404);
+            $clubServer = $chatService->serverForClub($club);
+            $clubProp = $chatService->presentClub($club);
+
+            if ($channel !== null) {
+                $this->authorize('view', $channel);
+                $channels = $chatService->presentChannels($clubServer, $channel, $user);
+            }
         } elseif ($inbox === ChatService::INBOX_FRIENDS) {
             $threads = $chatService->presentDirectThreads($user, $channel);
             $friendCandidates = $chatService->presentFriendCandidates($user);
@@ -124,7 +155,8 @@ class SocialChatController extends Controller
         return Inertia::render('Social/Chat/Index', [
             'inbox' => $inbox,
             'view' => $view,
-            'club' => $chatService->presentClub($club),
+            'fandom' => $chatService->presentFandom($fandom),
+            'club' => $clubProp,
             'server' => [
                 'id' => $server->id,
                 'name' => $server->name,

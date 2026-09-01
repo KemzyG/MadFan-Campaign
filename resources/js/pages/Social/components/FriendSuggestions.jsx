@@ -37,7 +37,7 @@ function SuggestionCard({ user }) {
             </span>
             <span className="mf-suggest-card__name truncate">{user.name}</span>
             <span className="mf-suggest-card__meta truncate">
-                {user.club?.short || `@${user.handle}`}
+                {user.fandom?.name || `@${user.handle}`}
             </span>
             <button
                 type="button"

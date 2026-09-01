@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Club;
-use App\Models\ClubMembership;
 use App\Support\ApplicationSettings;
 
 test('social home requires authentication', function () {
@@ -18,7 +16,7 @@ test('social is blocked when the network setting is disabled', function () {
         ->assertRedirect(route('fan.campaign'));
 });
 
-test('verified fans without a club are sent to social onboarding', function () {
+test('verified fans without a fandom are sent to social onboarding', function () {
     ApplicationSettings::sync(['social_network_enabled' => 'true']);
 
     $user = createUser();
@@ -28,29 +26,36 @@ test('verified fans without a club are sent to social onboarding', function () {
         ->assertRedirect(route('social.onboarding.fandom'));
 });
 
-test('fans can pick a favourite club and reach social home', function () {
+test('fans can pick a fandom and reach social home — no club step anymore', function () {
     ApplicationSettings::sync(['social_network_enabled' => 'true']);
 
-    $club = Club::factory()->create(['name' => 'Terrace FC']);
-    $user = createUser(['favourite_fandom_id' => ensureRegistrationFandom()->id]);
+    $fandom = ensureRegistrationFandom();
+    $user = createUser();
 
     $this->actingAs($user)
-        ->post('/social/onboarding/club', ['club_id' => $club->id])
+        ->post('/social/onboarding/fandom', ['fandom_id' => $fandom->id])
         ->assertRedirect(route('social.home'));
 
     $user->refresh();
 
-    expect($user->favourite_club_id)->toBe($club->id)
+    expect($user->favourite_fandom_id)->toBe($fandom->id)
         ->and($user->social_onboarded_at)->not->toBeNull()
-        ->and($user->club)->toBe('Terrace FC');
-
-    expect(ClubMembership::query()->where('user_id', $user->id)->where('club_id', $club->id)->where('is_primary', true)->exists())
-        ->toBeTrue();
+        ->and($user->favourite_club_id)->toBeNull();
 
     $this->actingAs($user)
         ->get('/social')
         ->assertSuccessful()
         ->assertInertia(fn ($page) => $page
             ->component('Social/Events')
-            ->where('club.name', 'Terrace FC'));
+            ->where('club', null));
+});
+
+test('the club onboarding step no longer exists', function () {
+    ApplicationSettings::sync(['social_network_enabled' => 'true']);
+
+    $user = createUser(['favourite_fandom_id' => ensureRegistrationFandom()->id]);
+
+    $this->actingAs($user)
+        ->get('/social/onboarding/club')
+        ->assertNotFound();
 });

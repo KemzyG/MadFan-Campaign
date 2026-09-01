@@ -24,6 +24,7 @@ export default function Chat({
     inbox = 'friends',
     view = 'list',
     club,
+    fandom,
     channels = [],
     threads = [],
     friend_candidates = [],
@@ -93,6 +94,7 @@ export default function Chat({
                             inbox={inbox}
                             channel={channel}
                             club={club}
+                            fandom={fandom}
                             messages={messages?.items || []}
                             maxBodyLength={max_body_length}
                             realtime={realtime}

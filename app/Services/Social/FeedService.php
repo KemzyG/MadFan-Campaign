@@ -55,6 +55,21 @@ class FeedService
     }
 
     /**
+     * Fandom-scoped terrace feed — the fandom equivalent of clubFeed().
+     *
+     * @return LengthAwarePaginator<int, Post>
+     */
+    public function fandomFeed(User $viewer, ?int $fandomId = null): LengthAwarePaginator
+    {
+        $fandomId ??= $viewer->favourite_fandom_id;
+
+        return $this->baseFeedQuery($viewer)
+            ->forFandom((int) $fandomId)
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+    }
+
+    /**
      * Following feed: top-level posts from followed users (and the viewer).
      *
      * @return LengthAwarePaginator<int, Post>
@@ -77,7 +92,7 @@ class FeedService
 
     /**
      * "Fans to follow" — a handful of onboarded fans the viewer doesn't
-     * already follow, favouring their own club when there is one. Randomised
+     * already follow, favouring their own fandom when there is one. Randomised
      * per call so the feed's floating suggestion strip doesn't always list
      * the same faces.
      *
@@ -85,7 +100,7 @@ class FeedService
      */
     public function suggestedFollows(?User $viewer, int $limit = 8): array
     {
-        // A guest follows no one and has no club to prioritise — the query
+        // A guest follows no one and has no fandom to prioritise — the query
         // degrades to "a handful of onboarded fans", no exclusion/ordering.
         $excludedIds = $viewer === null ? collect() : Follow::query()
             ->where('follower_id', $viewer->id)
@@ -97,12 +112,12 @@ class FeedService
         $users = User::query()
             ->whereNotIn('id', $excludedIds)
             ->whereNotNull('social_onboarded_at')
-            ->with('favouriteClub:id,name,short,logo')
-            ->when($viewer?->favourite_club_id, fn (Builder $query) => $query
-                ->orderByRaw('favourite_club_id = ? desc', [$viewer->favourite_club_id]))
+            ->with('favouriteFandom:id,name,slug')
+            ->when($viewer?->favourite_fandom_id, fn (Builder $query) => $query
+                ->orderByRaw('favourite_fandom_id = ? desc', [$viewer->favourite_fandom_id]))
             ->inRandomOrder()
             ->limit($limit)
-            ->get(['id', 'name', 'handle', 'username', 'fan_id', 'bio', 'favourite_club_id', 'updated_at']);
+            ->get(['id', 'name', 'handle', 'username', 'fan_id', 'bio', 'favourite_fandom_id', 'updated_at']);
 
         return $users->map(fn (User $user): array => [
             'id' => $user->id,
@@ -110,9 +125,9 @@ class FeedService
             'handle' => $user->handle ?: $user->username ?: $user->fan_id,
             'avatar_url' => $user->avatar_url,
             'bio' => $user->bio,
-            'club' => $user->favouriteClub ? [
-                'short' => $user->favouriteClub->short,
-                'logo_url' => $user->favouriteClub->logo_url,
+            'fandom' => $user->favouriteFandom ? [
+                'name' => $user->favouriteFandom->name,
+                'slug' => $user->favouriteFandom->slug,
             ] : null,
         ])->values()->all();
     }
@@ -154,26 +169,32 @@ class FeedService
     }
 
     /**
-     * Restrict a post query to what the viewer is allowed to see:
-     * public posts, the viewer's own posts, or club posts for a club the
-     * viewer belongs to. `only_me` posts fall through to the author-only branch.
+     * Restrict a post query to what the viewer is allowed to see: public
+     * posts, the viewer's own posts, fandom posts for a fandom the viewer
+     * follows, or (legacy) club posts for a club the viewer belongs to.
+     * `only_me` posts fall through to the author-only branch.
      *
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
     public function applyVisibilityScope(Builder $query, ?User $viewer): Builder
     {
-        // A guest has no posts of their own and belongs to no club — only
-        // Public-visibility posts are theirs to see.
+        // A guest has no posts of their own and belongs to no club/fandom —
+        // only Public-visibility posts are theirs to see.
         if ($viewer === null) {
             return $query->where('visibility', PostVisibility::Public->value);
         }
 
         $clubIds = $this->viewerClubIds($viewer);
+        $fandomIds = $this->viewerFandomIds($viewer);
 
-        return $query->where(function (Builder $inner) use ($viewer, $clubIds): void {
+        return $query->where(function (Builder $inner) use ($viewer, $clubIds, $fandomIds): void {
             $inner->where('visibility', PostVisibility::Public->value)
                 ->orWhere('author_id', $viewer->id)
+                ->when($fandomIds !== [], fn (Builder $q) => $q->orWhere(function (Builder $fandomQuery) use ($fandomIds): void {
+                    $fandomQuery->where('visibility', PostVisibility::Fandom->value)
+                        ->whereIn('fandom_id', $fandomIds);
+                }))
                 ->when($clubIds !== [], fn (Builder $q) => $q->orWhere(function (Builder $clubQuery) use ($clubIds): void {
                     $clubQuery->where('visibility', PostVisibility::Club->value)
                         ->whereIn('club_id', $clubIds);
@@ -182,7 +203,8 @@ class FeedService
     }
 
     /**
-     * Club ids the viewer belongs to (favourite club + memberships).
+     * Club ids the viewer belongs to (favourite club + memberships) — legacy,
+     * only still load-bearing for posts made before the fandom move.
      *
      * @return list<int>
      */
@@ -190,6 +212,23 @@ class FeedService
     {
         return collect([$viewer->favourite_club_id])
             ->merge($viewer->clubMemberships()->pluck('club_id'))
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Fandom ids the viewer belongs to (favourite fandom + every fandom they
+     * follow — see FandomFollow).
+     *
+     * @return list<int>
+     */
+    protected function viewerFandomIds(User $viewer): array
+    {
+        return collect([$viewer->favourite_fandom_id])
+            ->merge($viewer->fandomFollows()->pluck('fandom_id'))
             ->filter()
             ->map(fn ($id) => (int) $id)
             ->unique()
@@ -206,6 +245,10 @@ class FeedService
         return match ($post->visibility) {
             PostVisibility::Public => true,
             PostVisibility::OnlyMe => $viewer !== null && $post->author_id === $viewer->id,
+            PostVisibility::Fandom => $viewer !== null && (
+                $post->author_id === $viewer->id
+                || in_array((int) $post->fandom_id, $this->viewerFandomIds($viewer), true)
+            ),
             PostVisibility::Club => $viewer !== null && (
                 $post->author_id === $viewer->id
                 || in_array((int) $post->club_id, $this->viewerClubIds($viewer), true)
@@ -245,16 +288,19 @@ class FeedService
     protected function feedWith(?User $viewer): array
     {
         $with = [
-            'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id',
+            'author:id,name,handle,username,fan_id,avatar_path,favourite_club_id,favourite_fandom_id',
             'club:id,name,short,logo',
+            'fandom:id,name,slug',
             'media',
             'stage.host:id,name,handle,username,fan_id,avatar_path,avatar_emoji,updated_at',
             'taggedUsers:id,name,handle,username,fan_id,avatar_path,updated_at',
             'quoteOf.author:id,name,handle,username,fan_id',
             'quoteOf.club:id,name,short,logo',
+            'quoteOf.fandom:id,name,slug',
             'quoteOf.media',
             'repostOf.author:id,name,handle,username,fan_id',
             'repostOf.club:id,name,short,logo',
+            'repostOf.fandom:id,name,slug',
             'repostOf.media',
         ];
 
@@ -369,6 +415,11 @@ class FeedService
                 'short' => $post->club->short,
                 'logo_url' => $post->club->logo_url,
             ] : null,
+            'fandom' => $post->fandom ? [
+                'id' => $post->fandom->id,
+                'name' => $post->fandom->name,
+                'slug' => $post->fandom->slug,
+            ] : null,
             'media' => $post->relationLoaded('media')
                 ? $post->media->map(fn (PostMedia $media) => [
                     'id' => $media->id,
@@ -419,6 +470,11 @@ class FeedService
                 'id' => $post->club->id,
                 'name' => $post->club->name,
                 'short' => $post->club->short,
+            ] : null,
+            'fandom' => $post->fandom ? [
+                'id' => $post->fandom->id,
+                'name' => $post->fandom->name,
+                'slug' => $post->fandom->slug,
             ] : null,
             'media' => $post->relationLoaded('media')
                 ? $post->media->map(fn (PostMedia $media) => [

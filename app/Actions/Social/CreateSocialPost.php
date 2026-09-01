@@ -28,8 +28,8 @@ class CreateSocialPost
      */
     public function handle(User $author, array $data): Post
     {
-        if ($author->favourite_club_id === null) {
-            throw new InvalidArgumentException('Favourite club is required before posting.');
+        if ($author->favourite_fandom_id === null) {
+            throw new InvalidArgumentException('Favourite fandom is required before posting.');
         }
 
         $replyToId = $data['reply_to_id'] ?? null;
@@ -82,6 +82,7 @@ class CreateSocialPost
             $post = Post::query()->create([
                 'author_id' => $author->id,
                 'club_id' => $parent?->club_id ?? $author->favourite_club_id,
+                'fandom_id' => $parent?->fandom_id ?? $author->favourite_fandom_id,
                 'stage_id' => $stageId,
                 'type' => PostType::Status,
                 'visibility' => $visibility,

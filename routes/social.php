@@ -102,7 +102,7 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
     // into the auth-only group below. `social.onboarded` stays in this stack
     // even though guests never hit it (it no-ops on a null user — see
     // EnsureSocialOnboarded) because a *logged-in* user who hasn't picked a
-    // club yet must still be funnelled through onboarding same as before.
+    // fandom yet must still be funnelled through onboarding same as before.
     // Both controllers reachable from this group must still tolerate
     // `$request->user() === null`.
     $guest = Route::middleware(['app.maintenance', 'social.enabled', 'social.onboarded', TouchLastSeen::class]);
@@ -235,11 +235,6 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
             Route::post('/onboarding/fandom', [SocialOnboardingController::class, 'storeFandom'])
                 ->middleware('throttle:12,1')
                 ->name('onboarding.fandom.store');
-
-            Route::get('/onboarding/club', [SocialOnboardingController::class, 'create'])->name('onboarding.club');
-            Route::post('/onboarding/club', [SocialOnboardingController::class, 'store'])
-                ->middleware('throttle:12,1')
-                ->name('onboarding.club.store');
 
             Route::middleware('social.onboarded')->group(function () use ($pathPrefix) {
                 $homeTarget = $pathPrefix === '' ? '/' : '/'.trim($pathPrefix, '/');

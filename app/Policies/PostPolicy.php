@@ -66,7 +66,7 @@ class PostPolicy
     private function isSocialReady(User $user): bool
     {
         return $user->social_onboarded_at !== null
-            && $user->favourite_club_id !== null
+            && $user->favourite_fandom_id !== null
             && $user->hasVerifiedEmail();
     }
 }

@@ -3,12 +3,17 @@ import { usePopover } from './usePopover';
 
 const OPTIONS = [
     { value: 'public', label: 'Public', hint: 'Anyone on Mad Fan', Icon: IconGlobe },
-    { value: 'club', label: 'Your club', hint: 'Only your club members', Icon: IconClubShield },
+    { value: 'fandom', label: 'Your fandom', hint: 'Only fans of your fandom', Icon: IconClubShield },
     { value: 'only_me', label: 'Only me', hint: 'Only you can see this', Icon: IconLock },
 ];
 
 /**
- * Audience dropdown for a new post — Public / Your club / Only me.
+ * Audience dropdown for a new post — Public / Your fandom / Only me. "Your
+ * club" used to be the middle option — favourite_club_id is no longer set
+ * during onboarding, so posting is scoped to fandom now (see
+ * CreateSocialPost). Old club-visibility posts still render/scope correctly
+ * (PostVisibility::Club is legacy, not removed) — this menu just never
+ * offers picking it for a new post.
  */
 export default function VisibilityMenu({ value, onChange, disabled = false }) {
     const { open, setOpen, ref } = usePopover();

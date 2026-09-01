@@ -6,7 +6,7 @@ import { AuthorAvatar, formatLastSeen, inboxHref, PresenceDot } from './helpers'
 import MembersModal from './MembersModal';
 import MessageStream from './MessageStream';
 
-function ThreadPresence({ inbox, channel, club, onOpen }) {
+function ThreadPresence({ inbox, channel, club, fandom, onOpen }) {
     if (inbox === 'friends') {
         const online = Boolean(channel.peer?.is_online);
         const label = online ? 'Active now' : formatLastSeen(channel.peer?.last_seen_at);
@@ -23,7 +23,7 @@ function ThreadPresence({ inbox, channel, club, onOpen }) {
 
     if (presence) {
         const noun =
-            presence.scope === 'club'
+            presence.scope === 'fandom' || presence.scope === 'club'
                 ? presence.total === 1 ? 'fan' : 'fans'
                 : presence.total === 1 ? 'member' : 'members';
 
@@ -38,15 +38,17 @@ function ThreadPresence({ inbox, channel, club, onOpen }) {
     }
 
     const subtitle =
-        inbox === 'club'
-            ? channel.topic || club?.name || 'Club radio'
-            : channel.topic || 'Private group';
+        inbox === 'fandom'
+            ? channel.topic || fandom?.name || 'Fandom radio'
+            : inbox === 'club'
+                ? channel.topic || club?.name || 'Club radio'
+                : channel.topic || 'Private group';
 
     return <p className="mf-thread-head__sub">{subtitle}</p>;
 }
 
-function ThreadHeader({ inbox, channel, club, realtime, fallbackUrl, onOpenMembers }) {
-    const title = inbox === 'club' ? `#${channel.name}` : channel.name;
+function ThreadHeader({ inbox, channel, club, fandom, realtime, fallbackUrl, onOpenMembers }) {
+    const title = inbox === 'fandom' || inbox === 'club' ? `#${channel.name}` : channel.name;
 
     return (
         <header className="mf-thread-head">
@@ -57,7 +59,11 @@ function ThreadHeader({ inbox, channel, club, realtime, fallbackUrl, onOpenMembe
             </Link>
 
             <span className="mf-thread-head__mark">
-                {inbox === 'club' && club?.logo_url ? (
+                {inbox === 'fandom' && fandom?.icon ? (
+                    <span className="mf-avatar mf-text-meta h-9 w-9" aria-hidden>
+                        {fandom.icon}
+                    </span>
+                ) : inbox === 'club' && club?.logo_url ? (
                     <img
                         src={club.logo_url}
                         alt=""
@@ -75,7 +81,7 @@ function ThreadHeader({ inbox, channel, club, realtime, fallbackUrl, onOpenMembe
 
             <div className="mf-thread-head__meta">
                 <p className="mf-thread-head__title mf-display">{title}</p>
-                <ThreadPresence inbox={inbox} channel={channel} club={club} onOpen={onOpenMembers} />
+                <ThreadPresence inbox={inbox} channel={channel} club={club} fandom={fandom} onOpen={onOpenMembers} />
             </div>
 
             {realtime?.mode ? (
@@ -88,7 +94,7 @@ function ThreadHeader({ inbox, channel, club, realtime, fallbackUrl, onOpenMembe
     );
 }
 
-export default function Thread({ inbox, channel, club, messages = [], maxBodyLength, realtime, app }) {
+export default function Thread({ inbox, channel, club, fandom, messages = [], maxBodyLength, realtime, app }) {
     const [replyTo, setReplyTo] = useState(null);
     const [membersOpen, setMembersOpen] = useState(false);
     const scrollerRef = useRef(null);
@@ -121,7 +127,13 @@ export default function Thread({ inbox, channel, club, messages = [], maxBodyLen
                 ? { title: 'Quiet group', body: 'Kick off the banter — everyone here sees it.' }
                 : {
                     title: 'Quiet radio',
-                    body: `Kick the first shout in #${channel.name}${club?.name ? ` for ${club.name}` : ''}.`,
+                    body: `Kick the first shout in #${channel.name}${
+                        inbox === 'fandom' && fandom?.name
+                            ? ` for ${fandom.name}`
+                            : club?.name
+                                ? ` for ${club.name}`
+                                : ''
+                    }.`,
                 };
 
     return (
@@ -130,6 +142,7 @@ export default function Thread({ inbox, channel, club, messages = [], maxBodyLen
                 inbox={inbox}
                 channel={channel}
                 club={club}
+                fandom={fandom}
                 realtime={realtime}
                 fallbackUrl={fallbackUrl}
                 onOpenMembers={() => setMembersOpen(true)}

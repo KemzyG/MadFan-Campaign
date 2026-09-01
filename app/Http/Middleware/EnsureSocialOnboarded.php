@@ -17,12 +17,12 @@ class EnsureSocialOnboarded
             return $next($request);
         }
 
-        if ($user->favourite_fandom_id === null) {
+        // Onboarding is single-step now: picking a fandom is the whole
+        // requirement (see SocialOnboardingController::storeFandom, which
+        // sets social_onboarded_at itself). Club is no longer part of this
+        // gate — see the "Choose your club" removal.
+        if ($user->favourite_fandom_id === null || $user->social_onboarded_at === null) {
             return redirect()->route('social.onboarding.fandom');
-        }
-
-        if ($user->social_onboarded_at === null || $user->favourite_club_id === null) {
-            return redirect()->route('social.onboarding.club');
         }
 
         return $next($request);

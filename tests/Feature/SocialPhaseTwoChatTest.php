@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Social\AwardSocialPoints;
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\Club;
 use App\Models\ClubMembership;
@@ -14,7 +15,7 @@ test('onboarded members can send a chat message to their club channel', function
 
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
 
-    $channel = Channel::query()->where('slug', 'general')->first();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->first();
 
     expect($channel)->not->toBeNull();
 
@@ -45,7 +46,7 @@ test('chat message awards social_chat points with min length', function () {
     $user = socialReadyUser($club);
 
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->post(route('social.chat.messages.store', $channel), [
@@ -64,7 +65,7 @@ test('chat message awards social_chat points with min length', function () {
 test('empty chat body is rejected', function () {
     $user = socialReadyUser();
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->post(route('social.chat.messages.store', $channel), ['body' => '   '])
@@ -74,7 +75,7 @@ test('empty chat body is rejected', function () {
 test('chat body longer than 500 characters is rejected', function () {
     $user = socialReadyUser();
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->post(route('social.chat.messages.store', $channel), [

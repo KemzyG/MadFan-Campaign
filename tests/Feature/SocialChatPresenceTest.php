@@ -187,7 +187,7 @@ test('the members endpoint returns the club roster to a fan', function () {
 
     // Provision the club server + channels on first read.
     $this->actingAs($fan)->getJson('/api/social/chat/rail')->assertSuccessful();
-    $general = Channel::query()->where('slug', 'general')->firstOrFail();
+    $general = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($fan)
         ->getJson('/api/social/chat/channels/'.$general->id.'/members')
@@ -229,7 +229,7 @@ test('the members endpoint rejects a club roster request from a non-fan', functi
     $outsider = socialReadyUser($clubB);
 
     $this->actingAs($fan)->getJson('/api/social/chat/rail')->assertSuccessful();
-    $general = Channel::query()->where('slug', 'general')->firstOrFail();
+    $general = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($outsider)
         ->getJson('/api/social/chat/channels/'.$general->id.'/members')

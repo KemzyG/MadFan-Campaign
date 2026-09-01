@@ -18,6 +18,7 @@ class Channel extends Model
 
     protected $fillable = [
         'club_server_id',
+        'fandom_server_id',
         'scope',
         'conversation_key',
         'created_by_id',
@@ -49,6 +50,11 @@ class Channel extends Model
         return $this->belongsTo(ClubServer::class);
     }
 
+    public function fandomServer(): BelongsTo
+    {
+        return $this->belongsTo(FandomServer::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_id');
@@ -76,9 +82,19 @@ class Channel extends Model
         return $this->clubServer?->club;
     }
 
+    public function fandom(): ?Fandom
+    {
+        return $this->fandomServer?->fandom;
+    }
+
     public function isClub(): bool
     {
         return $this->scope === ChannelScope::Club;
+    }
+
+    public function isFandom(): bool
+    {
+        return $this->scope === ChannelScope::Fandom;
     }
 
     public function isDirect(): bool

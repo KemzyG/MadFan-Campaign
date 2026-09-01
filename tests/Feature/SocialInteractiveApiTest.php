@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\Club;
 use App\Models\Follow;
@@ -89,7 +90,7 @@ test('api chat message store returns presented message json', function () {
 
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
 
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $response = $this->actingAs($user)
         ->postJson(route('api.social.chat.messages.store', $channel), [
@@ -109,7 +110,7 @@ test('api chat message store returns presented message json', function () {
 test('api chat message validation returns json errors', function () {
     $user = socialReadyUser();
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->postJson(route('api.social.chat.messages.store', $channel), [

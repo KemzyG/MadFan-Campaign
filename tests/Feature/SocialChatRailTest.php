@@ -9,7 +9,7 @@ test('the chat rail requires an onboarded fan', function () {
     $this->getJson('/api/social/chat/rail')->assertUnauthorized();
 });
 
-test('the chat rail lists club channels for a fresh fan', function () {
+test('the chat rail lists fandom and club channels for a fresh fan', function () {
     $user = socialReadyUser(Club::factory()->create(['name' => 'Radio FC']));
 
     $response = $this->actingAs($user)
@@ -18,9 +18,11 @@ test('the chat rail lists club channels for a fresh fan', function () {
 
     $names = collect($response->json('data'))->pluck('name')->all();
 
+    // socialReadyUser() sets both a favourite fandom and a favourite club —
+    // the rail lists a #general room for each (see ChatService::presentRail).
     expect($names)->toContain('general')
-        ->and(collect($response->json('data'))->pluck('scope')->unique()->all())
-        ->toBe([ChannelScope::Club->value]);
+        ->and(collect($response->json('data'))->pluck('scope')->unique()->sort()->values()->all())
+        ->toBe([ChannelScope::Club->value, ChannelScope::Fandom->value]);
 });
 
 test('the chat rail sorts every conversation by its last message', function () {
@@ -43,7 +45,7 @@ test('the chat rail sorts every conversation by its last message', function () {
     // The club server and its default channels are provisioned on first read.
     $this->actingAs($viewer)->getJson('/api/social/chat/rail')->assertSuccessful();
 
-    $general = Channel::query()->where('slug', 'general')->firstOrFail();
+    $general = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($viewer)
         ->post(route('social.chat.messages.store', $general), ['body' => 'Club shout first.'])

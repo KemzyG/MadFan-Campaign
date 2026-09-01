@@ -4,12 +4,12 @@ import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage'
 export const INBOXES = [
     { id: 'friends', label: 'Friends' },
     { id: 'groups', label: 'Group' },
-    { id: 'club', label: 'Club' },
+    { id: 'fandom', label: 'Fandom' },
 ];
 
 export function inboxHref(inbox) {
     // Friends is the default landing segment (ChatService::normalizeInbox),
-    // so every tab — including Club — needs its inbox spelled out explicitly;
+    // so every tab — including Fandom — needs its inbox spelled out explicitly;
     // a bare /social/chat would now resolve back to Friends instead.
     return `/social/chat?inbox=${inbox}`;
 }

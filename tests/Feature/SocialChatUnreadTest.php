@@ -11,7 +11,7 @@ test('a club chat message counts as unread for other members but not the sender'
     $member = socialReadyUser($club);
 
     $this->actingAs($sender)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($sender)
         ->postJson(route('api.social.chat.messages.store', $channel), ['body' => 'Kickoff soon.'])
@@ -34,7 +34,7 @@ test('opening a thread marks it read and clears its contribution to the unread c
     $member = socialReadyUser($club);
 
     $this->actingAs($sender)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($sender)
         ->postJson(route('api.social.chat.messages.store', $channel), ['body' => 'Kickoff soon.'])
@@ -77,7 +77,7 @@ test('unread counts span club, direct, and group channels', function () {
     ]);
 
     $this->actingAs($viewer)->get('/social/chat')->assertSuccessful();
-    $clubChannel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $clubChannel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $otherMember = socialReadyUser($club);
     $this->actingAs($otherMember)

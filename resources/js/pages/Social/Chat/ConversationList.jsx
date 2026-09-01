@@ -3,9 +3,17 @@ import { useMemo, useState } from 'react';
 import { AuthorAvatar, formatListStamp, INBOXES, inboxHref, PresenceDot } from './helpers';
 import NewConversation from './NewConversation';
 
+// Club is a legacy inbox — no longer a selectable tab (see INBOXES in
+// helpers.jsx), but a fan who still has a favourite_club_id can land on
+// ?inbox=club via an old link, and it renders with the exact same
+// channel-list treatment as Fandom.
+function isChannelInbox(inbox) {
+    return inbox === 'fandom' || inbox === 'club';
+}
+
 function previewText(row, inbox) {
     if (!row.last_message?.body) {
-        return inbox === 'club' ? row.topic || 'No shouts yet' : 'No messages yet';
+        return isChannelInbox(inbox) ? row.topic || 'No shouts yet' : 'No messages yet';
     }
 
     const prefix = row.last_message.is_mine ? 'You: ' : '';
@@ -24,7 +32,7 @@ function ConversationRow({ row, inbox }) {
             aria-current={row.is_active ? 'true' : undefined}
         >
             <span className="mf-convo-row__avatar">
-                {inbox === 'club' ? (
+                {isChannelInbox(inbox) ? (
                     <span className="mf-convo-row__hash mf-mono" aria-hidden>#</span>
                 ) : inbox === 'friends' && row.peer ? (
                     <AuthorAvatar author={row.peer} size="lg" />
@@ -67,7 +75,7 @@ export default function ConversationList({
     groupCandidates = [],
 }) {
     const [query, setQuery] = useState('');
-    const source = inbox === 'club' ? channels : threads;
+    const source = isChannelInbox(inbox) ? channels : threads;
 
     const rows = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -100,7 +108,7 @@ export default function ConversationList({
 
                 <label className="mf-chat-search">
                     <span className="sr-only">
-                        {inbox === 'club' ? 'Filter channels' : 'Filter chats'}
+                        {isChannelInbox(inbox) ? 'Filter channels' : 'Filter chats'}
                     </span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
                         <circle cx="11" cy="11" r="6.5" strokeWidth="1.75" />
@@ -110,12 +118,12 @@ export default function ConversationList({
                         type="search"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder={inbox === 'club' ? 'Find a channel' : 'Find a chat'}
+                        placeholder={isChannelInbox(inbox) ? 'Find a channel' : 'Find a chat'}
                         autoComplete="off"
                     />
                 </label>
 
-                {inbox !== 'club' ? (
+                {!isChannelInbox(inbox) ? (
                     <NewConversation
                         inbox={inbox}
                         friendCandidates={friendCandidates}
@@ -124,12 +132,12 @@ export default function ConversationList({
                 ) : null}
             </div>
 
-            <div className="mf-convo__list" role="tablist" aria-label={inbox === 'club' ? 'Channels' : 'Chats'}>
+            <div className="mf-convo__list" role="tablist" aria-label={isChannelInbox(inbox) ? 'Channels' : 'Chats'}>
                 {rows.length === 0 ? (
                     <p className="mf-convo__empty mf-text-meta">
                         {query.trim()
                             ? 'Nothing matches that.'
-                            : inbox === 'club'
+                            : isChannelInbox(inbox)
                                 ? 'No channels yet.'
                                 : inbox === 'friends'
                                     ? 'No friend chats yet — start one above.'

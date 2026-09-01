@@ -64,7 +64,7 @@ export default function MembersModal({ channel, inbox, onClose }) {
     const isDirect = data?.scope === 'direct';
     const label = isDirect
         ? data?.members?.[0]?.name || 'Member'
-        : data?.title || (inbox === 'club' ? 'Fans' : 'Members');
+        : data?.title || (inbox === 'fandom' || inbox === 'club' ? 'Fans' : 'Members');
 
     const filtered = useMemo(() => {
         const members = data?.members ?? [];
@@ -81,7 +81,7 @@ export default function MembersModal({ channel, inbox, onClose }) {
     const offline = filtered.filter((member) => !member.is_online);
     const showSearch = data && !isDirect && data.total_count > 8;
     const bounded =
-        data?.scope === 'club'
+        (data?.scope === 'fandom' || data?.scope === 'club')
         && !query.trim()
         && (data.members?.length ?? 0) < data.total_count;
 

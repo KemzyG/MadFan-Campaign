@@ -71,21 +71,27 @@ test('social passport shows loyalty identity club brand and referral qr payload'
         ->exists())->toBeTrue();
 });
 
-test('club onboarding syncs passport snapshot allegiance', function () {
+test('fandom onboarding syncs a passport snapshot', function () {
     $this->seed(SeasonSeeder::class);
 
     ApplicationSettings::sync(['social_network_enabled' => 'true']);
 
-    $club = Club::factory()->create(['name' => 'Onboard United']);
+    $fandom = ensureRegistrationFandom();
     $user = createUser(['email_verified_at' => now()]);
 
     $this->actingAs($user)
-        ->post('/social/onboarding/club', ['club_id' => $club->id])
+        ->post('/social/onboarding/fandom', ['fandom_id' => $fandom->id])
         ->assertRedirect(route('social.home'));
 
     $passport = Passport::query()->where('user_id', $user->id)->first();
 
+    // No club step anymore — snapshot_club stays null for a fandom-only fan
+    // (see SocialPassportService::syncSnapshot's favouriteClub?->name fallback).
     expect($passport)->not->toBeNull()
-        ->and($passport->snapshot_club)->toBe('Onboard United')
+        ->and($passport->snapshot_club)->toBeNull()
         ->and($passport->snapshot_name)->toBe($user->fresh()->name);
+
+    expect($user->fresh())
+        ->favourite_fandom_id->toBe($fandom->id)
+        ->favourite_club_id->toBeNull();
 });

@@ -32,7 +32,8 @@ class SocialChatMessageController extends Controller
         $inbox = match ($channel->scope ?? ChannelScope::Club) {
             ChannelScope::Direct => ChatService::INBOX_FRIENDS,
             ChannelScope::Group => ChatService::INBOX_GROUPS,
-            default => ChatService::INBOX_CLUB,
+            ChannelScope::Club => ChatService::INBOX_CLUB,
+            ChannelScope::Fandom => ChatService::INBOX_FANDOM,
         };
 
         return redirect()

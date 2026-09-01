@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ChannelScope;
 use App\Events\Social\ClubChatMessageCreated;
 use App\Events\Social\StageMessageCreated;
 use App\Events\Social\StageRoomUpdated;
@@ -17,7 +18,7 @@ test('club chat message dispatch broadcasts ClubChatMessageCreated', function ()
 
     $this->actingAs($user)->get('/social/chat')->assertSuccessful();
 
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->post(route('social.chat.messages.store', $channel), [

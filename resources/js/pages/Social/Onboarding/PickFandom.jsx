@@ -2,7 +2,6 @@ import { Head, useForm } from '@inertiajs/react';
 import FanBrandLogo from '../../../Components/Fan/FanBrandLogo';
 import ToastStack from '../../../Components/Fan/ToastStack';
 import { useToasts } from '../../../lib/useToasts';
-import OnboardStepper from './OnboardStepper';
 
 export default function PickFandom({ fandoms = [] }) {
     const { data, setData, post, processing } = useForm({
@@ -29,10 +28,8 @@ export default function PickFandom({ fandoms = [] }) {
                     <h1 className="mf-auth-title">Choose your fandom</h1>
                 </div>
 
-                <OnboardStepper currentStep={1} />
-
                 <p className="mf-text-meta text-[var(--mf-muted)]">
-                    More fandoms are coming — this is the one your club lives in today.
+                    More fandoms are coming — pick the one you're here for today.
                 </p>
 
                 <form onSubmit={submit}>

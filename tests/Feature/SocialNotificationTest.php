@@ -83,7 +83,7 @@ test('a chat message notifies other channel members but not the sender', functio
     $member = socialReadyUser($club);
 
     $this->actingAs($sender)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($sender)
         ->postJson(route('api.social.chat.messages.store', $channel), ['body' => 'Kickoff soon.'])
@@ -103,7 +103,7 @@ test('a club chat notification deep-links to the slug-based thread route', funct
     $member = socialReadyUser($club);
 
     $this->actingAs($sender)->get('/social/chat')->assertSuccessful();
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($sender)
         ->postJson(route('api.social.chat.messages.store', $channel), ['body' => 'Kickoff soon.'])

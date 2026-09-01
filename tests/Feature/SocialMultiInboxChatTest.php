@@ -166,7 +166,7 @@ test('club chat still works with inbox query and marks own messages', function (
 
     $this->actingAs($user)->get('/social/chat?inbox=club')->assertSuccessful();
 
-    $channel = Channel::query()->where('slug', 'general')->firstOrFail();
+    $channel = Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 
     $this->actingAs($user)
         ->post(route('social.chat.messages.store', $channel), [

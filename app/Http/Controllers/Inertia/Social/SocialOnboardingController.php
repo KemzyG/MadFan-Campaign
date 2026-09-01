@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Inertia\Social;
 
 use App\Http\Controllers\Controller;
-use App\Models\Club;
-use App\Models\ClubMembership;
 use App\Models\Fandom;
 use App\Models\FandomFollow;
 use App\Models\User;
 use App\Services\Social\SocialPassportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Onboarding is single-step: pick a fandom. There used to be a second
+ * "Choose your club" step (see git history / SocialOnboardingController
+ * before this class) — favourite_club_id is no longer part of what it
+ * means to be onboarded onto Social; a fan's fandom is now the whole
+ * community identity this flow establishes.
+ */
 class SocialOnboardingController extends Controller
 {
     public function fandom(Request $request): Response|RedirectResponse
@@ -22,8 +26,8 @@ class SocialOnboardingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if ($user->favourite_fandom_id !== null) {
-            return redirect()->route('social.onboarding.club');
+        if ($user->favourite_fandom_id !== null && $user->social_onboarded_at !== null) {
+            return redirect()->route('social.home');
         }
 
         $fandoms = Fandom::query()
@@ -38,7 +42,7 @@ class SocialOnboardingController extends Controller
         ]);
     }
 
-    public function storeFandom(Request $request): RedirectResponse
+    public function storeFandom(Request $request, SocialPassportService $socialPassport): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -47,91 +51,22 @@ class SocialOnboardingController extends Controller
             'fandom_id' => ['required', 'integer', 'exists:fandoms,id'],
         ]);
 
-        $user->forceFill(['favourite_fandom_id' => $validated['fandom_id']])->save();
+        $user->forceFill([
+            'favourite_fandom_id' => $validated['fandom_id'],
+            'social_onboarded_at' => $user->social_onboarded_at ?? now(),
+        ])->save();
 
         FandomFollow::query()->firstOrCreate([
             'user_id' => $user->id,
             'fandom_id' => $validated['fandom_id'],
         ]);
 
-        return redirect()->route('social.onboarding.club');
-    }
+        $socialPassport->syncSnapshot($user->fresh());
 
-    public function create(Request $request): Response|RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        if ($user->favourite_fandom_id === null) {
-            return redirect()->route('social.onboarding.fandom');
-        }
-
-        if ($user->social_onboarded_at !== null && $user->favourite_club_id !== null) {
-            return redirect()->route('social.home');
-        }
-
-        $clubs = Club::query()
-            ->with('league:id,name')
-            ->whereHas('league', fn ($query) => $query->where('fandom_id', $user->favourite_fandom_id))
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Club $club) => [
-                'id' => $club->id,
-                'name' => $club->name,
-                'short' => $club->short,
-                'logo_url' => $club->logo_url,
-                'league' => $club->league?->name,
-            ])
-            ->values()
-            ->all();
-
-        return Inertia::render('Social/Onboarding/PickClub', [
-            'clubs' => $clubs,
-            'current_club_id' => $user->favourite_club_id,
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'club_id' => ['required', 'integer', 'exists:clubs,id'],
-        ]);
-
-        $club = Club::query()->with('league:id,name')->findOrFail($validated['club_id']);
-
-        DB::transaction(function () use ($user, $club): void {
-            ClubMembership::query()
-                ->where('user_id', $user->id)
-                ->where('is_primary', true)
-                ->update(['is_primary' => false]);
-
-            ClubMembership::query()->updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'club_id' => $club->id,
-                ],
-                [
-                    'is_primary' => true,
-                    'role' => 'member',
-                    'notifications' => 'all',
-                ],
-            );
-
-            $user->forceFill([
-                'favourite_club_id' => $club->id,
-                'club' => $club->name,
-                'league' => $club->league?->name,
-                'social_onboarded_at' => now(),
-            ])->save();
-
-            app(SocialPassportService::class)->syncSnapshot($user->fresh());
-        });
+        $fandom = Fandom::find($validated['fandom_id']);
 
         return redirect()
             ->route('social.home')
-            ->with('success', 'You’re in. Welcome to the '.$club->name.' terrace.');
+            ->with('success', 'You’re in. Welcome to the '.($fandom?->name ?? 'fandom').' terrace.');
     }
 }

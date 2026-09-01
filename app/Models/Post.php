@@ -22,6 +22,7 @@ class Post extends Model
     protected $fillable = [
         'author_id',
         'club_id',
+        'fandom_id',
         'stage_id',
         'type',
         'visibility',
@@ -68,6 +69,11 @@ class Post extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function fandom(): BelongsTo
+    {
+        return $this->belongsTo(Fandom::class);
     }
 
     public function stage(): BelongsTo
@@ -143,6 +149,11 @@ class Post extends Model
     public function scopeForClub(Builder $query, int $clubId): Builder
     {
         return $query->where('club_id', $clubId);
+    }
+
+    public function scopeForFandom(Builder $query, int $fandomId): Builder
+    {
+        return $query->where('fandom_id', $fandomId);
     }
 
     public function isLikedBy(?User $user): bool

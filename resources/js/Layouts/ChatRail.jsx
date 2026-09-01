@@ -33,9 +33,13 @@ function loadRail() {
     return cache.inflight;
 }
 
+function isChannelScope(scope) {
+    return scope === 'fandom' || scope === 'club';
+}
+
 function previewText(row) {
     if (!row.last_message?.body) {
-        return row.scope === 'club' ? row.topic || 'No shouts yet' : 'No messages yet';
+        return isChannelScope(row.scope) ? row.topic || 'No shouts yet' : 'No messages yet';
     }
 
     return `${row.last_message.is_mine ? 'You: ' : ''}${row.last_message.body}`;
@@ -45,7 +49,7 @@ function RailRow({ row }) {
     return (
         <Link href={row.href} className="mf-convo-row mf-convo-row--rail" prefetch>
             <span className="mf-convo-row__avatar">
-                {row.scope === 'club' ? (
+                {isChannelScope(row.scope) ? (
                     <span className="mf-convo-row__hash mf-mono" aria-hidden>#</span>
                 ) : row.scope === 'direct' && row.peer ? (
                     <AuthorAvatar author={row.peer} />

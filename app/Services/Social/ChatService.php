@@ -3,11 +3,15 @@
 namespace App\Services\Social;
 
 use App\Actions\Social\EnsureClubChatRooms;
+use App\Actions\Social\EnsureFandomChatRoom;
 use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\ChannelMember;
 use App\Models\Club;
 use App\Models\ClubServer;
+use App\Models\Fandom;
+use App\Models\FandomFollow;
+use App\Models\FandomServer;
 use App\Models\Follow;
 use App\Models\Message;
 use App\Models\SocialNotification;
@@ -23,7 +27,13 @@ class ChatService
 
     public const POLL_INTERVAL_MS = 4000;
 
+    // Legacy — favourite_club_id is no longer set during onboarding, so no
+    // fan reaches this tab through the normal chat UI anymore. Kept only so
+    // a direct link to an existing club channel still resolves for whoever
+    // already has a club (see resolveInboxChannel/resolveThreadChannel).
     public const INBOX_CLUB = 'club';
+
+    public const INBOX_FANDOM = 'fandom';
 
     public const INBOX_FRIENDS = 'friends';
 
@@ -31,6 +41,7 @@ class ChatService
 
     public function __construct(
         private EnsureClubChatRooms $ensureClubChatRooms,
+        private EnsureFandomChatRoom $ensureFandomChatRoom,
     ) {}
 
     public function serverForClub(Club $club): ClubServer
@@ -38,19 +49,25 @@ class ChatService
         return $this->ensureClubChatRooms->handle($club);
     }
 
+    public function serverForFandom(Fandom $fandom): FandomServer
+    {
+        return $this->ensureFandomChatRoom->handle($fandom);
+    }
+
     public function normalizeInbox(?string $inbox): string
     {
         // Friends is the landing segment: opening Chat with no ?inbox= (or an
         // unrecognised one) lands a fan on their direct messages, not the
-        // club room. Explicit club/groups selections still pass through.
+        // fandom room. Explicit fandom/club/groups selections still pass through.
         return match ($inbox) {
+            self::INBOX_FANDOM => self::INBOX_FANDOM,
             self::INBOX_CLUB => self::INBOX_CLUB,
             self::INBOX_GROUPS => self::INBOX_GROUPS,
             default => self::INBOX_FRIENDS,
         };
     }
 
-    public function resolveChannel(ClubServer $server, ?string $slug): Channel
+    public function resolveChannel(ClubServer|FandomServer $server, ?string $slug): Channel
     {
         $slug = $slug !== null && $slug !== '' ? $slug : 'general';
 
@@ -59,7 +76,7 @@ class ChatService
             ?? $server->channels->first();
 
         if ($channel === null) {
-            abort(404, 'No chat channels for this club yet.');
+            abort(404, 'No chat channels here yet.');
         }
 
         return $channel;
@@ -67,15 +84,22 @@ class ChatService
 
     public function resolveInboxChannel(User $user, string $inbox, ?string $channelKey): ?Channel
     {
+        if ($inbox === self::INBOX_FANDOM) {
+            $fandom = $user->favouriteFandom;
+            if ($fandom === null) {
+                return null;
+            }
+
+            return $this->resolveChannel($this->serverForFandom($fandom), $channelKey);
+        }
+
         if ($inbox === self::INBOX_CLUB) {
             $club = $user->favouriteClub;
             if ($club === null) {
                 return null;
             }
 
-            $server = $this->serverForClub($club);
-
-            return $this->resolveChannel($server, $channelKey);
+            return $this->resolveChannel($this->serverForClub($club), $channelKey);
         }
 
         if ($channelKey === null || $channelKey === '') {
@@ -100,15 +124,20 @@ class ChatService
 
     /**
      * Resolve a channel for the dedicated thread route, where the inbox is derived
-     * from the channel itself rather than passed in the URL.
+     * from the channel itself rather than passed in the URL. $server is the
+     * viewer's primary community server (fandom, or club for a legacy direct
+     * link) — a slug-only key resolves against it; a numeric key can be any
+     * channel the viewer is allowed into.
      */
-    public function resolveThreadChannel(User $user, ClubServer $server, string $key): ?Channel
+    public function resolveThreadChannel(User $user, ClubServer|FandomServer $server, string $key): ?Channel
     {
+        $serverColumn = $server instanceof FandomServer ? 'fandom_server_id' : 'club_server_id';
+
         $channel = Channel::query()
             ->when(
                 ctype_digit($key),
                 fn ($q) => $q->whereKey((int) $key),
-                fn ($q) => $q->where('slug', $key)->where('club_server_id', $server->id),
+                fn ($q) => $q->where('slug', $key)->where($serverColumn, $server->id),
             )
             ->first();
 
@@ -116,8 +145,27 @@ class ChatService
             return null;
         }
 
+        // Fandom/club channels have no per-user ChannelMember row by default
+        // (see markRead()) — membership is implicit ("you're in this fandom/
+        // club"), so verify the viewer's own server matches instead of
+        // hasMember(). A numeric key could name any fandom's or club's
+        // channel, not just the viewer's own — always re-derive the
+        // viewer's own server id fresh rather than trusting $server is the
+        // right type for whichever channel got fetched.
+        if ($channel->isFandom()) {
+            $ownServerId = $user->favourite_fandom_id !== null
+                ? $this->serverForFandom($user->favouriteFandom)->id
+                : null;
+
+            return (int) $channel->fandom_server_id === (int) $ownServerId ? $channel : null;
+        }
+
         if ($channel->isClub()) {
-            return (int) $channel->club_server_id === (int) $server->id ? $channel : null;
+            $ownServerId = $user->favourite_club_id !== null
+                ? $this->serverForClub($user->favouriteClub)->id
+                : null;
+
+            return (int) $channel->club_server_id === (int) $ownServerId ? $channel : null;
         }
 
         return $channel->hasMember($user) ? $channel : null;
@@ -128,12 +176,18 @@ class ChatService
         return match (true) {
             $channel->isDirect() => self::INBOX_FRIENDS,
             $channel->isGroup() => self::INBOX_GROUPS,
-            default => self::INBOX_CLUB,
+            $channel->isClub() => self::INBOX_CLUB,
+            default => self::INBOX_FANDOM,
         };
     }
 
     public function threadHref(Channel $channel): string
     {
+        // Slugs are only unique per-server, not globally — 'general' exists
+        // once per fandom AND once per club, so only the legacy club scope
+        // (a single well-known server per channel list) gets the pretty
+        // slug URL; fandom joins direct/group in using the id, which is
+        // always unambiguous.
         $key = $channel->isClub() ? (string) $channel->slug : (string) $channel->id;
 
         return '/social/chat/thread/'.urlencode($key);
@@ -237,17 +291,26 @@ class ChatService
     /**
      * @return list<array<string, mixed>>
      */
-    public function presentChannels(ClubServer $server, ?Channel $active, ?User $viewer = null): array
+    public function presentChannels(ClubServer|FandomServer $server, ?Channel $active, ?User $viewer = null): array
     {
         $server->channels->loadMissing(['messages' => fn ($q) => $q->latest('id')->limit(1)]);
-        $server->loadMissing('club');
 
         // One fanbase per server, so the counts are computed once and shared by every channel row.
-        $club = $server->club;
-        $onlineFans = $club !== null ? User::where('favourite_club_id', $club->id)->online()->count() : 0;
-        $totalFans = $club !== null ? User::where('favourite_club_id', $club->id)->count() : 0;
+        if ($server instanceof FandomServer) {
+            $server->loadMissing('fandom');
+            $fandom = $server->fandom;
+            $onlineFans = $fandom !== null ? User::where('favourite_fandom_id', $fandom->id)->online()->count() : 0;
+            $totalFans = $fandom !== null ? User::where('favourite_fandom_id', $fandom->id)->count() : 0;
+            $scope = ChannelScope::Fandom->value;
+        } else {
+            $server->loadMissing('club');
+            $club = $server->club;
+            $onlineFans = $club !== null ? User::where('favourite_club_id', $club->id)->online()->count() : 0;
+            $totalFans = $club !== null ? User::where('favourite_club_id', $club->id)->count() : 0;
+            $scope = ChannelScope::Club->value;
+        }
 
-        return $server->channels->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans): array {
+        return $server->channels->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans, $scope): array {
             $preview = $channel->messages->first();
 
             return [
@@ -255,7 +318,7 @@ class ChatService
                 'slug' => $channel->slug,
                 'name' => $channel->name,
                 'topic' => $channel->topic,
-                'scope' => ChannelScope::Club->value,
+                'scope' => $scope,
                 'is_read_only' => $channel->is_read_only,
                 'is_active' => $active !== null && $channel->id === $active->id,
                 'href' => $this->threadHref($channel),
@@ -391,7 +454,10 @@ class ChatService
     {
         $channelIds = collect();
 
-        $viewer->loadMissing('favouriteClub');
+        $viewer->loadMissing(['favouriteFandom', 'favouriteClub']);
+        if ($viewer->favouriteFandom !== null) {
+            $channelIds = $channelIds->merge($this->serverForFandom($viewer->favouriteFandom)->channels->pluck('id'));
+        }
         if ($viewer->favouriteClub !== null) {
             $channelIds = $channelIds->merge($this->serverForClub($viewer->favouriteClub)->channels->pluck('id'));
         }
@@ -437,7 +503,14 @@ class ChatService
             ...$this->presentGroupThreads($viewer, null),
         ];
 
-        $viewer->loadMissing('favouriteClub');
+        $viewer->loadMissing(['favouriteFandom', 'favouriteClub']);
+
+        if ($viewer->favouriteFandom !== null) {
+            $rows = [
+                ...$rows,
+                ...$this->presentChannels($this->serverForFandom($viewer->favouriteFandom), null, $viewer),
+            ];
+        }
 
         if ($viewer->favouriteClub !== null) {
             $rows = [
@@ -574,6 +647,17 @@ class ChatService
             $base['presence'] = ['scope' => 'group', 'online' => $onlineCount, 'total' => $memberCount];
         }
 
+        if ($channel->isFandom()) {
+            $fandom = $channel->fandom();
+            if ($fandom !== null) {
+                $base['presence'] = [
+                    'scope' => 'fandom',
+                    'online' => User::where('favourite_fandom_id', $fandom->id)->online()->count(),
+                    'total' => User::where('favourite_fandom_id', $fandom->id)->count(),
+                ];
+            }
+        }
+
         if ($channel->isClub()) {
             $club = $channel->club();
             if ($club !== null) {
@@ -632,15 +716,38 @@ class ChatService
             ];
         }
 
-        // Club: bounded slice (online, then most-recently-seen) with exact counts.
+        $columns = ['id', 'name', 'handle', 'fan_id', 'avatar_path', 'avatar_emoji', 'last_seen_at'];
+        $threshold = now()->subMinutes(User::ONLINE_WINDOW_MINUTES);
+
+        if ($channel->isFandom()) {
+            $fandom = $channel->fandom();
+
+            if ($fandom === null) {
+                return ['scope' => 'fandom', 'title' => 'Fans', 'online_count' => 0, 'total_count' => 0, 'members' => []];
+            }
+
+            $online = User::where('favourite_fandom_id', $fandom->id)->online()->orderBy('name')->limit(80)->get($columns);
+            $offline = User::where('favourite_fandom_id', $fandom->id)
+                ->where(fn ($q) => $q->whereNull('last_seen_at')->orWhere('last_seen_at', '<', $threshold))
+                ->orderByDesc('last_seen_at')
+                ->limit(80)
+                ->get($columns);
+
+            return [
+                'scope' => 'fandom',
+                'title' => 'Fans',
+                'online_count' => User::where('favourite_fandom_id', $fandom->id)->online()->count(),
+                'total_count' => User::where('favourite_fandom_id', $fandom->id)->count(),
+                'members' => $online->concat($offline)->map(fn (User $u) => $this->presentMember($u))->all(),
+            ];
+        }
+
+        // Club (legacy): bounded slice (online, then most-recently-seen) with exact counts.
         $club = $channel->club();
 
         if ($club === null) {
             return ['scope' => 'club', 'title' => 'Fans', 'online_count' => 0, 'total_count' => 0, 'members' => []];
         }
-
-        $columns = ['id', 'name', 'handle', 'fan_id', 'avatar_path', 'avatar_emoji', 'last_seen_at'];
-        $threshold = now()->subMinutes(User::ONLINE_WINDOW_MINUTES);
 
         $online = User::where('favourite_club_id', $club->id)
             ->online()
@@ -695,11 +802,24 @@ class ChatService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function presentFandom(Fandom $fandom): array
+    {
+        return [
+            'id' => $fandom->id,
+            'name' => $fandom->name,
+            'slug' => $fandom->slug,
+            'icon' => $fandom->icon,
+        ];
+    }
+
     public function chatQueryParams(string $inbox, Channel $channel): array
     {
-        if ($inbox === self::INBOX_CLUB) {
+        if ($inbox === self::INBOX_FANDOM || $inbox === self::INBOX_CLUB) {
             return [
-                'inbox' => self::INBOX_CLUB,
+                'inbox' => $inbox,
                 'channel' => $channel->slug,
             ];
         }

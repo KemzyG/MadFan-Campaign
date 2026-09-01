@@ -20,7 +20,9 @@ class ChatMembersController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if ($channel->isClub()) {
+        if ($channel->isFandom()) {
+            abort_unless((int) $channel->fandomServer?->fandom_id === (int) $user->favourite_fandom_id, 403);
+        } elseif ($channel->isClub()) {
             abort_unless((int) $channel->clubServer?->club_id === (int) $user->favourite_club_id, 403);
         } else {
             abort_unless($channel->hasMember($user), 403);

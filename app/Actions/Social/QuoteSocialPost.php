@@ -12,8 +12,8 @@ class QuoteSocialPost
 {
     public function handle(User $author, Post $original, string $body): Post
     {
-        if ($author->favourite_club_id === null) {
-            throw new InvalidArgumentException('Favourite club is required before posting.');
+        if ($author->favourite_fandom_id === null) {
+            throw new InvalidArgumentException('Favourite fandom is required before posting.');
         }
 
         if ($original->reply_to_id !== null) {
@@ -24,6 +24,7 @@ class QuoteSocialPost
             $post = Post::query()->create([
                 'author_id' => $author->id,
                 'club_id' => $author->favourite_club_id,
+                'fandom_id' => $author->favourite_fandom_id,
                 'type' => PostType::Quote,
                 'body' => $body,
                 'quote_of_id' => $original->id,

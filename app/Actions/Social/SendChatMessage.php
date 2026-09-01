@@ -7,6 +7,7 @@ use App\Enums\MessageType;
 use App\Events\Social\ClubChatMessageCreated;
 use App\Models\Channel;
 use App\Models\ClubMembership;
+use App\Models\FandomFollow;
 use App\Models\Message;
 use App\Models\SocialNotification;
 use App\Models\User;
@@ -126,15 +127,35 @@ class SendChatMessage
     }
 
     /**
-     * Who to notify about a new message, excluding the author. Club-scoped
-     * channels have no `channel_members` rows (membership is implicit via
-     * favourite_club_id/ClubMembership — see ChannelPolicy::belongsToClubChannel);
+     * Who to notify about a new message, excluding the author. Club/fandom
+     * scoped channels have no `channel_members` rows (membership is implicit
+     * via favourite_club_id/ClubMembership or favourite_fandom_id/FandomFollow
+     * — see ChannelPolicy::belongsToClubChannel/belongsToFandomChannel);
      * direct/group channels use the real pivot.
      *
      * @return Collection<int, User>
      */
     private function recipientsFor(Channel $channel, User $author): Collection
     {
+        if ($channel->scope === ChannelScope::Fandom) {
+            $channel->loadMissing('fandomServer');
+            $fandomId = $channel->fandomServer?->fandom_id;
+
+            if ($fandomId === null) {
+                return collect();
+            }
+
+            $memberIds = FandomFollow::query()->where('fandom_id', $fandomId)->pluck('user_id');
+
+            return User::query()
+                ->where('id', '!=', $author->id)
+                ->where(function ($query) use ($fandomId, $memberIds): void {
+                    $query->where('favourite_fandom_id', $fandomId)
+                        ->orWhereIn('id', $memberIds);
+                })
+                ->get();
+        }
+
         if ($channel->scope === ChannelScope::Club) {
             $channel->loadMissing('clubServer');
             $clubId = $channel->clubServer?->club_id;

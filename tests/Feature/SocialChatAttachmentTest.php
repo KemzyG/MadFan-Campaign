@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\Club;
 use App\Models\Message;
@@ -11,7 +12,7 @@ function attachmentTestChannel($user): Channel
 {
     test()->actingAs($user)->get('/social/chat')->assertSuccessful();
 
-    return Channel::query()->where('slug', 'general')->firstOrFail();
+    return Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->firstOrFail();
 }
 
 /**

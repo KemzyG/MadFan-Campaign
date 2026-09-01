@@ -106,6 +106,7 @@ class HandleInertiaRequests extends Middleware
                     'email_verified' => $user->hasVerifiedEmail(),
                     'mfa_enabled' => $user->hasMfaEnabled(),
                     'favourite_club_id' => $user->favourite_club_id,
+                    'favourite_fandom_id' => $user->favourite_fandom_id,
                     'social_onboarded' => $user->social_onboarded_at !== null,
                 ] : null,
             ],

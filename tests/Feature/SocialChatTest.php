@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ChannelScope;
 use App\Models\Channel;
 use App\Models\Club;
 use App\Models\ClubServer;
@@ -35,7 +36,7 @@ test('onboarded fans can open club chat with default channels', function () {
             ->has('messages.items'));
 
     expect(ClubServer::query()->where('club_id', $club->id)->exists())->toBeTrue();
-    expect(Channel::query()->where('slug', 'general')->exists())->toBeTrue();
+    expect(Channel::query()->where('slug', 'general')->where('scope', ChannelScope::Club)->exists())->toBeTrue();
     expect(Channel::query()->where('slug', 'matchday')->exists())->toBeTrue();
 });
 
