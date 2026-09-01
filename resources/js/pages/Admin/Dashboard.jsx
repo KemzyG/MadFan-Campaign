@@ -1,7 +1,7 @@
 import AdminLayout from '../../Layouts/AdminLayout';
-import { OpsDashboardChart } from '@/Components/admin/ops-dashboard-chart';
-import { OpsDashboardSectionCards } from '@/Components/admin/ops-dashboard-section-cards';
-import { OpsDashboardTables } from '@/Components/admin/ops-dashboard-tables';
+import { OpsDashboardChart } from '@/Components/Admin/ops-dashboard-chart';
+import { OpsDashboardSectionCards } from '@/Components/Admin/ops-dashboard-section-cards';
+import { OpsDashboardTables } from '@/Components/Admin/ops-dashboard-tables';
 
 export default function Dashboard({
     dashboard_mode: dashboardMode = 'platform',
