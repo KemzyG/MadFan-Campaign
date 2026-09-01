@@ -1,4 +1,14 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { AuthShell } from '@/Components/Admin/auth-shell';
+import { Button } from '@/Components/ui/button';
+import {
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
+} from '@/Components/ui/field';
+import { Input } from '@/Components/ui/input';
+import { Spinner } from '@/Components/ui/spinner';
 import { adminPath } from '../../lib/adminPath';
 
 export default function MfaChallenge() {
@@ -7,39 +17,61 @@ export default function MfaChallenge() {
         code: '',
     });
 
-    function submit(e) {
-        e.preventDefault();
+    function submit(event) {
+        event.preventDefault();
         post(adminPath(page.props, 'mfa/challenge'));
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-surface-900 p-4">
+        <>
             <Head title="MFA challenge" />
-            <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-surface-800/80 p-8 shadow-2xl">
-                <h1 className="text-2xl font-semibold text-white">Two-factor authentication</h1>
-                <p className="mt-2 text-sm text-zinc-400">
-                    Enter a code from your authenticator app, or a recovery code.
-                </p>
+            <AuthShell>
+                <form className="p-6 md:p-8" onSubmit={submit}>
+                    <FieldGroup>
+                        <div className="flex flex-col items-center gap-2 text-center">
+                            <h1 className="text-2xl font-bold">Two-factor authentication</h1>
+                            <p className="text-balance text-muted-foreground">
+                                Enter a code from your authenticator app, or a recovery code.
+                            </p>
+                        </div>
 
-                <form onSubmit={submit} className="mt-6 space-y-4">
-                    <input
-                        className="w-full rounded-lg border border-white/10 bg-surface-900 px-3 py-2 text-white"
-                        placeholder="123456 or recovery-code"
-                        value={data.code}
-                        onChange={(e) => setData('code', e.target.value)}
-                        required
-                        autoFocus
-                    />
-                    {errors.code && <p className="text-sm text-red-400">{errors.code}</p>}
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="w-full rounded-lg bg-brand-500 px-4 py-2 font-semibold text-surface-900"
-                    >
-                        {processing ? 'Checking…' : 'Verify'}
-                    </button>
+                        <Field>
+                            <FieldLabel htmlFor="code">Authentication code</FieldLabel>
+                            <Input
+                                id="code"
+                                name="code"
+                                placeholder="123456 or recovery-code"
+                                autoComplete="one-time-code"
+                                autoFocus
+                                required
+                                value={data.code}
+                                onChange={(event) => setData('code', event.target.value)}
+                                aria-invalid={Boolean(errors.code)}
+                            />
+                            {errors.code ? (
+                                <p className="text-sm text-destructive">{errors.code}</p>
+                            ) : null}
+                        </Field>
+
+                        <Field>
+                            <Button type="submit" className="w-full" disabled={processing}>
+                                {processing ? (
+                                    <>
+                                        <Spinner data-icon="inline-start" />
+                                        Verifying…
+                                    </>
+                                ) : (
+                                    'Verify and continue'
+                                )}
+                            </Button>
+                        </Field>
+
+                        <FieldDescription className="text-center">
+                            Lost your device? Use a saved recovery code instead.
+                        </FieldDescription>
+                    </FieldGroup>
                 </form>
-            </div>
-        </div>
+            </AuthShell>
+        </>
     );
 }

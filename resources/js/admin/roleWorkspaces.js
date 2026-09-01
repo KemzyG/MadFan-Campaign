@@ -40,7 +40,7 @@ export function buildAdminNavigation(basePath = '/ops') {
         { name: 'Events', href: p('announcements'), permission: 'announcements.manage', key: 'announcements', section: 'social' },
         { name: 'Fixtures', href: p('fixtures'), permission: 'fixtures.manage', key: 'fixtures', section: 'social' },
         { name: 'Reports', href: p('reports'), permission: 'reports.manage', key: 'reports', section: 'social' },
-        { name: 'Polls', href: p('polls'), permission: 'polls.manage', key: 'polls', section: 'social' },
+        { name: 'Vote', href: p('polls'), permission: 'polls.manage', key: 'polls', section: 'social' },
         { name: 'Showdowns', href: p('showdowns'), permission: 'polls.manage', key: 'showdowns', section: 'social' },
         { name: 'Predictions', href: p('predictions'), permission: 'predictions.manage', key: 'predictions', section: 'social' },
         { name: 'Stages', href: p('stages'), permission: 'stages.manage', key: 'stages', section: 'social' },

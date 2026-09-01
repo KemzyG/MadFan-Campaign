@@ -93,7 +93,7 @@ export default function PollsIndex({ polls, filters = {}, fandoms = [], seasons 
     }
 
     async function remove(poll) {
-        if (!confirm('Delete this poll?')) return;
+        if (!confirm('Delete this vote?')) return;
         await adminApi(`/polls/${poll.id}`, { method: 'DELETE' });
         router.reload({ only: ['polls'] });
     }
@@ -117,13 +117,13 @@ export default function PollsIndex({ polls, filters = {}, fandoms = [], seasons 
     }));
 
     return (
-        <AdminLayout title="Polls">
+        <AdminLayout title="Vote">
             <AdminPageHeader
-                title="Polls"
-                description="Fandom and season polls for fan engagement."
+                title="Vote"
+                description="Fandom and season votes for fan engagement — shown as Fan vote cards on the Events feed."
                 actions={
                     <Button type="button" onClick={openCreate}>
-                        New poll
+                        New vote
                     </Button>
                 }
             />
@@ -139,7 +139,7 @@ export default function PollsIndex({ polls, filters = {}, fandoms = [], seasons 
                 rows={rows}
             />
             <AdminPagination links={polls?.links} meta={polls} />
-            <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editing ? 'Edit poll' : 'Create poll'}</DialogTitle></DialogHeader>
+            <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{editing ? 'Edit vote' : 'Create vote'}</DialogTitle></DialogHeader>
                 <form onSubmit={save} className="space-y-3">
                     <Field ><FieldLabel>Question</FieldLabel>
                         <Input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} required />
