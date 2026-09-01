@@ -3,9 +3,10 @@ import { Countdown } from '../EventChrome';
 import { IconCoin, IconExternal } from '../icons';
 
 /**
- * fan_challenge — a task brief. The reward is the hero (a coin plate with the
- * points), the platform/type read as tags, and the deadline runs as a countdown
- * so the card pressures you the way a challenge should.
+ * fan_challenge and campaign — a task brief (see TaskFeedProvider; both are
+ * admin-authored Task rows, told apart only by feed_kind). The reward is the
+ * hero (a coin plate with the points), the platform/type read as tags, and
+ * the deadline runs as a countdown so the card pressures you either way.
  */
 export default function FanChallengeCard({ event }) {
     const {

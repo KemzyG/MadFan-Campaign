@@ -155,7 +155,7 @@ class SocialChatController extends Controller
         ];
 
         if ($channel !== null) {
-            $page = $chatService->paginatedMessages($channel, null, ChatService::MESSAGES_PER_PAGE);
+            $page = $chatService->paginatedMessages($channel, null, ChatService::MESSAGES_PER_PAGE, $user);
             $messagesPayload = [
                 'items' => $chatService->presentMessages($page['messages'], $user),
                 'has_more' => $page['has_more'],

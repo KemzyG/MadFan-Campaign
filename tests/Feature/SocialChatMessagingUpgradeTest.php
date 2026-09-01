@@ -9,6 +9,7 @@ use App\Models\Follow;
 use App\Models\Message;
 use App\Models\SocialReport;
 use App\Models\UserBlock;
+use App\Services\Social\ChatService;
 use Illuminate\Http\UploadedFile;
 
 test('chat messages payload includes pagination meta', function () {
@@ -206,6 +207,55 @@ test('direct thread list includes unread counts sorted by recent activity', func
             ->has('threads', 1)
             ->where('threads.0.unread_count', 1)
             ->where('threads.0.last_message.body', 'Unread ping'));
+});
+
+test('viewer can clear, mute, archive, and set disappearing messages on a channel', function () {
+    $club = Club::factory()->create();
+    $viewer = socialReadyUser($club);
+    $peer = socialReadyUser($club);
+
+    Follow::factory()->create([
+        'follower_id' => $viewer->id,
+        'following_id' => $peer->id,
+    ]);
+
+    $channel = app(EnsureDirectChatChannel::class)->handle($viewer, $peer);
+
+    Message::factory()->create([
+        'channel_id' => $channel->id,
+        'author_id' => $peer->id,
+        'body' => 'Old message',
+    ]);
+
+    $this->actingAs($viewer)
+        ->patchJson("/api/social/chat/channels/{$channel->id}/preferences", [
+            'muted' => true,
+            'disappearing_seconds' => ChatService::DISAPPEARING_DAY,
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('data.muted', true)
+        ->assertJsonPath('data.disappearing_seconds', ChatService::DISAPPEARING_DAY);
+
+    $this->actingAs($viewer)
+        ->postJson("/api/social/chat/channels/{$channel->id}/clear")
+        ->assertSuccessful();
+
+    $this->actingAs($viewer)
+        ->getJson("/api/social/chat/channels/{$channel->id}/messages")
+        ->assertSuccessful()
+        ->assertJsonCount(0, 'data');
+
+    $this->actingAs($viewer)
+        ->patchJson("/api/social/chat/channels/{$channel->id}/preferences", [
+            'archived' => true,
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('data.archived', true);
+
+    $this->actingAs($viewer)
+        ->get('/social/chat?inbox=friends')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->where('threads', []));
 });
 
 test('members endpoint uses channel policy instead of favourite-only checks', function () {

@@ -24,6 +24,7 @@ class Task extends Model
         'points',
         'platform',
         'task_type',
+        'feed_kind',
         'audience',
         'staff_position',
         'assigned_user_id',

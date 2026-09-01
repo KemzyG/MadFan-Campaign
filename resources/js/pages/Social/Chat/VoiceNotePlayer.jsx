@@ -55,9 +55,9 @@ function IconPause() {
 /**
  * WhatsApp / Telegram style inline voice bubble — play icon + waveform, no native controls.
  *
- * @param {{ src: string, seed?: string|number, isMine?: boolean, durationMs?: number, compact?: boolean }} props
+ * @param {{ src: string, seed?: string|number, isMine?: boolean, durationMs?: number, compact?: boolean, inBubble?: boolean }} props
  */
-export default function VoiceNotePlayer({ src, seed = src, isMine = false, durationMs = 0, compact = false }) {
+export default function VoiceNotePlayer({ src, seed = src, isMine = false, durationMs = 0, compact = false, inBubble = false }) {
     const audioRef = useRef(null);
     const [playing, setPlaying] = useState(false);
     const [duration, setDuration] = useState(Math.max(0, durationMs / 1000));
@@ -89,6 +89,10 @@ export default function VoiceNotePlayer({ src, seed = src, isMine = false, durat
             }
         }
 
+        function onDurationChange() {
+            onLoaded();
+        }
+
         function onTimeUpdate() {
             setCurrent(audio.currentTime);
         }
@@ -108,12 +112,20 @@ export default function VoiceNotePlayer({ src, seed = src, isMine = false, durat
         }
 
         audio.addEventListener('loadedmetadata', onLoaded);
+        audio.addEventListener('durationchange', onDurationChange);
+        audio.addEventListener('loadeddata', onLoaded);
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('ended', onEnded);
         audio.addEventListener('pause', onPause);
 
+        if (audio.readyState >= 1) {
+            onLoaded();
+        }
+
         return () => {
             audio.removeEventListener('loadedmetadata', onLoaded);
+            audio.removeEventListener('durationchange', onDurationChange);
+            audio.removeEventListener('loadeddata', onLoaded);
             audio.removeEventListener('timeupdate', onTimeUpdate);
             audio.removeEventListener('ended', onEnded);
             audio.removeEventListener('pause', onPause);
@@ -158,10 +170,11 @@ export default function VoiceNotePlayer({ src, seed = src, isMine = false, durat
                 'mf-voice-note',
                 isMine ? 'is-mine' : 'is-theirs',
                 compact ? 'is-compact' : '',
+                inBubble ? 'is-in-bubble' : '',
                 playing ? 'is-playing' : '',
             ].filter(Boolean).join(' ')}
         >
-            <audio ref={audioRef} src={src} preload="metadata" hidden />
+            <audio ref={audioRef} src={src} preload="metadata" className="mf-voice-note__audio" aria-hidden />
 
             <button
                 type="button"

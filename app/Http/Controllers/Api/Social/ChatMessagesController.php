@@ -21,7 +21,7 @@ class ChatMessagesController extends Controller
         $beforeId = $request->integer('before_id') ?: null;
         $limit = min($request->integer('limit', ChatService::MESSAGES_PER_PAGE), 100);
 
-        $result = $chatService->paginatedMessages($channel, $beforeId, $limit);
+        $result = $chatService->paginatedMessages($channel, $beforeId, $limit, $request->user());
 
         return response()->json([
             'data' => $chatService->presentMessages($result['messages'], $request->user()),

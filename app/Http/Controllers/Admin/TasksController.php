@@ -38,6 +38,7 @@ class TasksController extends Controller
             'description' => '',
             'platform' => 'internal',
             'task_type' => 'general',
+            'feed_kind' => 'challenge',
             'display_order' => (int) Task::query()->max('display_order') + 1,
             'audience' => 'fan',
         ], $request->validated());

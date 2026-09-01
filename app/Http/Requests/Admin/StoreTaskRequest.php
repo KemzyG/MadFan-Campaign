@@ -26,6 +26,8 @@ class StoreTaskRequest extends FormRequest
             'points' => ['required', 'integer', 'min:0'],
             'platform' => ['nullable', 'string', 'max:50'],
             'task_type' => ['nullable', 'string', 'max:50'],
+            // Which Events-feed card this task renders as (see TaskFeedProvider).
+            'feed_kind' => ['nullable', 'string', 'in:challenge,campaign'],
             'audience' => ['nullable', 'string', 'in:fan,staff'],
             'staff_position' => ['nullable', 'string', 'in:'.implode(',', StaffPosition::values())],
             'assigned_user_id' => ['nullable', 'exists:users,id'],
@@ -34,7 +36,10 @@ class StoreTaskRequest extends FormRequest
             'is_active' => ['boolean'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            // Fan-facing challenges must have a close date so they drop off
+            // the Events feed on their own instead of running forever; staff
+            // assignments (ongoing duties) are exempt.
+            'ends_at' => ['required_unless:audience,staff', 'nullable', 'date', 'after_or_equal:starts_at'],
             'steps' => ['sometimes', 'array'],
             'steps.*.description' => ['required_with:steps', 'string'],
             'steps.*.link_url' => ['nullable', 'url'],

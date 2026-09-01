@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Social\ChatBlockController as ApiSocialChatBlockController;
+use App\Http\Controllers\Api\Social\ChatChannelPreferencesController as ApiSocialChatChannelPreferencesController;
 use App\Http\Controllers\Api\Social\ChatMembersController as ApiSocialChatMembersController;
 use App\Http\Controllers\Api\Social\ChatMessageController as ApiSocialChatMessageController;
 use App\Http\Controllers\Api\Social\ChatMessageReportController as ApiSocialChatMessageReportController;
@@ -222,6 +223,12 @@ return function (string $pathPrefix, string $apiPrefix, bool $withNames): void {
                 Route::get('/chat/channels/{channel}/members', ApiSocialChatMembersController::class)
                     ->middleware('throttle:120,1')
                     ->name('chat.channels.members');
+                Route::patch('/chat/channels/{channel}/preferences', [ApiSocialChatChannelPreferencesController::class, 'update'])
+                    ->middleware('throttle:60,1')
+                    ->name('chat.channels.preferences.update');
+                Route::post('/chat/channels/{channel}/clear', [ApiSocialChatChannelPreferencesController::class, 'clear'])
+                    ->middleware('throttle:30,1')
+                    ->name('chat.channels.clear');
 
                 Route::get('/notifications/unread-count', [ApiSocialNotificationController::class, 'unreadCount'])
                     ->middleware('throttle:120,1')

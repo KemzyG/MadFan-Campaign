@@ -107,6 +107,10 @@ class SendChatMessage
         SocialBroadcast::try(fn () => ClubChatMessageCreated::dispatch($message));
 
         foreach ($this->recipientsFor($channel, $author) as $recipient) {
+            if ($this->chatService->isChannelMuted($recipient, $channel)) {
+                continue;
+            }
+
             $this->notifications->notify(
                 $recipient,
                 $author,
@@ -115,7 +119,9 @@ class SendChatMessage
                 [
                     'snippet' => $body !== ''
                         ? str($body)->limit(80)->toString()
-                        : ($message->media_type === 'video' ? 'Sent a video' : 'Sent a photo'),
+                        : ($message->type === MessageType::Voice
+                            ? 'Sent a voice note'
+                            : ($message->media_type === 'video' ? 'Sent a video' : 'Sent a photo')),
                     'channel_name' => $channel->name,
                     // threadHref(), not the raw slug: a direct/group channel's
                     // slug only resolves inside its own club's server scope
@@ -192,8 +198,10 @@ class SendChatMessage
         }
 
         $mime = strtolower((string) $attachment->getMimeType());
-        $isVideo = str_starts_with($mime, 'video/');
-        $isAudio = str_starts_with($mime, 'audio/');
+        $filename = strtolower((string) $attachment->getClientOriginalName());
+        $isVoiceUpload = str_starts_with($filename, 'voice-');
+        $isAudio = str_starts_with($mime, 'audio/') || $isVoiceUpload;
+        $isVideo = str_starts_with($mime, 'video/') && ! $isAudio;
         $path = CloudinaryImageStorage::storeMedia($attachment, 'social/chat/'.$channel->id);
 
         $width = null;

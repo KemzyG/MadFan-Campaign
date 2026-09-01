@@ -71,9 +71,11 @@ class StoreChatMessageRequest extends FormRequest
             }
 
             $mime = strtolower((string) $file->getMimeType());
+            $filename = strtolower((string) $file->getClientOriginalName());
+            $isVoiceUpload = str_starts_with($filename, 'voice-');
             $isImage = str_starts_with($mime, 'image/');
-            $isVideo = str_starts_with($mime, 'video/');
-            $isAudio = str_starts_with($mime, 'audio/');
+            $isAudio = str_starts_with($mime, 'audio/') || $isVoiceUpload;
+            $isVideo = str_starts_with($mime, 'video/') && ! $isAudio;
 
             if ($isImage && $file->getSize() > FeedService::MAX_IMAGE_KB * 1024) {
                 $validator->errors()->add(

@@ -57,7 +57,7 @@ enum EventType: string
             self::LiveEvent => 'Join',
             self::Tournament => 'View table',
             self::NewEpisode => 'Watch',
-            self::Campaign => 'View campaign',
+            self::Campaign => 'Join campaign',
             self::FanChallenge => 'Join challenge',
             self::Showdown => 'Vote now',
             self::Vote => 'Vote now',

@@ -262,6 +262,8 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
 
     const hasDraft = Boolean(body.trim() || attachment || voice.preview);
     const canSend = !processing && !isSlowmodeActive && hasDraft && !voice.recording;
+    const voiceReady = Boolean(voice.preview && !voice.recording);
+    const showTextDock = !voice.recording && !voiceReady;
 
     return (
         <form className="mf-chat-composer mf-chat-composer--v2" onSubmit={submit}>
@@ -290,8 +292,18 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                 </div>
             ) : null}
 
-            {voice.preview ? (
-                <div className="mf-chat-composer__voice-draft">
+            {voiceReady ? (
+                <div className="mf-chat-composer__voice-ready" role="status">
+                    <button
+                        type="button"
+                        className="mf-chat-composer__voice-ready-discard"
+                        onClick={voice.clearPreview}
+                        disabled={processing}
+                        aria-label="Discard voice note"
+                        title="Discard"
+                    >
+                        <IconClose />
+                    </button>
                     <VoiceNotePlayer
                         src={voice.preview.url}
                         seed="draft"
@@ -299,8 +311,13 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                         durationMs={voice.preview.durationMs || voice.elapsedMs}
                         compact
                     />
-                    <button type="button" className="mf-chat-composer__voice-draft-remove" onClick={voice.clearPreview} aria-label="Remove voice note">
-                        <IconClose />
+                    <button
+                        type="submit"
+                        className="mf-chat-composer__send mf-chat-composer__send--voice"
+                        disabled={!canSend}
+                        aria-label={processing ? 'Sending' : 'Send voice note'}
+                    >
+                        <IconSend />
                     </button>
                 </div>
             ) : null}
@@ -328,7 +345,7 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
 
             {voice.error ? <p className="mf-chat-composer__voice-error mf-text-meta">{voice.error}</p> : null}
 
-            {!voice.recording ? (
+            {showTextDock ? (
                 <div className="mf-chat-composer__dock">
                     <input
                         ref={fileInputRef}
@@ -397,17 +414,6 @@ export default function Composer({ channel, maxBodyLength, inbox, replyTo, onCle
                             </button>
                         )}
                     </div>
-                </div>
-            ) : null}
-
-            {!voice.recording ? (
-                <div className="mf-chat-composer__bar">
-                    <span className="mf-chat-composer__hint mf-text-meta text-[var(--mf-muted)]">
-                        {isSlowmodeActive ? `Slowmode active · ${slowmodeRemaining}s left` : 'Enter to send · Shift+Enter for line'}
-                    </span>
-                    <span className="mf-mono mf-text-micro text-[var(--mf-muted)]">
-                        {body.length}/{maxBodyLength}
-                    </span>
                 </div>
             ) : null}
         </form>

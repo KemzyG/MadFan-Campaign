@@ -163,6 +163,9 @@ class TaskSeeder extends Seeder
                     'season_id' => $season->id,
                     'season_week_id' => $seasonWeeks[$index % $seasonWeeks->count()]->id,
                     'is_active' => true,
+                    // Every fan challenge needs a close date so it drops off
+                    // the Events feed on its own — default to the season's.
+                    'ends_at' => $taskData['ends_at'] ?? $season->ends_at,
                 ]
             );
 

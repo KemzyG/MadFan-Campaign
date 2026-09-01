@@ -48,7 +48,7 @@ function ThreadPresence({ inbox, channel, club, fandom, onOpen }) {
     return <p className="mf-thread-head__sub">{subtitle}</p>;
 }
 
-function ThreadHeader({ inbox, channel, club, fandom, realtime, fallbackUrl, onOpenMembers }) {
+function ThreadHeader({ inbox, channel, club, fandom, fallbackUrl, onOpenMembers }) {
     const title = inbox === 'fandom' || inbox === 'club' ? `#${channel.name}` : channel.name;
 
     return (
@@ -88,7 +88,6 @@ function ThreadHeader({ inbox, channel, club, fandom, realtime, fallbackUrl, onO
             <ChatOptionsMenu
                 inbox={inbox}
                 channel={channel}
-                realtime={realtime}
                 onOpenMembers={onOpenMembers}
             />
         </header>
@@ -155,7 +154,6 @@ export default function Thread({
                 channel={channel}
                 club={club}
                 fandom={fandom}
-                realtime={realtime}
                 fallbackUrl={fallbackUrl}
                 onOpenMembers={() => setMembersOpen(true)}
             />

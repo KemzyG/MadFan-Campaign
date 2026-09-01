@@ -29,6 +29,33 @@ export function formatTime(iso) {
     }
 }
 
+/** Whether a chat message should render the custom voice-note player. */
+export function isVoiceMessage(message) {
+    if (!message?.media?.url || message.deleted) {
+        return false;
+    }
+
+    const messageType = message.type;
+    const mediaType = String(message.media?.type || '').toLowerCase();
+
+    if (messageType === 'voice') {
+        return true;
+    }
+
+    if (mediaType === 'audio' || mediaType.startsWith('audio/')) {
+        return true;
+    }
+
+    // Some browsers upload voice notes as video/webm before the server re-tags them.
+    if (mediaType === 'video' && !message.body && !message.media?.height) {
+        const url = String(message.media.url || '').toLowerCase();
+
+        return url.includes('voice') || url.endsWith('.webm');
+    }
+
+    return false;
+}
+
 function sameDay(a, b) {
     return (
         a.getFullYear() === b.getFullYear()

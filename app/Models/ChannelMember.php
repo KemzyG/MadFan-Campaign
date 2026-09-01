@@ -18,6 +18,10 @@ class ChannelMember extends Model
         'role',
         'joined_at',
         'last_read_at',
+        'muted_at',
+        'archived_at',
+        'disappearing_seconds',
+        'cleared_before_at',
     ];
 
     /**
@@ -28,6 +32,10 @@ class ChannelMember extends Model
         return [
             'joined_at' => 'datetime',
             'last_read_at' => 'datetime',
+            'muted_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'cleared_before_at' => 'datetime',
+            'disappearing_seconds' => 'integer',
         ];
     }
 

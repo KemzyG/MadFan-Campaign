@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
 import { socialApi } from '../../../../lib/socialApi';
 import { useAuthGate } from '../../authGate';
@@ -7,26 +7,61 @@ import { formatCount } from '../post/format';
 import { setEventInterest } from './eventProps';
 import { IconBolt, IconExternal, IconShare } from './icons';
 
-function isExternal(href) {
-    return typeof href === 'string' && /^https?:\/\//i.test(href);
+/**
+ * A card's CTA can be an absolute URL pointing at another of our own surfaces
+ * (e.g. the campaign/fan app, which may live on its own domain — see
+ * CampaignRouting::url()) rather than a truly external, third-party link.
+ * Those still need a real full-page navigation (Inertia can't soft-navigate
+ * across origins), but same tab, no "external" treatment.
+ */
+function classifyHref(href, ownOrigins) {
+    if (typeof href !== 'string' || href === '') {
+        return 'none';
+    }
+    if (!/^https?:\/\//i.test(href)) {
+        return 'relative';
+    }
+    try {
+        return ownOrigins.includes(new URL(href).origin) ? 'own-origin' : 'external';
+    } catch {
+        return 'external';
+    }
 }
 
 /**
- * Type-appropriate primary action. Internal paths use an Inertia <Link> so the
- * SPA keeps its state; external destinations open in a new tab.
+ * Type-appropriate primary action. Relative paths and other-origin links to
+ * our own surfaces navigate in the same tab; genuinely external destinations
+ * open in a new tab.
  */
 export function EventCTA({ cta, tone = 'pitch' }) {
+    const { app } = usePage().props;
+
     if (!cta?.href || !cta?.label) {
         return null;
     }
 
     const className = `mf-btn mf-ev-cta mf-ev-cta--${tone}`;
+    // In single-host mode campaign/social_domain.origin are empty (no
+    // separate domain configured), so a same-origin absolute URL only
+    // matches via window.location.origin — include it so single-host stays
+    // same-tab instead of misreading its own app as "external".
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : null;
+    const ownOrigins = [currentOrigin, app?.campaign?.origin, app?.social_domain?.origin].filter(Boolean);
+    const kind = classifyHref(cta.href, ownOrigins);
 
-    if (isExternal(cta.href)) {
+    if (kind === 'external') {
         return (
             <a className={className} href={cta.href} target="_blank" rel="noopener noreferrer">
                 {cta.label}
                 <IconExternal />
+            </a>
+        );
+    }
+
+    if (kind === 'own-origin') {
+        return (
+            <a className={className} href={cta.href}>
+                {cta.label}
             </a>
         );
     }

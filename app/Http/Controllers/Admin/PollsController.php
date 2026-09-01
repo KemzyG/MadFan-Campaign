@@ -44,7 +44,9 @@ class PollsController extends Controller
             'season_id' => ['nullable', 'integer', 'exists:seasons,id'],
             'question' => ['required', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
-            'closes_at' => ['nullable', 'date'],
+            // Every vote needs a close date so it drops off the Events feed
+            // on its own instead of running forever.
+            'closes_at' => ['required', 'date', 'after:now'],
             'options' => ['required', 'array', 'min:2'],
             'options.*' => ['required', 'string', 'max:255'],
         ]);
@@ -84,7 +86,7 @@ class PollsController extends Controller
             'season_id' => ['nullable', 'integer', 'exists:seasons,id'],
             'question' => ['sometimes', 'required', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
-            'closes_at' => ['nullable', 'date'],
+            'closes_at' => ['sometimes', 'required', 'date'],
         ]);
 
         $poll->update($data);

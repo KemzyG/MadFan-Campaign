@@ -28,6 +28,7 @@ class UpdateTaskRequest extends FormRequest
             'points' => ['sometimes', 'integer', 'min:0'],
             'platform' => ['sometimes', 'nullable', 'string', 'max:50'],
             'task_type' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'feed_kind' => ['sometimes', 'nullable', 'string', 'in:challenge,campaign'],
             'audience' => ['sometimes', 'nullable', 'string', 'in:fan,staff'],
             'staff_position' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', StaffPosition::values())],
             'assigned_user_id' => ['sometimes', 'nullable', 'exists:users,id'],
@@ -36,7 +37,9 @@ class UpdateTaskRequest extends FormRequest
             'is_active' => ['sometimes', 'boolean'],
             'display_order' => ['sometimes', 'integer', 'min:0'],
             'starts_at' => ['sometimes', 'nullable', 'date'],
-            'ends_at' => ['sometimes', 'nullable', 'date'],
+            // Fan-facing challenges/campaigns must keep a close date; staff
+            // assignments (ongoing duties) are exempt.
+            'ends_at' => ['sometimes', 'required_unless:audience,staff', 'date'],
             'steps' => ['sometimes', 'array'],
             'steps.*.description' => ['required_with:steps', 'string'],
             'steps.*.link_url' => ['nullable', 'url'],

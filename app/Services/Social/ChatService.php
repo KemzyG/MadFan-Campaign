@@ -5,6 +5,7 @@ namespace App\Services\Social;
 use App\Actions\Social\EnsureClubChatRooms;
 use App\Actions\Social\EnsureFandomChatRoom;
 use App\Enums\ChannelScope;
+use App\Enums\MessageType;
 use App\Models\Channel;
 use App\Models\ChannelMember;
 use App\Models\Club;
@@ -26,6 +27,12 @@ class ChatService
     public const MESSAGES_PER_PAGE = 50;
 
     public const MAX_VOICE_KB = 5120;
+
+    public const DISAPPEARING_DAY = 86_400;
+
+    public const DISAPPEARING_WEEK = 604_800;
+
+    public const DISAPPEARING_NINETY_DAYS = 7_776_000;
 
     public const EDIT_WINDOW_MINUTES = 5;
 
@@ -219,7 +226,7 @@ class ChatService
     /**
      * @return array{messages: list<Message>, has_more: bool, oldest_id: ?int}
      */
-    public function paginatedMessages(Channel $channel, ?int $beforeId, int $limit = self::MESSAGES_PER_PAGE): array
+    public function paginatedMessages(Channel $channel, ?int $beforeId, int $limit = self::MESSAGES_PER_PAGE, ?User $viewer = null): array
     {
         $limit = max(1, min($limit, 100));
 
@@ -232,6 +239,21 @@ class ChatService
                 'replyTo.author:id,name',
             ])
             ->orderByDesc('id');
+
+        if ($viewer !== null) {
+            $member = ChannelMember::query()
+                ->where('channel_id', $channel->id)
+                ->where('user_id', $viewer->id)
+                ->first();
+
+            if ($member?->cleared_before_at !== null) {
+                $query->where('created_at', '>', $member->cleared_before_at);
+            }
+
+            if ($member?->disappearing_seconds !== null && $member->disappearing_seconds > 0) {
+                $query->where('created_at', '>', now()->subSeconds($member->disappearing_seconds));
+            }
+        }
 
         if ($beforeId !== null) {
             $query->where('id', '<', $beforeId);
@@ -298,7 +320,7 @@ class ChatService
             'type' => $message->type?->value ?? (string) $message->type,
             'media' => $message->media_path ? [
                 'url' => $message->media_url,
-                'type' => $message->media_type,
+                'type' => $message->type === MessageType::Voice ? 'audio' : $message->media_type,
                 'width' => $message->media_width,
                 'height' => $message->media_height,
             ] : null,
@@ -348,8 +370,10 @@ class ChatService
         }
 
         $unreadMap = $viewer !== null ? $this->unreadCountsMap($viewer) : [];
+        $archivedIds = $viewer !== null ? $this->archivedChannelIds($viewer) : collect();
 
         return $server->channels
+            ->reject(fn (Channel $channel) => $archivedIds->contains($channel->id))
             ->sortByDesc(fn (Channel $channel) => $channel->messages->first()?->id ?? 0)
             ->values()
             ->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans, $scope, $unreadMap): array {
@@ -467,11 +491,7 @@ class ChatService
      */
     public function markRead(User $viewer, Channel $channel): void
     {
-        $member = ChannelMember::query()->firstOrNew(
-            ['channel_id' => $channel->id, 'user_id' => $viewer->id],
-            ['role' => 'member', 'joined_at' => now()],
-        );
-
+        $member = $this->membershipFor($viewer, $channel);
         $member->last_read_at = now();
         $member->save();
 
@@ -743,7 +763,64 @@ class ChatService
             }
         }
 
+        $member = ChannelMember::query()
+            ->where('channel_id', $channel->id)
+            ->where('user_id', $viewer->id)
+            ->first();
+
+        $base['settings'] = $this->presentChannelSettings($member);
+
         return $base;
+    }
+
+    public function membershipFor(User $viewer, Channel $channel): ChannelMember
+    {
+        return ChannelMember::query()->firstOrCreate(
+            ['channel_id' => $channel->id, 'user_id' => $viewer->id],
+            ['role' => 'member', 'joined_at' => now()],
+        );
+    }
+
+    public function isChannelMuted(User $viewer, Channel $channel): bool
+    {
+        return ChannelMember::query()
+            ->where('channel_id', $channel->id)
+            ->where('user_id', $viewer->id)
+            ->whereNotNull('muted_at')
+            ->exists();
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    public function archivedChannelIds(User $viewer): Collection
+    {
+        return ChannelMember::query()
+            ->where('user_id', $viewer->id)
+            ->whereNotNull('archived_at')
+            ->pluck('channel_id');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function presentChannelSettings(?ChannelMember $member): array
+    {
+        if ($member === null) {
+            return [
+                'muted' => false,
+                'archived' => false,
+                'disappearing_seconds' => null,
+                'cleared_before_at' => null,
+            ];
+        }
+
+        return [
+            'muted' => $member->muted_at !== null,
+            'archived' => $member->archived_at !== null,
+            'disappearing_seconds' => $member->disappearing_seconds,
+            'cleared_before_at' => $member->cleared_before_at?->toIso8601String(),
+        ];
     }
 
     /**
@@ -911,7 +988,9 @@ class ChatService
     {
         return Channel::query()
             ->where('scope', $scope)
-            ->whereHas('memberships', fn ($q) => $q->where('user_id', $viewer->id))
+            ->whereHas('memberships', fn ($q) => $q
+                ->where('user_id', $viewer->id)
+                ->whereNull('archived_at'))
             ->with([
                 'memberships.user:id,name,handle,fan_id,avatar_path,avatar_emoji,last_seen_at',
                 'messages' => fn ($q) => $q->latest('id')->limit(1),

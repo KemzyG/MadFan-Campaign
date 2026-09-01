@@ -1,9 +1,8 @@
 /*
- * Social events feed — the three editorial / progress bodies:
+ * Social events feed — two editorial / task bodies:
  *
- *   .mf-evwire  breaking_news  wire bulletin with a rail down the left edge
- *   .mf-evcamp  campaign       segmented week meter
- *   .mf-evtask  fan_challenge  task brief with the points reward as the hero
+ *   .mf-evwire  breaking_news              wire bulletin with a left rail
+ *   .mf-evtask  fan_challenge, campaign    task brief, points reward as hero
  */
 
 /* ======================================================================== */
@@ -119,118 +118,7 @@
 }
 
 /* ======================================================================== */
-/* campaign — week meter                                                    */
-/* ======================================================================== */
-.mf-evcamp__title {
-    margin: 0;
-    font-family: var(--mf-font-display);
-    font-size: var(--mf-text-body);
-    font-weight: 700;
-    line-height: var(--mf-leading-tight);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--mf-text);
-}
-
-.mf-evcamp__meter {
-    margin-top: 0.6rem;
-}
-
-.mf-evcamp__bar {
-    position: relative;
-    height: 0.4rem;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-elevated);
-    box-shadow: inset 0 0 0 1px var(--mf-line);
-    overflow: hidden;
-}
-
-.mf-evcamp__fill {
-    display: block;
-    height: 100%;
-    border-radius: var(--mf-radius-full);
-    background: linear-gradient(90deg, color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 60%, transparent), var(--mf-ev-accent, var(--mf-pitch)));
-    box-shadow: 0 0 10px -2px color-mix(in srgb, var(--mf-ev-accent, transparent) 65%, transparent);
-    transition: width var(--mf-dur-slow) var(--mf-ease);
-}
-
-.mf-evcamp__weeks {
-    display: flex;
-    gap: 0.15rem;
-    margin-top: 0.35rem;
-}
-
-.mf-evcamp__week {
-    flex: 1 1 0;
-    height: 0.28rem;
-    border-radius: var(--mf-radius-full);
-    background: var(--mf-elevated);
-    box-shadow: inset 0 0 0 1px var(--mf-line);
-}
-
-.mf-evcamp__week.is-done {
-    background: color-mix(in srgb, var(--mf-ev-accent, var(--mf-pitch)) 55%, transparent);
-    box-shadow: none;
-}
-
-.mf-evcamp__week.is-now {
-    background: var(--mf-ev-accent, var(--mf-pitch));
-}
-
-/* Week and days-left are both optional, so the track count follows the cells. */
-.mf-evcamp__stats {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-    gap: 0.4rem;
-    margin: 0.5rem 0 0;
-}
-
-.mf-evcamp__stats > div {
-    padding: 0.3rem 0.45rem;
-    border-radius: var(--mf-radius);
-    border: 1px solid var(--mf-line);
-    background: var(--mf-panel);
-}
-
-.mf-evcamp__stats dt {
-    font-family: var(--mf-font-label);
-    font-size: var(--mf-text-micro);
-    font-weight: 600;
-    letter-spacing: var(--mf-tracking-label);
-    text-transform: uppercase;
-    color: var(--mf-muted);
-    white-space: nowrap;
-}
-
-.mf-evcamp__stats dd {
-    display: flex;
-    align-items: baseline;
-    gap: 0.05rem;
-    margin: 0.1rem 0 0;
-    font-family: var(--mf-font-display);
-    font-size: var(--mf-text-title);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    color: var(--mf-text);
-}
-
-.mf-evcamp__stats dd i {
-    font-style: normal;
-    font-size: var(--mf-text-caption);
-    font-weight: 600;
-    color: var(--mf-muted);
-}
-
-.mf-evcamp__ends {
-    margin: 0.55rem 0 0;
-    font-size: var(--mf-text-caption);
-    color: var(--mf-muted);
-}
-
-/* ======================================================================== */
-/* fan_challenge — task brief                                               */
+/* fan_challenge, campaign — task brief                                     */
 /* ======================================================================== */
 .mf-evtask {
     display: flex;

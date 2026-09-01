@@ -26,6 +26,7 @@ function emptyForm(seasons) {
         points: 10,
         platform: 'internal',
         task_type: 'general',
+        feed_kind: 'challenge',
         audience: 'fan',
         staff_position: '',
         assigned_user_id: '',
@@ -48,6 +49,7 @@ function taskToForm(task) {
         points: task.points ?? 10,
         platform: task.platform ?? 'internal',
         task_type: task.task_type ?? 'general',
+        feed_kind: task.feed_kind ?? 'challenge',
         audience: task.audience ?? 'fan',
         staff_position: task.staff_position ?? '',
         assigned_user_id: task.assigned_user_id ?? '',
@@ -198,6 +200,7 @@ export default function TasksIndex({
         () => [
             { key: 'name', label: 'Task' },
             { key: 'code', label: 'Code' },
+            { key: 'feed_label', label: 'Feed' },
             { key: 'audience_label', label: 'Audience' },
             { key: 'season', label: 'Season' },
             { key: 'points', label: 'Points' },
@@ -222,6 +225,7 @@ export default function TasksIndex({
 
     const rows = (tasks?.data ?? []).map((task) => ({
         ...task,
+        feed_label: task.feed_kind === 'campaign' ? 'Campaign' : 'Challenge',
         audience_label: audienceLabel(task),
         season: task.season?.name ?? '—',
         points: formatNumber(task.points),
@@ -408,7 +412,7 @@ export default function TasksIndex({
                             />
                         </Field>
 
-                        <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="grid gap-3 sm:grid-cols-4">
                             <Field ><FieldLabel>Platform</FieldLabel>
                                 <NativeSelect className="w-full"
                                     value={form.platform}
@@ -431,6 +435,15 @@ export default function TasksIndex({
                                             {type}
                                         </NativeSelectOption>
                                     ))}
+                                </NativeSelect>
+                            </Field>
+                            <Field ><FieldLabel>Feed</FieldLabel>
+                                <NativeSelect className="w-full"
+                                    value={form.feed_kind}
+                                    onChange={(e) => setForm({ ...form, feed_kind: e.target.value })}
+                                >
+                                    <NativeSelectOption value="challenge">Challenge</NativeSelectOption>
+                                    <NativeSelectOption value="campaign">Campaign</NativeSelectOption>
                                 </NativeSelect>
                             </Field>
                             <Field ><FieldLabel>Display order</FieldLabel>

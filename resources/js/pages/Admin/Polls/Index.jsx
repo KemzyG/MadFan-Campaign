@@ -171,6 +171,14 @@ export default function PollsIndex({ polls, filters = {}, fandoms = [], seasons 
                             <Textarea value={form.optionsText} onChange={(e) => setForm({ ...form, optionsText: e.target.value })} rows={4} required />
                         </Field>
                     )}
+                    <Field ><FieldLabel>Closes at</FieldLabel>
+                        <Input
+                            type="datetime-local"
+                            value={form.closes_at}
+                            onChange={(e) => setForm({ ...form, closes_at: e.target.value })}
+                            required
+                        />
+                    </Field>
                     <label className="flex items-center gap-2 text-sm">
                         <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
                         Active

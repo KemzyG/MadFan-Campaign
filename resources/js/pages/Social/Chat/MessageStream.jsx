@@ -11,6 +11,7 @@ import {
     formatDayLabel,
     formatTime,
     isGroupedWith,
+    isVoiceMessage,
     jumpToMessage,
 } from './helpers';
 import ReplyQuote from './ReplyQuote';
@@ -41,14 +42,18 @@ function MessageMedia({ message, onOpenLightbox }) {
         return null;
     }
 
-    if (message.media.type === 'audio' || message.type === 'voice') {
+    if (isVoiceMessage(message)) {
         return (
-            <VoiceNotePlayer
-                src={message.media.url}
-                seed={message.id}
-                isMine={Boolean(message.is_mine)}
-                durationMs={0}
-            />
+            <div className="mf-chat-bubble__voice">
+                <VoiceNotePlayer
+                    src={message.media.url}
+                    seed={message.id}
+                    isMine={Boolean(message.is_mine)}
+                    durationMs={message.media.duration_ms || 0}
+                    compact
+                    inBubble
+                />
+            </div>
         );
     }
 
@@ -148,6 +153,7 @@ function MessageRow({
         isGrouped ? 'is-grouped' : '',
         message._optimistic ? 'is-optimistic' : '',
         message.deleted ? 'is-deleted' : '',
+        isVoiceMessage(message) && !message.body ? 'is-voice-only' : '',
     ]
         .filter(Boolean)
         .join(' ');
@@ -177,7 +183,7 @@ function MessageRow({
                 {showAuthor && !isMine && !isGrouped ? (
                     <span className="mf-chat-bubble__name">{author?.name || 'Fan'}</span>
                 ) : null}
-                <div className="mf-chat-bubble__pill">
+                <div className={`mf-chat-bubble__pill ${isVoiceMessage(message) && !message.body ? 'mf-chat-bubble__pill--voice' : ''}`}>
                     {message.reply_to ? (
                         <ReplyQuote
                             authorName={message.reply_to.author_name}
