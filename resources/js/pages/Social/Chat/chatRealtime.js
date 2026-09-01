@@ -1,16 +1,51 @@
 import { router } from '@inertiajs/react';
 
-export function mergeChatMessage(items, incoming) {
+export function enrichChatMessage(incoming, viewerId = null) {
     if (!incoming?.id) {
+        return incoming;
+    }
+
+    const authorId = incoming.author?.id;
+    const isMine = viewerId !== null && authorId !== null
+        ? Number(authorId) === Number(viewerId)
+        : Boolean(incoming.is_mine);
+
+    return {
+        ...incoming,
+        is_mine: isMine,
+        can_edit: isMine ? Boolean(incoming.can_edit) : false,
+        can_delete: isMine ? Boolean(incoming.can_delete) : false,
+    };
+}
+
+export function mergeChatMessage(items, incoming, viewerId = null) {
+    const message = enrichChatMessage(incoming, viewerId);
+
+    if (!message?.id) {
         return items;
     }
 
-    const exists = items.some((item) => item.id === incoming.id);
+    const exists = items.some((item) => item.id === message.id);
     if (exists) {
-        return items.map((item) => (item.id === incoming.id ? { ...item, ...incoming } : item));
+        return items.map((item) => {
+            if (item.id !== message.id) {
+                return item;
+            }
+
+            return {
+                ...item,
+                ...message,
+                is_mine: message.is_mine ?? item.is_mine,
+                _optimistic: false,
+            };
+        });
     }
 
-    return [...items, incoming].sort((a, b) => {
+    const withoutTemps = items.filter(
+        (item) => !(item._optimistic && item.is_mine && message.is_mine),
+    );
+
+    return [...withoutTemps, message].sort((a, b) => {
         const aId = typeof a.id === 'number' ? a.id : 0;
         const bId = typeof b.id === 'number' ? b.id : 0;
         if (aId && bId) {

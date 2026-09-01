@@ -3,7 +3,8 @@ import MediaLightbox from '../components/post/MediaLightbox';
 import { linkifyText } from '../../../lib/linkify';
 import { socialApi } from '../../../lib/socialApi';
 import { applyOptimisticProps, useSocialFlash } from '../optimistic';
-import { markChatMessageDeleted, prependChatMessages } from './chatRealtime';
+import MessageActionSheet from './MessageActionSheet';
+import { prependChatMessages } from './chatRealtime';
 import {
     AuthorAvatar,
     dayKey,
@@ -13,6 +14,7 @@ import {
     jumpToMessage,
 } from './helpers';
 import ReplyQuote from './ReplyQuote';
+import VoiceNotePlayer from './VoiceNotePlayer';
 
 const LONG_PRESS_MS = 420;
 
@@ -34,93 +36,6 @@ function MoreIcon() {
     );
 }
 
-function MessageActions({ message, inbox, onEdit, onReply, onClose }) {
-    const { reportError, reportSuccess } = useSocialFlash();
-    const [open, setOpen] = useState(true);
-
-    if (!open) {
-        return null;
-    }
-
-    async function remove() {
-        if (!confirm('Delete this message?')) {
-            return;
-        }
-
-        try {
-            await socialApi(`/chat/messages/${message.id}`, { method: 'DELETE' });
-            applyOptimisticProps((props) => ({
-                messages: {
-                    ...props.messages,
-                    items: markChatMessageDeleted(props.messages?.items || [], message.id),
-                },
-            }));
-            reportSuccess?.('Message deleted.');
-            onClose?.();
-        } catch (error) {
-            reportError?.(error instanceof Error ? error.message : 'Could not delete message.');
-        }
-    }
-
-    async function report() {
-        try {
-            await socialApi(`/chat/messages/${message.id}/report`, {
-                method: 'POST',
-                body: { reason: 'abuse' },
-            });
-            reportSuccess?.('Report submitted.');
-            onClose?.();
-        } catch (error) {
-            reportError?.(error instanceof Error ? error.message : 'Could not submit report.');
-        }
-    }
-
-    async function blockAuthor() {
-        if (!message.author?.id) {
-            return;
-        }
-
-        try {
-            await socialApi(`/chat/users/${message.author.id}/block`, { method: 'POST' });
-            reportSuccess?.('Fan blocked.');
-            onClose?.();
-        } catch (error) {
-            reportError?.(error instanceof Error ? error.message : 'Could not block fan.');
-        }
-    }
-
-    return (
-        <div className="mf-chat-actions" role="menu">
-            {message.can_edit ? (
-                <button type="button" onClick={() => { onEdit?.(message); onClose?.(); }}>
-                    Edit
-                </button>
-            ) : null}
-            <button type="button" onClick={() => { onReply?.(message); onClose?.(); }}>
-                Reply
-            </button>
-            {message.can_delete ? (
-                <button type="button" className="is-danger" onClick={remove}>
-                    Delete
-                </button>
-            ) : null}
-            {!message.is_mine ? (
-                <>
-                    <button type="button" onClick={report}>Report</button>
-                    {inbox === 'friends' && message.author?.id ? (
-                        <button type="button" className="is-danger" onClick={blockAuthor}>
-                            Block fan
-                        </button>
-                    ) : null}
-                </>
-            ) : null}
-            <button type="button" onClick={() => { setOpen(false); onClose?.(); }}>
-                Cancel
-            </button>
-        </div>
-    );
-}
-
 function MessageMedia({ message, onOpenLightbox }) {
     if (!message.media?.url || message.deleted) {
         return null;
@@ -128,9 +43,12 @@ function MessageMedia({ message, onOpenLightbox }) {
 
     if (message.media.type === 'audio' || message.type === 'voice') {
         return (
-            <div className="mf-chat-bubble__voice">
-                <audio src={message.media.url} controls preload="metadata" />
-            </div>
+            <VoiceNotePlayer
+                src={message.media.url}
+                seed={message.id}
+                isMine={Boolean(message.is_mine)}
+                durationMs={0}
+            />
         );
     }
 
@@ -320,19 +238,16 @@ function MessageRow({
             ) : null}
 
             {menuOpen ? (
-                <>
-                    <button type="button" className="mf-chat-actions__backdrop" aria-label="Close actions" onClick={() => setMenuOpen(false)} />
-                    <MessageActions
-                        message={message}
-                        inbox={inbox}
-                        onEdit={() => {
-                            setEditBody(message.body || '');
-                            setEditing(true);
-                        }}
-                        onReply={onReply}
-                        onClose={() => setMenuOpen(false)}
-                    />
-                </>
+                <MessageActionSheet
+                    message={message}
+                    inbox={inbox}
+                    onEdit={() => {
+                        setEditBody(message.body || '');
+                        setEditing(true);
+                    }}
+                    onReply={onReply}
+                    onClose={() => setMenuOpen(false)}
+                />
             ) : null}
         </article>
     );

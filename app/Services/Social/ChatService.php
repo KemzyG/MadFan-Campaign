@@ -347,27 +347,34 @@ class ChatService
             $scope = ChannelScope::Club->value;
         }
 
-        return $server->channels->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans, $scope): array {
-            $preview = $channel->messages->first();
+        $unreadMap = $viewer !== null ? $this->unreadCountsMap($viewer) : [];
 
-            return [
-                'id' => $channel->id,
-                'slug' => $channel->slug,
-                'name' => $channel->name,
-                'topic' => $channel->topic,
-                'scope' => $scope,
-                'is_read_only' => $channel->is_read_only,
-                'is_active' => $active !== null && $channel->id === $active->id,
-                'href' => $this->threadHref($channel),
-                'online_count' => $onlineFans,
-                'fan_count' => $totalFans,
-                'last_message' => $preview ? [
-                    'body' => $preview->body,
-                    'created_at' => $preview->created_at?->toIso8601String(),
-                    'is_mine' => $viewer !== null && (int) $preview->author_id === (int) $viewer->id,
-                ] : null,
-            ];
-        })->values()->all();
+        return $server->channels
+            ->sortByDesc(fn (Channel $channel) => $channel->messages->first()?->id ?? 0)
+            ->values()
+            ->map(function (Channel $channel) use ($active, $viewer, $onlineFans, $totalFans, $scope, $unreadMap): array {
+                $preview = $channel->messages->first();
+
+                return [
+                    'id' => $channel->id,
+                    'slug' => $channel->slug,
+                    'name' => $channel->name,
+                    'topic' => $channel->topic,
+                    'scope' => $scope,
+                    'is_read_only' => $channel->is_read_only,
+                    'is_active' => $active !== null && $channel->id === $active->id,
+                    'href' => $this->threadHref($channel),
+                    'online_count' => $onlineFans,
+                    'fan_count' => $totalFans,
+                    'unread_count' => $unreadMap[$channel->id] ?? 0,
+                    'last_message' => $preview ? [
+                        'body' => $preview->body,
+                        'type' => $preview->type?->value ?? (string) $preview->type,
+                        'created_at' => $preview->created_at?->toIso8601String(),
+                        'is_mine' => $viewer !== null && (int) $preview->author_id === (int) $viewer->id,
+                    ] : null,
+                ];
+            })->values()->all();
     }
 
     /**
@@ -376,8 +383,9 @@ class ChatService
     public function presentDirectThreads(User $viewer, ?Channel $active): array
     {
         $channels = $this->memberChannels($viewer, ChannelScope::Direct);
+        $unreadMap = $this->unreadCountsMap($viewer);
 
-        return $channels->map(function (Channel $channel) use ($viewer, $active): array {
+        return $channels->map(function (Channel $channel) use ($viewer, $active, $unreadMap): array {
             $peer = $channel->memberships
                 ->first(fn ($membership) => (int) $membership->user_id !== (int) $viewer->id)
                 ?->user;
@@ -393,6 +401,7 @@ class ChatService
                 'is_read_only' => $channel->is_read_only,
                 'is_active' => $active !== null && $channel->id === $active->id,
                 'href' => $this->threadHref($channel),
+                'unread_count' => $unreadMap[$channel->id] ?? 0,
                 'peer' => $peer ? [
                     'id' => $peer->id,
                     'name' => $peer->name,
@@ -404,6 +413,7 @@ class ChatService
                 ] : null,
                 'last_message' => $preview ? [
                     'body' => $preview->body,
+                    'type' => $preview->type?->value ?? (string) $preview->type,
                     'created_at' => $preview->created_at?->toIso8601String(),
                     'is_mine' => (int) $preview->author_id === (int) $viewer->id,
                 ] : null,
@@ -417,8 +427,9 @@ class ChatService
     public function presentGroupThreads(User $viewer, ?Channel $active): array
     {
         $channels = $this->memberChannels($viewer, ChannelScope::Group);
+        $unreadMap = $this->unreadCountsMap($viewer);
 
-        return $channels->map(function (Channel $channel) use ($viewer, $active): array {
+        return $channels->map(function (Channel $channel) use ($viewer, $active, $unreadMap): array {
             $preview = $channel->messages->first();
             $memberCount = $channel->memberships->count();
             $onlineCount = $channel->memberships
@@ -436,8 +447,10 @@ class ChatService
                 'href' => $this->threadHref($channel),
                 'member_count' => $memberCount,
                 'online_count' => $onlineCount,
+                'unread_count' => $unreadMap[$channel->id] ?? 0,
                 'last_message' => $preview ? [
                     'body' => $preview->body,
+                    'type' => $preview->type?->value ?? (string) $preview->type,
                     'created_at' => $preview->created_at?->toIso8601String(),
                     'is_mine' => (int) $preview->author_id === (int) $viewer->id,
                 ] : null,
@@ -482,6 +495,14 @@ class ChatService
     public function unreadCount(User $viewer): int
     {
         return array_sum($this->unreadCountsByChannel($viewer));
+    }
+
+    /**
+     * @return array<int, int> channel_id => unread count
+     */
+    public function unreadCountsMap(User $viewer): array
+    {
+        return $this->unreadCountsByChannel($viewer);
     }
 
     /**

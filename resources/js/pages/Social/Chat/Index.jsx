@@ -1,4 +1,4 @@
-import { Head, usePoll } from '@inertiajs/react';
+import { Head, usePage, usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { getEcho, leaveEchoChannel } from '../../../echo';
 import SocialShell from '../../../Layouts/SocialShell';
@@ -36,6 +36,8 @@ export default function Chat({
     realtime,
     app,
 }) {
+    const page = usePage();
+    const viewerId = page.props?.auth?.user?.id ?? null;
     const usingReverb = realtime?.mode === 'reverb';
     const fallbackPollMs = usingReverb ? Math.max(poll_ms, 30000) : poll_ms;
 
@@ -65,7 +67,7 @@ export default function Chat({
                 patchChatProps((current) => ({
                     messages: {
                         ...current.messages,
-                        items: mergeChatMessage(current.messages?.items || [], incoming),
+                        items: mergeChatMessage(current.messages?.items || [], incoming, viewerId),
                     },
                 }));
             })
@@ -78,7 +80,7 @@ export default function Chat({
                 patchChatProps((current) => ({
                     messages: {
                         ...current.messages,
-                        items: mergeChatMessage(current.messages?.items || [], incoming),
+                        items: mergeChatMessage(current.messages?.items || [], incoming, viewerId),
                     },
                 }));
             })
@@ -102,7 +104,7 @@ export default function Chat({
             subscription.stopListening('.message.deleted');
             leaveEchoChannel(name);
         };
-    }, [usingReverb, channel?.id]);
+    }, [usingReverb, channel?.id, viewerId]);
 
     const isThread = view === 'thread';
 

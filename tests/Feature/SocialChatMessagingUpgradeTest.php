@@ -181,6 +181,33 @@ test('fans can send a voice note attachment in chat', function () {
         ->assertJsonPath('data.media.type', 'audio');
 });
 
+test('direct thread list includes unread counts sorted by recent activity', function () {
+    $club = Club::factory()->create();
+    $viewer = socialReadyUser($club);
+    $peer = socialReadyUser($club);
+
+    Follow::factory()->create([
+        'follower_id' => $viewer->id,
+        'following_id' => $peer->id,
+    ]);
+
+    $channel = app(EnsureDirectChatChannel::class)->handle($viewer, $peer);
+
+    Message::factory()->create([
+        'channel_id' => $channel->id,
+        'author_id' => $peer->id,
+        'body' => 'Unread ping',
+    ]);
+
+    $this->actingAs($viewer)
+        ->get('/social/chat?inbox=friends')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->has('threads', 1)
+            ->where('threads.0.unread_count', 1)
+            ->where('threads.0.last_message.body', 'Unread ping'));
+});
+
 test('members endpoint uses channel policy instead of favourite-only checks', function () {
     $viewer = socialReadyUser();
     $channel = Channel::query()->where('scope', ChannelScope::Direct)->first();

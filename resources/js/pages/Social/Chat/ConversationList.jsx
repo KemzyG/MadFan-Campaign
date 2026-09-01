@@ -12,20 +12,49 @@ function isChannelInbox(inbox) {
 }
 
 function previewText(row, inbox) {
-    if (!row.last_message?.body) {
+    const message = row.last_message;
+
+    if (!message) {
         return isChannelInbox(inbox) ? row.topic || 'No shouts yet' : 'No messages yet';
     }
 
-    const prefix = row.last_message.is_mine ? 'You: ' : '';
+    const prefix = message.is_mine ? 'You: ' : '';
 
-    return `${prefix}${row.last_message.body}`;
+    if (message.type === 'voice') {
+        return `${prefix}Voice message`;
+    }
+
+    if (message.type === 'attachment' && !message.body) {
+        return `${prefix}Photo`;
+    }
+
+    if (!message.body) {
+        return `${prefix}Attachment`;
+    }
+
+    return `${prefix}${message.body}`;
+}
+
+function sortByRecent(rows) {
+    return [...rows].sort((a, b) => {
+        const aTime = a.last_message?.created_at || '';
+        const bTime = b.last_message?.created_at || '';
+
+        if (aTime === bTime) {
+            return (b.id || 0) - (a.id || 0);
+        }
+
+        return bTime.localeCompare(aTime);
+    });
 }
 
 function ConversationRow({ row, inbox }) {
+    const unread = Number(row.unread_count || 0);
+
     return (
         <Link
             href={row.href}
-            className={`mf-convo-row ${row.is_active ? 'is-active' : ''}`}
+            className={`mf-convo-row ${row.is_active ? 'is-active' : ''} ${unread > 0 ? 'has-unread' : ''}`}
             preserveScroll
             preserveState
             prefetch
@@ -56,6 +85,11 @@ function ConversationRow({ row, inbox }) {
                                 {row.online_count}
                             </span>
                         ) : null}
+                        {unread > 0 ? (
+                            <span className="mf-convo-row__unread" aria-label={`${unread} unread messages`}>
+                                {unread > 99 ? '99+' : unread}
+                            </span>
+                        ) : null}
                         <span className="mf-convo-row__stamp mf-mono">
                             {formatListStamp(row.last_message?.created_at)}
                         </span>
@@ -78,12 +112,13 @@ export default function ConversationList({
     const source = isChannelInbox(inbox) ? channels : threads;
 
     const rows = useMemo(() => {
+        const sorted = sortByRecent(source);
         const q = query.trim().toLowerCase();
         if (!q) {
-            return source;
+            return sorted;
         }
 
-        return source.filter((row) =>
+        return sorted.filter((row) =>
             [row.name, row.slug, row.topic].filter(Boolean).join(' ').toLowerCase().includes(q));
     }, [source, query]);
 

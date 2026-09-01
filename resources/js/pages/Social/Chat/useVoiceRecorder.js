@@ -10,6 +10,8 @@ export function useVoiceRecorder() {
     const chunksRef = useRef([]);
     const timerRef = useRef(null);
     const streamRef = useRef(null);
+    const elapsedMsRef = useRef(0);
+    const previewUrlRef = useRef(null);
 
     const [recording, setRecording] = useState(false);
     const [elapsedMs, setElapsedMs] = useState(0);
@@ -21,24 +23,28 @@ export function useVoiceRecorder() {
         streamRef.current = null;
     }, []);
 
+    const revokePreviewUrl = useCallback(() => {
+        if (previewUrlRef.current) {
+            URL.revokeObjectURL(previewUrlRef.current);
+            previewUrlRef.current = null;
+        }
+    }, []);
+
     useEffect(() => () => {
         if (timerRef.current) {
             window.clearInterval(timerRef.current);
         }
         cleanupStream();
-        if (preview?.url) {
-            URL.revokeObjectURL(preview.url);
-        }
-    }, [cleanupStream, preview?.url]);
+        revokePreviewUrl();
+    }, [cleanupStream, revokePreviewUrl]);
 
     const clearPreview = useCallback(() => {
-        if (preview?.url) {
-            URL.revokeObjectURL(preview.url);
-        }
+        revokePreviewUrl();
         setPreview(null);
+        elapsedMsRef.current = 0;
         setElapsedMs(0);
         setError('');
-    }, [preview?.url]);
+    }, [revokePreviewUrl]);
 
     const stopRecording = useCallback(() => {
         if (timerRef.current) {
@@ -46,8 +52,14 @@ export function useVoiceRecorder() {
             timerRef.current = null;
         }
 
-        if (mediaRecorderRef.current?.state === 'recording') {
-            mediaRecorderRef.current.stop();
+        const recorder = mediaRecorderRef.current;
+        if (recorder?.state === 'recording') {
+            try {
+                recorder.requestData();
+            } catch {
+                // Some browsers throw if no timeslice was configured — safe to ignore.
+            }
+            recorder.stop();
         }
 
         setRecording(false);
@@ -59,6 +71,8 @@ export function useVoiceRecorder() {
         }
 
         setError('');
+        revokePreviewUrl();
+        setPreview(null);
 
         if (!navigator.mediaDevices?.getUserMedia) {
             setError('Voice notes are not supported in this browser.');
@@ -70,6 +84,8 @@ export function useVoiceRecorder() {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
             chunksRef.current = [];
+            elapsedMsRef.current = 0;
+            setElapsedMs(0);
 
             const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
                 ? 'audio/webm;codecs=opus'
@@ -107,32 +123,34 @@ export function useVoiceRecorder() {
                     type: blob.type || 'audio/webm',
                 });
 
+                const url = URL.createObjectURL(blob);
+                previewUrlRef.current = url;
+
                 setPreview({
                     file,
-                    url: URL.createObjectURL(blob),
-                    durationMs: elapsedMs,
+                    url,
+                    durationMs: elapsedMsRef.current,
                 });
             };
 
-            recorder.start();
+            recorder.start(250);
             setRecording(true);
-            setElapsedMs(0);
 
             timerRef.current = window.setInterval(() => {
-                setElapsedMs((value) => {
-                    const next = value + 200;
-                    if (next >= MAX_VOICE_MS) {
-                        stopRecording();
-                    }
+                elapsedMsRef.current += 200;
+                const next = elapsedMsRef.current;
 
-                    return next;
-                });
+                setElapsedMs(next);
+
+                if (next >= MAX_VOICE_MS) {
+                    stopRecording();
+                }
             }, 200);
         } catch {
             cleanupStream();
             setError('Microphone access was denied.');
         }
-    }, [cleanupStream, elapsedMs, recording, stopRecording]);
+    }, [cleanupStream, recording, revokePreviewUrl, stopRecording]);
 
     return {
         recording,

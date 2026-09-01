@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { onImageError, resolveDefaultImageUrl } from '../../../lib/defaultImage';
+import ChatOptionsMenu from './ChatOptionsMenu';
 import Composer from './Composer';
 import { AuthorAvatar, formatLastSeen, inboxHref, PresenceDot } from './helpers';
 import MembersModal from './MembersModal';
@@ -84,12 +85,12 @@ function ThreadHeader({ inbox, channel, club, fandom, realtime, fallbackUrl, onO
                 <ThreadPresence inbox={inbox} channel={channel} club={club} fandom={fandom} onOpen={onOpenMembers} />
             </div>
 
-            {realtime?.mode ? (
-                <span className="mf-chat-live mf-text-micro" title={realtime.note}>
-                    <span className="mf-chat-live__dot" aria-hidden />
-                    {realtime.mode === 'reverb' ? 'Live' : 'Poll'}
-                </span>
-            ) : null}
+            <ChatOptionsMenu
+                inbox={inbox}
+                channel={channel}
+                realtime={realtime}
+                onOpenMembers={onOpenMembers}
+            />
         </header>
     );
 }
